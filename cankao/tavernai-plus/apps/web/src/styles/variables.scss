@@ -1,0 +1,104 @@
+// 主色调 - 神秘紫金系
+$primary-color: #8B5CF6;
+$primary-light: #A78BFA;
+$primary-dark: #7C3AED;
+
+// 辅助色 - 温暖金色系
+$secondary-color: #F59E0B;
+$secondary-light: #FCD34D;
+$secondary-dark: #D97706;
+
+// 背景色系 - 深色主题
+$bg-primary: #0F0F23;
+$bg-secondary: #1E1E3F;
+$bg-tertiary: #2D2D5A;
+$bg-card: #252544;
+
+// 文字色系
+$text-primary: #F9FAFB;
+$text-secondary: #D1D5DB;
+$text-tertiary: #9CA3AF;
+$text-muted: #6B7280;
+
+// 功能色系
+$success-color: #10B981;
+$warning-color: #F59E0B;
+$error-color: #EF4444;
+$info-color: #3B82F6;
+
+// 字体家族
+$font-family-base: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-family-mono: 'JetBrains Mono', 'SF Mono', Monaco, 'Cascadia Code', monospace;
+$font-family-serif: 'Crimson Pro', Georgia, serif;
+
+// 字体大小系统
+$font-size-xs: 0.75rem;
+$font-size-sm: 0.875rem;
+$font-size-base: 1rem;
+$font-size-lg: 1.125rem;
+$font-size-xl: 1.25rem;
+$font-size-2xl: 1.5rem;
+$font-size-3xl: 1.875rem;
+$font-size-4xl: 2.25rem;
+
+// 行高系统
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// 字重系统
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// 基础间距单位（8px 系统）
+$spacing-0: 0;
+$spacing-1: 0.25rem;
+$spacing-2: 0.5rem;
+$spacing-3: 0.75rem;
+$spacing-4: 1rem;
+$spacing-5: 1.25rem;
+$spacing-6: 1.5rem;
+$spacing-8: 2rem;
+$spacing-10: 2.5rem;
+$spacing-12: 3rem;
+$spacing-16: 4rem;
+$spacing-20: 5rem;
+
+// 组件间距
+$component-gap: $spacing-4;
+$section-gap: $spacing-8;
+$page-padding: $spacing-6;
+$container-max-width: 1200px;
+
+// 圆角系统
+$border-radius-sm: 0.25rem;
+$border-radius-base: 0.5rem;
+$border-radius-lg: 0.75rem;
+$border-radius-xl: 1rem;
+$border-radius-full: 9999px;
+
+// 阴影系统
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+$shadow-base: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+
+// 特殊效果
+$glow-primary: 0 0 20px rgba(139, 92, 246, 0.3);
+$glow-secondary: 0 0 20px rgba(245, 158, 11, 0.3);
+
+// 过渡动画
+$transition-fast: 150ms ease-in-out;
+$transition-base: 250ms ease-in-out;
+$transition-slow: 350ms ease-in-out;
+
+// 断点定义
+$breakpoint-xs: 475px;
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-2xl: 1536px;

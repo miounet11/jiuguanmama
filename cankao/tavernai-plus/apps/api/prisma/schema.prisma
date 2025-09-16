@@ -1,0 +1,228 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户模型
+model User {
+  id                    String    @id @default(uuid())
+  username              String    @unique
+  email                 String    @unique
+  passwordHash          String?
+  avatar                String?
+  bio                   String?
+  credits               Int       @default(100)
+  subscriptionTier      String    @default("free") // free, plus, pro
+  subscriptionExpiresAt DateTime?
+  isActive              Boolean   @default(true)
+  isVerified            Boolean   @default(false)
+  verificationToken     String?
+  resetPasswordToken    String?
+  resetPasswordExpires  DateTime?
+  lastLoginAt           DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // 关系
+  characters     Character[]
+  chatSessions   ChatSession[]
+  messages       Message[]
+  favorites      CharacterFavorite[]
+  ratings        CharacterRating[]
+  transactions   Transaction[]
+  oauthAccounts  OAuthAccount[]
+  refreshTokens  RefreshToken[]
+}
+
+// OAuth 账号
+model OAuthAccount {
+  id           String   @id @default(uuid())
+  userId       String
+  provider     String   // google, discord
+  providerId   String
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@index([userId])
+}
+
+// 刷新令牌
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// 角色模型
+model Character {
+  id              String   @id @default(uuid())
+  creatorId       String   @map("userId")
+  name            String
+  description     String
+  fullDescription String?  @db.Text
+  personality     String?
+  backstory       String?
+  speakingStyle   String?
+  scenario        String?
+  firstMessage    String?
+  systemPrompt    String?
+  exampleDialogs  String[] @default([])
+  avatar          String?
+  coverImage      String?
+  category        String   @default("原创")
+  tags            String[]
+  language        String   @default("zh-CN")
+  model           String   @default("gpt-3.5-turbo")
+  temperature     Float    @default(0.7)
+  maxTokens       Int      @default(1000)
+  isPublic        Boolean  @default(true)
+  isNSFW          Boolean  @default(false)
+  isFeatured      Boolean  @default(false)
+  rating          Float    @default(0)
+  ratingCount     Int      @default(0)
+  chatCount       Int      @default(0)
+  favoriteCount   Int      @default(0)
+  importedFrom    String?  // 记录导入来源
+  version         Int      @default(1)
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // 关系
+  creator        User              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  chatSessions   ChatSession[]
+  messages       Message[]
+  favorites      CharacterFavorite[]
+  ratings        CharacterRating[]
+
+  @@index([creatorId])
+  @@index([isPublic])
+  @@index([rating])
+  @@index([category])
+  @@index([isFeatured])
+}
+
+// 聊天会话
+model ChatSession {
+  id             String    @id @default(uuid())
+  userId         String
+  characterId    String
+  title          String?
+  model          String    @default("gpt-3.5-turbo")
+  presetId       String?
+  worldInfoId    String?
+  lastMessageAt  DateTime?
+  messageCount   Int       @default(0)
+  totalTokens    Int       @default(0)
+  isArchived     Boolean   @default(false)
+  metadata       Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // 关系
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character  Character   @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  messages   Message[]
+
+  @@index([userId])
+  @@index([characterId])
+  @@index([updatedAt])
+}
+
+// 消息
+model Message {
+  id           String   @id @default(uuid())
+  sessionId    String
+  userId       String?
+  characterId  String?
+  role         String   // user, assistant, system
+  content      String
+  tokens       Int      @default(0)
+  edited       Boolean  @default(false)
+  deleted      Boolean  @default(false)
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 关系
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  character Character?  @relation(fields: [characterId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId])
+  @@index([userId])
+}
+
+// 角色收藏
+model CharacterFavorite {
+  id          String   @id @default(uuid())
+  userId      String
+  characterId String
+  createdAt   DateTime @default(now())
+
+  // 关系
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, characterId])
+  @@index([userId])
+  @@index([characterId])
+}
+
+// 角色评分
+model CharacterRating {
+  id          String   @id @default(uuid())
+  userId      String
+  characterId String
+  rating      Float    // 1-5，支持半星
+  comment     String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关系
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, characterId])
+  @@index([userId])
+  @@index([characterId])
+  @@index([rating])
+}
+
+// 交易记录
+model Transaction {
+  id            String    @id @default(uuid())
+  userId        String
+  type          String    // subscription, credits, refund
+  amount        Float
+  currency      String    @default("USD")
+  status        String    @default("pending") // pending, completed, failed, refunded
+  paymentMethod String?
+  paymentId     String?
+  description   String?
+  metadata      Json?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  // 关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}

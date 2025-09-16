@@ -1,0 +1,65 @@
+* {box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif; margin: 0; padding: 0; transition: all 0.3s ease;}
+:root {
+  --bg: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+  --card: #ffffff;
+  --accent: #3b82f6;
+  --muted: #64748b;
+  --shadow: 0 4px 20px rgba(0,0,0,0.1);
+  --dark-bg: linear-gradient(135deg, #0f172a, #1e293b);
+  --dark-card: #1f2937;
+  --dark-muted: #94a3b8;
+  --dark-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+body.dark {
+  --bg: var(--dark-bg);
+  --card: var(--dark-card);
+  --muted: var(--dark-muted);
+  --shadow: var(--dark-shadow);
+}
+body {background: var(--bg); color: #1e293b; min-height: 100vh;}
+.container {max-width: 1200px; margin: 0 auto; padding: 2rem;}
+.site-header {background: linear-gradient(135deg, var(--accent), #2563eb); color: #fff; padding: 4rem 0; text-align: center; border-radius: 0 0 2rem 2rem; box-shadow: var(--shadow);}
+.site-header h1 {font-size: 3rem; margin-bottom: 0.5rem;}
+.tagline {font-size: 1.25rem; opacity: 0.9;}
+h2 {margin: 2rem 0 1rem; color: #0f172a; font-weight: 600;}
+section {margin-bottom: 3rem;}
+.modes-grid {display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;}
+.mode-card {background: var(--card); padding: 1.5rem; border-radius: 1rem; box-shadow: var(--shadow); cursor: pointer;}
+.mode-card:hover {transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15);}
+.mode-card h3 {margin-bottom: 0.5rem; font-size: 1.25rem;}
+.mode-card p {color: var(--muted); font-size: 0.95rem;}
+.playbox {background: var(--card); padding: 1.5rem; border-radius: 1rem; box-shadow: var(--shadow);}
+.play-controls {margin-top: 1rem; display: flex; gap: 1rem;}
+button {background: var(--accent); color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; cursor: pointer; font-weight: 500;}
+button:hover {background: #2563eb;}
+.output {height: 200px; overflow: auto; background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; font-family: monospace;}
+.footer {padding: 2rem 0; color: var(--muted); text-align: center; border-top: 1px solid #e2e8f0;}
+@media (max-width: 768px) { .container {padding: 1rem;} .site-header h1 {font-size: 2rem;} }
+
+input[type="text"], select {
+  background: var(--card);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  color: inherit;
+  width: 100%;
+  max-width: 300px;
+}
+
+input[type="text"]:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.theme-toggle {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+}

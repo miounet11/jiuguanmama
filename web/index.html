@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>九馆爸爸 — 玩法中心</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <header class="site-header" style="background-image: url('img/header-bg.jpg'); background-size: cover; background-position: center;">
+    <div class="container">
+      <h1>九馆爸爸 — 玩法中心</h1>
+      <p class="tagline">探索与管理多种玩法模式，准备面向用户大规模推出新玩法</p>
+      <button class="theme-toggle"><i class="fas fa-moon"></i></button>
+    </div>
+  </header>
+
+  <section id="signup" style="text-align: center; margin: 2rem 0;">
+    <h2>注册聊天</h2>
+    <button style="background: #db4437; margin: 0.5rem;">使用 Google 继续</button>
+    <button style="background: #000; margin: 0.5rem;">使用 Apple 继续</button>
+    <p>或者</p>
+    <input type="email" placeholder="使用电子邮件继续" style="margin: 0.5rem;">
+    <button>继续</button>
+    <p>若要继续，您需要同意<a href="#">条款</a>和<a href="#">隐私政策</a></p>
+  </section>
+
+  <main class="container">
+    <section id="intro">
+      <h2>简介</h2>
+      <p>欢迎来到九馆爸爸的玩法中心。这是一个面向玩家与运营者的集中展示页面，用于介绍、体验与管理不同的玩法模式。网站采用静态前端，便于部署到任何静态托管服务（GitHub Pages、Netlify、Vercel 等）。</p>
+    </section>
+
+    <section id="features">
+      <h2>功能概览</h2>
+      <ul>
+        <li>玩法模式分类与描述</li>
+        <li>每个玩法的要点、规则与示例</li>
+        <li>可导出的玩法数据（JSON 格式）用于后台接入</li>
+        <li>简单的试玩交互（本地模拟）</li>
+        <li>面向后续扩展的插件化支持说明</li>
+      </ul>
+    </section>
+
+    <section id="modes">
+      <h2>现有玩法一览</h2>
+      <div id="featured-modes" class="carousel">
+        <!-- JS for carousel -->
+      </div>
+      <div id="modes-list" class="modes-grid">
+        <!-- 动态注入玩法卡片 -->
+      </div>
+    </section>
+
+    <section id="playground">
+      <h2>试玩区</h2>
+      <div class="playbox">
+        <div>
+          <label for="mode-select">选择玩法：</label>
+          <select id="mode-select"></select>
+        </div>
+        <div class="play-controls">
+          <button id="start-btn">开始试玩</button>
+          <button id="export-btn">导出玩法（JSON）</button>
+        </div>
+        <pre id="play-output" class="output"></pre>
+      </div>
+    </section>
+
+    <section id="extend">
+      <h2>扩展与接入说明</h2>
+      <p>玩法以 JSON 格式描述，方便后端、SDK 或插件直接读取。请参考下方的示例与 `modes.json`。</p>
+      <h3>数据字段说明</h3>
+      <ul>
+        <li><strong>id</strong>：玩法唯一标识</li>
+        <li><strong>name</strong>：玩法名称</li>
+        <li><strong>category</strong>：玩法类别（对战、社交、解谜 等）</li>
+        <li><strong>description</strong>：玩法简短介绍</li>
+        <li><strong>rules</strong>：玩法规则要点（数组）</li>
+        <li><strong>example</strong>：玩法示例或初始数据</li>
+      </ul>
+    </section>
+
+    <section id="deploy">
+      <h2>部署说明</h2>
+      <ol>
+        <li>将整个 `web/` 目录推送到代码仓库或静态托管服务。</li>
+        <li>配置域名与 HTTPS（可选）。</li>
+        <li>如需后端化，请让后端读取 `modes.json` 并实现对应的玩法逻辑。</li>
+      </ol>
+    </section>
+
+    <section id="roadmap">
+      <h2>未来规划</h2>
+      <ul>
+        <li>支持用户自定义玩法并提交审核</li>
+        <li>玩法市场化（付费/免费）与推荐系统</li>
+        <li>更多试玩模组与社交互动功能</li>
+      </ul>
+    </section>
+
+    <section id="search" style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem;">
+      <input type="text" id="search-input" placeholder="搜索玩法名称或描述">
+      <select id="category-filter"></select>
+    </section>
+
+    <footer class="footer">
+      <p>由九馆爸爸团队制作 — 仅为内部预览与运营准备</p>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+  <script src="search.js"></script>
+</body>
+</html>

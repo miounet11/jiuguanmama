@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>智能创作 - 角色 - 九馆爸爸</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="flex-between">
+        <div class="go-back flex-center">
+          <i class="fas fa-arrow-left" style="font-size: 20px;"></i>
+        </div>
+        <div class="logo">
+          <h1>智能创作 - 角色</h1>
+        </div>
+        <div></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="studio-content-wrap">
+      <div class="studio-content">
+        <div class="header-wrap setting-wrap" style="padding-right: 12px;">
+          <div class="item" style="margin-bottom: 0px;">
+            <div class="title flex-between">
+              <div class="flex">
+                <i class="fas fa-robot" style="font-size: 24px; margin-right: 8px;"></i>
+                AI 角色
+              </div>
+              <div class="tips">
+                <!-- Tips slider or text -->
+                <p>输入@代替{{char}}以及{{user}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex" style="overflow: hidden; flex: 1;">
+          <div class="char-image-wrap flex-top">
+            <div class="icon-tools-bar">
+              <div class="el-row">
+                <div class="el-col el-col-12 flex-center">
+                  <div class="flex-center activate">
+                    <i class="fas fa-magic" style="font-size: 18px;"></i>
+                    生成形象
+                  </div>
+                </div>
+                <div class="el-col el-col-12 flex-center">
+                  <div class="flex-center activate">
+                    <i class="fas fa-upload" style="font-size: 18px;"></i>
+                    上传形象
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="char-image flex-center">
+              <div class="no-picture flex-center" style="flex: 1;">
+                <i class="fas fa-image" style="font-size: 150px; color: #ccc;"></i>
+                <div class="picture-tips">
+                  <p class="bold">请上传您本人创作的原创图片作品。</p>
+                  <p>为保障作品权益，可以添加您自主设计的专属标识或水印。</p>
+                  <p>请勿上传含有他人平台水印或涉嫌侵权的图片内容。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="char-setting-wrap">
+            <div class="setting-wrap" style="flex: 1; padding: 0 0 12px; overflow: hidden;">
+              <div class="char-attr-editor">
+                <div class="build">
+                  <div class="item" style="margin-bottom: 0px;">
+                    <div class="title flex-between">
+                      <div class="flex">
+                        <i class="fas fa-robot" style="font-size: 24px;"></i>
+                        AI 角色构筑
+                      </div>
+                      <div class="quack-button-wrap small">
+                        <button class="quack-button">示例1</button>
+                        <button class="quack-button">示例2</button>
+                        <button class="quack-button">清除</button>
+                      </div>
+                    </div>
+                    <div class="introduce">
+                      <div class="tips">
+                        点击示例快速了解如何使用<br>
+                        填入素材分析以及提示词，或者其中一项<br>
+                        确认角色属性无误后开始构筑
+                      </div>
+                    </div>
+                    <div class="item">
+                      <div class="title">素材分析</div>
+                      <textarea class="el-textarea__inner" placeholder="粘贴角色说明、描述、对话、动作等相关细节作为分析素材进行构筑" rows="4" maxlength="20000"></textarea>
+                    </div>
+                    <div class="item">
+                      <div class="title">提示词</div>
+                      <input class="el-input__inner" placeholder="通过简单的描述可以快速构筑,也可以作为提示词辅助使用" maxlength="100">
+                    </div>
+                    <div class="flex">
+                      <button class="el-button el-button--primary el-button--large" style="width: 100%; background: #FF7878;">
+                        <div class="flex-center">
+                          <i class="fas fa-magic" style="font-size: 24px;"></i>
+                          开始构筑
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="item attr-details-wrap">
+                  <div class="default-attrs-wrap">
+                    <div class="title flex-between">
+                      <div>角色介绍</div>
+                      <div class="quack-button-wrap small">
+                        <button class="quack-button">清除</button>
+                      </div>
+                    </div>
+                    <div class="introduce">
+                      <div class="tips required"> 必填项(角色介绍的内容不会和AI交互)<br> 该内容只包含该角色介绍(简介), 需要和AI交互的内容请创建“自定义属性”，例如“人生经历”</div>
+                    </div>
+                    <textarea class="el-textarea__inner" placeholder="示例:艾莉娜因其银色长发和深紫色眼眸而备受瞩目..." rows="2" maxlength="500"></textarea>
+                  </div>
+
+                  <div class="default-attrs-wrap">
+                    <div class="title flex-between">
+                      <div>默认属性</div>
+                      <div class="quack-button-wrap small">
+                        <button class="quack-button">清除</button>
+                      </div>
+                    </div>
+                    <div class="introduce">
+                      <div class="tips required"> 必填项</div>
+                    </div>
+                    <div class="attr-details">
+                      <div class="el-row">
+                        <div class="el-col el-col-24 el-col-sm-12">
+                          <div class="el-input-group">
+                            <div class="el-input-group__prepend">名字</div>
+                            <input class="el-input__inner" placeholder="名字" maxlength="50">
+                            <div class="el-input-group__append">
+                              <div class="more flex-center">
+                                <i class="fas fa-info-circle"></i>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="el-col el-col-24 el-col-sm-12">
+                          <div class="el-input-group">
+                            <div class="el-input-group__prepend">性别</div>
+                            <input class="el-input__inner" placeholder="性别" maxlength="50">
+                            <div class="el-input-group__append">
+                              <div class="more flex-center">
+                                <i class="fas fa-info-circle"></i>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <!-- Add more default attributes like age, occupation, etc. -->
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="advise-attrs-wrap">
+                    <div class="title flex-between">
+                      <div>常用属性</div>
+                      <div class="quack-button-wrap small">
+                        <button class="quack-button">清除</button>
+                      </div>
+                    </div>
+                    <div class="introduce">
+                      <div class="tips"> 选填项</div>
+                    </div>
+                    <div class="el-select" style="margin-bottom: 20px;">
+                      <div class="el-select__wrapper">
+                        <div class="el-select__selection">
+                          <div class="el-select__selected-item el-select__placeholder is-transparent">
+                            <span>请选择或输入标签，回车添加</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="custom-attrs-wrap">
+                    <div class="title flex-between">
+                      <div>自定义属性</div>
+                      <div class="quack-button-wrap small">
+                        <button class="quack-button">管理</button>
+                        <button class="quack-button">清除</button>
+                      </div>
+                    </div>
+                    <div class="introduce">
+                      <div class="tips"> 选填项</div>
+                    </div>
+                    <div class="no-attr-tips">无自定义属性</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="foot-steps flex-between">
+    <div class="stage">1 / 5</div>
+    <div class="save-tips flex-center">
+      <div class="flex-center">
+        <i class="fas fa-save"></i>
+        自动保存成功
+      </div>
+    </div>
+    <div class="next-step flex">
+      <div class="quack-button-wrap small">
+        <button class="quack-button">下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="setting-wrap create-storybook-wrap">
+    <div class="step-header">
+      <div class="step-title">
+        <h2>创建故事书</h2>
+        <p class="step-description">为你的角色创建专属的故事书，包含与角色相关的特定设定和背景信息（可选）</p>
+      </div>
+    </div>
+    <div class="storybook-content">
+      <div class="item">
+        <div class="title flex-between">
+          <div>基本设置</div>
+        </div>
+        <div class="form-item-wrap">
+          <div class="form-label">扫描设置</div>
+          <div class="el-row">
+            <div class="el-col el-col-24 el-col-sm-12">
+              <div class="form-sub-label">扫描关键词深度</div>
+              <input type="number" class="el-input__inner" min="1" max="100" value="4" placeholder="4">
+              <div class="form-help-text">设置扫描最近多少条聊天记录来查找关键词</div>
+            </div>
+            <div class="el-col el-col-24 el-col-sm-12">
+              <div class="switch-wrap">
+                <div class="switch-label">
+                  <span>区分大小写</span>
+                  <span class="switch-desc">匹配关键词时是否区分大小写</span>
+                </div>
+                <div class="el-switch">
+                  <!-- switch -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-item-wrap">
+          <div class="form-label">匹配规则</div>
+          <div class="el-row">
+            <div class="el-col el-col-24 el-col-sm-12">
+              <div class="switch-wrap">
+                <div class="switch-label">
+                  <span>完整单词匹配</span>
+                  <span class="switch-desc">只匹配完整的单词，避免部分匹配</span>
+                </div>
+                <div class="el-switch">
+                  <!-- switch -->
+                </div>
+              </div>
+            </div>
+            <div class="el-col el-col-24 el-col-sm-12">
+              <div class="switch-wrap">
+                <div class="switch-label">
+                  <span>激活其他词条</span>
+                  <span class="switch-desc">触发时同时激活关联的其他词条</span>
+                </div>
+                <div class="el-switch is-checked">
+                  <!-- switch on -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="title flex-between">
+          <div>词条详情</div>
+          <div class="quack-button-wrap small">
+            <button class="quack-button">
+              <i class="fas fa-plus"></i> 添加词条
+            </button>
+          </div>
+        </div>
+        <div class="no-attr-tips">暂无词条，点击"添加词条"按钮开始创建故事书内容</div>
+      </div>
+      <div class="tips-section">
+        <div class="tip-card">
+          <i class="fas fa-info-circle tip-icon"></i>
+          <div class="tip-content">
+            <div class="tip-title">什么是故事书？</div>
+            <div class="tip-text">故事书包含与当前角色相关的特定设定和背景信息，可以为角色对话提供更丰富的上下文。你可以添加角色的背景故事、人际关系、重要事件等信息。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="setting-wrap create-persona-wrap">
+    <div class="step-header">
+      <div class="step-title">
+        <h2>创建人设</h2>
+        <p class="step-description">定义玩家扮演的角色身份，设置具体的人物名称和背景（可选）</p>
+      </div>
+    </div>
+    <div class="persona-content">
+      <div class="item">
+        <div class="title flex-between">
+          <div>人设信息</div>
+          <div class="quack-button-wrap small">
+            <button class="quack-button">清除</button>
+          </div>
+        </div>
+        <div class="form-item-wrap">
+          <div class="form-label">角色名称</div>
+          <input class="el-input__inner" placeholder="请输入玩家扮演的角色名称（如：刘德华、小明、张雪梅等）" maxlength="100">
+          <div class="form-help-text">输入玩家在对话中扮演的具体角色名称，可以是真实姓名或虚构人物名字</div>
+        </div>
+        <div class="form-item-wrap">
+          <div class="form-label">角色背景</div>
+          <textarea class="el-textarea__inner" placeholder="请输入玩家角色的背景信息、性格特点、职业身份等" rows="2" maxlength="2000"></textarea>
+          <div class="form-help-text">描述玩家扮演角色的背景信息、性格特点、职业身份、说话风格等，帮助AI更好地理解这个角色设定</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="title flex-between">
+          <div>角色示例</div>
+        </div>
+        <div class="example-list">
+          <div class="example-item">
+            <div class="example-header">
+              <div class="example-name">李明</div>
+              <div class="example-action">
+                <i class="fas fa-plus"></i> 应用
+              </div>
+            </div>
+            <div class="example-preview">25岁大学刚毕业的程序员，性格内向但善良，对技术充满热情...</div>
+          </div>
+          <!-- More examples -->
+        </div>
+      </div>
+      <div class="tips-section">
+        <div class="tip-card">
+          <i class="fas fa-info-circle tip-icon"></i>
+          <div class="tip-content">
+            <div class="tip-title">什么是人设？</div>
+            <div class="tip-text">人设是指玩家在对话中扮演的具体角色身份，包含角色的姓名、背景、性格等信息。设定好人设后，AI会根据这个角色设定来理解玩家的身份和背景。</div>
+          </div>
+        </div>
+        <div class="tip-card tip-card-secondary">
+          <i class="fas fa-lightbulb tip-icon"></i>
+          <div class="tip-content">
+            <div class="tip-title">编写技巧</div>
+            <div class="tip-text">
+              • 明确角色身份：具体的姓名和年龄<br>
+              • 职业背景：工作、学历、社会地位等<br>
+              • 性格特点：开朗、内向、幽默、严肃等<br>
+              • 说话风格：正式、随意、方言、口头禅等<br>
+              • 生活背景：家庭情况、成长经历等
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

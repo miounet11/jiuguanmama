@@ -1,0 +1,8 @@
+# 排除嵌套的 Git 仓库
+SillyTavern/
+
+# 排除系统文件
+.DS_Store
+*.log
+node_modules/
+.env

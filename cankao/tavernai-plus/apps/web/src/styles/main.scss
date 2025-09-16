@@ -1,0 +1,254 @@
+// 导入变量和混合
+@import './variables.scss';
+@import './mixins.scss';
+
+// Element Plus 主题覆盖
+:root {
+  --el-color-primary: #{$primary-color};
+  --el-color-primary-light-3: #{$primary-light};
+  --el-color-primary-dark-2: #{$primary-dark};
+  
+  --el-bg-color: #{$bg-primary};
+  --el-bg-color-page: #{$bg-primary};
+  --el-bg-color-overlay: #{$bg-secondary};
+  
+  --el-text-color-primary: #{$text-primary};
+  --el-text-color-regular: #{$text-secondary};
+  --el-text-color-secondary: #{$text-tertiary};
+  --el-text-color-placeholder: #{$text-muted};
+  
+  --el-border-color: #{$bg-tertiary};
+  --el-border-color-light: #{$bg-secondary};
+  --el-border-color-lighter: #{$bg-card};
+  
+  --el-fill-color: #{$bg-card};
+  --el-fill-color-light: #{$bg-tertiary};
+  --el-fill-color-lighter: #{$bg-secondary};
+  --el-fill-color-blank: #{$bg-primary};
+}
+
+// 全局重置
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: $line-height-normal;
+  color: $text-primary;
+  background: $bg-primary;
+  overflow-x: hidden;
+}
+
+// 链接样式
+a {
+  color: $primary-color;
+  text-decoration: none;
+  transition: color $transition-fast;
+  
+  &:hover {
+    color: $primary-light;
+  }
+  
+  &:active {
+    color: $primary-dark;
+  }
+}
+
+// 选择文字样式
+::selection {
+  background: rgba($primary-color, 0.3);
+  color: $text-primary;
+}
+
+// 自定义滚动条
+html {
+  @include custom-scrollbar;
+}
+
+// 工具类
+.container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 $spacing-4;
+  max-width: $container-max-width;
+  
+  @include respond-to($breakpoint-sm) {
+    padding: 0 $spacing-6;
+  }
+}
+
+.gradient-text {
+  @include gradient-text;
+}
+
+.text-truncate {
+  @include text-truncate;
+}
+
+.flex-center {
+  @include flex-center;
+}
+
+.flex-between {
+  @include flex-between;
+}
+
+// 动画类
+.fade-enter-active, .fade-leave-active {
+  transition: opacity $transition-base;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active, .slide-up-leave-active {
+  transition: all $transition-base;
+}
+.slide-up-enter-from, .slide-up-leave-to {
+  transform: translateY(20px);
+  opacity: 0;
+}
+
+.scale-enter-active, .scale-leave-active {
+  transition: all $transition-fast;
+}
+.scale-enter-from, .scale-leave-to {
+  transform: scale(0.95);
+  opacity: 0;
+}
+
+// 特殊效果
+.glow-hover {
+  transition: all $transition-base;
+  &:hover {
+    box-shadow: $glow-primary;
+    transform: translateY(-2px);
+  }
+}
+
+.bounce-click {
+  transition: transform $transition-fast;
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+// 响应式网格
+.grid {
+  display: grid;
+  gap: $spacing-4;
+  
+  &.grid-1 { grid-template-columns: 1fr; }
+  
+  &.grid-2 { 
+    grid-template-columns: 1fr;
+    @include respond-to($breakpoint-sm) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  &.grid-3 { 
+    grid-template-columns: 1fr;
+    @include respond-to($breakpoint-sm) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    @include respond-to($breakpoint-lg) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  &.grid-4 { 
+    grid-template-columns: 1fr;
+    @include respond-to($breakpoint-sm) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    @include respond-to($breakpoint-lg) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    @include respond-to($breakpoint-xl) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+}
+
+// 间距工具类
+@each $key, $value in (
+  '0': $spacing-0,
+  '1': $spacing-1,
+  '2': $spacing-2,
+  '3': $spacing-3,
+  '4': $spacing-4,
+  '5': $spacing-5,
+  '6': $spacing-6,
+  '8': $spacing-8,
+  '10': $spacing-10,
+  '12': $spacing-12,
+  '16': $spacing-16,
+  '20': $spacing-20
+) {
+  .m-#{$key} { margin: $value !important; }
+  .mt-#{$key} { margin-top: $value !important; }
+  .mr-#{$key} { margin-right: $value !important; }
+  .mb-#{$key} { margin-bottom: $value !important; }
+  .ml-#{$key} { margin-left: $value !important; }
+  .mx-#{$key} { margin-left: $value !important; margin-right: $value !important; }
+  .my-#{$key} { margin-top: $value !important; margin-bottom: $value !important; }
+  
+  .p-#{$key} { padding: $value !important; }
+  .pt-#{$key} { padding-top: $value !important; }
+  .pr-#{$key} { padding-right: $value !important; }
+  .pb-#{$key} { padding-bottom: $value !important; }
+  .pl-#{$key} { padding-left: $value !important; }
+  .px-#{$key} { padding-left: $value !important; padding-right: $value !important; }
+  .py-#{$key} { padding-top: $value !important; padding-bottom: $value !important; }
+}
+
+// 高对比度模式支持
+@media (prefers-contrast: high) {
+  :root {
+    --el-text-color-primary: #FFFFFF;
+    --el-border-color: #FFFFFF;
+  }
+}
+
+// 暗色模式
+.dark {
+  // 暗色主题下的变量已经是默认值
+}
+
+// 亮色模式
+.light {
+  // 亮色主题变量覆盖
+  --el-bg-color: #FFFFFF;
+  --el-bg-color-page: #F9FAFB;
+  --el-bg-color-overlay: #FFFFFF;
+  
+  --el-text-color-primary: #1F2937;
+  --el-text-color-regular: #4B5563;
+  --el-text-color-secondary: #6B7280;
+  --el-text-color-placeholder: #9CA3AF;
+  
+  --el-border-color: #E5E7EB;
+  --el-border-color-light: #F3F4F6;
+  --el-border-color-lighter: #F9FAFB;
+  
+  $bg-primary: #FFFFFF;
+  $bg-secondary: #F9FAFB;
+  $bg-tertiary: #F3F4F6;
+  $bg-card: #FFFFFF;
+  
+  $text-primary: #1F2937;
+  $text-secondary: #4B5563;
+  $text-tertiary: #6B7280;
+  $text-muted: #9CA3AF;
+}
