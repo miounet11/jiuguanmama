@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -15,6 +15,7 @@ model User {
   passwordHash          String?
   avatar                String?
   bio                   String?
+  role                  String    @default("user") // user, admin, moderator
   credits               Int       @default(100)
   subscriptionTier      String    @default("free") // free, plus, pro
   subscriptionExpiresAt DateTime?
@@ -28,14 +29,23 @@ model User {
   updatedAt             DateTime  @updatedAt
 
   // 关系
-  characters     Character[]
-  chatSessions   ChatSession[]
-  messages       Message[]
-  favorites      CharacterFavorite[]
-  ratings        CharacterRating[]
-  transactions   Transaction[]
-  oauthAccounts  OAuthAccount[]
-  refreshTokens  RefreshToken[]
+  characters       Character[]
+  chatSessions     ChatSession[]
+  messages         Message[]
+  favorites        CharacterFavorite[]
+  ratings          CharacterRating[]
+  transactions     Transaction[]
+  oauthAccounts    OAuthAccount[]
+  refreshTokens    RefreshToken[]
+  // 多角色聊天关系
+  ownedChatRooms   ChatRoom[]
+  chatParticipants ChatParticipant[]
+  chatMessages     ChatMessage[]
+  // 工作流关系
+  workflows        Workflow[]
+  workflowInstances WorkflowInstance[]
+  workflowRatings  WorkflowRating[]
+  scheduledTasks   ScheduledTask[]
 }
 
 // OAuth 账号
@@ -75,18 +85,18 @@ model Character {
   creatorId       String   @map("userId")
   name            String
   description     String
-  fullDescription String?  @db.Text
+  fullDescription String?
   personality     String?
   backstory       String?
   speakingStyle   String?
   scenario        String?
   firstMessage    String?
   systemPrompt    String?
-  exampleDialogs  String[] @default([])
+  exampleDialogs  String?  // JSON stored as text for SQLite
   avatar          String?
   coverImage      String?
   category        String   @default("原创")
-  tags            String[]
+  tags            String   @default("[]") // JSON stored as text for SQLite
   language        String   @default("zh-CN")
   model           String   @default("gpt-3.5-turbo")
   temperature     Float    @default(0.7)
@@ -100,17 +110,21 @@ model Character {
   favoriteCount   Int      @default(0)
   importedFrom    String?  // 记录导入来源
   version         Int      @default(1)
-  metadata        Json?
+  metadata        String?    // JSON for PostgreSQL
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   // 关系
-  creator        User              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  chatSessions   ChatSession[]
-  messages       Message[]
-  favorites      CharacterFavorite[]
-  ratings        CharacterRating[]
+  creator            User              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  chatSessions       ChatSession[]
+  messages           Message[]
+  favorites          CharacterFavorite[]
+  ratings            CharacterRating[]
+  // 多角色聊天关系
+  chatParticipants   ChatParticipant[]
+  chatMessages       ChatMessage[]
 
+  @@unique([name, creatorId])
   @@index([creatorId])
   @@index([isPublic])
   @@index([rating])
@@ -118,7 +132,7 @@ model Character {
   @@index([isFeatured])
 }
 
-// 聊天会话
+// 聊天会话（单角色）
 model ChatSession {
   id             String    @id @default(uuid())
   userId         String
@@ -131,7 +145,8 @@ model ChatSession {
   messageCount   Int       @default(0)
   totalTokens    Int       @default(0)
   isArchived     Boolean   @default(false)
-  metadata       Json?
+  isPinned       Boolean   @default(false)
+  metadata       String?    // JSON for PostgreSQL
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -145,6 +160,112 @@ model ChatSession {
   @@index([updatedAt])
 }
 
+// 多角色聊天室
+model ChatRoom {
+  id             String    @id @default(uuid())
+  name           String
+  description    String?
+  ownerId        String
+  maxParticipants Int      @default(10)
+  isPrivate      Boolean   @default(false)
+  allowSpectators Boolean  @default(true)
+  roomType       String    @default("multichar") // multichar, group, roleplay
+  settings       String?     // 房间设置
+  lastMessageAt  DateTime?
+  messageCount   Int       @default(0)
+  totalTokens    Int       @default(0)
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // 关系
+  owner        User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  participants ChatParticipant[]
+  messages     ChatMessage[]
+
+  @@index([ownerId])
+  @@index([isActive])
+  @@index([roomType])
+  @@index([lastMessageAt])
+}
+
+// 聊天室参与者
+model ChatParticipant {
+  id          String   @id @default(uuid())
+  roomId      String
+  userId      String?  // null表示AI角色
+  characterId String?  // AI角色ID
+  role        String   @default("member") // owner, admin, member, spectator
+  permissions String     @default("{}") // 权限设置
+  joinedAt    DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  isActive    Boolean  @default(true)
+  isMuted     Boolean  @default(false)
+
+  // 关系
+  room      ChatRoom   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character Character? @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId]) // 用户在房间中唯一
+  @@unique([roomId, characterId]) // 角色在房间中唯一
+  @@index([roomId])
+  @@index([userId])
+  @@index([characterId])
+}
+
+// 多角色聊天消息
+model ChatMessage {
+  id            String   @id @default(uuid())
+  roomId        String
+  senderId      String?  // 发送者用户ID（null表示AI）
+  characterId   String?  // AI角色ID
+  content       String
+  messageType   String   @default("text") // text, action, system, ooc
+  replyToId     String?  // 回复的消息ID
+  tokens        Int      @default(0)
+  isEdited      Boolean  @default(false)
+  isDeleted     Boolean  @default(false)
+  metadata      String?    // 消息元数据
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 关系
+  room        ChatRoom     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender      User?        @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  character   Character?   @relation(fields: [characterId], references: [id], onDelete: SetNull)
+  replyTo     ChatMessage? @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies     ChatMessage[] @relation("MessageReplies")
+
+  @@index([roomId])
+  @@index([senderId])
+  @@index([characterId])
+  @@index([createdAt])
+}
+
+// 交易记录
+model Transaction {
+  id          String   @id @default(uuid())
+  userId      String
+  type        String   // subscription, credit, purchase
+  amount      Float
+  currency    String   @default("USD")
+  status      String   // pending, success, failed, cancelled, refunded
+  method      String   // stripe, paypal, alipay
+  externalId  String?  // 第三方支付ID
+  description String
+  metadata    String?    @default("{}")
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
 // 消息
 model Message {
   id           String   @id @default(uuid())
@@ -156,7 +277,7 @@ model Message {
   tokens       Int      @default(0)
   edited       Boolean  @default(false)
   deleted      Boolean  @default(false)
-  metadata     Json?
+  metadata     String?    // JSON for PostgreSQL
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -191,7 +312,7 @@ model CharacterRating {
   userId      String
   characterId String
   rating      Float    // 1-5，支持半星
-  comment     String?  @db.Text
+  comment     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -205,24 +326,276 @@ model CharacterRating {
   @@index([rating])
 }
 
-// 交易记录
-model Transaction {
-  id            String    @id @default(uuid())
-  userId        String
-  type          String    // subscription, credits, refund
-  amount        Float
-  currency      String    @default("USD")
-  status        String    @default("pending") // pending, completed, failed, refunded
-  paymentMethod String?
-  paymentId     String?
-  description   String?
-  metadata      Json?
-  completedAt   DateTime?
-  createdAt     DateTime  @default(now())
+// 管理员日志
+model AdminLog {
+  id          String   @id @default(uuid())
+  adminId     String
+  action      String   // 操作类型：create, update, delete, etc.
+  targetType  String   // 目标类型：user, character, etc.
+  targetId    String?  // 目标ID
+  details     String?  // 详细信息 JSON
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
 
-  // 关系
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([adminId])
+  @@index([action])
+  @@index([targetType])
+  @@index([createdAt])
+}
+
+// 使用日志
+model UsageLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  endpoint    String   // API端点
+  method      String   // HTTP方法
+  statusCode  Int      // 响应状态码
+  responseTime Int     // 响应时间(ms)
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
 
   @@index([userId])
+  @@index([endpoint])
+  @@index([statusCode])
+  @@index([createdAt])
+}
+
+// 系统警报
+model Alert {
+  id          String   @id @default(uuid())
+  type        String   // 警报类型：error, warning, info
+  severity    String   // 严重程度：low, medium, high, critical
+  title       String
+  message     String
+  source      String?  // 警报源
+  metadata    String?  // 元数据 JSON
+  isRead      Boolean  @default(false)
+  isResolved  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([severity])
+  @@index([isRead])
+  @@index([isResolved])
+  @@index([createdAt])
+}
+
+// 中继通道
+model Channel {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  provider    String   // AI提供商：openai, anthropic, google, etc.
+  apiKey      String
+  baseUrl     String?
+  models      String     // 支持的模型列表 JSON
+  isActive    Boolean  @default(true)
+  priority    Int      @default(1)
+  weight      Int      @default(1)
+  maxTokens   Int?
+  rpmLimit    Int?     // 每分钟请求限制
+  tpmLimit    Int?     // 每分钟token限制
+  usageCount  Int      @default(0)
+  errorCount  Int      @default(0)
+  lastUsedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([provider])
+  @@index([isActive])
+  @@index([priority])
+  @@index([lastUsedAt])
+}
+
+// 工作流定义
+model Workflow {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
+  creatorId      String
+  version        String   @default("1.0.0")
+  status         String   @default("draft") // draft, published, archived
+  isTemplate     Boolean  @default(false)
+  isPublic       Boolean  @default(false)
+  category       String   @default("general")
+  tags           String     @default("[]")
+  definition     String     // 工作流节点和连接定义
+  variables      String     @default("{}") // 全局变量定义
+  settings       String     @default("{}") // 工作流设置
+  usageCount     Int      @default(0)
+  rating         Float    @default(0)
+  ratingCount    Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // 关系
+  creator        User              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  instances      WorkflowInstance[]
+  templates      WorkflowTemplate[]
+  ratings        WorkflowRating[]
+  scheduledTasks ScheduledTask[]
+
+  @@unique([name, creatorId])
+  @@index([creatorId])
   @@index([status])
+  @@index([isTemplate])
+  @@index([isPublic])
+  @@index([category])
+}
+
+// 工作流实例
+model WorkflowInstance {
+  id             String   @id @default(uuid())
+  workflowId     String
+  executorId     String
+  name           String?
+  status         String   @default("pending") // pending, running, completed, failed, paused, cancelled
+  priority       String   @default("normal") // low, normal, high, urgent
+  input          String?    // 输入参数
+  output         String?    // 输出结果
+  variables      String     @default("{}") // 运行时变量
+  currentStep    String?  // 当前执行步骤ID
+  progress       Float    @default(0) // 执行进度 0-100
+  startedAt      DateTime?
+  completedAt    DateTime?
+  failureReason  String?
+  retryCount     Int      @default(0)
+  maxRetries     Int      @default(3)
+  timeout        Int?     // 超时时间(秒)
+  metadata       String     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // 关系
+  workflow       Workflow       @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  executor       User           @relation(fields: [executorId], references: [id], onDelete: Cascade)
+  executions     StepExecution[]
+  logs           WorkflowLog[]
+
+  @@index([workflowId])
+  @@index([executorId])
+  @@index([status])
+  @@index([priority])
+  @@index([startedAt])
+  @@index([completedAt])
+}
+
+// 步骤执行记录
+model StepExecution {
+  id              String   @id @default(uuid())
+  instanceId      String
+  stepId          String   // 工作流定义中的步骤ID
+  stepType        String   // ai_chat, condition, loop, webhook, script, etc.
+  status          String   @default("pending") // pending, running, completed, failed, skipped
+  input           String?    // 步骤输入
+  output          String?    // 步骤输出
+  error           String?  // 错误信息
+  duration        Int      @default(0) // 执行时间(毫秒)
+  retryCount      Int      @default(0)
+  startedAt       DateTime?
+  completedAt     DateTime?
+  metadata        String     @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // 关系
+  instance        WorkflowInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId])
+  @@index([stepId])
+  @@index([status])
+  @@index([stepType])
+  @@index([startedAt])
+}
+
+// 工作流日志
+model WorkflowLog {
+  id         String   @id @default(uuid())
+  instanceId String
+  level      String   @default("info") // debug, info, warn, error
+  message    String
+  data       String?    // 相关数据
+  stepId     String?  // 相关步骤ID
+  timestamp  DateTime @default(now())
+
+  // 关系
+  instance   WorkflowInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId])
+  @@index([level])
+  @@index([timestamp])
+}
+
+// 工作流模板
+model WorkflowTemplate {
+  id          String   @id @default(uuid())
+  workflowId  String
+  name        String
+  description String?
+  category    String   @default("general")
+  tags        String     @default("[]")
+  isOfficial  Boolean  @default(false)
+  usageCount  Int      @default(0)
+  rating      Float    @default(0)
+  ratingCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关系
+  workflow    Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@index([category])
+  @@index([isOfficial])
+  @@index([rating])
+}
+
+// 工作流评分
+model WorkflowRating {
+  id         String   @id @default(uuid())
+  workflowId String
+  userId     String
+  rating     Float    // 1-5 星级评分
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // 关系
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workflowId, userId])
+  @@index([workflowId])
+  @@index([userId])
+  @@index([rating])
+}
+
+// 定时任务
+model ScheduledTask {
+  id             String   @id @default(uuid())
+  name           String
+  workflowId     String
+  creatorId      String
+  cronExpression String   // Cron表达式
+  timezone       String   @default("UTC")
+  isEnabled      Boolean  @default(true)
+  input          String?    // 默认输入参数
+  lastRunAt      DateTime?
+  nextRunAt      DateTime?
+  runCount       Int      @default(0)
+  failureCount   Int      @default(0)
+  maxRuns        Int?     // 最大执行次数
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // 关系
+  workflow       Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  creator        User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@index([creatorId])
+  @@index([isEnabled])
+  @@index([nextRunAt])
 }

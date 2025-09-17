@@ -3,14 +3,17 @@ import { authenticate, AuthRequest } from '../middleware/auth'
 import { prisma } from '../server'
 import { io } from '../server'
 import { aiService } from '../services/ai'
+import { guidanceService } from '../services/guidance'
+import { summonService } from '../services/summon'
+import { worldInfoService } from '../services/worldinfo'
 
 const router = Router()
 
-// 获取用户的聊天会话列表
-router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
+// 获取用户的聊天会话列表 (兼容前端的 /api/chats 调用)
+router.get('/', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const sessions = await prisma.chatSession.findMany({
-      where: { 
+      where: {
         userId: req.user!.id,
         isArchived: false
       },
@@ -32,7 +35,74 @@ router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
       orderBy: { updatedAt: 'desc' },
       take: 20
     })
-    
+
+    res.json({
+      success: true,
+      sessions
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 创建新聊天会话 (兼容前端的 /api/chats POST 调用)
+router.post('/', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { characterId, title } = req.body
+
+    const session = await prisma.chatSession.create({
+      data: {
+        userId: req.user!.id,
+        characterId,
+        title: title || `与${characterId}的对话`
+      },
+      include: {
+        character: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true
+          }
+        }
+      }
+    })
+
+    res.status(201).json({
+      success: true,
+      session
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 获取用户的聊天会话列表 (保持向后兼容)
+router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const sessions = await prisma.chatSession.findMany({
+      where: {
+        userId: req.user!.id,
+        isArchived: false
+      },
+      select: {
+        id: true,
+        title: true,
+        characterId: true,
+        lastMessageAt: true,
+        messageCount: true,
+        updatedAt: true,
+        character: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true
+          }
+        }
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 20
+    })
+
     res.json({
       success: true,
       sessions
@@ -46,7 +116,7 @@ router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
 router.post('/sessions', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const { characterId, title } = req.body
-    
+
     const session = await prisma.chatSession.create({
       data: {
         userId: req.user!.id,
@@ -64,7 +134,7 @@ router.post('/sessions', authenticate, async (req: AuthRequest, res, next) => {
         }
       }
     })
-    
+
     res.status(201).json({
       success: true,
       session
@@ -83,14 +153,14 @@ router.get('/sessions/:sessionId/messages', authenticate, async (req: AuthReques
         userId: req.user!.id
       }
     })
-    
+
     if (!session) {
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       })
     }
-    
+
     const messages = await prisma.message.findMany({
       where: { sessionId: req.params.sessionId },
       orderBy: { createdAt: 'asc' },
@@ -104,7 +174,7 @@ router.get('/sessions/:sessionId/messages', authenticate, async (req: AuthReques
         }
       }
     })
-    
+
     res.json({
       success: true,
       messages
@@ -118,7 +188,7 @@ router.get('/sessions/:sessionId/messages', authenticate, async (req: AuthReques
 router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const { content, characterId } = req.body
-    
+
     // 验证会话所有权
     const session = await prisma.chatSession.findFirst({
       where: {
@@ -129,14 +199,14 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
         character: true
       }
     })
-    
+
     if (!session) {
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       })
     }
-    
+
     // 创建用户消息
     const userMessage = await prisma.message.create({
       data: {
@@ -156,7 +226,7 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
         }
       }
     })
-    
+
     // 更新会话统计
     await prisma.chatSession.update({
       where: { id: req.params.sessionId },
@@ -166,22 +236,22 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
         totalTokens: { increment: userMessage.tokens }
       }
     })
-    
+
     // 通过 WebSocket 广播用户消息
     io.to(`session:${req.params.sessionId}`).emit('message', {
       type: 'user_message',
       sessionId: req.params.sessionId,
       message: userMessage
     })
-    
+
     // 异步生成 AI 回复
     setImmediate(async () => {
       try {
         const character = session.character
-        
+
         // 获取历史消息作为上下文
         const recentMessages = await prisma.message.findMany({
-          where: { 
+          where: {
             sessionId: req.params.sessionId,
             deleted: false
           },
@@ -192,7 +262,7 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
             content: true
           }
         })
-        
+
         // 构建消息历史（倒序排列）
         const messageHistory = recentMessages
           .reverse()
@@ -201,13 +271,13 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
             role: msg.role as 'user' | 'assistant',
             content: msg.content
           }))
-        
+
         // 添加最新的用户消息
         messageHistory.push({
           role: 'user' as const,
           content
         })
-        
+
         // 使用流式生成
         const generator = aiService.generateChatStream({
           sessionId: req.params.sessionId,
@@ -218,10 +288,10 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
           temperature: 0.7,
           maxTokens: 1000
         })
-        
+
         let fullContent = ''
         let chunkCount = 0
-        
+
         // 先创建消息记录
         const aiMessage = await prisma.message.create({
           data: {
@@ -241,12 +311,12 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
             }
           }
         })
-        
+
         // 流式发送内容
         for await (const chunk of generator) {
           fullContent += chunk
           chunkCount++
-          
+
           // 每收到一定数量的块就发送一次
           if (chunkCount % 3 === 0) {
             io.to(`session:${req.params.sessionId}`).emit('message_chunk', {
@@ -257,7 +327,7 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
             })
           }
         }
-        
+
         // 更新消息内容
         const finalMessage = await prisma.message.update({
           where: { id: aiMessage.id },
@@ -275,7 +345,7 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
             }
           }
         })
-        
+
         // 更新会话统计
         await prisma.chatSession.update({
           where: { id: req.params.sessionId },
@@ -285,7 +355,7 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
             totalTokens: { increment: finalMessage.tokens }
           }
         })
-        
+
         // 发送完整消息
         io.to(`session:${req.params.sessionId}`).emit('message', {
           type: 'assistant_message',
@@ -300,7 +370,7 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
         })
       }
     })
-    
+
     res.json({
       success: true,
       message: userMessage
@@ -329,14 +399,14 @@ router.get('/sessions/:sessionId', authenticate, async (req: AuthRequest, res, n
         }
       }
     })
-    
+
     if (!session) {
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       })
     }
-    
+
     res.json({
       success: true,
       session
@@ -355,18 +425,18 @@ router.delete('/sessions/:sessionId', authenticate, async (req: AuthRequest, res
         userId: req.user!.id
       }
     })
-    
+
     if (!session) {
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       })
     }
-    
+
     await prisma.chatSession.delete({
       where: { id: req.params.sessionId }
     })
-    
+
     res.json({
       success: true,
       message: 'Session deleted'
@@ -385,19 +455,19 @@ router.post('/sessions/:sessionId/archive', authenticate, async (req: AuthReques
         userId: req.user!.id
       }
     })
-    
+
     if (!session) {
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       })
     }
-    
+
     await prisma.chatSession.update({
       where: { id: req.params.sessionId },
       data: { isArchived: true }
     })
-    
+
     res.json({
       success: true,
       message: 'Session archived'
@@ -411,7 +481,7 @@ router.post('/sessions/:sessionId/archive', authenticate, async (req: AuthReques
 router.put('/sessions/:sessionId/messages/:messageId', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const { content } = req.body
-    
+
     const message = await prisma.message.findFirst({
       where: {
         id: req.params.messageId,
@@ -419,14 +489,14 @@ router.put('/sessions/:sessionId/messages/:messageId', authenticate, async (req:
         userId: req.user!.id
       }
     })
-    
+
     if (!message) {
       return res.status(404).json({
         success: false,
         message: 'Message not found'
       })
     }
-    
+
     const updatedMessage = await prisma.message.update({
       where: { id: req.params.messageId },
       data: {
@@ -451,7 +521,7 @@ router.put('/sessions/:sessionId/messages/:messageId', authenticate, async (req:
         }
       }
     })
-    
+
     res.json({
       success: true,
       message: updatedMessage
@@ -470,20 +540,20 @@ router.delete('/sessions/:sessionId/messages/:messageId', authenticate, async (r
         sessionId: req.params.sessionId
       }
     })
-    
+
     if (!message) {
       return res.status(404).json({
         success: false,
         message: 'Message not found'
       })
     }
-    
+
     // 软删除
     await prisma.message.update({
       where: { id: req.params.messageId },
       data: { deleted: true }
     })
-    
+
     res.json({
       success: true,
       message: 'Message deleted'
@@ -503,17 +573,17 @@ router.post('/sessions/:sessionId/messages/:messageId/regenerate', authenticate,
         role: 'assistant'
       }
     })
-    
+
     if (!message) {
       return res.status(404).json({
         success: false,
         message: 'Message not found'
       })
     }
-    
+
     // TODO: 调用 AI API 重新生成
     const newContent = `重新生成的消息内容`
-    
+
     const updatedMessage = await prisma.message.update({
       where: { id: req.params.messageId },
       data: {
@@ -531,7 +601,7 @@ router.post('/sessions/:sessionId/messages/:messageId/regenerate', authenticate,
         }
       }
     })
-    
+
     res.json({
       success: true,
       message: updatedMessage
@@ -545,11 +615,11 @@ router.post('/sessions/:sessionId/messages/:messageId/regenerate', authenticate,
 router.post('/sessions/:sessionId/stop', authenticate, async (req: AuthRequest, res, next) => {
   try {
     // TODO: 实现停止 AI 生成的逻辑
-    
+
     io.to(`session:${req.params.sessionId}`).emit('generation_stopped', {
       sessionId: req.params.sessionId
     })
-    
+
     res.json({
       success: true,
       message: 'Generation stopped'
@@ -568,14 +638,14 @@ router.post('/sessions/:sessionId/clear-context', authenticate, async (req: Auth
         userId: req.user!.id
       }
     })
-    
+
     if (!session) {
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       })
     }
-    
+
     // 重置会话的元数据
     await prisma.chatSession.update({
       where: { id: req.params.sessionId },
@@ -583,7 +653,7 @@ router.post('/sessions/:sessionId/clear-context', authenticate, async (req: Auth
         metadata: {}
       }
     })
-    
+
     res.json({
       success: true,
       message: 'Context cleared'
@@ -602,14 +672,14 @@ router.put('/sessions/:sessionId/settings', authenticate, async (req: AuthReques
         userId: req.user!.id
       }
     })
-    
+
     if (!session) {
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       })
     }
-    
+
     await prisma.chatSession.update({
       where: { id: req.params.sessionId },
       data: {
@@ -620,10 +690,58 @@ router.put('/sessions/:sessionId/settings', authenticate, async (req: AuthReques
         }
       }
     })
-    
+
     res.json({
       success: true,
       message: 'Settings updated'
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 更新聊天会话（固定/取消固定等）
+router.patch('/:sessionId', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { sessionId } = req.params
+    const { isPinned, title } = req.body
+
+    // 验证会话属于当前用户
+    const existingSession = await prisma.chatSession.findFirst({
+      where: {
+        id: sessionId,
+        userId: req.user!.id
+      }
+    })
+
+    if (!existingSession) {
+      return res.status(404).json({
+        success: false,
+        message: 'Chat session not found'
+      })
+    }
+
+    // 更新会话信息
+    const updatedSession = await prisma.chatSession.update({
+      where: { id: sessionId },
+      data: {
+        ...(isPinned !== undefined && { isPinned }),
+        ...(title && { title })
+      },
+      include: {
+        character: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true
+          }
+        }
+      }
+    })
+
+    res.json({
+      success: true,
+      session: updatedSession
     })
   } catch (error) {
     next(error)

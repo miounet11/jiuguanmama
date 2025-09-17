@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>连接测试</title>
+</head>
+<body>
+    <h1>测试页面</h1>
+    <div id="test-results"></div>
+    <script>
+        const results = document.getElementById('test-results');
+
+        // 测试前端服务
+        fetch('http://localhost:3000')
+            .then(r => {
+                results.innerHTML += '<p>✅ 前端服务 (3000): 正常</p>';
+                return fetch('http://localhost:3000/src/main.ts');
+            })
+            .then(r => r.text())
+            .then(text => {
+                if(text.includes('createApp')) {
+                    results.innerHTML += '<p>✅ Vue应用主文件: 正常</p>';
+                }
+            })
+            .catch(e => {
+                results.innerHTML += '<p>❌ 前端服务错误: ' + e.message + '</p>';
+            });
+
+        // 测试API服务
+        fetch('http://localhost:3001/api/health')
+            .then(r => {
+                results.innerHTML += '<p>✅ API服务 (3001): 正常</p>';
+            })
+            .catch(e => {
+                results.innerHTML += '<p>⚠️ API服务: ' + e.message + '</p>';
+            });
+    </script>
+</body>
+</html>

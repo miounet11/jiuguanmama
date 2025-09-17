@@ -1,0 +1,111 @@
+/* 全局布局修复 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#app {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* 修复容器宽度问题 */
+.container,
+.main-container {
+  max-width: 100%;
+  padding: 0 20px;
+  margin: 0 auto;
+}
+
+/* 修复响应式问题 */
+@media (max-width: 768px) {
+  .hero-section {
+    flex-direction: column !important;
+    padding: 20px !important;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  .character-carousel {
+    overflow-x: auto !important;
+  }
+}
+
+/* 修复按钮和表单元素 */
+.btn, button {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+input, textarea, select {
+  max-width: 100%;
+  width: 100%;
+}
+
+/* 修复图片溢出 */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 修复弹性布局 */
+.flex,
+.d-flex,
+[class*="flex-"] {
+  flex-wrap: wrap;
+}
+
+/* 修复网格布局 */
+.grid,
+[class*="grid-"] {
+  gap: 1rem;
+}
+
+/* 修复定位问题 */
+.absolute,
+[class*="position-absolute"] {
+  max-width: 100vw;
+}
+
+/* 修复侧边栏 */
+.sidebar {
+  position: relative;
+  z-index: 1000;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.active {
+    transform: translateX(0);
+  }
+}
+
+/* 修复卡片布局 */
+.card {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 修复导航栏 */
+.navbar,
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+}

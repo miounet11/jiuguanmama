@@ -1,0 +1,32 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景圆 -->
+  <circle cx="100" cy="100" r="95" fill="url(#grad1)" stroke="#ffc107" stroke-width="3"/>
+
+  <!-- 渐变定义 -->
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 天使光环 -->
+  <ellipse cx="100" cy="40" rx="35" ry="8" fill="#ffd700" opacity="0.8" filter="url(#glow)"/>
+
+  <!-- AI 文字 -->
+  <text x="100" y="110" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">AI</text>
+
+  <!-- 装饰星星 -->
+  <path d="M 60,150 L 62,156 L 68,156 L 63,160 L 65,166 L 60,162 L 55,166 L 57,160 L 52,156 L 58,156 Z" fill="#ffd700" opacity="0.9"/>
+  <path d="M 140,150 L 142,156 L 148,156 L 143,160 L 145,166 L 140,162 L 135,166 L 137,160 L 132,156 L 138,156 Z" fill="#ffd700" opacity="0.9"/>
+
+  <!-- 底部文字 -->
+  <text x="100" y="145" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" opacity="0.9">MIAODA</text>
+</svg>

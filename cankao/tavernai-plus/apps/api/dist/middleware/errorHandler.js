@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.errorHandler = void 0;
 const library_1 = require("@prisma/client/runtime/library");
 const zod_1 = require("zod");
+const errorLogger_1 = require("../utils/errorLogger");
 const errorHandler = (err, req, res, next) => {
     let statusCode = err.statusCode || 500;
     let message = err.message || 'Internal Server Error';
@@ -46,6 +47,16 @@ const errorHandler = (err, req, res, next) => {
         statusCode = 401;
         message = 'Token expired';
     }
+    // 记录错误日志
+    errorLogger_1.errorLogger.error(message, {
+        endpoint: req.path,
+        method: req.method,
+        statusCode,
+        userId: req.user?.id,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        stack: err.stack
+    });
     // 开发环境下输出错误堆栈
     if (process.env.NODE_ENV === 'development') {
         console.error('Error:', err);

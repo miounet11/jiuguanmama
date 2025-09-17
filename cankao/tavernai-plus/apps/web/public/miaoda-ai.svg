@@ -1,0 +1,130 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- 深蓝色圆形背景 -->
+  <circle cx="200" cy="200" r="195" fill="#2a3990"/>
+
+  <!-- 装饰元素背景 -->
+  <g opacity="0.3">
+    <!-- 几何形状装饰 -->
+    <rect x="50" y="60" width="30" height="30" fill="none" stroke="#64b5f6" stroke-width="2" transform="rotate(45 65 75)"/>
+    <circle cx="320" cy="80" r="15" fill="none" stroke="#64b5f6" stroke-width="2"/>
+    <polygon points="80,320 95,340 65,340" fill="none" stroke="#ffd54f" stroke-width="2"/>
+    <rect x="330" y="310" width="25" height="25" fill="none" stroke="#ff8a65" stroke-width="2"/>
+
+    <!-- 右上角菱形 -->
+    <rect x="300" y="40" width="35" height="35" fill="none" stroke="#ffd54f" stroke-width="2" transform="rotate(45 317.5 57.5)"/>
+
+    <!-- 左侧三角形 -->
+    <polygon points="60,180 80,210 40,210" fill="none" stroke="#64ddff" stroke-width="2"/>
+  </g>
+
+  <!-- 中心光环渐变 -->
+  <defs>
+    <radialGradient id="centerGlow">
+      <stop offset="0%" style="stop-color:#7eb3f0;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#2a3990;stop-opacity:0" />
+    </radialGradient>
+
+    <radialGradient id="haloGrad">
+      <stop offset="0%" style="stop-color:#64ddff;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#4dd0ff;stop-opacity:0.7" />
+      <stop offset="100%" style="stop-color:#3dc0ff;stop-opacity:0.3" />
+    </radialGradient>
+
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 中心光环背景 -->
+  <circle cx="200" cy="160" r="120" fill="url(#centerGlow)"/>
+
+  <!-- 金色光环 -->
+  <ellipse cx="200" cy="80" rx="65" ry="18" fill="#ffd700" opacity="0.9" filter="url(#softGlow)"/>
+  <ellipse cx="200" cy="80" rx="58" ry="14" fill="none" stroke="#ffeb3b" stroke-width="2" opacity="0.8"/>
+
+  <!-- 角色主体 -->
+  <g transform="translate(200, 160)">
+    <!-- 蓝色波浪头发背景 -->
+    <path d="M -70,-50 Q -80,-30 -75,-10 Q -72,5 -65,20 Q -60,35 -50,45 Q -40,52 -25,55 Q -10,57 0,57 Q 10,57 25,55 Q 40,52 50,45 Q 60,35 65,20 Q 72,5 75,-10 Q 80,-30 70,-50 Q 55,-62 35,-67 Q 15,-70 0,-70 Q -15,-70 -35,-67 Q -55,-62 -70,-50 Z"
+          fill="#7eb3f0" opacity="0.8" filter="url(#softGlow)"/>
+
+    <!-- 头发高光 -->
+    <path d="M -60,-45 Q -50,-50 -30,-52 Q -10,-53 10,-52 Q 30,-50 50,-45"
+          stroke="#a8d0f4" stroke-width="3" fill="none" opacity="0.6"/>
+
+    <!-- 脸部 -->
+    <ellipse cx="0" cy="0" rx="42" ry="45" fill="#ffeaa7"/>
+
+    <!-- 左眼 -->
+    <ellipse cx="-15" cy="-8" rx="10" ry="12" fill="#5eb3f0"/>
+    <ellipse cx="-15" cy="-8" rx="7" ry="9" fill="#2d3436"/>
+    <circle cx="-13" cy="-10" r="3" fill="white"/>
+    <circle cx="-17" cy="-6" r="1.5" fill="#a8d0f4"/>
+
+    <!-- 右眼 -->
+    <ellipse cx="15" cy="-8" rx="10" ry="12" fill="#5eb3f0"/>
+    <ellipse cx="15" cy="-8" rx="7" ry="9" fill="#2d3436"/>
+    <circle cx="17" cy="-10" r="3" fill="white"/>
+    <circle cx="13" cy="-6" r="1.5" fill="#a8d0f4"/>
+
+    <!-- 眉毛 -->
+    <path d="M -25,-20 Q -15,-22 -10,-20" stroke="#8395a7" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M 10,-20 Q 15,-22 25,-20" stroke="#8395a7" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+    <!-- 嘴巴 - 微笑 -->
+    <path d="M -8,10 Q 0,15 8,10" stroke="#fd79a8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+    <!-- 腮红 -->
+    <ellipse cx="-25" cy="8" rx="8" ry="6" fill="#ff7675" opacity="0.35"/>
+    <ellipse cx="25" cy="8" rx="8" ry="6" fill="#ff7675" opacity="0.35"/>
+
+    <!-- 食指做"嘘"手势 -->
+    <g transform="translate(0, 12)">
+      <!-- 手臂 -->
+      <rect x="-5" y="15" width="10" height="25" rx="5" fill="#ffeaa7"/>
+      <!-- 手 -->
+      <ellipse cx="0" cy="12" rx="12" ry="10" fill="#ffeaa7"/>
+      <!-- 食指 -->
+      <rect x="-3" y="2" width="6" height="15" rx="3" fill="#ffeaa7"/>
+      <circle cx="0" cy="2" r="4" fill="#ffeaa7"/>
+      <!-- 指尖细节 -->
+      <ellipse cx="0" cy="1" rx="2.5" ry="3" fill="#ffddaa"/>
+    </g>
+
+    <!-- 身体/衣服 -->
+    <path d="M -35,50 Q -35,60 -30,70 L -25,80 Q -15,85 0,85 Q 15,85 25,80 L 30,70 Q 35,60 35,50 Q 30,48 0,48 Q -30,48 -35,50 Z"
+          fill="#f8f9fa" opacity="0.9"/>
+
+    <!-- 衣领装饰 -->
+    <path d="M -20,50 Q 0,45 20,50" stroke="#e0e0e0" stroke-width="2" fill="none"/>
+
+    <!-- 心形装饰 -->
+    <path d="M 0,65 C -3,62 -8,62 -8,66 C -8,70 -3,75 0,78 C 3,75 8,70 8,66 C 8,62 3,62 0,65 Z"
+          fill="#fd79a8" opacity="0.8"/>
+  </g>
+
+  <!-- MIAODA AI 文字 -->
+  <text x="200" y="300" font-family="'Arial Black', 'Arial', sans-serif" font-size="52" font-weight="900" fill="white" text-anchor="middle" letter-spacing="2">MIAODA AI</text>
+
+  <!-- 装饰星星 -->
+  <g fill="#ffd700">
+    <g transform="translate(90, 110)" opacity="0.8">
+      <path d="M 0,-8 L 2,0 L 10,0 L 4,4 L 6,12 L 0,7 L -6,12 L -4,4 L -10,0 L -2,0 Z" filter="url(#softGlow)"/>
+    </g>
+    <g transform="translate(310, 110)" opacity="0.8">
+      <path d="M 0,-8 L 2,0 L 10,0 L 4,4 L 6,12 L 0,7 L -6,12 L -4,4 L -10,0 L -2,0 Z" filter="url(#softGlow)"/>
+    </g>
+  </g>
+
+  <!-- 额外装饰点 -->
+  <g fill="#64ddff" opacity="0.5">
+    <circle cx="100" cy="280" r="3"/>
+    <circle cx="120" cy="290" r="2"/>
+    <circle cx="300" cy="280" r="3"/>
+    <circle cx="280" cy="290" r="2"/>
+  </g>
+</svg>

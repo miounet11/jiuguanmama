@@ -150,7 +150,7 @@
       <div class="dialog-footer">
         <el-button @click="handleClose">取消</el-button>
         <el-button type="primary" @click="handleAIGenerate" :loading="generating">
-          <el-icon class="mr-1"><Magic /></el-icon>
+          <el-icon class="mr-1"><Star /></el-icon>
           AI 生成
         </el-button>
         <el-button type="primary" @click="handleSubmit" :loading="submitting">
@@ -164,7 +164,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { ElMessage, type FormInstance } from 'element-plus'
-import { Plus, Magic } from '@element-plus/icons-vue'
+import { Plus, Star } from '@element-plus/icons-vue'
 import { characterService } from '@/services/character'
 import type { Character } from '@/types/character'
 

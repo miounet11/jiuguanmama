@@ -1,461 +1,190 @@
 <template>
-  <div class="auth-page">
-    <div class="auth-container">
-      <div class="auth-card">
-        <!-- Logo 和标题 -->
-        <div class="auth-header">
-          <div class="logo-wrapper">
-            <img src="/logo.svg" alt="TavernAI Plus" class="logo" />
-          </div>
-          <h1 class="title gradient-text">TavernAI Plus</h1>
-          <p class="subtitle">欢迎回到神秘酒馆</p>
-        </div>
-        
-        <!-- 登录表单 -->
-        <el-form
-          ref="loginFormRef"
-          :model="loginForm"
-          :rules="loginRules"
-          class="auth-form"
-          @submit.prevent="handleSubmit"
-        >
-          <el-form-item prop="email">
-            <el-input
-              v-model="loginForm.email"
-              size="large"
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+      <div>
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          登录您的账户
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+          或者
+          <router-link to="/register" class="font-medium text-indigo-600 hover:text-indigo-500">
+            注册新账户
+          </router-link>
+        </p>
+      </div>
+      <form class="mt-8 space-y-6" @submit.prevent="handleLogin">
+        <div class="rounded-md shadow-sm -space-y-px">
+          <div>
+            <label for="email" class="sr-only">邮箱地址</label>
+            <input
+              id="email"
+              v-model="formData.email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              required
+              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
               placeholder="邮箱地址"
-              prefix-icon="Message"
-              clearable
             />
-          </el-form-item>
-          
-          <el-form-item prop="password">
-            <el-input
-              v-model="loginForm.password"
+          </div>
+          <div>
+            <label for="password" class="sr-only">密码</label>
+            <input
+              id="password"
+              v-model="formData.password"
+              name="password"
               type="password"
-              size="large"
+              autocomplete="current-password"
+              required
+              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
               placeholder="密码"
-              prefix-icon="Lock"
-              show-password
-              clearable
             />
-          </el-form-item>
-          
-          <el-form-item>
-            <div class="form-options">
-              <el-checkbox v-model="rememberMe">记住我</el-checkbox>
-              <router-link to="/forgot-password" class="link">
-                忘记密码？
-              </router-link>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <input
+              id="remember-me"
+              v-model="rememberMe"
+              name="remember-me"
+              type="checkbox"
+              class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <label for="remember-me" class="ml-2 block text-sm text-gray-900">
+              记住我
+            </label>
+          </div>
+
+          <div class="text-sm">
+            <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">
+              忘记密码？
+            </a>
+          </div>
+        </div>
+
+        <div v-if="errorMessage" class="rounded-md bg-red-50 p-4">
+          <div class="flex">
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-red-800">
+                登录失败
+              </h3>
+              <div class="mt-2 text-sm text-red-700">
+                <p>{{ errorMessage }}</p>
+              </div>
             </div>
-          </el-form-item>
-          
-          <el-form-item>
-            <el-button
-              type="primary"
-              size="large"
-              class="submit-button"
-              :loading="loading"
-              @click="handleSubmit"
+          </div>
+        </div>
+
+        <div>
+          <button
+            type="submit"
+            :disabled="isLoading"
+            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+          >
+            <span v-if="isLoading" class="absolute left-0 inset-y-0 flex items-center pl-3">
+              <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </span>
+            {{ isLoading ? '登录中...' : '登录' }}
+          </button>
+        </div>
+
+        <div class="mt-6">
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-gray-50 text-gray-500">或使用以下方式登录</span>
+            </div>
+          </div>
+
+          <div class="mt-6 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              @click="handleGoogleLogin"
+              class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
             >
-              登录
-            </el-button>
-          </el-form-item>
-        </el-form>
-        
-        <!-- 分隔线 -->
-        <div class="divider">
-          <span>或</span>
+              <svg class="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              <span class="ml-2">Google</span>
+            </button>
+
+            <button
+              type="button"
+              @click="handleGithubLogin"
+              class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd"/>
+              </svg>
+              <span class="ml-2">GitHub</span>
+            </button>
+          </div>
         </div>
-        
-        <!-- 第三方登录 -->
-        <div class="oauth-buttons">
-          <el-button size="large" class="oauth-button" @click="handleOAuthLogin('google')">
-            <img src="/icons/google.svg" alt="Google" class="oauth-icon" />
-            使用 Google 登录
-          </el-button>
-          
-          <el-button size="large" class="oauth-button" @click="handleOAuthLogin('discord')">
-            <img src="/icons/discord.svg" alt="Discord" class="oauth-icon" />
-            使用 Discord 登录
-          </el-button>
-        </div>
-        
-        <!-- 注册链接 -->
-        <div class="auth-footer">
-          <span>还没有账号？</span>
-          <router-link to="/register" class="link">立即注册</router-link>
-        </div>
-      </div>
-      
-      <!-- 装饰背景 -->
-      <div class="auth-decoration">
-        <div class="floating-shape shape-1"></div>
-        <div class="floating-shape shape-2"></div>
-        <div class="floating-shape shape-3"></div>
-      </div>
+      </form>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElForm, ElMessage } from 'element-plus'
-import type { FormInstance, FormRules } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 
-// 表单引用
-const loginFormRef = ref<FormInstance>()
-
-// 表单数据
-const loginForm = reactive({
+const formData = reactive({
   email: '',
   password: ''
 })
 
-// 其他状态
 const rememberMe = ref(false)
-const loading = ref(false)
+const isLoading = ref(false)
+const errorMessage = ref('')
 
-// 表单验证规则
-const loginRules = reactive<FormRules>({
-  email: [
-    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度至少为6位', trigger: 'blur' }
-  ]
-})
+const handleLogin = async () => {
+  isLoading.value = true
+  errorMessage.value = ''
 
-// 处理登录
-const handleSubmit = async () => {
-  if (!loginFormRef.value) return
-  
-  await loginFormRef.value.validate(async (valid) => {
-    if (!valid) return
-    
-    loading.value = true
-    
-    try {
-      const success = await userStore.login(loginForm)
-      
-      if (success) {
-        // 记住我功能
-        if (rememberMe.value) {
-          localStorage.setItem('rememberEmail', loginForm.email)
-        } else {
-          localStorage.removeItem('rememberEmail')
-        }
-        
-        // 跳转到目标页面或首页
-        const redirect = route.query.redirect as string || '/'
-        router.push(redirect)
-      }
-    } finally {
-      loading.value = false
-    }
-  })
-}
+  try {
+    await userStore.login({
+      email: formData.email,
+      password: formData.password,
+      rememberMe: rememberMe.value
+    })
 
-// OAuth 登录
-const handleOAuthLogin = (provider: 'google' | 'discord') => {
-  // 跳转到 OAuth 授权页面
-  const oauthUrl = `${import.meta.env.VITE_API_URL}/auth/oauth/${provider}`
-  window.location.href = oauthUrl
-}
-
-// 初始化
-onMounted(() => {
-  // 恢复记住的邮箱
-  const rememberedEmail = localStorage.getItem('rememberEmail')
-  if (rememberedEmail) {
-    loginForm.email = rememberedEmail
-    rememberMe.value = true
+    const redirectPath = route.query.redirect as string || '/'
+    await router.push(redirectPath)
+  } catch (error: any) {
+    errorMessage.value = error.response?.data?.message || '登录失败，请检查邮箱和密码'
+  } finally {
+    isLoading.value = false
   }
-})
+}
+
+const handleGoogleLogin = async () => {
+  try {
+    window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`
+  } catch (error) {
+    errorMessage.value = 'Google登录失败'
+  }
+}
+
+const handleGithubLogin = async () => {
+  try {
+    window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/github`
+  } catch (error) {
+    errorMessage.value = 'GitHub登录失败'
+  }
+}
 </script>
-
-<style lang="scss" scoped>
-.auth-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, $bg-primary 0%, darken($bg-primary, 5%) 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.auth-container {
-  width: 100%;
-  max-width: 420px;
-  padding: $spacing-4;
-  position: relative;
-  z-index: 1;
-}
-
-.auth-card {
-  background: rgba($bg-card, 0.9);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba($bg-tertiary, 0.5);
-  border-radius: $border-radius-xl;
-  padding: $spacing-10 $spacing-8;
-  box-shadow: $shadow-xl;
-}
-
-.auth-header {
-  text-align: center;
-  margin-bottom: $spacing-8;
-  
-  .logo-wrapper {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto $spacing-4;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, $primary-color, $secondary-color);
-    border-radius: $border-radius-lg;
-    box-shadow: $glow-primary;
-    
-    .logo {
-      width: 50px;
-      height: 50px;
-      filter: brightness(0) invert(1);
-    }
-  }
-  
-  .title {
-    font-size: $font-size-3xl;
-    font-weight: $font-weight-bold;
-    margin: 0 0 $spacing-2;
-    font-family: $font-family-serif;
-  }
-  
-  .subtitle {
-    color: $text-secondary;
-    font-size: $font-size-base;
-    margin: 0;
-  }
-}
-
-.auth-form {
-  .el-input {
-    :deep(.el-input__wrapper) {
-      background: rgba($bg-secondary, 0.5);
-      border-color: $bg-tertiary;
-      box-shadow: none;
-      
-      &:hover {
-        border-color: rgba($primary-color, 0.3);
-      }
-      
-      &.is-focus {
-        border-color: $primary-color;
-      }
-    }
-    
-    :deep(.el-input__inner) {
-      color: $text-primary;
-      
-      &::placeholder {
-        color: $text-muted;
-      }
-    }
-  }
-  
-  .form-options {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    
-    .el-checkbox {
-      :deep(.el-checkbox__label) {
-        color: $text-secondary;
-      }
-    }
-    
-    .link {
-      color: $primary-color;
-      font-size: $font-size-sm;
-      text-decoration: none;
-      transition: color $transition-fast;
-      
-      &:hover {
-        color: $primary-light;
-      }
-    }
-  }
-  
-  .submit-button {
-    width: 100%;
-    height: 44px;
-    font-size: $font-size-base;
-    font-weight: $font-weight-medium;
-    background: linear-gradient(135deg, $primary-color, $primary-dark);
-    border: none;
-    
-    &:hover {
-      background: linear-gradient(135deg, $primary-light, $primary-color);
-    }
-  }
-}
-
-.divider {
-  text-align: center;
-  margin: $spacing-6 0;
-  position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: $bg-tertiary;
-  }
-  
-  span {
-    position: relative;
-    background: $bg-card;
-    padding: 0 $spacing-4;
-    color: $text-tertiary;
-    font-size: $font-size-sm;
-  }
-}
-
-.oauth-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-3;
-  
-  .oauth-button {
-    width: 100%;
-    height: 44px;
-    background: rgba($bg-secondary, 0.5);
-    border: 1px solid $bg-tertiary;
-    color: $text-primary;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: $spacing-2;
-    transition: all $transition-base;
-    
-    &:hover {
-      background: rgba($bg-secondary, 0.8);
-      border-color: rgba($primary-color, 0.3);
-      transform: translateY(-1px);
-    }
-    
-    .oauth-icon {
-      width: 20px;
-      height: 20px;
-    }
-  }
-}
-
-.auth-footer {
-  text-align: center;
-  margin-top: $spacing-6;
-  color: $text-secondary;
-  font-size: $font-size-sm;
-  
-  .link {
-    color: $primary-color;
-    text-decoration: none;
-    margin-left: $spacing-1;
-    font-weight: $font-weight-medium;
-    
-    &:hover {
-      color: $primary-light;
-    }
-  }
-}
-
-.auth-decoration {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.floating-shape {
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0.1;
-  animation: float 20s ease-in-out infinite;
-  
-  &.shape-1 {
-    width: 300px;
-    height: 300px;
-    background: linear-gradient(135deg, $primary-color, $secondary-color);
-    top: -150px;
-    left: -150px;
-    animation-duration: 25s;
-  }
-  
-  &.shape-2 {
-    width: 200px;
-    height: 200px;
-    background: linear-gradient(135deg, $secondary-color, $primary-color);
-    bottom: -100px;
-    right: -100px;
-    animation-duration: 20s;
-    animation-delay: -5s;
-  }
-  
-  &.shape-3 {
-    width: 150px;
-    height: 150px;
-    background: linear-gradient(135deg, $primary-light, $secondary-light);
-    top: 50%;
-    right: -75px;
-    animation-duration: 22s;
-    animation-delay: -10s;
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  25% {
-    transform: translate(30px, -30px) rotate(90deg);
-  }
-  50% {
-    transform: translate(-20px, 20px) rotate(180deg);
-  }
-  75% {
-    transform: translate(-30px, -10px) rotate(270deg);
-  }
-}
-
-// 响应式设计
-@include respond-below($breakpoint-sm) {
-  .auth-container {
-    padding: $spacing-2;
-  }
-  
-  .auth-card {
-    padding: $spacing-6 $spacing-4;
-  }
-  
-  .auth-header {
-    .title {
-      font-size: $font-size-2xl;
-    }
-  }
-}
-</style>

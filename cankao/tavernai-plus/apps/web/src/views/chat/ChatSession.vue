@@ -1,1034 +1,308 @@
 <template>
-  <div class="chat-session-page">
-    <div class="chat-container">
-      <!-- 侧边栏 -->
-      <div class="chat-sidebar" :class="{ collapsed: sidebarCollapsed }">
-        <div class="sidebar-header">
-          <h3>对话历史</h3>
-          <el-button 
-            circle 
-            size="small" 
-            @click="sidebarCollapsed = !sidebarCollapsed"
-          >
-            <el-icon><ArrowLeft v-if="!sidebarCollapsed" /><ArrowRight v-else /></el-icon>
-          </el-button>
-        </div>
-        
-        <div class="session-list">
-          <div 
-            v-for="session in sessions" 
-            :key="session.id"
-            class="session-item"
-            :class="{ active: session.id === currentSessionId }"
-            @click="switchSession(session.id)"
-          >
-            <div class="session-info">
-              <h4>{{ session.title || '新对话' }}</h4>
-              <p>{{ formatTime(session.lastMessageAt) }}</p>
-            </div>
-            <el-dropdown trigger="click" @command="handleSessionCommand($event, session)">
-              <el-button circle size="small" class="session-menu">
-                <el-icon><More /></el-icon>
-              </el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="rename">
-                    <el-icon><Edit /></el-icon> 重命名
-                  </el-dropdown-item>
-                  <el-dropdown-item command="archive">
-                    <el-icon><FolderAdd /></el-icon> 归档
-                  </el-dropdown-item>
-                  <el-dropdown-item command="delete" divided>
-                    <el-icon><Delete /></el-icon> 删除
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
+  <div class="flex h-screen bg-gray-100">
+    <!-- 侧边栏 -->
+    <div class="w-80 bg-white border-r flex flex-col">
+      <!-- 角色信息 -->
+      <div class="p-4 border-b">
+        <div class="flex items-center space-x-3">
+          <img
+            :src="character?.avatar || '/default-avatar.png'"
+            :alt="character?.name"
+            class="w-12 h-12 rounded-full"
+          />
+          <div class="flex-1">
+            <h2 class="font-semibold">{{ character?.name }}</h2>
+            <p class="text-sm text-gray-500">{{ character?.creator }}</p>
           </div>
-        </div>
-        
-        <div class="sidebar-footer">
-          <el-button type="primary" @click="createNewSession" block>
-            <el-icon><Plus /></el-icon> 新建对话
-          </el-button>
         </div>
       </div>
-      
-      <!-- 主聊天区域 -->
-      <div class="chat-main">
-        <div class="chat-header">
-          <div class="header-left">
-            <div class="character-info" v-if="currentCharacter">
-              <img 
-                :src="currentCharacter.avatar || '/images/default-avatar.png'" 
-                :alt="currentCharacter.name"
-                class="character-avatar"
-              />
-              <div>
-                <h3>{{ currentCharacter.name }}</h3>
-                <p>{{ currentSession?.messageCount || 0 }} 条消息</p>
-              </div>
-            </div>
+
+      <!-- 设置面板 -->
+      <div class="flex-1 overflow-y-auto p-4">
+        <div class="space-y-4">
+          <!-- 模型选择 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">AI模型</label>
+            <select v-model="settings.model" class="w-full px-3 py-2 border rounded-lg">
+              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+              <option value="gpt-4">GPT-4</option>
+              <option value="claude-2">Claude 2</option>
+            </select>
           </div>
-          
-          <div class="header-actions">
-            <el-button circle @click="showSettingsDialog = true">
-              <el-icon><Setting /></el-icon>
-            </el-button>
-            <el-button circle @click="clearContext">
-              <el-icon><Refresh /></el-icon>
-            </el-button>
-            <el-button circle @click="exportChat">
-              <el-icon><Download /></el-icon>
-            </el-button>
-          </div>
-        </div>
-        
-        <div class="chat-messages" ref="messagesContainer">
-          <div class="messages-wrapper">
-            <!-- 欢迎消息 -->
-            <div class="welcome-message" v-if="messages.length === 0 && currentCharacter">
-              <img 
-                :src="currentCharacter.avatar || '/images/default-avatar.png'" 
-                :alt="currentCharacter.name"
-                class="welcome-avatar"
-              />
-              <h2>开始与 {{ currentCharacter.name }} 对话</h2>
-              <p>{{ currentCharacter.description }}</p>
-              <div class="quick-actions" v-if="currentCharacter.firstMessage">
-                <el-button @click="sendFirstMessage">发送初始消息</el-button>
-              </div>
-            </div>
-            
-            <!-- 消息列表 -->
-            <div 
-              v-for="(message, index) in messages" 
-              :key="message.id"
-              class="message-item"
-              :class="[message.role]"
-            >
-              <div class="message-avatar">
-                <img 
-                  v-if="message.role === 'assistant'"
-                  :src="currentCharacter?.avatar || '/images/default-avatar.png'" 
-                  :alt="currentCharacter?.name"
-                />
-                <img 
-                  v-else
-                  :src="userStore.user?.avatar || '/images/default-user.png'" 
-                  :alt="userStore.user?.username"
-                />
-              </div>
-              
-              <div class="message-content">
-                <div class="message-header">
-                  <span class="message-sender">
-                    {{ message.role === 'assistant' ? currentCharacter?.name : userStore.user?.username }}
-                  </span>
-                  <span class="message-time">{{ formatTime(message.createdAt) }}</span>
-                </div>
-                
-                <div class="message-text" v-html="renderMarkdown(message.content)"></div>
-                
-                <div class="message-actions">
-                  <el-button 
-                    v-if="message.role === 'assistant'"
-                    size="small" 
-                    text 
-                    @click="regenerateMessage(message)"
-                  >
-                    <el-icon><RefreshRight /></el-icon> 重新生成
-                  </el-button>
-                  <el-button 
-                    size="small" 
-                    text 
-                    @click="editMessage(message, index)"
-                  >
-                    <el-icon><Edit /></el-icon> 编辑
-                  </el-button>
-                  <el-button 
-                    size="small" 
-                    text 
-                    @click="deleteMessage(message, index)"
-                  >
-                    <el-icon><Delete /></el-icon> 删除
-                  </el-button>
-                </div>
-              </div>
-            </div>
-            
-            <!-- 生成中指示器 -->
-            <div v-if="isGenerating" class="message-item assistant generating">
-              <div class="message-avatar">
-                <img 
-                  :src="currentCharacter?.avatar || '/images/default-avatar.png'" 
-                  :alt="currentCharacter?.name"
-                />
-              </div>
-              <div class="message-content">
-                <div class="typing-indicator">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 输入区域 -->
-        <div class="chat-input">
-          <div class="input-wrapper">
-            <el-input
-              v-model="inputMessage"
-              type="textarea"
-              :rows="3"
-              placeholder="输入消息... (Ctrl+Enter 发送)"
-              @keydown.ctrl.enter="sendMessage"
-              :disabled="isGenerating"
-              resize="none"
+
+          <!-- 温度设置 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              创造性 ({{ settings.temperature }})
+            </label>
+            <input
+              v-model="settings.temperature"
+              type="range"
+              min="0"
+              max="2"
+              step="0.1"
+              class="w-full"
             />
-            
-            <div class="input-actions">
-              <el-button 
-                type="primary" 
-                @click="sendMessage"
-                :loading="isGenerating"
-                :disabled="!inputMessage.trim()"
-              >
-                <el-icon v-if="!isGenerating"><Promotion /></el-icon>
-                <span>{{ isGenerating ? '生成中...' : '发送' }}</span>
-              </el-button>
-              
-              <el-button 
-                v-if="isGenerating"
-                @click="stopGeneration"
-                type="danger"
-              >
-                <el-icon><VideoPause /></el-icon> 停止
-              </el-button>
+          </div>
+
+          <!-- 最大令牌 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              最大长度 ({{ settings.maxTokens }})
+            </label>
+            <input
+              v-model="settings.maxTokens"
+              type="range"
+              min="100"
+              max="4000"
+              step="100"
+              class="w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- 操作按钮 -->
+      <div class="p-4 border-t space-y-2">
+        <button
+          @click="exportChat"
+          class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+        >
+          导出对话
+        </button>
+        <button
+          @click="clearChat"
+          class="w-full px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+        >
+          清空对话
+        </button>
+      </div>
+    </div>
+
+    <!-- 主聊天区域 -->
+    <div class="flex-1 flex flex-col">
+      <!-- 聊天消息 -->
+      <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4">
+        <div v-if="messages.length === 0" class="text-center text-gray-500 mt-8">
+          <p>开始你的对话吧！</p>
+        </div>
+
+        <div v-for="message in messages" :key="message.id" class="mb-4">
+          <div :class="[
+            'flex',
+            message.role === 'user' ? 'justify-end' : 'justify-start'
+          ]">
+            <div :class="[
+              'max-w-[70%] rounded-lg px-4 py-2',
+              message.role === 'user'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-white border'
+            ]">
+              <div class="whitespace-pre-wrap">{{ message.content }}</div>
+              <div :class="[
+                'text-xs mt-1',
+                message.role === 'user' ? 'text-indigo-200' : 'text-gray-400'
+              ]">
+                {{ formatTime(message.timestamp) }}
+              </div>
             </div>
           </div>
-          
-          <div class="input-toolbar">
-            <span class="token-count">{{ currentTokens }}/{{ maxTokens }} tokens</span>
-            <span class="model-info">{{ currentSession?.model || 'gpt-3.5-turbo' }}</span>
+        </div>
+
+        <!-- 输入中指示器 -->
+        <div v-if="isTyping" class="flex justify-start mb-4">
+          <div class="bg-white border rounded-lg px-4 py-2">
+            <div class="flex space-x-1">
+              <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+              <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+              <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 输入区域 -->
+      <div class="border-t bg-white p-4">
+        <div class="flex space-x-2">
+          <textarea
+            v-model="inputMessage"
+            @keydown.enter.prevent="sendMessage"
+            placeholder="输入消息..."
+            class="flex-1 px-4 py-2 border rounded-lg resize-none"
+            rows="3"
+          ></textarea>
+          <div class="flex flex-col space-y-2">
+            <button
+              @click="sendMessage"
+              :disabled="!inputMessage.trim() || isLoading"
+              class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+            >
+              发送
+            </button>
+            <button
+              v-if="isLoading"
+              @click="stopGeneration"
+              class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              停止
+            </button>
           </div>
         </div>
       </div>
     </div>
-    
-    <!-- 设置对话框 -->
-    <el-dialog 
-      v-model="showSettingsDialog" 
-      title="对话设置"
-      width="600px"
-    >
-      <el-form label-width="100px">
-        <el-form-item label="模型">
-          <el-select v-model="chatSettings.model" style="width: 100%">
-            <el-option label="GPT-4" value="gpt-4" />
-            <el-option label="GPT-3.5" value="gpt-3.5-turbo" />
-            <el-option label="Claude 3" value="claude-3" />
-            <el-option label="Gemini Pro" value="gemini-pro" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="温度">
-          <el-slider 
-            v-model="chatSettings.temperature" 
-            :min="0" 
-            :max="2" 
-            :step="0.1"
-            show-input
-          />
-        </el-form-item>
-        
-        <el-form-item label="最大长度">
-          <el-input-number 
-            v-model="chatSettings.maxTokens" 
-            :min="100" 
-            :max="4000" 
-            :step="100"
-          />
-        </el-form-item>
-        
-        <el-form-item label="系统提示">
-          <el-input 
-            v-model="chatSettings.systemPrompt" 
-            type="textarea" 
-            :rows="4"
-          />
-        </el-form-item>
-      </el-form>
-      
-      <template #footer>
-        <el-button @click="showSettingsDialog = false">取消</el-button>
-        <el-button type="primary" @click="saveSettings">保存设置</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  ArrowLeft, ArrowRight, More, Plus, Edit, Delete, FolderAdd,
-  Setting, Refresh, Download, RefreshRight, Promotion, VideoPause
-} from '@element-plus/icons-vue'
-import { marked } from 'marked'
-import DOMPurify from 'dompurify'
-import { chatService } from '@/services/chat'
-import { characterService } from '@/services/character'
-import { useUserStore } from '@/stores/user'
-import { useWebSocket } from '@/composables/useWebSocket'
-import type { ChatSession, Message } from '@/types/chat'
-import type { Character } from '@/types/character'
+import { ref, reactive, onMounted, nextTick, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import axios from '@/utils/axios'
 
 const route = useRoute()
-const router = useRouter()
-const userStore = useUserStore()
-const { connect, disconnect, send, on, off } = useWebSocket()
 
-// 状态
-const currentSessionId = ref<string>('')
-const currentSession = ref<ChatSession | null>(null)
-const currentCharacter = ref<Character | null>(null)
-const sessions = ref<ChatSession[]>([])
+interface Message {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
+}
+
+const character = ref<any>(null)
 const messages = ref<Message[]>([])
 const inputMessage = ref('')
-const isGenerating = ref(false)
-const sidebarCollapsed = ref(false)
-const showSettingsDialog = ref(false)
+const isLoading = ref(false)
+const isTyping = ref(false)
 const messagesContainer = ref<HTMLElement>()
 
-// 设置
-const chatSettings = ref({
+const settings = reactive({
   model: 'gpt-3.5-turbo',
   temperature: 0.7,
-  maxTokens: 1000,
-  systemPrompt: ''
+  maxTokens: 1000
 })
 
-// 计算属性
-const currentTokens = computed(() => {
-  return messages.value.reduce((sum, msg) => sum + msg.tokens, 0)
-})
-
-const maxTokens = computed(() => chatSettings.value.maxTokens)
-
-// 格式化时间
-const formatTime = (time: string | null) => {
-  if (!time) return ''
+const formatTime = (time: Date) => {
   const date = new Date(time)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  
-  if (diff < 60000) return '刚刚'
-  if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`
-  return date.toLocaleDateString()
+  return date.toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
-// 渲染 Markdown
-const renderMarkdown = (text: string) => {
-  const html = marked(text)
-  return DOMPurify.sanitize(html)
-}
-
-// 加载会话列表
-const loadSessions = async () => {
-  try {
-    sessions.value = await chatService.getSessions()
-  } catch (error) {
-    console.error('加载会话列表失败:', error)
-  }
-}
-
-// 加载当前会话
-const loadSession = async (sessionId: string) => {
-  try {
-    currentSession.value = await chatService.getSession(sessionId)
-    messages.value = await chatService.getMessages(sessionId)
-    
-    // 加载角色信息
-    if (currentSession.value.characterIds.length > 0) {
-      currentCharacter.value = await characterService.getCharacter(
-        currentSession.value.characterIds[0]
-      )
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
     }
-    
-    // 加入 WebSocket 房间
-    send('join', { sessionId })
-    
-    // 滚动到底部
-    await nextTick()
-    scrollToBottom()
-  } catch (error) {
-    console.error('加载会话失败:', error)
-    ElMessage.error('加载会话失败')
-  }
+  })
 }
 
-// 切换会话
-const switchSession = (sessionId: string) => {
-  router.push(`/chat/${sessionId}`)
-}
-
-// 创建新会话
-const createNewSession = () => {
-  router.push('/chat')
-}
-
-// 发送消息
 const sendMessage = async () => {
-  if (!inputMessage.value.trim() || isGenerating.value) return
-  
-  const content = inputMessage.value
+  if (!inputMessage.value.trim() || isLoading.value) return
+
+  const userMessage: Message = {
+    id: Date.now().toString(),
+    role: 'user',
+    content: inputMessage.value,
+    timestamp: new Date()
+  }
+
+  messages.value.push(userMessage)
+  const messageContent = inputMessage.value
   inputMessage.value = ''
-  
-  try {
-    // 发送用户消息
-    const userMessage = await chatService.sendMessage(currentSessionId.value, {
-      content,
-      characterId: currentCharacter.value?.id
-    })
-    
-    messages.value.push(userMessage)
-    isGenerating.value = true
-    
-    // 滚动到底部
-    await nextTick()
-    scrollToBottom()
-  } catch (error) {
-    console.error('发送消息失败:', error)
-    ElMessage.error('发送消息失败')
-    isGenerating.value = false
-  }
-}
+  scrollToBottom()
 
-// 发送初始消息
-const sendFirstMessage = () => {
-  if (currentCharacter.value?.firstMessage) {
-    messages.value.push({
-      id: 'first',
-      sessionId: currentSessionId.value,
-      characterId: currentCharacter.value.id,
+  isLoading.value = true
+  isTyping.value = true
+
+  try {
+    const response = await axios.post(`/api/chats/${route.params.sessionId}/messages`, {
+      content: messageContent,
+      settings
+    })
+
+    isTyping.value = false
+
+    const assistantMessage: Message = {
+      id: response.data.id,
       role: 'assistant',
-      content: currentCharacter.value.firstMessage,
-      tokens: 0,
-      edited: false,
-      deleted: false,
-      character: currentCharacter.value,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    })
+      content: response.data.content,
+      timestamp: new Date(response.data.timestamp)
+    }
+
+    messages.value.push(assistantMessage)
     scrollToBottom()
-  }
-}
-
-// 重新生成消息
-const regenerateMessage = async (message: Message) => {
-  try {
-    isGenerating.value = true
-    const newMessage = await chatService.regenerateMessage(
-      currentSessionId.value,
-      message.id
-    )
-    
-    const index = messages.value.findIndex(m => m.id === message.id)
-    if (index !== -1) {
-      messages.value[index] = newMessage
-    }
   } catch (error) {
-    console.error('重新生成失败:', error)
-    ElMessage.error('重新生成失败')
+    console.error('Failed to send message:', error)
+    isTyping.value = false
+
+    // 模拟回复
+    setTimeout(() => {
+      const assistantMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: '抱歉，我现在无法响应。请稍后再试。',
+        timestamp: new Date()
+      }
+      messages.value.push(assistantMessage)
+      scrollToBottom()
+    }, 1000)
   } finally {
-    isGenerating.value = false
+    isLoading.value = false
   }
 }
 
-// 编辑消息
-const editMessage = async (message: Message, index: number) => {
-  const { value } = await ElMessageBox.prompt('编辑消息', '编辑', {
-    inputType: 'textarea',
-    inputValue: message.content,
-    confirmButtonText: '保存',
-    cancelButtonText: '取消'
-  })
-  
-  if (value) {
-    try {
-      const updatedMessage = await chatService.editMessage(
-        currentSessionId.value,
-        message.id,
-        value
-      )
-      messages.value[index] = updatedMessage
-    } catch (error) {
-      console.error('编辑失败:', error)
-      ElMessage.error('编辑失败')
-    }
-  }
+const stopGeneration = () => {
+  // 实现停止生成逻辑
+  isLoading.value = false
+  isTyping.value = false
 }
 
-// 删除消息
-const deleteMessage = async (message: Message, index: number) => {
-  await ElMessageBox.confirm('确定删除这条消息吗？', '删除确认', {
-    type: 'warning'
-  })
-  
-  try {
-    await chatService.deleteMessage(currentSessionId.value, message.id)
-    messages.value.splice(index, 1)
-  } catch (error) {
-    console.error('删除失败:', error)
-    ElMessage.error('删除失败')
-  }
-}
-
-// 停止生成
-const stopGeneration = async () => {
-  try {
-    await chatService.stopGeneration(currentSessionId.value)
-    isGenerating.value = false
-  } catch (error) {
-    console.error('停止失败:', error)
-  }
-}
-
-// 清空上下文
-const clearContext = async () => {
-  await ElMessageBox.confirm(
-    '确定要清空对话上下文吗？这将重置对话但保留历史记录。',
-    '清空确认',
-    { type: 'warning' }
-  )
-  
-  try {
-    await chatService.clearContext(currentSessionId.value)
-    ElMessage.success('上下文已清空')
-  } catch (error) {
-    console.error('清空失败:', error)
-    ElMessage.error('清空失败')
-  }
-}
-
-// 导出聊天
 const exportChat = () => {
-  const content = messages.value
-    .map(m => `${m.role === 'user' ? '用户' : currentCharacter.value?.name}: ${m.content}`)
-    .join('\n\n')
-  
-  const blob = new Blob([content], { type: 'text/plain' })
+  const chatData = {
+    character: character.value,
+    messages: messages.value,
+    exportedAt: new Date()
+  }
+
+  const blob = new Blob([JSON.stringify(chatData, null, 2)], {
+    type: 'application/json'
+  })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `chat-${currentSessionId.value}.txt`
+  a.download = `chat-${character.value?.name}-${Date.now()}.json`
   a.click()
   URL.revokeObjectURL(url)
 }
 
-// 保存设置
-const saveSettings = async () => {
+const clearChat = () => {
+  if (confirm('确定要清空所有对话吗？')) {
+    messages.value = []
+  }
+}
+
+const fetchChatData = async () => {
   try {
-    await chatService.updateSessionSettings(currentSessionId.value, chatSettings.value)
-    showSettingsDialog.value = false
-    ElMessage.success('设置已保存')
+    const response = await axios.get(`/api/chats/${route.params.sessionId}`)
+    character.value = response.data.character
+    messages.value = response.data.messages
   } catch (error) {
-    console.error('保存失败:', error)
-    ElMessage.error('保存失败')
-  }
-}
-
-// 处理会话菜单命令
-const handleSessionCommand = async (command: string, session: ChatSession) => {
-  switch (command) {
-    case 'rename':
-      const { value } = await ElMessageBox.prompt('重命名会话', '重命名', {
-        inputValue: session.title || '',
-        confirmButtonText: '确定',
-        cancelButtonText: '取消'
-      })
-      // TODO: 实现重命名
-      break
-    case 'archive':
-      await chatService.archiveSession(session.id)
-      ElMessage.success('已归档')
-      loadSessions()
-      break
-    case 'delete':
-      await ElMessageBox.confirm('确定删除这个会话吗？', '删除确认', {
-        type: 'warning'
-      })
-      await chatService.deleteSession(session.id)
-      ElMessage.success('已删除')
-      loadSessions()
-      if (session.id === currentSessionId.value) {
-        router.push('/chat')
-      }
-      break
-  }
-}
-
-// 滚动到底部
-const scrollToBottom = () => {
-  if (messagesContainer.value) {
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
-  }
-}
-
-// WebSocket 事件处理
-const handleWebSocketMessage = (data: any) => {
-  if (data.sessionId !== currentSessionId.value) return
-  
-  if (data.type === 'assistant_message') {
-    // 完整消息
-    messages.value.push(data.message)
-    isGenerating.value = false
-    scrollToBottom()
-  } else if (data.type === 'user_message') {
-    // 用户消息（其他客户端发送的）
-    const exists = messages.value.find(m => m.id === data.message.id)
-    if (!exists) {
-      messages.value.push(data.message)
-      scrollToBottom()
+    console.error('Failed to fetch chat data:', error)
+    // 模拟数据
+    character.value = {
+      name: '助手',
+      avatar: '',
+      creator: '系统'
     }
+    messages.value = []
   }
 }
 
-// 处理流式消息块
-const handleMessageChunk = (data: any) => {
-  if (data.sessionId !== currentSessionId.value) return
-  
-  // 查找或创建临时消息
-  let message = messages.value.find(m => m.id === data.messageId)
-  if (!message) {
-    // 创建临时消息
-    message = {
-      id: data.messageId,
-      sessionId: data.sessionId,
-      role: 'assistant',
-      content: '',
-      tokens: 0,
-      edited: false,
-      deleted: false,
-      character: currentCharacter.value,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-    messages.value.push(message)
-  }
-  
-  // 更新内容
-  message.content = data.partial
+onMounted(() => {
+  fetchChatData()
+})
+
+watch(messages, () => {
   scrollToBottom()
-}
-
-// 监听路由变化
-watch(() => route.params.sessionId, (sessionId) => {
-  if (sessionId && typeof sessionId === 'string') {
-    currentSessionId.value = sessionId
-    loadSession(sessionId)
-  }
-}, { immediate: true })
-
-onMounted(async () => {
-  await loadSessions()
-  
-  // 连接 WebSocket
-  connect()
-  on('message', handleWebSocketMessage)
-  on('message_chunk', handleMessageChunk)
-  on('error', (data: any) => {
-    if (data.sessionId === currentSessionId.value) {
-      ElMessage.error(data.message || '发生错误')
-      isGenerating.value = false
-    }
-  })
 })
 </script>
-
-<style lang="scss" scoped>
-.chat-session-page {
-  height: 100vh;
-  background: #0f0f1a;
-}
-
-.chat-container {
-  display: flex;
-  height: 100%;
-}
-
-// 侧边栏样式
-.chat-sidebar {
-  width: 300px;
-  background: rgba(30, 30, 40, 0.8);
-  border-right: 1px solid rgba(139, 92, 246, 0.2);
-  display: flex;
-  flex-direction: column;
-  transition: width 0.3s;
-  
-  &.collapsed {
-    width: 0;
-    overflow: hidden;
-  }
-  
-  .sidebar-header {
-    padding: 20px;
-    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    
-    h3 {
-      margin: 0;
-      font-size: 18px;
-      color: #f3f4f6;
-    }
-  }
-  
-  .session-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px;
-  }
-  
-  .session-item {
-    padding: 12px;
-    margin-bottom: 8px;
-    background: rgba(139, 92, 246, 0.1);
-    border: 1px solid transparent;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.3s;
-    
-    &:hover {
-      background: rgba(139, 92, 246, 0.2);
-      border-color: rgba(139, 92, 246, 0.3);
-    }
-    
-    &.active {
-      background: rgba(139, 92, 246, 0.3);
-      border-color: #8b5cf6;
-    }
-    
-    .session-info {
-      flex: 1;
-      min-width: 0;
-      
-      h4 {
-        margin: 0 0 4px;
-        font-size: 14px;
-        color: #f3f4f6;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      
-      p {
-        margin: 0;
-        font-size: 12px;
-        color: #9ca3af;
-      }
-    }
-    
-    .session-menu {
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    
-    &:hover .session-menu {
-      opacity: 1;
-    }
-  }
-  
-  .sidebar-footer {
-    padding: 20px;
-    border-top: 1px solid rgba(139, 92, 246, 0.2);
-  }
-}
-
-// 主聊天区域
-.chat-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.chat-header {
-  padding: 20px;
-  background: rgba(30, 30, 40, 0.8);
-  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  
-  .header-left {
-    display: flex;
-    align-items: center;
-  }
-  
-  .character-info {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    
-    .character-avatar {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid rgba(139, 92, 246, 0.3);
-    }
-    
-    h3 {
-      margin: 0;
-      font-size: 18px;
-      color: #f3f4f6;
-    }
-    
-    p {
-      margin: 0;
-      font-size: 14px;
-      color: #9ca3af;
-    }
-  }
-  
-  .header-actions {
-    display: flex;
-    gap: 10px;
-  }
-}
-
-// 消息区域
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  
-  .messages-wrapper {
-    max-width: 900px;
-    margin: 0 auto;
-  }
-  
-  .welcome-message {
-    text-align: center;
-    padding: 60px 20px;
-    
-    .welcome-avatar {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      margin-bottom: 20px;
-      border: 3px solid rgba(139, 92, 246, 0.3);
-    }
-    
-    h2 {
-      margin: 0 0 10px;
-      font-size: 28px;
-      color: #f3f4f6;
-    }
-    
-    p {
-      margin: 0 0 30px;
-      font-size: 16px;
-      color: #9ca3af;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-  }
-  
-  .message-item {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 25px;
-    
-    &.user {
-      flex-direction: row-reverse;
-      
-      .message-content {
-        background: rgba(139, 92, 246, 0.2);
-        border-color: rgba(139, 92, 246, 0.3);
-      }
-    }
-    
-    &.assistant {
-      .message-content {
-        background: rgba(30, 30, 40, 0.8);
-        border-color: rgba(139, 92, 246, 0.2);
-      }
-    }
-    
-    &.generating .message-content {
-      padding: 20px;
-    }
-    
-    .message-avatar {
-      flex-shrink: 0;
-      
-      img {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
-    }
-    
-    .message-content {
-      max-width: 70%;
-      padding: 15px;
-      border: 1px solid;
-      border-radius: 12px;
-      
-      .message-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        
-        .message-sender {
-          font-weight: 600;
-          color: #c084fc;
-          font-size: 14px;
-        }
-        
-        .message-time {
-          font-size: 12px;
-          color: #9ca3af;
-        }
-      }
-      
-      .message-text {
-        color: #f3f4f6;
-        line-height: 1.6;
-        
-        :deep(p) {
-          margin: 0 0 10px;
-          
-          &:last-child {
-            margin-bottom: 0;
-          }
-        }
-        
-        :deep(code) {
-          background: rgba(139, 92, 246, 0.1);
-          padding: 2px 6px;
-          border-radius: 4px;
-          font-family: 'Monaco', monospace;
-        }
-        
-        :deep(pre) {
-          background: rgba(0, 0, 0, 0.3);
-          padding: 15px;
-          border-radius: 8px;
-          overflow-x: auto;
-          
-          code {
-            background: none;
-            padding: 0;
-          }
-        }
-      }
-      
-      .message-actions {
-        margin-top: 10px;
-        opacity: 0;
-        transition: opacity 0.3s;
-        display: flex;
-        gap: 10px;
-      }
-    }
-    
-    &:hover .message-actions {
-      opacity: 1;
-    }
-  }
-  
-  .typing-indicator {
-    display: flex;
-    gap: 5px;
-    
-    span {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #8b5cf6;
-      animation: typing 1.4s infinite;
-      
-      &:nth-child(2) {
-        animation-delay: 0.2s;
-      }
-      
-      &:nth-child(3) {
-        animation-delay: 0.4s;
-      }
-    }
-  }
-}
-
-@keyframes typing {
-  0%, 60%, 100% {
-    opacity: 0.3;
-    transform: scale(0.8);
-  }
-  30% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-// 输入区域
-.chat-input {
-  padding: 20px;
-  background: rgba(30, 30, 40, 0.8);
-  border-top: 1px solid rgba(139, 92, 246, 0.2);
-  
-  .input-wrapper {
-    max-width: 900px;
-    margin: 0 auto;
-    display: flex;
-    gap: 15px;
-    align-items: flex-end;
-    
-    .el-textarea {
-      flex: 1;
-      
-      :deep(.el-textarea__inner) {
-        background: rgba(139, 92, 246, 0.1);
-        border-color: rgba(139, 92, 246, 0.3);
-        color: #f3f4f6;
-        
-        &:focus {
-          border-color: #8b5cf6;
-        }
-      }
-    }
-    
-    .input-actions {
-      display: flex;
-      gap: 10px;
-    }
-  }
-  
-  .input-toolbar {
-    margin-top: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 900px;
-    margin-left: auto;
-    margin-right: auto;
-    
-    span {
-      font-size: 12px;
-      color: #9ca3af;
-    }
-  }
-}
-</style>

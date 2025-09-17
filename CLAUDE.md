@@ -1,176 +1,102 @@
-# CLAUDE.md
+# Claude 开发指导文档
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## 项目核心原则
 
-## 项目概述
+### 🎯 生产就绪开发原则
+**重要**: 整个开发过程以上线为目标，不允许使用模拟数据或临时方案。
 
-SillyTavern 是一个功能强大的 LLM 前端应用，专为高级用户设计，提供角色扮演、对话管理和多 AI 提供商集成。
+1. **真实数据原则**
+   - ❌ 禁止使用模拟数据、mock数据、假数据
+   - ✅ 数据库缺少内容时，生成真实的游戏数据作为种子数据
+   - ✅ 所有API端点必须基于真实数据库查询
+   - ✅ 创建真实的角色、故事书、用户等基础数据
 
-## 开发命令
+2. **问题解决文档化**
+   - 每次解决问题都必须记录在`问题解决文档.md`中
+   - 包含问题描述、解决方案、影响文件、代码示例
+   - 防止反复修改导致回归错误
+   - 为后续开发提供重要参考资料
 
-### 启动与运行
-```bash
-# 安装依赖
-npm install
+3. **代码质量标准**
+   - 所有TypeScript错误必须修复，不允许跳过
+   - 遵循现有项目架构和代码风格
+   - 每次修改前充分理解现有代码
+   - 确保所有功能在生产环境标准下工作
 
-# 启动服务器 (默认端口 8000)
-npm start
+## 项目架构
 
-# 调试模式
-npm run debug
+### 技术栈
+- **前端**: Vue 3 + TypeScript + Tailwind CSS + Vite
+- **后端**: Node.js + Express + TypeScript
+- **数据库**: SQLite (开发) + Prisma ORM
+- **构建工具**: Turbo (monorepo)
 
-# 全局访问模式（监听所有网络接口）
-npm run start:global
+### 核心功能
+这是一个AI角色扮演对话平台（云酒馆 TavernAI Plus），主要功能：
+- AI角色创建和管理
+- 角色对话和聊天
+- 角色市场和分享
+- 用户社区功能
 
-# 桌面版 (Electron)
-npm run start:electron
+## 开发工作流
 
-# 禁用 CSRF 保护（仅用于开发）
-npm run start:no-csrf
-```
+### 问题解决标准流程
+1. **问题识别**: 准确描述问题现象和影响范围
+2. **原因分析**: 找出问题根本原因，不只是表面症状
+3. **解决方案**: 制定符合生产标准的解决方案
+4. **代码实现**: 遵循项目架构和代码规范
+5. **文档记录**: 在`问题解决文档.md`中详细记录
+6. **验证测试**: 确保修复有效且不产生新问题
 
-### 代码质量
-```bash
-# 代码检查
-npm run lint
+### 数据库操作原则
+1. **种子数据生成**: 缺少数据时创建丰富的真实内容
+   - 角色: 创建多样化的AI角色（不同类型、风格、背景）
+   - 故事: 生成有趣的角色背景故事和对话场景
+   - 用户: 创建测试用户账户（符合真实使用场景）
 
-# 自动修复代码问题
-npm run lint:fix
-```
+2. **数据结构完整性**
+   - 确保所有外键关系正确
+   - 填充所有必需字段
+   - 创建合理的数据关联
 
-### 测试
-```bash
-# 进入测试目录并运行测试
-cd tests && npm test
-```
+### 代码修改原则
+1. **先读后写**: 充分理解现有代码再进行修改
+2. **最小化修改**: 只修改必要的部分，避免大范围重构
+3. **类型安全**: 修复所有TypeScript类型错误
+4. **向后兼容**: 确保修改不破坏现有功能
 
-### 插件管理
-```bash
-# 更新插件
-npm run plugins:update
+## 当前项目状态
 
-# 安装插件
-npm run plugins:install
-```
+### 已解决问题
+- ✅ 产品方向纠正（从工作流编辑器改为AI角色扮演平台）
+- ✅ 数据库配置修复（PostgreSQL → SQLite）
+- ✅ 前端API端口配置修复
+- ✅ 基础API端点添加
 
-## 核心架构
+### 正在解决
+- 🔄 TypeScript类型错误修复
+- 🔄 移除所有模拟数据，使用真实数据库
+- 🔄 创建丰富的种子数据
 
-### 目录结构
-- `src/` - 后端核心代码
-  - `endpoints/` - API 端点（43个端点文件）
-    - `backends/` - AI 提供商适配器（chat-completions.js 为统一接口）
-  - `middleware/` - Express 中间件（认证、代理、缓存等）
-  - `vectors/` - 向量数据库集成（支持8+提供商）
-  - `electron/` - 桌面版包装器
-- `public/` - 前端资源
-  - `scripts/` - 核心 JavaScript 模块（60+模块）
-    - `extensions/` - 内置扩展（14个扩展）
-  - `lib/` - 第三方库依赖
-- `default/` - 默认配置和预设
-  - `config.yaml` - 主配置文件
-  - `content/presets/` - AI 模型预设（40+预设）
-- `plugins/` - 服务器端插件（CommonJS 模块）
-- `data/` - 用户数据目录（运行时生成）
+### 待解决
+- ⏳ 数据库种子数据生成
+- ⏳ 用户认证流程完善
+- ⏳ UI界面最终调优
 
-### 关键技术决策
+## 重要提醒
 
-1. **服务器入口**: `server.js` → `src/server-main.js`
-2. **前端主控制器**: `public/script.js` (约2万行，管理60+模块)
-3. **AI 提供商统一接口**: `src/endpoints/backends/chat-completions.js`
-4. **密钥管理**: `src/endpoints/secrets.js` (支持60+服务商)
-5. **配置系统**: YAML 格式，支持环境变量覆盖
-6. **数据存储**: 基于文件系统，使用 node-persist
-7. **扩展机制**: 前端使用 ES6 模块 + manifest.json，后端使用 CommonJS
+⚠️ **绝对禁止的行为**:
+- 使用模拟数据、mock数据解决问题
+- 跳过TypeScript类型错误
+- 不记录问题解决过程
+- 破坏现有架构进行快速修复
 
-### API 端点模式
+✅ **推荐的行为**:
+- 创建真实、丰富的种子数据
+- 详细记录每次问题解决过程
+- 遵循生产环境开发标准
+- 确保代码质量和类型安全
 
-所有 API 端点遵循 RESTful 设计：
-- 路径模式: `/api/{resource}/{action}`
-- 认证: 支持 Basic Auth 和 API Token
-- 响应格式: JSON
-- 错误处理: 统一错误响应格式
+---
 
-### 前端扩展开发
-
-扩展位于 `public/scripts/extensions/`，每个扩展需要：
-1. 主 JS 文件 (index.js)
-2. manifest.json (元数据)
-3. 可选的 HTML/CSS 资源
-
-扩展生命周期：
-- `init()` - 初始化
-- `onEnable()` - 启用时
-- `onDisable()` - 禁用时
-
-### AI 提供商集成
-
-新增 AI 提供商步骤：
-1. 在 `src/endpoints/backends/` 创建适配器
-2. 实现 chat-completions 接口
-3. 在 `secrets.js` 注册密钥映射
-4. 前端在 `public/scripts/` 添加对应处理
-
-### 数据流
-
-```
-用户输入 → 前端 script.js → API 端点 → AI 提供商适配器 → 外部 AI API
-                ↑                                    ↓
-            响应渲染 ← 流式响应处理 ← Express 路由 ← API 响应
-```
-
-## 开发约定
-
-### 文件命名
-- 使用 kebab-case: `chat-completions.js`
-- 扩展使用目录名: `extensions/tts/index.js`
-
-### 代码风格
-- ES6+ 语法，Node.js 18+ 特性
-- 模块使用 ES6 import/export
-- 异步操作使用 async/await
-
-### 错误处理
-- 使用 try-catch 包装异步操作
-- 错误日志输出到 console.error
-- API 返回标准错误响应
-
-### 安全实践
-- 密钥存储在 `secrets.json`（自动生成）
-- 使用 write-file-atomic 确保数据一致性
-- 输入验证使用 express-validator
-
-## 常见开发任务
-
-### 添加新 API 端点
-1. 在 `src/endpoints/` 创建新文件
-2. 导出 router 对象
-3. 在 `src/server-main.js` 注册路由
-
-### 修改前端界面
-1. 核心逻辑在 `public/script.js`
-2. UI 组件在 `public/scripts/` 各模块
-3. 样式在 `public/css/`
-
-### 调试技巧
-- 使用 `npm run debug` 启用 Node.js 调试器
-- 浏览器开发者工具查看前端日志
-- 检查 `data/logs/` 目录的日志文件
-
-## 部署注意事项
-
-### 环境变量
-- `SILLY_TAVERN_PORT` - 服务器端口
-- `SILLY_TAVERN_DATA_ROOT` - 数据目录
-- `SILLY_TAVERN_PUBLIC_URL` - 公开访问 URL
-
-### Docker 部署
-```bash
-cd docker
-docker-compose up -d
-```
-
-### 生产环境配置
-1. 启用 HTTPS（使用反向代理）
-2. 配置 Basic Auth 或 API Token
-3. 限制 CORS 来源
-4. 启用访问日志
+*此文档随项目发展持续更新，确保开发团队始终遵循统一的高质量标准。*

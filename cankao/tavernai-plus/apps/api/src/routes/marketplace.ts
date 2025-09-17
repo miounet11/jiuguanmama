@@ -27,8 +27,9 @@ router.get('/characters', async (req: Request, res: Response) => {
     if (search) {
       where.OR = [
         { name: { contains: search as string, mode: 'insensitive' } },
-        { description: { contains: search as string, mode: 'insensitive' } },
-        { tags: { has: search as string } }
+        { description: { contains: search as string, mode: 'insensitive' } }
+        // TODO: Fix tag search for SQLite
+        // { tags: { has: search as string } }
       ]
     }
 
@@ -145,7 +146,11 @@ router.get('/recommended', authenticate, async (req: AuthRequest, res: Response)
     })
 
     const preferredCategories = [...new Set(recentChats.map(c => c.character.category))]
-    const preferredTags = [...new Set(recentChats.flatMap(c => c.character.tags))]
+    // Parse tags from JSON strings
+    const preferredTags = [...new Set(recentChats.flatMap(c => {
+      const tags = typeof c.character.tags === 'string' ? JSON.parse(c.character.tags) : c.character.tags
+      return Array.isArray(tags) ? tags : []
+    }))]
 
     // 基于偏好推荐角色
     const characters = await prisma.character.findMany({
@@ -153,8 +158,9 @@ router.get('/recommended', authenticate, async (req: AuthRequest, res: Response)
         isPublic: true,
         NOT: { creatorId: userId },
         OR: [
-          { category: { in: preferredCategories } },
-          { tags: { hasSome: preferredTags } }
+          { category: { in: preferredCategories } }
+          // TODO: Fix tag filtering for SQLite
+          // { tags: { hasSome: preferredTags } }
         ]
       },
       orderBy: [
@@ -196,10 +202,10 @@ router.get('/recommended', authenticate, async (req: AuthRequest, res: Response)
       finalCharacters = [...characters, ...popular]
     }
 
-    res.json(finalCharacters.map(char => ({
+    res.json(finalCharacters.map((char: any) => ({
       ...char,
-      favorites: char._count.favorites,
-      ratingCount: char._count.ratings
+      favorites: char._count?.favorites || 0,
+      ratingCount: char._count?.ratings || 0
     })))
   } catch (error) {
     console.error('Get recommended characters error:', error)
@@ -305,8 +311,9 @@ router.get('/search', async (req: Request, res: Response) => {
       isPublic: true,
       OR: [
         { name: { contains: searchQuery as string, mode: 'insensitive' } },
-        { description: { contains: searchQuery as string, mode: 'insensitive' } },
-        { tags: { has: searchQuery as string } }
+        { description: { contains: searchQuery as string, mode: 'insensitive' } }
+        // TODO: Fix tag search for SQLite
+        // { tags: { has: searchQuery as string } }
       ]
     }
 
@@ -379,7 +386,7 @@ router.get('/characters/:id', async (req: Request, res: Response) => {
 
     const totalMessages = await prisma.message.count({
       where: {
-        chatSession: {
+        session: {
           characterId: character.id
         }
       }

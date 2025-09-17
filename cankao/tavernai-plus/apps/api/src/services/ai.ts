@@ -1,10 +1,23 @@
 import axios from 'axios'
 import { prisma } from '../server'
 
-// NewAPI 配置
+// Grok-3 LLM 配置 - 从环境变量获取
 const NEWAPI_BASE_URL = process.env.NEWAPI_BASE_URL || 'https://ttkk.inping.com/v1'
-const NEWAPI_KEY = process.env.NEWAPI_KEY || 'sk-ap3W4RSYQgxXsatCrAog6dZwYKnxs12rHcyokvjIkPmgGZuY'
-const DEFAULT_MODEL = process.env.DEFAULT_AI_MODEL || 'grok-3'
+const NEWAPI_KEY = process.env.NEWAPI_KEY
+const DEFAULT_MODEL = process.env.DEFAULT_MODEL || 'grok-3'
+const DEFAULT_MAX_TOKENS = parseInt(process.env.NEWAPI_MAX_TOKENS || '4000')
+const DEFAULT_TEMPERATURE = parseFloat(process.env.NEWAPI_TEMPERATURE || '0.7')
+
+// 验证关键配置
+if (!NEWAPI_KEY) {
+  console.error('❌ 错误: NEWAPI_KEY 未配置，AI服务将不可用')
+} else {
+  console.log('✅ Grok-3 LLM 配置已加载')
+  console.log(`   Base URL: ${NEWAPI_BASE_URL}`)
+  console.log(`   Model: ${DEFAULT_MODEL}`)
+  console.log(`   Max Tokens: ${DEFAULT_MAX_TOKENS}`)
+  console.log(`   Temperature: ${DEFAULT_TEMPERATURE}`)
+}
 
 // 创建 axios 实例
 const aiClient = axios.create({
@@ -54,31 +67,31 @@ class AIService {
       characterId,
       messages,
       model = DEFAULT_MODEL,
-      temperature = 0.7,
-      maxTokens = 1000,
+      temperature = DEFAULT_TEMPERATURE,
+      maxTokens = DEFAULT_MAX_TOKENS,
       stream = true
     } = options
-    
+
     try {
       // 获取角色信息来构建系统提示
       let systemPrompt = '你是一个友好的AI助手。'
-      
+
       if (characterId) {
         const character = await prisma.character.findUnique({
           where: { id: characterId }
         })
-        
+
         if (character) {
           systemPrompt = this.buildCharacterPrompt(character)
         }
       }
-      
+
       // 构建消息列表
       const apiMessages = [
         { role: 'system', content: systemPrompt },
         ...messages
       ]
-      
+
       // 调用 NewAPI
       const response = await aiClient.post('/chat/completions', {
         model,
@@ -87,7 +100,7 @@ class AIService {
         max_tokens: maxTokens,
         stream
       })
-      
+
       if (stream) {
         // 返回流式响应
         return response.data
@@ -105,7 +118,7 @@ class AIService {
       throw new Error('AI生成失败: ' + (error.response?.data?.error?.message || error.message))
     }
   }
-  
+
   // 流式生成聊天回复
   async *generateChatStream(options: GenerateOptions) {
     const {
@@ -114,30 +127,30 @@ class AIService {
       characterId,
       messages,
       model = DEFAULT_MODEL,
-      temperature = 0.7,
-      maxTokens = 1000
+      temperature = DEFAULT_TEMPERATURE,
+      maxTokens = DEFAULT_MAX_TOKENS
     } = options
-    
+
     try {
       // 获取角色信息
       let systemPrompt = '你是一个友好的AI助手。'
-      
+
       if (characterId) {
         const character = await prisma.character.findUnique({
           where: { id: characterId }
         })
-        
+
         if (character) {
           systemPrompt = this.buildCharacterPrompt(character)
         }
       }
-      
+
       // 构建消息列表
       const apiMessages = [
         { role: 'system' as const, content: systemPrompt },
         ...messages
       ]
-      
+
       // 调用 NewAPI 流式接口
       const response = await aiClient.post('/chat/completions', {
         model,
@@ -148,28 +161,28 @@ class AIService {
       }, {
         responseType: 'stream'
       })
-      
+
       // 处理流式响应
       const stream = response.data
       let buffer = ''
-      
+
       for await (const chunk of stream) {
         buffer += chunk.toString()
         const lines = buffer.split('\n')
         buffer = lines.pop() || ''
-        
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.slice(6)
-            
+
             if (data === '[DONE]') {
               return
             }
-            
+
             try {
               const parsed = JSON.parse(data) as StreamChunk
               const content = parsed.choices[0]?.delta?.content
-              
+
               if (content) {
                 yield content
               }
@@ -184,36 +197,36 @@ class AIService {
       throw new Error('流式生成失败: ' + error.message)
     }
   }
-  
+
   // 构建角色提示词
   private buildCharacterPrompt(character: any): string {
     let prompt = `你是${character.name}。`
-    
+
     if (character.description) {
       prompt += `\n\n角色描述：${character.description}`
     }
-    
+
     if (character.personality) {
       prompt += `\n\n性格特征：${character.personality}`
     }
-    
+
     if (character.backstory) {
       prompt += `\n\n背景故事：${character.backstory}`
     }
-    
+
     if (character.speakingStyle) {
       prompt += `\n\n说话风格：${character.speakingStyle}`
     }
-    
+
     if (character.systemPrompt) {
       prompt += `\n\n${character.systemPrompt}`
     }
-    
+
     prompt += '\n\n请根据以上角色设定进行对话，保持角色的一致性。'
-    
+
     return prompt
   }
-  
+
   // 生成角色设定
   async generateCharacterProfile(name: string, tags: string[] = []) {
     try {
@@ -233,7 +246,7 @@ class AIService {
 - backstory
 - speakingStyle
 - firstMessage`
-      
+
       const response = await aiClient.post('/chat/completions', {
         model: DEFAULT_MODEL,
         messages: [
@@ -249,9 +262,9 @@ class AIService {
         temperature: 0.8,
         max_tokens: 800
       })
-      
+
       const content = response.data.choices[0]?.message?.content || '{}'
-      
+
       try {
         // 尝试解析JSON
         const parsed = JSON.parse(content)
@@ -272,7 +285,7 @@ class AIService {
       throw new Error('生成角色设定失败')
     }
   }
-  
+
   // 检查API状态
   async checkAPIStatus() {
     try {
@@ -288,7 +301,7 @@ class AIService {
       }
     }
   }
-  
+
   // 计算tokens数量（简单估算）
   estimateTokens(text: string): number {
     // 中文大约1.5个字符一个token，英文大约4个字符一个token

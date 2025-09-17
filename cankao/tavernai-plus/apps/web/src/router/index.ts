@@ -82,6 +82,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/admin/logs',
+    name: 'Logs',
+    component: () => import('@/views/admin/LogsPage.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/404',
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue'),
@@ -109,14 +115,14 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
-  
+
   // 需要认证的路由
   if (to.meta.requiresAuth) {
     // 尝试恢复会话
     if (!userStore.isAuthenticated) {
       await userStore.restoreSession()
     }
-    
+
     // 检查是否已登录
     if (!userStore.isAuthenticated) {
       // 保存目标路由
@@ -127,12 +133,12 @@ router.beforeEach(async (to, from, next) => {
       })
     }
   }
-  
+
   // 已登录用户访问登录/注册页面
   if ((to.name === 'Login' || to.name === 'Register') && userStore.isAuthenticated) {
     return next({ name: 'Home' })
   }
-  
+
   next()
 })
 

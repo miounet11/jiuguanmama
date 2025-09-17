@@ -22,9 +22,10 @@ router.get('/', auth_1.optionalAuth, async (req, res, next) => {
                 { description: { contains: String(search), mode: 'insensitive' } }
             ];
         }
-        if (tags && Array.isArray(tags) && tags.length > 0) {
-            where.tags = { hasSome: tags };
-        }
+        // TODO: Fix tag filtering for SQLite (tags is now a JSON string)
+        // if (tags && Array.isArray(tags) && tags.length > 0) {
+        //   where.tags = { hasSome: tags }
+        // }
         const characters = await server_1.prisma.character.findMany({
             where,
             select: {
@@ -82,6 +83,47 @@ router.get('/', auth_1.optionalAuth, async (req, res, next) => {
         next(error);
     }
 });
+// 获取热门角色
+router.get('/popular', auth_1.optionalAuth, async (req, res, next) => {
+    try {
+        const characters = await server_1.prisma.character.findMany({
+            where: {
+                isPublic: true,
+                isFeatured: false // 不包括特色角色
+            },
+            orderBy: [
+                { chatCount: 'desc' },
+                { rating: 'desc' },
+                { favoriteCount: 'desc' }
+            ],
+            take: 12,
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                avatar: true,
+                tags: true,
+                rating: true,
+                ratingCount: true,
+                chatCount: true,
+                favoriteCount: true,
+                creator: {
+                    select: {
+                        id: true,
+                        username: true
+                    }
+                }
+            }
+        });
+        res.json({
+            success: true,
+            characters
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
 // 获取我的角色
 router.get('/my', auth_1.authenticate, async (req, res, next) => {
     try {
@@ -127,6 +169,49 @@ router.get('/favorites', auth_1.authenticate, async (req, res, next) => {
         next(error);
     }
 });
+// 获取热门角色
+router.get('/popular', async (req, res, next) => {
+    try {
+        const { limit = 12 } = req.query;
+        const popularCharacters = await server_1.prisma.character.findMany({
+            where: { isPublic: true },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                avatar: true,
+                category: true,
+                tags: true,
+                rating: true,
+                ratingCount: true,
+                chatCount: true,
+                favoriteCount: true,
+                isNSFW: true,
+                creator: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true
+                    }
+                },
+                createdAt: true
+            },
+            orderBy: [
+                { chatCount: 'desc' },
+                { favoriteCount: 'desc' },
+                { rating: 'desc' }
+            ],
+            take: Number(limit)
+        });
+        res.json({
+            success: true,
+            characters: popularCharacters
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
 // 获取热门标签
 router.get('/tags/popular', async (req, res, next) => {
     try {
@@ -137,9 +222,12 @@ router.get('/tags/popular', async (req, res, next) => {
         // 统计标签出现频率
         const tagCount = {};
         characters.forEach(char => {
-            char.tags.forEach(tag => {
-                tagCount[tag] = (tagCount[tag] || 0) + 1;
-            });
+            const tags = typeof char.tags === 'string' ? JSON.parse(char.tags) : char.tags;
+            if (Array.isArray(tags)) {
+                tags.forEach(tag => {
+                    tagCount[tag] = (tagCount[tag] || 0) + 1;
+                });
+            }
         });
         // 排序并返回前20个
         const popularTags = Object.entries(tagCount)

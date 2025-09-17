@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import { ZodError } from 'zod'
+import { errorLogger } from '../utils/errorLogger'
 
 export interface ApiError extends Error {
   statusCode?: number
@@ -16,7 +17,7 @@ export const errorHandler = (
   let statusCode = err.statusCode || 500
   let message = err.message || 'Internal Server Error'
   let errors = err.errors || null
-  
+
   // 处理 Prisma 错误
   if (err instanceof PrismaClientKnownRequestError) {
     switch (err.code) {
@@ -34,7 +35,7 @@ export const errorHandler = (
         message = 'Database operation failed'
     }
   }
-  
+
   // 处理 Zod 验证错误
   if (err instanceof ZodError) {
     statusCode = 422
@@ -48,23 +49,34 @@ export const errorHandler = (
       return acc
     }, {} as Record<string, string[]>)
   }
-  
+
   // JWT 错误
   if (err.name === 'JsonWebTokenError') {
     statusCode = 401
     message = 'Invalid token'
   }
-  
+
   if (err.name === 'TokenExpiredError') {
     statusCode = 401
     message = 'Token expired'
   }
-  
+
+  // 记录错误日志
+  errorLogger.error(message, {
+    endpoint: req.path,
+    method: req.method,
+    statusCode,
+    userId: (req as any).user?.id,
+    ip: req.ip,
+    userAgent: req.headers['user-agent'],
+    stack: err.stack
+  })
+
   // 开发环境下输出错误堆栈
   if (process.env.NODE_ENV === 'development') {
     console.error('Error:', err)
   }
-  
+
   // 发送错误响应
   res.status(statusCode).json({
     success: false,

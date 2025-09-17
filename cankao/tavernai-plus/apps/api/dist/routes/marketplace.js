@@ -19,8 +19,9 @@ router.get('/characters', async (req, res) => {
         if (search) {
             where.OR = [
                 { name: { contains: search, mode: 'insensitive' } },
-                { description: { contains: search, mode: 'insensitive' } },
-                { tags: { has: search } }
+                { description: { contains: search, mode: 'insensitive' } }
+                // TODO: Fix tag search for SQLite
+                // { tags: { has: search as string } }
             ];
         }
         const orderBy = {};
@@ -112,7 +113,7 @@ router.get('/featured', async (req, res) => {
     }
 });
 // 获取推荐角色（基于用户偏好）
-router.get('/recommended', auth_1.authenticateToken, async (req, res) => {
+router.get('/recommended', auth_1.authenticate, async (req, res) => {
     try {
         const limit = Math.min(Number(req.query.limit) || 12, 30);
         const userId = req.user.id;
@@ -128,15 +129,20 @@ router.get('/recommended', auth_1.authenticateToken, async (req, res) => {
             }
         });
         const preferredCategories = [...new Set(recentChats.map(c => c.character.category))];
-        const preferredTags = [...new Set(recentChats.flatMap(c => c.character.tags))];
+        // Parse tags from JSON strings
+        const preferredTags = [...new Set(recentChats.flatMap(c => {
+                const tags = typeof c.character.tags === 'string' ? JSON.parse(c.character.tags) : c.character.tags;
+                return Array.isArray(tags) ? tags : [];
+            }))];
         // 基于偏好推荐角色
         const characters = await server_1.prisma.character.findMany({
             where: {
                 isPublic: true,
                 NOT: { creatorId: userId },
                 OR: [
-                    { category: { in: preferredCategories } },
-                    { tags: { hasSome: preferredTags } }
+                    { category: { in: preferredCategories } }
+                    // TODO: Fix tag filtering for SQLite
+                    // { tags: { hasSome: preferredTags } }
                 ]
             },
             orderBy: [
@@ -176,10 +182,10 @@ router.get('/recommended', auth_1.authenticateToken, async (req, res) => {
             });
             finalCharacters = [...characters, ...popular];
         }
-        res.json(finalCharacters.map(char => ({
+        res.json(finalCharacters.map((char) => ({
             ...char,
-            favorites: char._count.favorites,
-            ratingCount: char._count.ratings
+            favorites: char._count?.favorites || 0,
+            ratingCount: char._count?.ratings || 0
         })));
     }
     catch (error) {
@@ -275,8 +281,9 @@ router.get('/search', async (req, res) => {
             isPublic: true,
             OR: [
                 { name: { contains: searchQuery, mode: 'insensitive' } },
-                { description: { contains: searchQuery, mode: 'insensitive' } },
-                { tags: { has: searchQuery } }
+                { description: { contains: searchQuery, mode: 'insensitive' } }
+                // TODO: Fix tag search for SQLite
+                // { tags: { has: searchQuery as string } }
             ]
         };
         if (category)
@@ -346,7 +353,7 @@ router.get('/characters/:id', async (req, res) => {
         }
         const totalMessages = await server_1.prisma.message.count({
             where: {
-                chatSession: {
+                session: {
                     characterId: character.id
                 }
             }
@@ -371,7 +378,7 @@ router.get('/characters/:id', async (req, res) => {
     }
 });
 // 收藏角色
-router.post('/characters/:id/favorite', auth_1.authenticateToken, async (req, res) => {
+router.post('/characters/:id/favorite', auth_1.authenticate, async (req, res) => {
     try {
         const userId = req.user.id;
         const characterId = req.params.id;
@@ -394,7 +401,7 @@ router.post('/characters/:id/favorite', auth_1.authenticateToken, async (req, re
     }
 });
 // 取消收藏角色
-router.delete('/characters/:id/favorite', auth_1.authenticateToken, async (req, res) => {
+router.delete('/characters/:id/favorite', auth_1.authenticate, async (req, res) => {
     try {
         const userId = req.user.id;
         const characterId = req.params.id;
@@ -411,7 +418,7 @@ router.delete('/characters/:id/favorite', auth_1.authenticateToken, async (req, 
     }
 });
 // 评价角色
-router.post('/characters/:id/rate', auth_1.authenticateToken, async (req, res) => {
+router.post('/characters/:id/rate', auth_1.authenticate, async (req, res) => {
     try {
         const userId = req.user.id;
         const characterId = req.params.id;
@@ -458,7 +465,7 @@ router.post('/characters/:id/rate', auth_1.authenticateToken, async (req, res) =
     }
 });
 // 导入角色到我的角色库
-router.post('/characters/:id/import', auth_1.authenticateToken, async (req, res) => {
+router.post('/characters/:id/import', auth_1.authenticate, async (req, res) => {
     try {
         const userId = req.user.id;
         const sourceCharacterId = req.params.id;

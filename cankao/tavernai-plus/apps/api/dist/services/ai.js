@@ -6,10 +6,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.aiService = void 0;
 const axios_1 = __importDefault(require("axios"));
 const server_1 = require("../server");
-// NewAPI 配置
+// Grok-3 LLM 配置 - 从环境变量获取
 const NEWAPI_BASE_URL = process.env.NEWAPI_BASE_URL || 'https://ttkk.inping.com/v1';
-const NEWAPI_KEY = process.env.NEWAPI_KEY || 'sk-ap3W4RSYQgxXsatCrAog6dZwYKnxs12rHcyokvjIkPmgGZuY';
-const DEFAULT_MODEL = process.env.DEFAULT_AI_MODEL || 'grok-3';
+const NEWAPI_KEY = process.env.NEWAPI_KEY;
+const DEFAULT_MODEL = process.env.DEFAULT_MODEL || 'grok-3';
+const DEFAULT_MAX_TOKENS = parseInt(process.env.NEWAPI_MAX_TOKENS || '4000');
+const DEFAULT_TEMPERATURE = parseFloat(process.env.NEWAPI_TEMPERATURE || '0.7');
+// 验证关键配置
+if (!NEWAPI_KEY) {
+    console.error('❌ 错误: NEWAPI_KEY 未配置，AI服务将不可用');
+}
+else {
+    console.log('✅ Grok-3 LLM 配置已加载');
+    console.log(`   Base URL: ${NEWAPI_BASE_URL}`);
+    console.log(`   Model: ${DEFAULT_MODEL}`);
+    console.log(`   Max Tokens: ${DEFAULT_MAX_TOKENS}`);
+    console.log(`   Temperature: ${DEFAULT_TEMPERATURE}`);
+}
 // 创建 axios 实例
 const aiClient = axios_1.default.create({
     baseURL: NEWAPI_BASE_URL,
@@ -22,7 +35,7 @@ const aiClient = axios_1.default.create({
 class AIService {
     // 生成聊天回复
     async generateChatResponse(options) {
-        const { sessionId, userId, characterId, messages, model = DEFAULT_MODEL, temperature = 0.7, maxTokens = 1000, stream = true } = options;
+        const { sessionId, userId, characterId, messages, model = DEFAULT_MODEL, temperature = DEFAULT_TEMPERATURE, maxTokens = DEFAULT_MAX_TOKENS, stream = true } = options;
         try {
             // 获取角色信息来构建系统提示
             let systemPrompt = '你是一个友好的AI助手。';
@@ -68,7 +81,7 @@ class AIService {
     }
     // 流式生成聊天回复
     async *generateChatStream(options) {
-        const { sessionId, userId, characterId, messages, model = DEFAULT_MODEL, temperature = 0.7, maxTokens = 1000 } = options;
+        const { sessionId, userId, characterId, messages, model = DEFAULT_MODEL, temperature = DEFAULT_TEMPERATURE, maxTokens = DEFAULT_MAX_TOKENS } = options;
         try {
             // 获取角色信息
             let systemPrompt = '你是一个友好的AI助手。';

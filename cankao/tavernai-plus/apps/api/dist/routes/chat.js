@@ -6,7 +6,71 @@ const server_1 = require("../server");
 const server_2 = require("../server");
 const ai_1 = require("../services/ai");
 const router = (0, express_1.Router)();
-// 获取用户的聊天会话列表
+// 获取用户的聊天会话列表 (兼容前端的 /api/chats 调用)
+router.get('/', auth_1.authenticate, async (req, res, next) => {
+    try {
+        const sessions = await server_1.prisma.chatSession.findMany({
+            where: {
+                userId: req.user.id,
+                isArchived: false
+            },
+            select: {
+                id: true,
+                title: true,
+                characterId: true,
+                lastMessageAt: true,
+                messageCount: true,
+                updatedAt: true,
+                character: {
+                    select: {
+                        id: true,
+                        name: true,
+                        avatar: true
+                    }
+                }
+            },
+            orderBy: { updatedAt: 'desc' },
+            take: 20
+        });
+        res.json({
+            success: true,
+            sessions
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// 创建新聊天会话 (兼容前端的 /api/chats POST 调用)
+router.post('/', auth_1.authenticate, async (req, res, next) => {
+    try {
+        const { characterId, title } = req.body;
+        const session = await server_1.prisma.chatSession.create({
+            data: {
+                userId: req.user.id,
+                characterId,
+                title: title || `与${characterId}的对话`
+            },
+            include: {
+                character: {
+                    select: {
+                        id: true,
+                        name: true,
+                        avatar: true
+                    }
+                }
+            }
+        });
+        res.status(201).json({
+            success: true,
+            session
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// 获取用户的聊天会话列表 (保持向后兼容)
 router.get('/sessions', auth_1.authenticate, async (req, res, next) => {
     try {
         const sessions = await server_1.prisma.chatSession.findMany({
@@ -17,11 +81,11 @@ router.get('/sessions', auth_1.authenticate, async (req, res, next) => {
             select: {
                 id: true,
                 title: true,
-                characterIds: true,
+                characterId: true,
                 lastMessageAt: true,
                 messageCount: true,
                 updatedAt: true,
-                characters: {
+                character: {
                     select: {
                         id: true,
                         name: true,
@@ -44,18 +108,15 @@ router.get('/sessions', auth_1.authenticate, async (req, res, next) => {
 // 创建新的聊天会话
 router.post('/sessions', auth_1.authenticate, async (req, res, next) => {
     try {
-        const { characterIds, title } = req.body;
+        const { characterId, title } = req.body;
         const session = await server_1.prisma.chatSession.create({
             data: {
                 userId: req.user.id,
-                characterIds,
-                title,
-                characters: {
-                    connect: characterIds.map((id) => ({ id }))
-                }
+                characterId,
+                title
             },
             include: {
-                characters: {
+                character: {
                     select: {
                         id: true,
                         name: true,
@@ -122,7 +183,7 @@ router.post('/sessions/:sessionId/messages', auth_1.authenticate, async (req, re
                 userId: req.user.id
             },
             include: {
-                characters: true
+                character: true
             }
         });
         if (!session) {
@@ -168,7 +229,7 @@ router.post('/sessions/:sessionId/messages', auth_1.authenticate, async (req, re
         // 异步生成 AI 回复
         setImmediate(async () => {
             try {
-                const character = session.characters[0];
+                const character = session.character;
                 // 获取历史消息作为上下文
                 const recentMessages = await server_1.prisma.message.findMany({
                     where: {
@@ -299,7 +360,7 @@ router.get('/sessions/:sessionId', auth_1.authenticate, async (req, res, next) =
                 userId: req.user.id
             },
             include: {
-                characters: {
+                character: {
                     select: {
                         id: true,
                         name: true,
@@ -577,6 +638,50 @@ router.put('/sessions/:sessionId/settings', auth_1.authenticate, async (req, res
         res.json({
             success: true,
             message: 'Settings updated'
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// 更新聊天会话（固定/取消固定等）
+router.patch('/:sessionId', auth_1.authenticate, async (req, res, next) => {
+    try {
+        const { sessionId } = req.params;
+        const { isPinned, title } = req.body;
+        // 验证会话属于当前用户
+        const existingSession = await server_1.prisma.chatSession.findFirst({
+            where: {
+                id: sessionId,
+                userId: req.user.id
+            }
+        });
+        if (!existingSession) {
+            return res.status(404).json({
+                success: false,
+                message: 'Chat session not found'
+            });
+        }
+        // 更新会话信息
+        const updatedSession = await server_1.prisma.chatSession.update({
+            where: { id: sessionId },
+            data: {
+                ...(isPinned !== undefined && { isPinned }),
+                ...(title && { title })
+            },
+            include: {
+                character: {
+                    select: {
+                        id: true,
+                        name: true,
+                        avatar: true
+                    }
+                }
+            }
+        });
+        res.json({
+            success: true,
+            session: updatedSession
         });
     }
     catch (error) {

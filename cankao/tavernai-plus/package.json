@@ -26,13 +26,17 @@
     "db:seed": "cd apps/api && npx ts-node src/seed.ts"
   },
   "devDependencies": {
-    "turbo": "^1.11.3",
     "@types/node": "^20.10.5",
+    "turbo": "^1.11.3",
     "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
-  "packageManager": "npm@9.8.1"
+  "packageManager": "npm@9.8.1",
+  "dependencies": {
+    "colors": "^1.4.0",
+    "date-fns": "^4.1.0"
+  }
 }
