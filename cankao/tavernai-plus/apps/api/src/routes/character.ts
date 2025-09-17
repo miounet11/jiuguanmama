@@ -186,50 +186,7 @@ router.get('/favorites', authenticate, async (req: AuthRequest, res, next) => {
   }
 })
 
-// 获取热门角色
-router.get('/popular', async (req, res, next) => {
-  try {
-    const { limit = 12 } = req.query
 
-    const popularCharacters = await prisma.character.findMany({
-      where: { isPublic: true },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        avatar: true,
-        category: true,
-        tags: true,
-        rating: true,
-        ratingCount: true,
-        chatCount: true,
-        favoriteCount: true,
-        isNSFW: true,
-        creator: {
-          select: {
-            id: true,
-            username: true,
-            avatar: true
-          }
-        },
-        createdAt: true
-      },
-      orderBy: [
-        { chatCount: 'desc' },
-        { favoriteCount: 'desc' },
-        { rating: 'desc' }
-      ],
-      take: Number(limit)
-    })
-
-    res.json({
-      success: true,
-      characters: popularCharacters
-    })
-  } catch (error) {
-    next(error)
-  }
-})
 
 // 获取热门标签
 router.get('/tags/popular', async (req, res, next) => {
@@ -296,43 +253,6 @@ router.post('/generate', authenticate, async (req: AuthRequest, res, next) => {
 // 获取单个角色详情
 router.get('/:id', optionalAuth, async (req: AuthRequest, res, next) => {
   try {
-    // 如果是角色ID "1"，返回司夜的模拟数据
-    if (req.params.id === '1') {
-      const mockCharacter = {
-        id: '1',
-        name: '司夜',
-        description: '冷漠高贵的夜之女王，掌控着黑暗的力量，但内心深处渴望着真正的理解与陪伴。',
-        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face',
-        gender: '女',
-        age: '不明',
-        personality: '冷漠、高傲、神秘、内心柔软',
-        background: '远古时代的夜之女王，拥有操控黑暗的神秘力量。表面冷漠高傲，实际上内心孤独，渴望有人能够理解她的内心世界。',
-        greeting: '你好，凡人。我是司夜，夜的统治者。敢于在黑暗中寻找我，你很有勇气...或者说很愚蠢。不过，既然你已经来了，就让我看看你是否值得我花费时间。',
-        exampleDialogue: '用户：你为什么总是一个人？\n司夜：一个人？*冷笑* 黑暗就是我的伴侣，寂静就是我的朋友。我不需要任何人...虽然，有时候确实会感到...算了，这些你不会懂的。',
-        scenario: '在一座古老的城堡中，夜幕降临时分，司夜出现在阳台上，凝视着远方的星空。她感知到有人的接近，缓缓转身...',
-        category: '奇幻',
-        tags: JSON.stringify(['女王', '神秘', '夜晚', '高贵', '冷漠']),
-        isPublic: true,
-        isNSFW: false,
-        rating: 4.8,
-        ratingCount: 234,
-        chatCount: 1528,
-        favoriteCount: 89,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-15'),
-        creator: {
-          id: 'creator1',
-          username: '夜色创作者',
-          avatar: ''
-        },
-        isFavorited: false
-      }
-
-      return res.json({
-        success: true,
-        character: mockCharacter
-      })
-    }
 
     const character = await prisma.character.findUnique({
       where: { id: req.params.id },
@@ -626,29 +546,51 @@ router.post('/:id/clone', authenticate, async (req: AuthRequest, res, next) => {
 // 获取角色评论
 router.get('/:id/reviews', async (req, res, next) => {
   try {
-    // 返回模拟评论数据
-    const reviews = [
-      {
-        id: 1,
-        username: '用户A',
-        userAvatar: '',
-        rating: 5,
-        comment: '非常棒的角色！对话自然流畅，个性鲜明。',
-        date: '2024-01-15'
+    const { page = 1, limit = 10 } = req.query
+
+    const reviews = await prisma.characterRating.findMany({
+      where: {
+        characterId: req.params.id,
+        // 只显示有评论文本的评分
+        comment: { not: null }
       },
-      {
-        id: 2,
-        username: '用户B',
-        userAvatar: '',
-        rating: 4,
-        comment: '很有趣的设定，期待更多互动选项。',
-        date: '2024-01-14'
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: (Number(page) - 1) * Number(limit),
+      take: Number(limit)
+    })
+
+    const total = await prisma.characterRating.count({
+      where: {
+        characterId: req.params.id,
+        comment: { not: null }
       }
-    ]
+    })
 
     res.json({
       success: true,
-      reviews
+      reviews: reviews.map(review => ({
+        id: review.id,
+        username: review.user.username,
+        userAvatar: review.user.avatar,
+        rating: review.rating,
+        comment: review.comment,
+        date: review.createdAt.toISOString().split('T')[0]
+      })),
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages: Math.ceil(total / Number(limit))
+      }
     })
   } catch (error) {
     next(error)
@@ -658,23 +600,54 @@ router.get('/:id/reviews', async (req, res, next) => {
 // 获取相关角色
 router.get('/:id/related', async (req, res, next) => {
   try {
-    // 返回模拟相关角色数据
-    const relatedCharacters = [
-      {
-        id: 'r1',
-        name: '相关角色1',
-        avatar: '',
-        chats: 8234,
-        rating: 4.3
+    const { limit = 6 } = req.query
+
+    // 获取当前角色信息
+    const currentCharacter = await prisma.character.findUnique({
+      where: { id: req.params.id },
+      select: { category: true, tags: true }
+    })
+
+    if (!currentCharacter) {
+      return res.status(404).json({
+        success: false,
+        message: 'Character not found'
+      })
+    }
+
+    // 基于分类和标签推荐相关角色
+    const relatedCharacters = await prisma.character.findMany({
+      where: {
+        id: { not: req.params.id }, // 排除自己
+        isPublic: true,
+        OR: [
+          { category: currentCharacter.category }, // 相同分类
+          // TODO: 在SQLite中实现标签匹配（需要JSON解析）
+        ]
       },
-      {
-        id: 'r2',
-        name: '相关角色2',
-        avatar: '',
-        chats: 5421,
-        rating: 4.7
-      }
-    ]
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        avatar: true,
+        rating: true,
+        ratingCount: true,
+        chatCount: true,
+        favoriteCount: true,
+        creator: {
+          select: {
+            id: true,
+            username: true
+          }
+        }
+      },
+      orderBy: [
+        { rating: 'desc' },
+        { chatCount: 'desc' },
+        { favoriteCount: 'desc' }
+      ],
+      take: Number(limit)
+    })
 
     res.json({
       success: true,

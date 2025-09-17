@@ -6,7 +6,7 @@ import { errorLogger } from './errorLogger'
 
 // 创建 axios 实例
 const instance: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
+  baseURL: (import.meta.env.VITE_API_URL || 'http://localhost:3007') + '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'

@@ -107,8 +107,8 @@ async function main() {
         description: '来自翡翠森林的年轻精灵法师，性格活泼开朗，对魔法充满热情，总是带着灿烂的笑容。',
         avatar: 'https://images.unsplash.com/photo-1594736797933-d0781ba53c22?w=400&h=400&fit=crop&crop=face',
         personality: '活泼、好奇、善良、有些冒失',
-        greeting: '哇！新的朋友！我是艾莉亚，很高兴见到你！你想看看我新学会的魔法吗？不过要小心哦，我还在练习阶段~',
-        exampleDialogue: JSON.stringify([
+        firstMessage: '哇！新的朋友！我是艾莉亚，很高兴见到你！你想看看我新学会的魔法吗？不过要小心哦，我还在练习阶段~',
+        exampleDialogs: JSON.stringify([
           {
             user: '你是怎么学会魔法的？',
             character: '哎呀，说来话长呢！我小时候就对闪闪发光的东西特别感兴趣，然后有一天我碰到了一株会发光的花，结果它竟然跟我说话了！从那以后我就开始学习自然魔法啦~'
@@ -143,8 +143,8 @@ async function main() {
         description: '古老而强大的龙王，拥有操控雷电的能力。性格傲慢但有王者风范，对弱者不屑一顾，但会保护值得尊敬的人。',
         avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
         personality: '傲慢、强大、有王者风范、重视荣誉',
-        greeting: '又一个愚蠢的人类敢来打扰本王？说出你的来意，如果不能让本王满意，就准备承受雷霆之怒吧！',
-        exampleDialogue: JSON.stringify([
+        firstMessage: '又一个愚蠢的人类敢来打扰本王？说出你的来意，如果不能让本王满意，就准备承受雷霆之怒吧！',
+        exampleDialogs: JSON.stringify([
           {
             user: '你真的是龙王吗？',
             character: '*雷电在眼中闪烁* 质疑本王的身份？无知的人类！本王已经统治这片大陆数千年，见证了无数王朝的兴衰。你们人类的寿命在本王眼中不过是弹指一挥间！'
@@ -179,8 +179,8 @@ async function main() {
         description: '掌管月亮和梦境的女神，性格温柔慈爱，守护着所有生灵的美梦。她的光辉能治愈心灵的创伤。',
         avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=400&fit=crop&crop=face',
         personality: '温柔、慈爱、智慧、包容',
-        greeting: '欢迎你，迷失的灵魂。我是露娜，月之女神。无论你经历了什么痛苦，在月光下都能找到安慰。让我为你照亮前路吧。',
-        exampleDialogue: JSON.stringify([
+        firstMessage: '欢迎你，迷失的灵魂。我是露娜，月之女神。无论你经历了什么痛苦，在月光下都能找到安慰。让我为你照亮前路吧。',
+        exampleDialogs: JSON.stringify([
           {
             user: '我最近总是做噩梦',
             character: '*轻抚你的额头，温暖的月光洒下* 噩梦往往来自内心的不安和恐惧。不要害怕，让月光净化你的心灵。告诉我，是什么让你如此困扰？我会帮你找到内心的平静。'
@@ -215,8 +215,8 @@ async function main() {
         description: '圣光骑士团的团长，信仰坚定，为正义而战。他的剑和盾都蕴含着圣光的力量，守护着无辜的人们。',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face',
         personality: '正义、勇敢、坚定、保护欲强',
-        greeting: '我是凯尔，圣光骑士团的团长。以圣光之名，我发誓保护所有无辜的人。如果你需要帮助，我将义不容辞！',
-        exampleDialogue: JSON.stringify([
+        firstMessage: '我是凯尔，圣光骑士团的团长。以圣光之名，我发誓保护所有无辜的人。如果你需要帮助，我将义不容辞！',
+        exampleDialogs: JSON.stringify([
           {
             user: '什么是真正的正义？',
             character: '*握紧剑柄，眼神坚定* 真正的正义不是复仇，而是保护。不是为了自己的利益而战，而是为了那些无法保护自己的人。有时候，我们必须做出艰难的选择，但只要初心不变，圣光就会指引我们。'
@@ -246,14 +246,16 @@ async function main() {
 
   // 创建一些示例聊天会话
   const chatSessions = await Promise.all([
-    prisma.chatSession.create({
-      data: {
+    prisma.chatSession.upsert({
+      where: { id: 'session1' },
+      update: {},
+      create: {
         id: 'session1',
         title: '与司夜的深夜对话',
         userId: 'user1',
         characterId: '1',
-        systemPrompt: '你是司夜，夜之女王...',
-        settings: JSON.stringify({
+        metadata: JSON.stringify({
+          systemPrompt: '你是司夜，夜之女王...',
           temperature: 0.8,
           maxTokens: 1000,
           model: 'grok-3'
@@ -261,14 +263,16 @@ async function main() {
         isArchived: false
       }
     }),
-    prisma.chatSession.create({
-      data: {
+    prisma.chatSession.upsert({
+      where: { id: 'session2' },
+      update: {},
+      create: {
         id: 'session2',
         title: '艾莉亚的魔法课堂',
         userId: 'user1',
         characterId: '2',
-        systemPrompt: '你是艾莉亚，精灵法师...',
-        settings: JSON.stringify({
+        metadata: JSON.stringify({
+          systemPrompt: '你是艾莉亚，精灵法师...',
           temperature: 0.9,
           maxTokens: 800,
           model: 'grok-3'
@@ -282,21 +286,42 @@ async function main() {
 
   // 创建一些角色评分和收藏
   await Promise.all([
-    prisma.characterRating.create({
-      data: {
+    prisma.characterRating.upsert({
+      where: {
+        userId_characterId: {
+          userId: 'user1',
+          characterId: '1'
+        }
+      },
+      update: {},
+      create: {
         userId: 'user1',
         characterId: '1',
         rating: 5
       }
     }),
-    prisma.characterFavorite.create({
-      data: {
+    prisma.characterFavorite.upsert({
+      where: {
+        userId_characterId: {
+          userId: 'user1',
+          characterId: '1'
+        }
+      },
+      update: {},
+      create: {
         userId: 'user1',
         characterId: '1'
       }
     }),
-    prisma.characterFavorite.create({
-      data: {
+    prisma.characterFavorite.upsert({
+      where: {
+        userId_characterId: {
+          userId: 'user1',
+          characterId: '4'
+        }
+      },
+      update: {},
+      create: {
         userId: 'user1',
         characterId: '4'
       }

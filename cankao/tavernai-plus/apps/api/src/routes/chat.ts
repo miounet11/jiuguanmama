@@ -9,6 +9,275 @@ import { worldInfoService } from '../services/worldinfo'
 
 const router = Router()
 
+// 获取或创建与角色的聊天会话 (兼容前端的 /api/chats/{characterId} 调用)
+router.get('/:characterId', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { characterId } = req.params
+
+    // 验证角色是否存在
+    const character = await prisma.character.findUnique({
+      where: { id: characterId },
+      select: {
+        id: true,
+        name: true,
+        avatar: true,
+        description: true,
+        firstMessage: true,
+        creator: {
+          select: {
+            username: true
+          }
+        }
+      }
+    })
+
+    if (!character) {
+      return res.status(404).json({
+        success: false,
+        message: 'Character not found'
+      })
+    }
+
+    // 查找现有会话
+    let session = await prisma.chatSession.findFirst({
+      where: {
+        userId: req.user!.id,
+        characterId,
+        isArchived: false
+      },
+      orderBy: { updatedAt: 'desc' }
+    })
+
+    // 如果没有现有会话，创建新的
+    if (!session) {
+      session = await prisma.chatSession.create({
+        data: {
+          userId: req.user!.id,
+          characterId,
+          title: `与${character.name}的对话`,
+          metadata: JSON.stringify({
+            systemPrompt: character.firstMessage || `你好！我是${character.name}`,
+            temperature: 0.7,
+            maxTokens: 1000,
+            model: 'grok-3'
+          })
+        }
+      })
+
+      // 如果角色有首条消息，添加它
+      if (character.firstMessage) {
+        await prisma.message.create({
+          data: {
+            sessionId: session.id,
+            characterId,
+            role: 'assistant',
+            content: character.firstMessage,
+            tokens: Math.ceil(character.firstMessage.length / 4)
+          }
+        })
+      }
+    }
+
+    // 获取消息历史
+    const messages = await prisma.message.findMany({
+      where: {
+        sessionId: session.id,
+        deleted: false
+      },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true
+          }
+        },
+        character: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true
+          }
+        }
+      }
+    })
+
+    res.json({
+      success: true,
+      session: {
+        ...session,
+        character: {
+          ...character,
+          creator: character.creator.username
+        }
+      },
+      character: {
+        ...character,
+        creator: character.creator.username
+      },
+      messages
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 发送消息到指定角色会话 (兼容前端的 /api/chats/{characterId}/messages 调用)
+router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { content } = req.body
+    const { characterId } = req.params
+
+    // 验证角色是否存在
+    const character = await prisma.character.findUnique({
+      where: { id: characterId },
+      include: { creator: true }
+    })
+
+    if (!character) {
+      return res.status(404).json({
+        success: false,
+        message: 'Character not found'
+      })
+    }
+
+    // 查找或创建会话
+    let session = await prisma.chatSession.findFirst({
+      where: {
+        characterId,
+        userId: req.user!.id
+      }
+    })
+
+    if (!session) {
+      session = await prisma.chatSession.create({
+        data: {
+          userId: req.user!.id,
+          characterId,
+          title: `与${character.name}的对话`,
+          metadata: JSON.stringify({
+            systemPrompt: character.firstMessage || `你好！我是${character.name}`,
+            temperature: 0.7,
+            maxTokens: 1000,
+            model: 'grok-3'
+          })
+        }
+      })
+    }
+
+    // 创建用户消息
+    const userMessage = await prisma.message.create({
+      data: {
+        sessionId: session.id,
+        userId: req.user!.id,
+        role: 'user',
+        content,
+        tokens: Math.ceil(content.length / 4)
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true
+          }
+        }
+      }
+    })
+
+    // 更新会话统计
+    await prisma.chatSession.update({
+      where: { id: session.id },
+      data: {
+        messageCount: { increment: 1 },
+        lastMessageAt: new Date(),
+        totalTokens: { increment: userMessage.tokens }
+      }
+    })
+
+    // 同步生成 AI 回复
+    try {
+      // 获取历史消息作为上下文
+      const recentMessages = await prisma.message.findMany({
+        where: {
+          sessionId: session.id,
+          deleted: false
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        select: {
+          role: true,
+          content: true
+        }
+      })
+
+      // 构建消息历史
+      const messageHistory = recentMessages
+        .reverse()
+        .map(msg => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content
+        }))
+
+      // 生成AI回复
+      const aiResponse = await aiService.generateChatResponse({
+        sessionId: session.id,
+        userId: req.user!.id,
+        characterId: character.id,
+        messages: messageHistory,
+        model: session.model || 'grok-3',
+        temperature: 0.7,
+        maxTokens: 1000,
+        stream: false
+      })
+
+      // 创建AI消息
+      const aiMessage = await prisma.message.create({
+        data: {
+          sessionId: session.id,
+          characterId: character.id,
+          role: 'assistant',
+          content: aiResponse.content,
+          tokens: aiService.estimateTokens(aiResponse.content)
+        }
+      })
+
+      // 更新会话统计
+      await prisma.chatSession.update({
+        where: { id: session.id },
+        data: {
+          messageCount: { increment: 2 }, // 用户消息 + AI回复
+          lastMessageAt: new Date(),
+          totalTokens: { increment: userMessage.tokens + aiMessage.tokens }
+        }
+      })
+
+      // 返回AI回复消息给前端
+      res.json({
+        success: true,
+        id: aiMessage.id,
+        content: aiMessage.content,
+        timestamp: aiMessage.createdAt,
+        userMessage
+      })
+
+    } catch (aiError) {
+      console.error('生成 AI 回复失败:', aiError)
+      // 如果AI回复失败，至少返回成功的用户消息
+      res.json({
+        success: true,
+        id: Date.now().toString(),
+        content: '抱歉，我现在无法响应。请稍后再试。',
+        timestamp: new Date(),
+        userMessage
+      })
+    }
+  } catch (error) {
+    next(error)
+  }
+})
+
 // 获取用户的聊天会话列表 (兼容前端的 /api/chats 调用)
 router.get('/', authenticate, async (req: AuthRequest, res, next) => {
   try {

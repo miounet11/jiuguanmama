@@ -223,7 +223,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import axios from '@/utils/axios'
+import { http } from '@/utils/axios'
 
 const route = useRoute()
 const router = useRouter()
@@ -251,9 +251,11 @@ const formatNumber = (num: number) => {
 const fetchCharacterDetail = async () => {
   const characterId = route.params.id
   try {
-    const response = await axios.get(`/api/characters/${characterId}`)
-    character.value = response.data
-    isLiked.value = response.data.isLiked
+    const response = await http.get(`/characters/${characterId}`)
+    character.value = response.character
+    isLiked.value = response.character.isFavorited
+    // 角色数据加载完成后，获取其他作品
+    await fetchOtherWorks()
   } catch (error) {
     console.error('Failed to fetch character:', error)
     // 使用模拟数据
@@ -276,7 +278,7 @@ const fetchCharacterDetail = async () => {
 
 const fetchReviews = async () => {
   try {
-    const response = await axios.get(`/api/characters/${route.params.id}/reviews`)
+    const response = await http.get(`/characters/${route.params.id}/reviews`)
     reviews.value = response.data
   } catch (error) {
     // 模拟数据
@@ -303,7 +305,7 @@ const fetchReviews = async () => {
 
 const fetchRelatedCharacters = async () => {
   try {
-    const response = await axios.get(`/api/characters/${route.params.id}/related`)
+    const response = await http.get(`/characters/${route.params.id}/related`)
     relatedCharacters.value = response.data
   } catch (error) {
     // 模拟数据
@@ -315,8 +317,17 @@ const fetchRelatedCharacters = async () => {
 }
 
 const fetchOtherWorks = async () => {
+  if (!character.value?.creatorId) {
+    // 如果没有creatorId，使用模拟数据
+    otherWorks.value = [
+      { id: 'o1', name: '其他作品1', avatar: '', rating: 4.3 },
+      { id: 'o2', name: '其他作品2', avatar: '', rating: 4.7 }
+    ]
+    return
+  }
+
   try {
-    const response = await axios.get(`/api/users/${character.value?.creatorId}/characters`)
+    const response = await http.get(`/users/${character.value.creatorId}/characters`)
     otherWorks.value = response.data.filter((c: any) => c.id !== route.params.id)
   } catch (error) {
     // 模拟数据
@@ -342,7 +353,7 @@ const toggleLike = async () => {
   }
 
   try {
-    await axios.post(`/api/characters/${route.params.id}/like`)
+    await http.post(`/characters/${route.params.id}/like`)
     isLiked.value = !isLiked.value
     if (isLiked.value) {
       character.value.likes++
@@ -377,7 +388,7 @@ const submitReview = async () => {
   if (!userComment.value.trim()) return
 
   try {
-    await axios.post(`/api/characters/${route.params.id}/reviews`, {
+    await http.post(`/characters/${route.params.id}/reviews`, {
       rating: userRating.value,
       comment: userComment.value
     })
@@ -407,6 +418,5 @@ onMounted(() => {
   fetchCharacterDetail()
   fetchReviews()
   fetchRelatedCharacters()
-  fetchOtherWorks()
 })
 </script>

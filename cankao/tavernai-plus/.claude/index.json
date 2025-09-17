@@ -1,0 +1,365 @@
+{
+  "lastUpdated": "2025-09-17T21:04:59.000Z",
+  "project": {
+    "name": "TavernAI Plus",
+    "type": "monorepo",
+    "description": "AI角色扮演对话平台 - 基于Vue3+Express+TypeScript的全栈应用",
+    "version": "0.1.0",
+    "architecture": "monorepo",
+    "buildTool": "turbo"
+  },
+  "modules": [
+    {
+      "name": "api",
+      "path": "apps/api",
+      "type": "backend",
+      "language": "TypeScript",
+      "framework": "Express.js",
+      "description": "RESTful API后端服务，提供用户认证、角色管理、对话引擎等功能",
+      "entryPoints": [
+        "src/server.ts",
+        "src/minimal-server.ts"
+      ],
+      "mainInterfaces": [
+        "/api/auth - 用户认证服务",
+        "/api/characters - 角色管理API",
+        "/api/chat - 对话服务API",
+        "/api/marketplace - 角色市场API",
+        "/api/ai - AI功能服务",
+        "/api/admin - 系统管理API",
+        "/api/users - 用户管理API",
+        "/api/ai-features - 高级AI功能",
+        "/api/logs - 日志管理API"
+      ],
+      "keyDependencies": [
+        "express",
+        "@prisma/client",
+        "jsonwebtoken",
+        "socket.io",
+        "axios",
+        "zod",
+        "express-rate-limit",
+        "date-fns"
+      ],
+      "dataModels": [
+        "User - 用户模型（认证、订阅、积分）",
+        "Character - AI角色模型（设定、评分、标签）",
+        "ChatSession - 对话会话模型",
+        "ChatRoom - 多角色聊天室模型",
+        "Message - 消息模型",
+        "CharacterFavorite - 角色收藏关联模型",
+        "CharacterRating - 角色评分模型"
+      ],
+      "controllerArchitecture": [
+        "admin/user.ts - 用户管理控制器",
+        "admin/system.ts - 系统信息控制器",
+        "admin/log.ts - 日志管理控制器",
+        "admin/stats.ts - 统计数据控制器",
+        "admin/model.ts - AI模型管理控制器"
+      ],
+      "middlewareComponents": [
+        "auth.ts - JWT认证中间件",
+        "errorHandler.ts - 全局错误处理",
+        "requestLogger.ts - 彩色请求日志中间件",
+        "validate.ts - Zod请求验证中间件",
+        "admin.ts - 管理员权限检查"
+      ],
+      "advancedServices": [
+        "character-generator.ts - AI角色生成服务（支持NAI3/DALL-E头像生成）",
+        "ai.ts - 多模型AI服务集成",
+        "email.ts - 邮件发送服务",
+        "payment.ts - 支付处理服务",
+        "embedding.ts - 向量嵌入服务",
+        "guidance.ts - AI引导服务",
+        "monitor.ts - 系统监控服务",
+        "relay.ts - 请求中继服务",
+        "storybook.ts - 故事管理服务",
+        "summon.ts - 角色召唤服务",
+        "worldinfo.ts - 世界信息服务"
+      ],
+      "utilityTools": [
+        "json.ts - SQLite JSON字段处理工具",
+        "errorLogger.ts - 文件日志系统（按日期轮转，自动清理）"
+      ],
+      "webSocketSystem": [
+        "websocket/index.ts - 完整WebSocket服务器实现（JWT认证、房间管理、实时通信）"
+      ],
+      "testDirectory": "src/__tests__",
+      "configFiles": [
+        "package.json",
+        "tsconfig.json",
+        "prisma/schema.prisma",
+        "prisma/seed.ts",
+        ".env.production",
+        ".env.test"
+      ]
+    },
+    {
+      "name": "web",
+      "path": "apps/web",
+      "type": "frontend",
+      "language": "TypeScript",
+      "framework": "Vue 3",
+      "description": "现代化单页应用前端，提供AI角色扮演对话的用户界面",
+      "entryPoints": [
+        "src/main.ts",
+        "src/App.vue"
+      ],
+      "mainInterfaces": [
+        "/ - 首页和产品介绍",
+        "/characters - 角色浏览列表",
+        "/chat - 对话中心",
+        "/chatroom/:roomId - 多人聊天室",
+        "/studio - 创作工坊（角色管理中心）",
+        "/studio/character/create - 创建新角色",
+        "/studio/character/edit/:id - 编辑角色",
+        "/profile - 个人中心",
+        "/profile/settings - 用户设置",
+        "/subscription - 订阅管理",
+        "/marketplace - 角色市场",
+        "/admin/logs - 系统管理日志页面"
+      ],
+      "keyDependencies": [
+        "vue",
+        "vue-router",
+        "pinia",
+        "element-plus",
+        "axios",
+        "socket.io-client",
+        "tailwindcss",
+        "typescript"
+      ],
+      "stateManagement": [
+        "stores/user.ts - 用户状态管理",
+        "stores/theme.ts - 主题状态管理",
+        "stores/character.ts - 角色状态管理（完整CRUD+收藏）",
+        "stores/chat.ts - 聊天状态管理（WebSocket集成）",
+        "stores/chatroom.ts - 聊天室状态管理"
+      ],
+      "componentSystem": [
+        "CharacterCard - 角色卡片组件",
+        "CharacterCreateDialog - 角色创建对话框",
+        "ChatMessage - 聊天消息组件",
+        "MessageInput - 消息输入组件",
+        "CharacterEditor - 角色编辑器",
+        "ErrorBoundary - Vue 3错误边界",
+        "LoadingOverlay - 全屏加载覆盖层",
+        "Pagination - 分页组件",
+        "PageHeader - 统一页面头部组件（渐变标题、操作按钮）"
+      ],
+      "composablesSystem": [
+        "useWebSocket.ts - WebSocket连接管理（自动重连、聊天室功能）"
+      ],
+      "servicesSystem": [
+        "api.ts - 统一API服务基础",
+        "auth.ts - 用户认证服务",
+        "character.ts - 角色管理服务（完整CRUD、收藏、评分、生成、克隆、搜索）",
+        "chat.ts - 聊天服务集成",
+        "marketplace.ts - 角色市场服务"
+      ],
+      "typeSystem": [
+        "user.ts - 用户类型定义",
+        "character.ts - 角色类型定义（完整接口、过滤器、统计）",
+        "chat.ts - 聊天类型定义（会话、消息、设置、生成选项）"
+      ],
+      "styleSystem": [
+        "styles/variables.scss - 完整设计系统（颜色、字体、间距、响应式断点）",
+        "styles/mixins.scss - SCSS混合器集合（响应式、文字截断、Flex、卡片、按钮、玻璃态、渐变文字、滚动条、加载动画）",
+        "styles/main.scss - 全局样式和Element Plus主题覆盖",
+        "styles/fix-layout.css - 布局修复样式"
+      ],
+      "utilitySystem": [
+        "utils/axios.ts - HTTP客户端（拦截器、错误处理、文件上传）",
+        "utils/errorLogger.ts - 前端错误日志系统（API错误、运行时错误、组件错误、持久化存储）"
+      ],
+      "advancedFeatures": [
+        "聊天室功能 - 多用户WebSocket通信",
+        "WebSocket自动重连 - 指数退避算法",
+        "流式消息处理 - 实时AI回复",
+        "角色召唤功能 - 动态AI角色引入",
+        "创作工坊 - 完整角色管理中心（统计、批量操作、状态管理）",
+        "设计系统 - 完整SCSS架构和响应式设计",
+        "错误处理体系 - 前后端统一错误日志和用户反馈"
+      ],
+      "testDirectory": "src/__tests__",
+      "configFiles": [
+        "package.json",
+        "vite.config.ts",
+        "tailwind.config.js",
+        "tsconfig.json",
+        "tsconfig.node.json",
+        ".env.development",
+        ".eslintrc.js",
+        "postcss.config.js"
+      ]
+    }
+  ],
+  "projectDocumentationSystem": {
+    "coreDocuments": [
+      "README.md - 项目概述、快速开始、功能特性和进度跟踪",
+      "DEPLOYMENT.md - 完整部署指南：Docker/手动/生产环境配置",
+      "API_ENDPOINTS.md - API端点映射、WebSocket事件、错误码规范",
+      "问题解决文档.md - 问题跟踪、解决方案记录和开发规范",
+      "CLAUDE.md - AI开发指导、架构总览和模块索引"
+    ],
+    "qualityAssurance": [
+      "代码审查报告.md - 安全审查、部署准备检查（发现严重安全问题）",
+      "本地运行说明.md - 开发环境配置指南",
+      "IMPLEMENTATION_REPORT.md - 功能实现报告"
+    ],
+    "buildAndDeploy": [
+      "turbo.json - Monorepo构建配置",
+      "docker-compose.yml - PostgreSQL容器化配置",
+      "package.json - 项目根配置和脚本集合"
+    ]
+  },
+  "buildAndTestingTools": {
+    "shellScripts": [
+      "quick-start.sh - 一键快速启动脚本（设置环境变量、初始化数据库、并发启动）",
+      "start-local.sh - 本地开发启动脚本",
+      "verify.sh - 项目健康检查脚本",
+      "install.sh - 完整依赖安装和环境配置脚本（系统检查、配置创建、目录初始化）",
+      "start.sh - 生产启动脚本（环境检查、数据库迁移、服务启动）"
+    ],
+    "testingFramework": [
+      "test-api.js - 综合API端点测试（271行完整测试套件）",
+      "complete-test-server.js - 独立测试服务器（559行完整实现）",
+      "test-ai-standalone.js - AI功能专项测试",
+      "test-story-*.js - 业务流程测试套件",
+      "frontend-server.js - 前端测试服务器"
+    ],
+    "developmentTools": [
+      "Turbo - 高效monorepo构建系统",
+      "npm workspaces - 包管理和依赖共享",
+      "TypeScript - 全项目类型安全",
+      "Prisma - 数据库ORM和迁移管理",
+      "Docker - 容器化部署"
+    ]
+  },
+  "securityAndQuality": {
+    "identifiedIssues": [
+      "API密钥硬编码 - 严重安全风险（ai.ts第5-6行）",
+      "弱JWT密钥配置 - 使用占位符密钥",
+      "CORS配置过于宽松 - 禁用重要安全头",
+      "缺少输入验证 - SQL注入和XSS风险",
+      "敏感信息暴露 - .env文件包含实际密钥"
+    ],
+    "securityScores": {
+      "functionalCompleteness": "75/100",
+      "security": "40/100",
+      "deploymentReadiness": "55/100",
+      "codeQuality": "80/100",
+      "documentationCompleteness": "92/100"
+    },
+    "mustFixBeforeDeployment": [
+      "移除所有硬编码的API密钥",
+      "更新JWT密钥为强随机值",
+      "配置生产数据库",
+      "添加.env到.gitignore",
+      "实现邮箱验证",
+      "配置HTTPS和速率限制"
+    ]
+  },
+  "coverage": {
+    "totalFiles": 245,
+    "scannedFiles": 225,
+    "coveragePercentage": 91.8,
+    "completedSections": {
+      "rootDocument": true,
+      "moduleDocuments": true,
+      "coreArchitecture": true,
+      "apiEndpoints": true,
+      "dataModels": true,
+      "componentSystem": true,
+      "controllerArchitecture": true,
+      "middlewareSystem": true,
+      "utilityTools": true,
+      "stateManagement": true,
+      "composablesSystem": true,
+      "advancedServices": true,
+      "environmentConfigs": true,
+      "documentationSystem": true,
+      "buildTools": true,
+      "testingFramework": true,
+      "securityAudit": true,
+      "deploymentGuides": true,
+      "styleSystem": true,
+      "typeSystem": true,
+      "servicesSystem": true,
+      "webSocketSystem": true,
+      "utilitySystem": true,
+      "shellScripts": true
+    },
+    "fourthRoundDiscoveries": {
+      "completeStyleSystemAnalysis": "发现完整SCSS设计系统：变量、混合器、全局样式和Element Plus主题集成",
+      "middlewareArchitectureCompletion": "补完中间件架构：validate.ts Zod验证、requestLogger.ts彩色日志中间件",
+      "webSocketFullImplementation": "完整WebSocket服务器实现分析：JWT认证、房间管理、实时通信、用户状态管理",
+      "frontendServicesEcosystem": "前端服务生态系统：API客户端、角色服务、聊天服务、市场服务完整架构",
+      "typeSystemCompleteness": "类型系统完整性分析：用户、角色、聊天类型定义覆盖所有业务场景",
+      "utilitySystemAdvanced": "高级工具系统：HTTP客户端拦截器、前端错误日志、持久化存储机制",
+      "componentArchitectureRefinement": "组件架构精化：PageHeader统一头部、错误边界、加载覆盖层等通用组件",
+      "buildScriptEcosystem": "构建脚本生态系统：install.sh环境配置、start.sh生产启动等完整自动化",
+      "advancedAIServices": "高级AI服务发现：embedding向量服务、guidance引导、monitor监控、relay中继等"
+    },
+    "remainingGaps": {
+      "unitTestingComplete": "单元测试体系仍需完善（Jest/Vitest配置存在但测试用例不足）",
+      "e2eTestingFramework": "端到端测试框架需要建立完整流程",
+      "performanceMonitoring": "性能监控和优化策略需要具体实现",
+      "oauthCompleteImplementation": "OAuth登录功能需要完整实现细节",
+      "paymentSystemFull": "支付系统需要完整功能实现"
+    }
+  },
+  "ignoredPatterns": [
+    "node_modules/**",
+    ".git/**",
+    "dist/**",
+    "build/**",
+    ".next/**",
+    "__pycache__/**",
+    "*.lock",
+    "*.log",
+    "*.bin",
+    "*.pdf",
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    "*.mp4",
+    "*.zip",
+    "*.tar",
+    "*.gz"
+  ],
+  "finalRecommendations": {
+    "immediateActions": [
+      "🔒 修复所有安全问题：API密钥硬编码、弱JWT密钥、敏感配置保护",
+      "🧪 建立完整的单元测试体系：Jest/Vitest配置和测试用例实现",
+      "⚡ 性能优化：缓存策略、数据库查询优化、响应时间监控",
+      "🔐 OAuth登录功能完整实现：Google/Discord集成"
+    ],
+    "mediumTermGoals": [
+      "💳 支付系统集成：Stripe/PayPal完整实现",
+      "🏪 角色市场功能完善：交易、评价、推荐系统",
+      "📊 监控告警系统：Grafana + Prometheus集成",
+      "🤖 AI功能增强：更多模型支持、高级对话策略"
+    ],
+    "longTermVision": [
+      "🌍 多语言国际化支持",
+      "📱 移动端应用开发",
+      "🎨 高级UI/UX优化",
+      "🔬 AI模型训练和定制化"
+    ]
+  },
+  "truncated": false,
+  "metadata": {
+    "scanMethod": "adaptive-architect",
+    "scanIntensity": "final-refinement-comprehensive",
+    "timeSpent": "extensive-four-rounds",
+    "aiModel": "claude-sonnet-4",
+    "documentStandard": "production-ready-complete-knowledge-base",
+    "incrementalUpdate": true,
+    "previousCoverage": 85.7,
+    "coverageImprovement": 6.1,
+    "finalCoverageAchieved": 91.8,
+    "completenessLevel": "near-perfect-knowledge-system"
+  }
+}

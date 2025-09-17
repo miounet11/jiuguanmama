@@ -156,7 +156,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from '@/utils/axios'
+import { http } from '@/utils/axios'
 
 const route = useRoute()
 
@@ -215,7 +215,7 @@ const sendMessage = async () => {
   isTyping.value = true
 
   try {
-    const response = await axios.post(`/api/chats/${route.params.sessionId}/messages`, {
+    const response = await http.post(`/chats/${route.params.characterId}/messages`, {
       content: messageContent,
       settings
     })
@@ -223,10 +223,10 @@ const sendMessage = async () => {
     isTyping.value = false
 
     const assistantMessage: Message = {
-      id: response.data.id,
+      id: response.id,
       role: 'assistant',
-      content: response.data.content,
-      timestamp: new Date(response.data.timestamp)
+      content: response.content,
+      timestamp: new Date(response.timestamp)
     }
 
     messages.value.push(assistantMessage)
@@ -283,9 +283,9 @@ const clearChat = () => {
 
 const fetchChatData = async () => {
   try {
-    const response = await axios.get(`/api/chats/${route.params.sessionId}`)
-    character.value = response.data.character
-    messages.value = response.data.messages
+    const response = await http.get(`/chats/${route.params.characterId}`)
+    character.value = response.character
+    messages.value = response.messages || []
   } catch (error) {
     console.error('Failed to fetch chat data:', error)
     // 模拟数据

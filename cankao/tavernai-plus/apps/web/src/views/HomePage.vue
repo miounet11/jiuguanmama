@@ -106,7 +106,7 @@ const popularCharacters = ref([]);
 onMounted(async () => {
   // 获取热门角色
   try {
-    const response = await http.get('/api/characters/popular');
+    const response = await http.get('/characters/popular');
     if (response && response.characters) {
       popularCharacters.value = response.characters;
     }
