@@ -208,12 +208,12 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   Search, Star, ChatDotRound, User, TrophyBase, MagicStick,
-  VideoPlay, Reading, Ship, Cpu, Heart
+  VideoPlay, Reading, Ship, Cpu
 } from '@element-plus/icons-vue'
 import CharacterMarketCard from '@/components/marketplace/CharacterMarketCard.vue'
 import { characterService } from '@/services/character'
 import { chatService } from '@/services/chat'
-import { marketplaceService } from '@/services/marketplace'
+import marketplaceService from '@/services/marketplace'
 import type { Character } from '@/types/character'
 
 const router = useRouter()
@@ -291,7 +291,7 @@ const fetchCharacters = async () => {
       minRating: minRating.value,
       showNSFW: showNSFW.value
     })
-    
+
     characters.value = response.characters
     totalCharacters.value = response.pagination.total
   } catch (error) {
@@ -413,7 +413,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   .banner-content {
     position: relative;
     z-index: 2;
@@ -421,7 +421,7 @@ onMounted(() => {
     max-width: 800px;
     padding: 0 20px;
   }
-  
+
   .banner-title {
     font-size: 48px;
     font-weight: 700;
@@ -431,51 +431,51 @@ onMounted(() => {
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  
+
   .banner-subtitle {
     font-size: 20px;
     color: #d1d5db;
     margin: 0 0 40px;
   }
-  
+
   .search-container {
     max-width: 600px;
     margin: 0 auto 30px;
-    
+
     :deep(.el-input__wrapper) {
       background: rgba(255, 255, 255, 0.1);
       border-color: rgba(139, 92, 246, 0.3);
     }
   }
-  
+
   .quick-tags {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
     flex-wrap: wrap;
-    
+
     .tag-label {
       color: #9ca3af;
       font-size: 14px;
     }
-    
+
     .clickable-tag {
       cursor: pointer;
       transition: all 0.3s;
-      
+
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
       }
     }
   }
-  
+
   .banner-decoration {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    
+
     .floating-card {
       position: absolute;
       width: 60px;
@@ -505,21 +505,21 @@ onMounted(() => {
 .sidebar-filters {
   width: 280px;
   flex-shrink: 0;
-  
+
   .filter-section {
     background: rgba(30, 30, 40, 0.8);
     border: 1px solid rgba(139, 92, 246, 0.2);
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 20px;
-    
+
     h3 {
       margin: 0 0 15px;
       font-size: 16px;
       color: #f3f4f6;
     }
   }
-  
+
   .category-list {
     .category-item {
       display: flex;
@@ -530,24 +530,24 @@ onMounted(() => {
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.3s;
-      
+
       &:hover {
         background: rgba(139, 92, 246, 0.1);
       }
-      
+
       &.active {
         background: rgba(139, 92, 246, 0.2);
         border: 1px solid rgba(139, 92, 246, 0.3);
       }
-      
+
       .el-icon {
         font-size: 18px;
         color: #8b5cf6;
       }
-      
+
       span {
         color: #d1d5db;
-        
+
         &.count {
           margin-left: auto;
           font-size: 12px;
@@ -556,29 +556,29 @@ onMounted(() => {
       }
     }
   }
-  
+
   .filter-group {
     margin-bottom: 20px;
-    
+
     label {
       display: block;
       margin-bottom: 8px;
       font-size: 14px;
       color: #9ca3af;
     }
-    
+
     .el-select {
       width: 100%;
     }
   }
-  
+
   .creator-list {
     .creator-item {
       display: flex;
       align-items: center;
       gap: 10px;
       padding: 10px 0;
-      
+
       .rank {
         width: 24px;
         height: 24px;
@@ -591,23 +591,23 @@ onMounted(() => {
         font-weight: bold;
         color: #c084fc;
       }
-      
+
       img {
         width: 36px;
         height: 36px;
         border-radius: 50%;
         object-fit: cover;
       }
-      
+
       .creator-info {
         flex: 1;
-        
+
         .creator-name {
           font-size: 14px;
           color: #f3f4f6;
           margin-bottom: 2px;
         }
-        
+
         .creator-stats {
           font-size: 12px;
           color: #9ca3af;
@@ -626,68 +626,68 @@ onMounted(() => {
 // 精选角色轮播
 .featured-section {
   margin-bottom: 30px;
-  
+
   h2 {
     margin: 0 0 20px;
     font-size: 24px;
     color: #f3f4f6;
   }
-  
+
   .featured-carousel {
     :deep(.el-carousel__container) {
       border-radius: 12px;
       overflow: hidden;
     }
   }
-  
+
   .featured-character {
     display: flex;
     height: 100%;
     background: linear-gradient(135deg, rgba(30, 30, 40, 0.9), rgba(45, 27, 105, 0.9));
     cursor: pointer;
-    
+
     .featured-image {
       width: 400px;
       height: 100%;
-      
+
       img {
         width: 100%;
         height: 100%;
         object-fit: cover;
       }
     }
-    
+
     .featured-info {
       flex: 1;
       padding: 40px;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      
+
       h3 {
         margin: 0 0 15px;
         font-size: 32px;
         color: #f3f4f6;
       }
-      
+
       .featured-description {
         margin: 0 0 20px;
         font-size: 16px;
         color: #d1d5db;
         line-height: 1.6;
       }
-      
+
       .featured-stats {
         display: flex;
         gap: 20px;
         margin-bottom: 30px;
-        
+
         span {
           display: flex;
           align-items: center;
           gap: 5px;
           color: #9ca3af;
-          
+
           .el-icon {
             color: #fbbf24;
           }
@@ -703,14 +703,14 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  
+
   .view-options {
     :deep(.el-segmented) {
       background: rgba(30, 30, 40, 0.8);
-      
+
       .el-segmented__item {
         color: #9ca3af;
-        
+
         &.is-selected {
           background: rgba(139, 92, 246, 0.2);
           color: #c084fc;
@@ -741,13 +741,13 @@ onMounted(() => {
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s;
-    
+
     &:hover {
       transform: translateX(5px);
       border-color: rgba(139, 92, 246, 0.4);
       box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2);
     }
-    
+
     img {
       width: 80px;
       height: 80px;
@@ -755,17 +755,17 @@ onMounted(() => {
       object-fit: cover;
       flex-shrink: 0;
     }
-    
+
     .list-item-info {
       flex: 1;
       min-width: 0;
-      
+
       h3 {
         margin: 0 0 8px;
         font-size: 18px;
         color: #f3f4f6;
       }
-      
+
       p {
         margin: 0 0 10px;
         color: #9ca3af;
@@ -775,30 +775,30 @@ onMounted(() => {
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
       }
-      
+
       .list-item-meta {
         display: flex;
         gap: 5px;
       }
     }
-    
+
     .list-item-stats {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      
+
       .stat-item {
         display: flex;
         align-items: center;
         gap: 5px;
         color: #9ca3af;
-        
+
         .el-icon {
           color: #fbbf24;
         }
       }
     }
-    
+
     .list-item-actions {
       display: flex;
       gap: 10px;
@@ -811,7 +811,7 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   margin-top: 40px;
-  
+
   :deep(.el-pagination) {
     .el-pagination__total,
     .el-pagination__sizes,
@@ -819,7 +819,7 @@ onMounted(() => {
       background: rgba(30, 30, 40, 0.8);
       color: #9ca3af;
     }
-    
+
     .el-pager li.is-active {
       background: rgba(139, 92, 246, 0.2);
       color: #c084fc;
@@ -832,7 +832,7 @@ onMounted(() => {
   .marketplace-content {
     flex-direction: column;
   }
-  
+
   .sidebar-filters {
     width: 100%;
     display: grid;
@@ -844,16 +844,16 @@ onMounted(() => {
 @media (max-width: 768px) {
   .hero-banner {
     height: 300px;
-    
+
     .banner-title {
       font-size: 32px;
     }
-    
+
     .banner-subtitle {
       font-size: 16px;
     }
   }
-  
+
   .character-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }

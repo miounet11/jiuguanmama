@@ -143,30 +143,24 @@ class MonitorService extends events_1.EventEmitter {
                 },
                 _count: true,
                 _avg: {
-                    latency: true
+                    responseTime: true
                 }
             });
             this.metrics.requests.rpm = requestStats._count;
-            this.metrics.requests.avgLatency = requestStats._avg.latency || 0;
-            // 模型使用统计
-            const modelStats = await server_1.prisma.usageLog.groupBy({
-                by: ['model'],
+            this.metrics.requests.avgLatency = requestStats._avg.responseTime || 0;
+            // 模型使用统计（简化版 - 模型字段尚未在UsageLog中实现）
+            const totalRequests = await server_1.prisma.usageLog.count({
                 where: {
                     createdAt: {
                         gte: new Date(Date.now() - 3600000) // 最近1小时
                     }
-                },
-                _count: true,
-                _sum: {
-                    cost: true
                 }
             });
             this.metrics.models.usage.clear();
             this.metrics.models.costs.clear();
-            modelStats.forEach(stat => {
-                this.metrics.models.usage.set(stat.model, stat._count);
-                this.metrics.models.costs.set(stat.model, stat._sum.cost || 0);
-            });
+            // 暂时使用总计数，待模型字段实现后完善
+            this.metrics.models.usage.set('total', totalRequests);
+            this.metrics.models.costs.set('total', 0);
             // 用户统计
             const activeUsers = await server_1.prisma.user.count({
                 where: {
@@ -232,13 +226,18 @@ class MonitorService extends events_1.EventEmitter {
         // 记录告警
         await server_1.prisma.alert.create({
             data: {
-                ruleId: rule.id,
-                name: rule.name,
+                type: 'monitor',
                 severity: rule.severity,
-                metric: rule.metric,
-                value,
-                threshold: rule.threshold,
-                message: `${rule.name}: ${rule.metric} = ${value} ${rule.operator} ${rule.threshold}`
+                title: rule.name,
+                message: `${rule.name}: ${rule.metric} = ${value} ${rule.operator} ${rule.threshold}`,
+                source: 'system_monitor',
+                metadata: JSON.stringify({
+                    ruleId: rule.id,
+                    metric: rule.metric,
+                    value,
+                    threshold: rule.threshold,
+                    operator: rule.operator
+                })
             }
         });
         // 执行告警动作

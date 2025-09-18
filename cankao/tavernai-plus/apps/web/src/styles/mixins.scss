@@ -1,4 +1,8 @@
-// 响应式 Mixin
+// =====================================
+// 响应式设计 Mixins
+// =====================================
+
+// 基础响应式断点
 @mixin respond-to($breakpoint) {
   @media (min-width: $breakpoint) {
     @content;
@@ -13,6 +17,64 @@
 
 @mixin respond-between($min, $max) {
   @media (min-width: $min) and (max-width: $max - 1px) {
+    @content;
+  }
+}
+
+// 语义化断点 Mixins (更直观)
+@mixin mobile-only {
+  @media (max-width: $breakpoint-md - 1px) {
+    @content;
+  }
+}
+
+@mixin tablet-up {
+  @media (min-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin desktop-up {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+@mixin large-desktop-up {
+  @media (min-width: $breakpoint-xl) {
+    @content;
+  }
+}
+
+// 设备特定断点
+@mixin phone-portrait {
+  @media (max-width: $breakpoint-sm - 1px) and (orientation: portrait) {
+    @content;
+  }
+}
+
+@mixin tablet-portrait {
+  @media (min-width: $breakpoint-md) and (max-width: $breakpoint-lg - 1px) and (orientation: portrait) {
+    @content;
+  }
+}
+
+// 高密度屏幕
+@mixin retina {
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+    @content;
+  }
+}
+
+// 用户偏好响应
+@mixin prefers-dark {
+  @media (prefers-color-scheme: dark) {
+    @content;
+  }
+}
+
+@mixin prefers-reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
     @content;
   }
 }
@@ -51,7 +113,7 @@
   border-radius: $border-radius-lg;
   padding: $spacing-4;
   transition: all $transition-base;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: $shadow-lg;
@@ -65,18 +127,18 @@
   color: $text-color;
   border: 1px solid transparent;
   transition: all $transition-base;
-  
+
   &:hover {
     background: darken($bg-color, 5%);
     transform: translateY(-1px);
     box-shadow: $shadow-base;
   }
-  
+
   &:active {
     transform: translateY(0);
     box-shadow: none;
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -103,22 +165,22 @@
 @mixin custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: $bg-tertiary $bg-secondary;
-  
+
   &::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: $bg-secondary;
     border-radius: $border-radius-base;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: $bg-tertiary;
     border-radius: $border-radius-base;
     transition: background $transition-fast;
-    
+
     &:hover {
       background: rgba($primary-color, 0.5);
     }
@@ -133,7 +195,7 @@
   border-top-color: $color;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  
+
   @keyframes spin {
     to { transform: rotate(360deg); }
   }

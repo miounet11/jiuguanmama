@@ -419,6 +419,7 @@ export const useChatStore = defineStore('chat', () => {
 
         return true
       }
+      return false
     } catch (err: any) {
       error.value = err.message || '删除会话失败'
       console.error('Error deleting session:', err)

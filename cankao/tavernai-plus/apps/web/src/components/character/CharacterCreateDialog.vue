@@ -19,7 +19,7 @@
           <el-form-item label="角色名称" prop="name">
             <el-input v-model="form.name" placeholder="输入角色名称" />
           </el-form-item>
-          
+
           <el-form-item label="角色头像">
             <div class="avatar-uploader">
               <el-upload
@@ -33,7 +33,7 @@
               </el-upload>
             </div>
           </el-form-item>
-          
+
           <el-form-item label="角色描述" prop="description">
             <el-input
               v-model="form.description"
@@ -42,7 +42,7 @@
               placeholder="描述角色的基本信息和特点"
             />
           </el-form-item>
-          
+
           <el-form-item label="角色标签">
             <el-select
               v-model="form.tags"
@@ -58,13 +58,13 @@
               />
             </el-select>
           </el-form-item>
-          
+
           <el-form-item label="公开角色">
             <el-switch v-model="form.isPublic" />
             <span class="form-tip">公开后其他用户可以使用您的角色</span>
           </el-form-item>
         </el-tab-pane>
-        
+
         <!-- 人设设定 -->
         <el-tab-pane label="人设设定" name="persona">
           <el-form-item label="性格特征">
@@ -75,7 +75,7 @@
               placeholder="描述角色的性格特征"
             />
           </el-form-item>
-          
+
           <el-form-item label="背景故事">
             <el-input
               v-model="form.backstory"
@@ -84,7 +84,7 @@
               placeholder="角色的背景故事和经历"
             />
           </el-form-item>
-          
+
           <el-form-item label="说话风格">
             <el-input
               v-model="form.speakingStyle"
@@ -93,7 +93,7 @@
               placeholder="角色的说话方式和语言特点"
             />
           </el-form-item>
-          
+
           <el-form-item label="初始消息">
             <el-input
               v-model="form.firstMessage"
@@ -103,7 +103,7 @@
             />
           </el-form-item>
         </el-tab-pane>
-        
+
         <!-- AI 设置 -->
         <el-tab-pane label="AI 设置" name="ai">
           <el-form-item label="模型选择">
@@ -114,7 +114,7 @@
               <el-option label="Gemini Pro" value="gemini-pro" />
             </el-select>
           </el-form-item>
-          
+
           <el-form-item label="温度">
             <el-slider
               v-model="form.temperature"
@@ -124,7 +124,7 @@
               show-input
             />
           </el-form-item>
-          
+
           <el-form-item label="最大长度">
             <el-input-number
               v-model="form.maxTokens"
@@ -133,7 +133,7 @@
               :step="100"
             />
           </el-form-item>
-          
+
           <el-form-item label="系统提示">
             <el-input
               v-model="form.systemPrompt"
@@ -145,7 +145,7 @@
         </el-tab-pane>
       </el-tabs>
     </el-form>
-    
+
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="handleClose">取消</el-button>
@@ -179,7 +179,7 @@ const emit = defineEmits<{
 
 const visible = ref(props.modelValue)
 const activeTab = ref('basic')
-const formRef = ref<FormInstance>()
+const formRef = ref<FormInstance | null>(null)
 const submitting = ref(false)
 const generating = ref(false)
 
@@ -233,7 +233,7 @@ const handleClose = () => {
 const beforeAvatarUpload = (file: File) => {
   const isImage = file.type.startsWith('image/')
   const isLt2M = file.size / 1024 / 1024 < 2
-  
+
   if (!isImage) {
     ElMessage.error('只能上传图片文件')
     return false
@@ -254,14 +254,14 @@ const handleAIGenerate = async () => {
     ElMessage.warning('请先输入角色名称')
     return
   }
-  
+
   generating.value = true
   try {
     const generated = await characterService.generateCharacter({
       name: form.value.name,
       tags: form.value.tags
     })
-    
+
     Object.assign(form.value, generated)
     ElMessage.success('AI 生成成功')
   } catch (error) {
@@ -274,7 +274,7 @@ const handleAIGenerate = async () => {
 
 const handleSubmit = async () => {
   await formRef.value?.validate()
-  
+
   submitting.value = true
   try {
     const character = await characterService.createCharacter(form.value)
@@ -309,19 +309,19 @@ const handleSubmit = async () => {
     position: relative;
     overflow: hidden;
     transition: all 0.3s;
-    
+
     &:hover {
       border-color: #8b5cf6;
     }
   }
-  
+
   .avatar {
     width: 120px;
     height: 120px;
     display: block;
     object-fit: cover;
   }
-  
+
   .avatar-uploader-icon {
     font-size: 28px;
     color: #8b5cf6;

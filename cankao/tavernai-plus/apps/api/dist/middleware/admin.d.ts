@@ -2,7 +2,16 @@ import { Request, Response, NextFunction } from 'express';
 declare global {
     namespace Express {
         interface Request {
-            user?: any;
+            user?: {
+                id: string;
+                username: string;
+                email: string;
+                role: string;
+                credits: number;
+                subscriptionTier: string;
+                isActive: boolean;
+                isVerified: boolean;
+            };
             isAdmin?: boolean;
         }
     }
@@ -31,8 +40,8 @@ export declare enum Permission {
     CHANNEL_VIEW = "channel:view",
     CHANNEL_MANAGE = "channel:manage"
 }
-export declare const requireAdmin: (req: Request, res: Response, next: NextFunction) => Promise<Response<any, Record<string, any>>>;
-export declare const requirePermission: (permission: Permission | Permission[]) => (req: Request, res: Response, next: NextFunction) => Promise<Response<any, Record<string, any>>>;
+export declare const requireAdmin: (req: Request, res: Response, next: NextFunction) => Promise<Response<any, Record<string, any>> | undefined>;
+export declare const requirePermission: (permission: Permission | Permission[]) => (req: Request, res: Response, next: NextFunction) => Promise<Response<any, Record<string, any>> | undefined>;
 export declare const logAdminAction: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 export declare const adminRateLimiter: import("express-rate-limit").RateLimitRequestHandler;
 //# sourceMappingURL=admin.d.ts.map

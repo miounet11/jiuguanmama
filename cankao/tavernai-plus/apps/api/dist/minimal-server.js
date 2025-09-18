@@ -53,7 +53,7 @@ app.post('/api/ai/test', async (req, res) => {
             success: true,
             content: result.content,
             model: result.model,
-            usage: result.usage
+            tokensUsed: result.tokensUsed
         });
     }
     catch (error) {

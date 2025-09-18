@@ -6,6 +6,343 @@ const server_1 = require("../server");
 const server_2 = require("../server");
 const ai_1 = require("../services/ai");
 const router = (0, express_1.Router)();
+// 获取或创建与角色的聊天会话 (兼容前端的 /api/chats/{characterId} 调用)
+router.get('/:characterId', auth_1.authenticate, async (req, res, next) => {
+    try {
+        const { characterId } = req.params;
+        // 验证角色是否存在
+        const character = await server_1.prisma.character.findUnique({
+            where: { id: characterId },
+            select: {
+                id: true,
+                name: true,
+                avatar: true,
+                description: true,
+                firstMessage: true,
+                creator: {
+                    select: {
+                        username: true
+                    }
+                }
+            }
+        });
+        if (!character) {
+            return res.status(404).json({
+                success: false,
+                message: 'Character not found'
+            });
+        }
+        // 查找现有会话
+        let session = await server_1.prisma.chatSession.findFirst({
+            where: {
+                userId: req.user.id,
+                characterId,
+                isArchived: false
+            },
+            orderBy: { updatedAt: 'desc' }
+        });
+        // 如果没有现有会话，创建新的
+        if (!session) {
+            session = await server_1.prisma.chatSession.create({
+                data: {
+                    userId: req.user.id,
+                    characterId,
+                    title: `与${character.name}的对话`,
+                    metadata: JSON.stringify({
+                        systemPrompt: character.firstMessage || `你好！我是${character.name}`,
+                        temperature: 0.7,
+                        maxTokens: 1000,
+                        model: 'grok-3'
+                    })
+                }
+            });
+            // 如果角色有首条消息，添加它
+            if (character.firstMessage) {
+                await server_1.prisma.message.create({
+                    data: {
+                        sessionId: session.id,
+                        characterId,
+                        role: 'assistant',
+                        content: character.firstMessage,
+                        tokens: Math.ceil(character.firstMessage.length / 4)
+                    }
+                });
+            }
+        }
+        // 获取消息历史
+        const messages = await server_1.prisma.message.findMany({
+            where: {
+                sessionId: session.id,
+                deleted: false
+            },
+            orderBy: { createdAt: 'asc' },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true
+                    }
+                },
+                character: {
+                    select: {
+                        id: true,
+                        name: true,
+                        avatar: true
+                    }
+                }
+            }
+        });
+        res.json({
+            success: true,
+            session: {
+                ...session,
+                character: {
+                    ...character,
+                    creator: character.creator.username
+                }
+            },
+            character: {
+                ...character,
+                creator: character.creator.username
+            },
+            messages
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// 发送消息到指定角色会话 (兼容前端的 /api/chats/{characterId}/messages 调用)
+router.post('/:characterId/messages', auth_1.authenticate, async (req, res, next) => {
+    try {
+        const { content, settings = {}, stream = false } = req.body;
+        const { characterId } = req.params;
+        // 验证角色是否存在
+        const character = await server_1.prisma.character.findUnique({
+            where: { id: characterId },
+            include: { creator: true }
+        });
+        if (!character) {
+            return res.status(404).json({
+                success: false,
+                message: 'Character not found'
+            });
+        }
+        // 查找或创建会话
+        let session = await server_1.prisma.chatSession.findFirst({
+            where: {
+                characterId,
+                userId: req.user.id
+            }
+        });
+        if (!session) {
+            session = await server_1.prisma.chatSession.create({
+                data: {
+                    userId: req.user.id,
+                    characterId,
+                    title: `与${character.name}的对话`,
+                    metadata: JSON.stringify({
+                        systemPrompt: character.firstMessage || `你好！我是${character.name}`,
+                        temperature: settings.temperature || 0.7,
+                        maxTokens: settings.maxTokens || 1000,
+                        model: settings.model || 'grok-3'
+                    })
+                }
+            });
+        }
+        // 创建用户消息
+        const userMessage = await server_1.prisma.message.create({
+            data: {
+                sessionId: session.id,
+                userId: req.user.id,
+                role: 'user',
+                content,
+                tokens: Math.ceil(content.length / 4)
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true
+                    }
+                }
+            }
+        });
+        // 更新会话统计
+        await server_1.prisma.chatSession.update({
+            where: { id: session.id },
+            data: {
+                messageCount: { increment: 1 },
+                lastMessageAt: new Date(),
+                totalTokens: { increment: userMessage.tokens }
+            }
+        });
+        // 获取历史消息作为上下文
+        const recentMessages = await server_1.prisma.message.findMany({
+            where: {
+                sessionId: session.id,
+                deleted: false
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+            select: {
+                role: true,
+                content: true
+            }
+        });
+        // 构建消息历史
+        const messageHistory = recentMessages
+            .reverse()
+            .map(msg => ({
+            role: msg.role,
+            content: msg.content
+        }));
+        if (stream) {
+            // 流式响应
+            res.writeHead(200, {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Cache-Control',
+                'X-Accel-Buffering': 'no'
+            });
+            // 发送连接确认
+            res.write(`data: ${JSON.stringify({
+                type: 'connected',
+                userMessage: {
+                    id: userMessage.id,
+                    content: userMessage.content,
+                    timestamp: userMessage.createdAt
+                }
+            })}\n\n`);
+            let fullContent = '';
+            let aiMessage = null;
+            try {
+                // 使用流式生成
+                const streamGenerator = ai_1.aiService.generateChatStream({
+                    sessionId: session.id,
+                    userId: req.user.id,
+                    characterId: character.id,
+                    messages: messageHistory,
+                    model: settings.model || session.model || 'grok-3',
+                    temperature: settings.temperature || 0.7,
+                    maxTokens: settings.maxTokens || 1000
+                });
+                for await (const chunk of streamGenerator) {
+                    if (chunk && chunk.trim()) {
+                        fullContent += chunk;
+                        // 发送流式数据块
+                        res.write(`data: ${JSON.stringify({
+                            type: 'chunk',
+                            content: chunk,
+                            fullContent: fullContent
+                        })}\n\n`);
+                    }
+                }
+                // 保存完整的AI消息
+                if (fullContent.trim()) {
+                    aiMessage = await server_1.prisma.message.create({
+                        data: {
+                            sessionId: session.id,
+                            characterId: character.id,
+                            role: 'assistant',
+                            content: fullContent,
+                            tokens: ai_1.aiService.estimateTokens(fullContent)
+                        }
+                    });
+                    // 更新会话统计
+                    await server_1.prisma.chatSession.update({
+                        where: { id: session.id },
+                        data: {
+                            messageCount: { increment: 1 },
+                            lastMessageAt: new Date(),
+                            totalTokens: { increment: aiMessage.tokens }
+                        }
+                    });
+                }
+                // 发送完成信号
+                res.write(`data: ${JSON.stringify({
+                    type: 'complete',
+                    id: aiMessage?.id || Date.now().toString(),
+                    content: fullContent,
+                    timestamp: aiMessage?.createdAt || new Date()
+                })}\n\n`);
+            }
+            catch (error) {
+                console.error('流式生成失败:', error);
+                res.write(`data: ${JSON.stringify({
+                    type: 'error',
+                    message: '抱歉，我现在无法响应。请稍后再试。'
+                })}\n\n`);
+            }
+            finally {
+                res.end();
+            }
+        }
+        else {
+            // 非流式响应（原有逻辑）
+            try {
+                // 生成AI回复
+                const aiResponse = await ai_1.aiService.generateChatResponse({
+                    sessionId: session.id,
+                    userId: req.user.id,
+                    characterId: character.id,
+                    messages: messageHistory,
+                    model: settings.model || session.model || 'grok-3',
+                    temperature: settings.temperature || 0.7,
+                    maxTokens: settings.maxTokens || 1000,
+                    stream: false
+                });
+                // 创建AI消息
+                const aiMessage = await server_1.prisma.message.create({
+                    data: {
+                        sessionId: session.id,
+                        characterId: character.id,
+                        role: 'assistant',
+                        content: aiResponse.content,
+                        tokens: ai_1.aiService.estimateTokens(aiResponse.content)
+                    }
+                });
+                // 更新会话统计
+                await server_1.prisma.chatSession.update({
+                    where: { id: session.id },
+                    data: {
+                        messageCount: { increment: 1 },
+                        lastMessageAt: new Date(),
+                        totalTokens: { increment: aiMessage.tokens }
+                    }
+                });
+                // 返回AI回复消息给前端
+                res.json({
+                    success: true,
+                    id: aiMessage.id,
+                    content: aiMessage.content,
+                    timestamp: aiMessage.createdAt,
+                    userMessage
+                });
+            }
+            catch (aiError) {
+                console.error('生成 AI 回复失败:', aiError);
+                // 如果AI回复失败，至少返回成功的用户消息
+                res.json({
+                    success: true,
+                    id: Date.now().toString(),
+                    content: '抱歉，我现在无法响应。请稍后再试。',
+                    timestamp: new Date(),
+                    userMessage
+                });
+            }
+        }
+    }
+    catch (error) {
+        if (!res.headersSent) {
+            next(error);
+        }
+    }
+});
 // 获取用户的聊天会话列表 (兼容前端的 /api/chats 调用)
 router.get('/', auth_1.authenticate, async (req, res, next) => {
     try {

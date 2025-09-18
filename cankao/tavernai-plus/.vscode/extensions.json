@@ -1,0 +1,77 @@
+{
+  "recommendations": [
+    // TypeScript支持
+    "ms-vscode.vscode-typescript-next",
+
+    // Vue.js支持
+    "Vue.volar",
+    "Vue.vscode-typescript-vue-plugin",
+
+    // 代码质量和格式化
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+
+    // Git支持
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+
+    // 实用工具
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-json",
+    "redhat.vscode-yaml",
+
+    // 开发体验增强
+    "usernamehw.errorlens",
+    "streetsidesoftware.code-spell-checker",
+    "gruntfuggly.todo-tree",
+
+    // 主题和图标
+    "PKief.material-icon-theme",
+    "GitHub.github-vscode-theme",
+
+    // 调试和测试
+    "ms-vscode.vscode-node-debug2",
+    "hbenl.vscode-test-explorer",
+
+    // 数据库支持
+    "ms-vscode.vscode-sqlite",
+
+    // 文档和注释
+    "aaron-bond.better-comments",
+    "shd101wyy.markdown-preview-enhanced",
+
+    // API开发
+    "humao.rest-client",
+    "rangav.vscode-thunder-client",
+
+    // 代码片段
+    "hollowtree.vue-snippets",
+    "johnsoncodehk.vscode-typescript-importer",
+
+    // 协作工具
+    "MS-vsliveshare.vsliveshare",
+
+    // 性能和分析
+    "ms-vscode.vscode-webpack-analyzer",
+
+    // 环境变量支持
+    "mikestead.dotenv",
+
+    // 路径智能提示
+    "christian-kohler.path-intellisense",
+
+    // 自动重命名标签
+    "formulahendry.auto-rename-tag",
+
+    // 括号配对着色
+    "CoenraadS.bracket-pair-colorizer-2",
+
+    // 文件图标
+    "file-icons.file-icons"
+  ],
+  "unwantedRecommendations": [
+    // 避免与Volar冲突的扩展
+    "octref.vetur",
+    "ms-vscode.vscode-typescript-tslint-plugin"
+  ]
+}

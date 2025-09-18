@@ -276,14 +276,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { useChatRoomStore } from '@/stores/chatroom'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { formatTime } from '@/utils/date'
 import {
-  ArrowLeft, User, Connection, Plus, Setting, ChevronLeft, ChevronRight,
+  ArrowLeft, User, Connection, Plus, Setting, ArrowRight, ArrowDown,
   MoreFilled, Close, Promotion
 } from '@element-plus/icons-vue'
 import CharacterSummonDialog from '@/components/chatroom/CharacterSummonDialog.vue'
@@ -318,7 +319,7 @@ const typingUsers = ref<string[]>([])
 const aiThinking = ref<any>(null)
 
 // 消息容器引用
-const messagesContainer = ref<HTMLElement>()
+const messagesContainer = ref<HTMLElement | null>(null)
 
 // 计算属性
 const participantCount = computed(() => onlineUsers.value.length + aiCharacters.value.length)
@@ -364,8 +365,8 @@ const loadRoomData = async () => {
     roomInfo.value = roomData
 
     // 分离用户和AI角色
-    onlineUsers.value = roomData.participants.filter(p => p.user) || []
-    aiCharacters.value = roomData.participants.filter(p => p.character) || []
+    onlineUsers.value = roomData.participants.filter((p: any) => p.user) || []
+    aiCharacters.value = roomData.participants.filter((p: any) => p.character) || []
 
     // 加载消息历史
     const messagesData = await chatRoomStore.getMessages(roomId)
@@ -449,7 +450,9 @@ const removeCharacter = (characterId: string) => {
 }
 
 // 输入事件处理
-const onInputKeydown = (e: KeyboardEvent) => {
+const onInputKeydown = (e: Event | KeyboardEvent) => {
+  // 类型守卫：确保是 KeyboardEvent
+  if (!(e instanceof KeyboardEvent)) return
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
     sendMessage()

@@ -1,26 +1,27 @@
 // 导入变量和混合
 @import './variables.scss';
 @import './mixins.scss';
+@import './utilities.scss';
 
 // Element Plus 主题覆盖
 :root {
   --el-color-primary: #{$primary-color};
   --el-color-primary-light-3: #{$primary-light};
   --el-color-primary-dark-2: #{$primary-dark};
-  
+
   --el-bg-color: #{$bg-primary};
   --el-bg-color-page: #{$bg-primary};
   --el-bg-color-overlay: #{$bg-secondary};
-  
+
   --el-text-color-primary: #{$text-primary};
   --el-text-color-regular: #{$text-secondary};
   --el-text-color-secondary: #{$text-tertiary};
   --el-text-color-placeholder: #{$text-muted};
-  
+
   --el-border-color: #{$bg-tertiary};
   --el-border-color-light: #{$bg-secondary};
   --el-border-color-lighter: #{$bg-card};
-  
+
   --el-fill-color: #{$bg-card};
   --el-fill-color-light: #{$bg-tertiary};
   --el-fill-color-lighter: #{$bg-secondary};
@@ -54,11 +55,11 @@ a {
   color: $primary-color;
   text-decoration: none;
   transition: color $transition-fast;
-  
+
   &:hover {
     color: $primary-light;
   }
-  
+
   &:active {
     color: $primary-dark;
   }
@@ -75,33 +76,7 @@ html {
   @include custom-scrollbar;
 }
 
-// 工具类
-.container {
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 $spacing-4;
-  max-width: $container-max-width;
-  
-  @include respond-to($breakpoint-sm) {
-    padding: 0 $spacing-6;
-  }
-}
-
-.gradient-text {
-  @include gradient-text;
-}
-
-.text-truncate {
-  @include text-truncate;
-}
-
-.flex-center {
-  @include flex-center;
-}
-
-.flex-between {
-  @include flex-between;
-}
+// 基础工具类（utilities.scss中包含更全面的工具类）
 
 // 动画类
 .fade-enter-active, .fade-leave-active {
@@ -147,17 +122,17 @@ html {
 .grid {
   display: grid;
   gap: $spacing-4;
-  
+
   &.grid-1 { grid-template-columns: 1fr; }
-  
-  &.grid-2 { 
+
+  &.grid-2 {
     grid-template-columns: 1fr;
     @include respond-to($breakpoint-sm) {
       grid-template-columns: repeat(2, 1fr);
     }
   }
-  
-  &.grid-3 { 
+
+  &.grid-3 {
     grid-template-columns: 1fr;
     @include respond-to($breakpoint-sm) {
       grid-template-columns: repeat(2, 1fr);
@@ -166,8 +141,8 @@ html {
       grid-template-columns: repeat(3, 1fr);
     }
   }
-  
-  &.grid-4 { 
+
+  &.grid-4 {
     grid-template-columns: 1fr;
     @include respond-to($breakpoint-sm) {
       grid-template-columns: repeat(2, 1fr);
@@ -182,36 +157,7 @@ html {
 }
 
 // 间距工具类
-@each $key, $value in (
-  '0': $spacing-0,
-  '1': $spacing-1,
-  '2': $spacing-2,
-  '3': $spacing-3,
-  '4': $spacing-4,
-  '5': $spacing-5,
-  '6': $spacing-6,
-  '8': $spacing-8,
-  '10': $spacing-10,
-  '12': $spacing-12,
-  '16': $spacing-16,
-  '20': $spacing-20
-) {
-  .m-#{$key} { margin: $value !important; }
-  .mt-#{$key} { margin-top: $value !important; }
-  .mr-#{$key} { margin-right: $value !important; }
-  .mb-#{$key} { margin-bottom: $value !important; }
-  .ml-#{$key} { margin-left: $value !important; }
-  .mx-#{$key} { margin-left: $value !important; margin-right: $value !important; }
-  .my-#{$key} { margin-top: $value !important; margin-bottom: $value !important; }
-  
-  .p-#{$key} { padding: $value !important; }
-  .pt-#{$key} { padding-top: $value !important; }
-  .pr-#{$key} { padding-right: $value !important; }
-  .pb-#{$key} { padding-bottom: $value !important; }
-  .pl-#{$key} { padding-left: $value !important; }
-  .px-#{$key} { padding-left: $value !important; padding-right: $value !important; }
-  .py-#{$key} { padding-top: $value !important; padding-bottom: $value !important; }
-}
+// 间距工具类已移至 utilities.scss
 
 // 高对比度模式支持
 @media (prefers-contrast: high) {
@@ -232,21 +178,21 @@ html {
   --el-bg-color: #FFFFFF;
   --el-bg-color-page: #F9FAFB;
   --el-bg-color-overlay: #FFFFFF;
-  
+
   --el-text-color-primary: #1F2937;
   --el-text-color-regular: #4B5563;
   --el-text-color-secondary: #6B7280;
   --el-text-color-placeholder: #9CA3AF;
-  
+
   --el-border-color: #E5E7EB;
   --el-border-color-light: #F3F4F6;
   --el-border-color-lighter: #F9FAFB;
-  
+
   $bg-primary: #FFFFFF;
   $bg-secondary: #F9FAFB;
   $bg-tertiary: #F3F4F6;
   $bg-card: #FFFFFF;
-  
+
   $text-primary: #1F2937;
   $text-secondary: #4B5563;
   $text-tertiary: #6B7280;

@@ -43,7 +43,7 @@
           <el-tag
             v-for="tag in quickTags"
             :key="tag"
-            :type="selectedTag === tag ? 'primary' : ''"
+            :type="selectedTag === tag ? 'primary' : undefined"
             @click="toggleTag(tag)"
             class="cursor-pointer transition-all hover:scale-105"
             effect="plain"
@@ -165,7 +165,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useCharacterStore } from '@/stores/character'
+// import { useCharacterStore } from '@/stores/character' // 暂时未使用
 import { useChatStore } from '@/stores/chat'
 import {
   Search,
@@ -208,8 +208,8 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
-const characterStore = useCharacterStore()
-const chatStore = useChatStore()
+// const characterStore = useCharacterStore() // 暂时未使用
+// const chatStore = useChatStore() // 暂时未使用
 
 // 状态
 const loading = ref(false)
@@ -253,7 +253,7 @@ const filteredCharacters = computed(() => {
 })
 
 // 方法
-const handleSearch = debounce((query: string) => {
+const handleSearch = debounce((_query: string) => {
   // 搜索逻辑已在 computed 中处理
 }, 300)
 
@@ -325,8 +325,9 @@ const loadData = async () => {
       // 更多角色...
     ]
 
-    // 加载最近对话
-    recentChats.value = await chatStore.getRecentChats()
+    // 加载最近对话 - TODO: 实现 getRecentChats 方法
+    // recentChats.value = await chatStore.getRecentChats()
+    recentChats.value = []
   } catch (error) {
     console.error('加载数据失败:', error)
   } finally {

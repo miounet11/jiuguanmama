@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <router-view />
+    <AppLayout />
   </div>
 </template>
 
@@ -8,6 +8,7 @@
 import { onMounted } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 import { useUserStore } from '@/stores/user'
+import AppLayout from '@/components/layout/AppLayout.vue'
 
 const themeStore = useThemeStore()
 const userStore = useUserStore()
@@ -15,7 +16,7 @@ const userStore = useUserStore()
 onMounted(async () => {
   // 初始化主题
   themeStore.initTheme()
-  
+
   // 尝试恢复用户会话
   await userStore.restoreSession()
 })

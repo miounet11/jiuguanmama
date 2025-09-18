@@ -151,15 +151,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import {
-  Close,
-  Loading,
-  Check,
-  Warning,
-  WifiOff,
-  Wifi,
-  InfoFilled,
-  SuccessFilled,
-  CircleCloseFilled
+  Close
 } from '@element-plus/icons-vue'
 
 interface Character {
@@ -275,14 +267,14 @@ const removeMessageStatus = (id: string) => {
   }
 }
 
-const showNotification = (notification: Omit<Notification, 'id'>) => {
+const showNotification = (notificationData: Omit<Notification, 'id'>) => {
   const id = Date.now().toString()
-  notification.value = { ...notification, id }
+  notification.value = { ...notificationData, id }
 
-  if (notification.duration !== 0) {
+  if (notificationData.duration !== 0) {
     setTimeout(() => {
       dismissNotification()
-    }, notification.duration || 5000)
+    }, notificationData.duration || 5000)
   }
 }
 

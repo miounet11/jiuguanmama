@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onErrorCaptured } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -48,8 +48,8 @@ const errorMessage = ref('页面加载失败，请稍后重试')
 const errorDetails = ref('')
 const isDevelopment = import.meta.env.DEV
 
-// 捕获子组件错误
-onErrorCaptured((err: Error) => {
+// 手动错误处理方法
+const handleError = (err: Error) => {
   console.error('Error caught by boundary:', err)
 
   hasError.value = true
@@ -71,10 +71,7 @@ onErrorCaptured((err: Error) => {
   }
 
   errorDetails.value = `${err.name}: ${err.message}\n${err.stack}`
-
-  // 阻止错误继续传播
-  return false
-})
+}
 
 const handleReload = () => {
   hasError.value = false

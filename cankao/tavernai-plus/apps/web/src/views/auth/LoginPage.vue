@@ -159,8 +159,7 @@ const handleLogin = async () => {
   try {
     await userStore.login({
       email: formData.email,
-      password: formData.password,
-      rememberMe: rememberMe.value
+      password: formData.password
     })
 
     const redirectPath = route.query.redirect as string || '/'

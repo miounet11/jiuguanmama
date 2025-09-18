@@ -11,7 +11,7 @@ router.get('/', optionalAuth, async (req: AuthRequest, res, next) => {
 
     res.json({
       success: true,
-      models: models.map(model => ({
+      data: models.map(model => ({
         id: model.id,
         name: model.name,
         provider: model.provider,
@@ -20,11 +20,17 @@ router.get('/', optionalAuth, async (req: AuthRequest, res, next) => {
         description: model.description,
         features: model.features,
         pricePer1k: model.pricePer1k,
-        isRecommended: ['grok-3', 'gpt-4', 'claude-3'].includes(model.id)
+        available: true,
+        recommended: ['grok-3', 'gpt-4', 'claude-3'].includes(model.id)
       }))
     })
   } catch (error) {
-    next(error)
+    console.error('获取模型列表失败:', error)
+    res.status(500).json({
+      success: false,
+      message: '获取模型列表失败',
+      error: error instanceof Error ? error.message : '未知错误'
+    })
   }
 })
 
@@ -228,6 +234,97 @@ router.post('/preferences', authenticate, async (req: AuthRequest, res, next) =>
     })
   } catch (error) {
     next(error)
+  }
+})
+
+// 验证所有模型的可用性
+router.post('/validate', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const models = await aiService.getAvailableModels()
+    const validationResults = []
+
+    for (const model of models) {
+      try {
+        const isValid = await aiService.validateModel(model.id)
+        validationResults.push({
+          id: model.id,
+          name: model.name,
+          available: isValid,
+          validatedAt: new Date().toISOString()
+        })
+      } catch (error) {
+        validationResults.push({
+          id: model.id,
+          name: model.name,
+          available: false,
+          error: error instanceof Error ? error.message : '验证失败',
+          validatedAt: new Date().toISOString()
+        })
+      }
+    }
+
+    res.json({
+      success: true,
+      data: validationResults
+    })
+  } catch (error) {
+    console.error('验证模型失败:', error)
+    res.status(500).json({
+      success: false,
+      message: '验证模型失败',
+      error: error instanceof Error ? error.message : '未知错误'
+    })
+  }
+})
+
+// 批量测试模型
+router.post('/batch-test', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { modelIds, prompt = '你好，请简单介绍一下自己。' } = req.body
+    const models = modelIds || (await aiService.getAvailableModels()).map(m => m.id)
+    const testResults = []
+
+    for (const modelId of models) {
+      const startTime = Date.now()
+      try {
+        const response = await aiService.generateChatResponse({
+          model: modelId,
+          messages: [{ role: 'user', content: prompt }],
+          maxTokens: 100,
+          temperature: 0.7
+        })
+
+        const responseTime = Date.now() - startTime
+        testResults.push({
+          modelId,
+          success: true,
+          responseTime,
+          response: response.content,
+          tokensUsed: response.tokensUsed || 0,
+          testedAt: new Date().toISOString()
+        })
+      } catch (error) {
+        testResults.push({
+          modelId,
+          success: false,
+          responseTime: Date.now() - startTime,
+          error: error instanceof Error ? error.message : '测试失败',
+          testedAt: new Date().toISOString()
+        })
+      }
+    }
+
+    res.json({
+      success: true,
+      data: testResults
+    })
+  } catch (error) {
+    console.error('批量测试模型失败:', error)
+    res.status(500).json({
+      success: false,
+      message: '批量测试模型失败',
+      error: error instanceof Error ? error.message : '未知错误'
+    })
   }
 })
 

@@ -225,9 +225,7 @@ import {
   Close,
   Refresh,
   Download,
-  Delete,
-  VideoPlay,
-  VideoPause
+  Delete
 } from '@element-plus/icons-vue'
 
 // 组件导入
@@ -264,7 +262,7 @@ const route = useRoute()
 const router = useRouter()
 const characterStore = useCharacterStore()
 const chatStore = useChatStore()
-const userStore = useUserStore()
+
 
 // 响应式数据
 const character = ref<any>(null)
@@ -290,8 +288,8 @@ const chatSettings = ref<ChatSettings>({
 })
 
 // 引用
-const messagesRef = ref()
-const mobileMessagesRef = ref()
+const messagesRef = ref<any>(null)
+const mobileMessagesRef = ref<any>(null)
 
 // 计算属性
 const canRegenerate = computed(() => {
@@ -483,7 +481,7 @@ const handleVoiceResult = (text: string) => {
   showVoiceInput.value = false
 }
 
-const handleScroll = (event: Event) => {
+const handleScroll = () => {
   // 处理滚动事件
 }
 

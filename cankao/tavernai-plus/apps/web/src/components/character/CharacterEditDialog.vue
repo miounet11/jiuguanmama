@@ -1,443 +1,432 @@
 <template>
   <el-dialog
-    v-model="visible"
-    title="编辑角色"
-    width="800px"
-    class="character-edit-dialog"
-    :before-close="handleClose"
+    v-model="dialogVisible"
+    :title="isEdit ? '编辑角色' : '创建角色'"
+    :width="isMobile ? '95%' : '80%'"
+    :max-width="900"
+    :destroy-on-close="true"
+    @close="handleClose"
   >
-    <div v-if="loading" class="loading-container">
-      <el-skeleton :rows="8" animated />
-    </div>
+    <div class="character-edit-form">
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="120px"
+        size="default"
+      >
+        <el-row :gutter="24">
+          <!-- 左侧：基本信息 -->
+          <el-col :xs="24" :md="12">
+            <div class="form-section">
+              <h3 class="section-title">基本信息</h3>
 
-    <el-form
-      v-else
-      ref="formRef"
-      :model="form"
-      :rules="rules"
-      label-width="100px"
-      class="edit-form"
-    >
-      <el-tabs v-model="activeTab">
-        <!-- 基本信息 -->
-        <el-tab-pane label="基本信息" name="basic">
-          <el-form-item label="角色名称" prop="name">
-            <el-input v-model="form.name" placeholder="输入角色名称" />
-          </el-form-item>
+              <!-- 角色头像 -->
+              <el-form-item label="角色头像">
+                <div class="avatar-upload">
+                  <el-upload
+                    class="avatar-uploader"
+                    :action="uploadUrl"
+                    :headers="uploadHeaders"
+                    :show-file-list="false"
+                    :on-success="handleAvatarSuccess"
+                    :before-upload="beforeAvatarUpload"
+                    accept="image/*"
+                  >
+                    <img v-if="form.avatar" :src="form.avatar" class="avatar" alt="角色头像" />
+                    <div v-else class="avatar-placeholder">
+                      <el-icon class="avatar-uploader-icon"><Plus /></el-icon>
+                      <div class="upload-text">上传头像</div>
+                    </div>
+                  </el-upload>
 
-          <el-form-item label="角色头像">
-            <div class="avatar-uploader">
-              <el-upload
-                :show-file-list="false"
-                :before-upload="beforeAvatarUpload"
-                :on-success="handleAvatarSuccess"
-                :on-error="handleAvatarError"
-                action="/api/upload/avatar"
-              >
-                <img v-if="form.avatar" :src="form.avatar" class="avatar" />
-                <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-              </el-upload>
-              <el-button
-                v-if="form.avatar"
-                size="small"
-                type="danger"
-                @click="removeAvatar"
-                class="remove-avatar-btn"
-              >
-                删除头像
-              </el-button>
-            </div>
-          </el-form-item>
+                  <!-- AI生成头像按钮 -->
+                  <el-button
+                    v-if="form.name && form.description"
+                    type="primary"
+                    size="small"
+                    @click="generateAvatar"
+                    :loading="generatingAvatar"
+                    class="generate-avatar-btn"
+                  >
+                    <el-icon><MagicStick /></el-icon>
+                    AI生成头像
+                  </el-button>
+                </div>
+              </el-form-item>
 
-          <el-form-item label="角色描述" prop="description">
-            <el-input
-              v-model="form.description"
-              type="textarea"
-              :rows="4"
-              placeholder="描述角色的基本信息和特点"
-            />
-          </el-form-item>
-
-          <el-form-item label="角色类别">
-            <el-select v-model="form.category" placeholder="选择角色类别">
-              <el-option
-                v-for="category in categories"
-                :key="category"
-                :label="category"
-                :value="category"
-              />
-            </el-select>
-          </el-form-item>
-
-          <el-form-item label="角色标签">
-            <el-select
-              v-model="form.tags"
-              multiple
-              filterable
-              allow-create
-              placeholder="选择或创建标签"
-              style="width: 100%"
-            >
-              <el-option
-                v-for="tag in availableTags"
-                :key="tag"
-                :label="tag"
-                :value="tag"
-              />
-            </el-select>
-            <div class="form-tip">最多选择5个标签</div>
-          </el-form-item>
-
-          <el-form-item label="角色设置">
-            <el-row :gutter="20">
-              <el-col :span="8">
-                <el-switch v-model="form.isPublic" />
-                <span class="switch-label">公开角色</span>
-              </el-col>
-              <el-col :span="8">
-                <el-switch v-model="form.isFeatured" />
-                <span class="switch-label">推荐角色</span>
-              </el-col>
-              <el-col :span="8">
-                <el-switch v-model="form.isNSFW" />
-                <span class="switch-label">成人内容</span>
-              </el-col>
-            </el-row>
-          </el-form-item>
-        </el-tab-pane>
-
-        <!-- 人设设定 -->
-        <el-tab-pane label="人设设定" name="persona">
-          <el-form-item label="性格特征">
-            <el-input
-              v-model="form.personality"
-              type="textarea"
-              :rows="3"
-              placeholder="描述角色的性格特征"
-              maxlength="500"
-              show-word-limit
-            />
-          </el-form-item>
-
-          <el-form-item label="背景故事">
-            <el-input
-              v-model="form.backstory"
-              type="textarea"
-              :rows="4"
-              placeholder="角色的背景故事和经历"
-              maxlength="1000"
-              show-word-limit
-            />
-          </el-form-item>
-
-          <el-form-item label="说话风格">
-            <el-input
-              v-model="form.speakingStyle"
-              type="textarea"
-              :rows="3"
-              placeholder="角色的说话方式和语言特点"
-              maxlength="300"
-              show-word-limit
-            />
-          </el-form-item>
-
-          <el-form-item label="初始消息">
-            <el-input
-              v-model="form.firstMessage"
-              type="textarea"
-              :rows="3"
-              placeholder="角色的第一条消息"
-              maxlength="300"
-              show-word-limit
-            />
-          </el-form-item>
-
-          <el-form-item label="示例对话">
-            <div class="example-conversations">
-              <div
-                v-for="(example, index) in form.exampleConversations"
-                :key="index"
-                class="example-item"
-              >
+              <!-- 角色名称 -->
+              <el-form-item label="角色名称" prop="name">
                 <el-input
-                  v-model="example.user"
-                  placeholder="用户消息"
-                  class="mb-2"
+                  v-model="form.name"
+                  placeholder="输入角色名称"
+                  maxlength="50"
+                  show-word-limit
                 />
+              </el-form-item>
+
+              <!-- 角色描述 -->
+              <el-form-item label="角色描述" prop="description">
                 <el-input
-                  v-model="example.character"
-                  placeholder="角色回复"
+                  v-model="form.description"
+                  type="textarea"
+                  :rows="4"
+                  placeholder="简单描述这个角色的外貌、身份、特点等"
+                  maxlength="500"
+                  show-word-limit
+                />
+              </el-form-item>
+
+              <!-- 首条消息 -->
+              <el-form-item label="首条消息" prop="firstMessage">
+                <el-input
+                  v-model="form.firstMessage"
+                  type="textarea"
+                  :rows="3"
+                  placeholder="角色与用户初次见面时会说的话"
+                  maxlength="300"
+                  show-word-limit
+                />
+              </el-form-item>
+
+              <!-- 标签 -->
+              <el-form-item label="标签">
+                <div class="tags-input">
+                  <el-tag
+                    v-for="tag in form.tags"
+                    :key="tag"
+                    closable
+                    :disable-transitions="false"
+                    @close="removeTag(tag)"
+                    class="tag-item"
+                  >
+                    {{ tag }}
+                  </el-tag>
+
+                  <el-input
+                    v-if="inputVisible"
+                    ref="inputRef"
+                    v-model="inputValue"
+                    class="tag-input"
+                    size="small"
+                    @keyup.enter="handleInputConfirm"
+                    @blur="handleInputConfirm"
+                  />
+
+                  <el-button
+                    v-else
+                    class="button-new-tag"
+                    size="small"
+                    @click="showInput"
+                  >
+                    + 添加标签
+                  </el-button>
+                </div>
+              </el-form-item>
+            </div>
+          </el-col>
+
+          <!-- 右侧：高级设置 -->
+          <el-col :xs="24" :md="12">
+            <div class="form-section">
+              <h3 class="section-title">角色设定</h3>
+
+              <!-- 性格特征 -->
+              <el-form-item label="性格特征">
+                <el-input
+                  v-model="form.personality"
+                  type="textarea"
+                  :rows="3"
+                  placeholder="描述角色的性格特点，如：开朗、内向、幽默等"
+                  maxlength="300"
+                  show-word-limit
+                />
+              </el-form-item>
+
+              <!-- 背景故事 -->
+              <el-form-item label="背景故事">
+                <el-input
+                  v-model="form.backstory"
+                  type="textarea"
+                  :rows="4"
+                  placeholder="角色的背景经历、来历等"
+                  maxlength="800"
+                  show-word-limit
+                />
+              </el-form-item>
+
+              <!-- 说话风格 -->
+              <el-form-item label="说话风格">
+                <el-input
+                  v-model="form.speakingStyle"
                   type="textarea"
                   :rows="2"
+                  placeholder="描述角色的说话方式和语言习惯"
+                  maxlength="200"
+                  show-word-limit
                 />
-                <el-button
-                  type="danger"
-                  size="small"
-                  @click="removeExample(index)"
-                  class="remove-btn"
-                >
-                  删除
-                </el-button>
-              </div>
-              <el-button @click="addExample" type="primary" plain>
-                添加示例对话
-              </el-button>
+              </el-form-item>
+
+              <!-- 系统提示词 -->
+              <el-form-item label="系统提示词">
+                <el-input
+                  v-model="form.systemPrompt"
+                  type="textarea"
+                  :rows="4"
+                  placeholder="高级用户可以编写自定义的系统提示词来精确控制角色行为"
+                  maxlength="1000"
+                  show-word-limit
+                />
+                <div class="form-tip">
+                  系统提示词会覆盖其他设定，请谨慎使用
+                </div>
+              </el-form-item>
+
+              <!-- 可见性设置 -->
+              <el-form-item label="可见性">
+                <el-radio-group v-model="form.isPublic">
+                  <el-radio :label="false">私有</el-radio>
+                  <el-radio :label="true">公开</el-radio>
+                </el-radio-group>
+                <div class="form-tip">
+                  公开角色会出现在角色市场中，其他用户可以使用
+                </div>
+              </el-form-item>
+
+              <!-- 成人内容标记 -->
+              <el-form-item label="内容标记">
+                <el-checkbox v-model="form.nsfw">包含成人内容</el-checkbox>
+                <div class="form-tip">
+                  请诚实标记，有助于其他用户筛选合适的内容
+                </div>
+              </el-form-item>
             </div>
-          </el-form-item>
-        </el-tab-pane>
+          </el-col>
+        </el-row>
 
-        <!-- AI 设置 -->
-        <el-tab-pane label="AI 设置" name="ai">
-          <el-form-item label="模型选择">
-            <el-select v-model="form.model" placeholder="选择AI模型">
-              <el-option
-                v-for="model in availableModels"
-                :key="model.value"
-                :label="model.label"
-                :value="model.value"
-              />
-            </el-select>
-          </el-form-item>
+        <!-- AI助手生成 -->
+        <div class="ai-assistant-section">
+          <el-divider>
+            <el-icon><Robot /></el-icon>
+            AI助手
+          </el-divider>
 
-          <el-form-item label="温度">
-            <el-slider
-              v-model="form.temperature"
-              :min="0"
-              :max="2"
-              :step="0.1"
-              show-input
-            />
-            <div class="form-tip">控制回复的随机性，越高越有创意</div>
-          </el-form-item>
+          <div class="ai-tools">
+            <el-button
+              type="primary"
+              @click="showAIGenerator = true"
+              :disabled="!form.name"
+            >
+              <el-icon><MagicStick /></el-icon>
+              使用AI完善角色设定
+            </el-button>
 
-          <el-form-item label="最大长度">
-            <el-input-number
-              v-model="form.maxTokens"
-              :min="100"
-              :max="4000"
-              :step="100"
-            />
-            <div class="form-tip">每次回复的最大字数</div>
-          </el-form-item>
-
-          <el-form-item label="系统提示">
-            <el-input
-              v-model="form.systemPrompt"
-              type="textarea"
-              :rows="4"
-              placeholder="输入系统提示词，用于指导AI的行为"
-              maxlength="1000"
-              show-word-limit
-            />
-          </el-form-item>
-
-          <el-form-item label="记忆长度">
-            <el-input-number
-              v-model="form.memorySize"
-              :min="5"
-              :max="50"
-              :step="5"
-            />
-            <div class="form-tip">保留多少轮对话记忆</div>
-          </el-form-item>
-        </el-tab-pane>
-
-        <!-- 统计信息 -->
-        <el-tab-pane label="统计" name="stats" v-if="character">
-          <div class="stats-container">
-            <el-row :gutter="20">
-              <el-col :span="6">
-                <div class="stat-item">
-                  <div class="stat-value">{{ character.chatCount || 0 }}</div>
-                  <div class="stat-label">对话次数</div>
-                </div>
-              </el-col>
-              <el-col :span="6">
-                <div class="stat-item">
-                  <div class="stat-value">{{ character.favoriteCount || 0 }}</div>
-                  <div class="stat-label">收藏数</div>
-                </div>
-              </el-col>
-              <el-col :span="6">
-                <div class="stat-item">
-                  <div class="stat-value">{{ character.rating?.toFixed(1) || '0.0' }}</div>
-                  <div class="stat-label">平均评分</div>
-                </div>
-              </el-col>
-              <el-col :span="6">
-                <div class="stat-item">
-                  <div class="stat-value">{{ character.ratingCount || 0 }}</div>
-                  <div class="stat-label">评分人数</div>
-                </div>
-              </el-col>
-            </el-row>
-
-            <div class="creation-info">
-              <p><strong>创建时间：</strong>{{ formatDate(character.createdAt) }}</p>
-              <p><strong>更新时间：</strong>{{ formatDate(character.updatedAt) }}</p>
-              <p><strong>角色ID：</strong>{{ character.id }}</p>
-            </div>
+            <el-button
+              type="info"
+              @click="previewCharacter"
+              :disabled="!form.name"
+            >
+              <el-icon><View /></el-icon>
+              预览角色
+            </el-button>
           </div>
-        </el-tab-pane>
-      </el-tabs>
-    </el-form>
+        </div>
+      </el-form>
+    </div>
 
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="handleClose">取消</el-button>
-        <el-button type="primary" @click="handleAIGenerate" :loading="aiGenerating">
-          <el-icon class="mr-1"><Star /></el-icon>
-          AI 优化
-        </el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitting">
-          保存修改
+        <el-button
+          type="primary"
+          @click="handleSubmit"
+          :loading="submitting"
+        >
+          {{ isEdit ? '保存修改' : '创建角色' }}
         </el-button>
       </div>
     </template>
+
+    <!-- AI生成器对话框 -->
+    <AICharacterGenerator
+      v-model="showAIGenerator"
+      :character-name="form.name"
+      :initial-description="form.description"
+      @generated="handleAIGenerated"
+    />
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue'
-import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
-import { Plus, Star } from '@element-plus/icons-vue'
-import { characterService } from '@/services/character'
-import type { Character } from '@/types/character'
+import { ref, reactive, computed, nextTick, watch } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, MagicStick, Robot, View } from '@element-plus/icons-vue'
+import { api } from '@/services/api'
+import AICharacterGenerator from './AICharacterGenerator.vue'
+
+interface Character {
+  id?: string
+  name: string
+  description: string
+  avatar?: string
+  firstMessage: string
+  personality?: string
+  backstory?: string
+  speakingStyle?: string
+  systemPrompt?: string
+  tags: string[]
+  isPublic: boolean
+  nsfw: boolean
+}
 
 interface Props {
   modelValue: boolean
-  characterId: string
+  character?: Character
 }
 
-const props = defineProps<Props>()
+interface Emits {
+  (e: 'update:modelValue', value: boolean): void
+  (e: 'saved', character: Character): void
+}
 
-const emit = defineEmits<{
-  'update:modelValue': [value: boolean]
-  success: [character: Character]
-}>()
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: false
+})
 
-const visible = ref(props.modelValue)
-const activeTab = ref('basic')
-const formRef = ref<FormInstance>()
-const loading = ref(false)
+const emit = defineEmits<Emits>()
+
+// 响应式数据
+const dialogVisible = computed({
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value)
+})
+
+const formRef = ref()
+const inputRef = ref()
 const submitting = ref(false)
-const aiGenerating = ref(false)
-const character = ref<Character | null>(null)
+const generatingAvatar = ref(false)
+const showAIGenerator = ref(false)
+const inputVisible = ref(false)
+const inputValue = ref('')
 
-const categories = [
-  '动漫角色', '游戏角色', '小说角色', '影视角色', '历史人物',
-  '虚拟偶像', 'AI助手', '原创角色', '名人明星', '其他'
-]
+const isMobile = computed(() => {
+  return window.innerWidth <= 768
+})
 
-const availableTags = [
-  '动漫', '游戏', '小说', '影视', '历史', '科幻', '奇幻', '现实',
-  '助手', '教育', '娱乐', '陪伴', '创作', '治愈', '励志', '幽默',
-  '严肃', '可爱', '成熟', '神秘', '活泼', '温柔', '坚强', '智慧'
-]
+const isEdit = computed(() => {
+  return !!props.character?.id
+})
 
-const availableModels = [
-  { label: 'Grok-3 (推荐)', value: 'grok-3' },
-  { label: 'GPT-4', value: 'gpt-4' },
-  { label: 'GPT-3.5 Turbo', value: 'gpt-3.5-turbo' },
-  { label: 'Claude 3', value: 'claude-3' },
-  { label: 'Gemini Pro', value: 'gemini-pro' }
-]
-
-const form = ref({
+// 表单数据
+const form = reactive<Character>({
   name: '',
-  avatar: '',
   description: '',
-  category: '',
-  tags: [] as string[],
-  isPublic: true,
-  isFeatured: false,
-  isNSFW: false,
+  avatar: '',
+  firstMessage: '',
   personality: '',
   backstory: '',
   speakingStyle: '',
-  firstMessage: '',
-  exampleConversations: [] as Array<{ user: string; character: string }>,
-  model: 'grok-3',
-  temperature: 0.7,
-  maxTokens: 1000,
-  memorySize: 20,
-  systemPrompt: ''
+  systemPrompt: '',
+  tags: [],
+  isPublic: false,
+  nsfw: false
 })
 
+// 表单验证规则
 const rules = {
   name: [
     { required: true, message: '请输入角色名称', trigger: 'blur' },
-    { min: 2, max: 30, message: '名称长度在 2 到 30 个字符', trigger: 'blur' }
+    { min: 1, max: 50, message: '角色名称长度应在1-50个字符', trigger: 'blur' }
   ],
   description: [
     { required: true, message: '请输入角色描述', trigger: 'blur' },
-    { min: 10, max: 500, message: '描述长度在 10 到 500 个字符', trigger: 'blur' }
+    { min: 10, max: 500, message: '角色描述长度应在10-500个字符', trigger: 'blur' }
   ],
-  tags: [
-    { type: 'array', max: 5, message: '最多只能选择5个标签', trigger: 'change' }
+  firstMessage: [
+    { required: true, message: '请输入首条消息', trigger: 'blur' },
+    { min: 5, max: 300, message: '首条消息长度应在5-300个字符', trigger: 'blur' }
   ]
 }
 
-watch(() => props.modelValue, (val) => {
-  visible.value = val
-  if (val && props.characterId) {
-    loadCharacter()
-  }
-})
+// 上传配置
+const uploadUrl = '/api/upload/avatar'
+const uploadHeaders = computed(() => ({
+  'Authorization': `Bearer ${localStorage.getItem('token')}`
+}))
 
-watch(visible, (val) => {
-  emit('update:modelValue', val)
-  if (!val) {
+// 监听角色数据变化
+watch(() => props.character, (newCharacter) => {
+  if (newCharacter) {
+    Object.assign(form, {
+      ...newCharacter,
+      tags: newCharacter.tags || []
+    })
+  } else {
     resetForm()
   }
-})
+}, { immediate: true, deep: true })
 
-const loadCharacter = async () => {
-  if (!props.characterId) return
-
-  loading.value = true
-  try {
-    character.value = await characterService.getCharacter(props.characterId)
-
-    // 填充表单数据
-    const char = character.value
-    form.value = {
-      name: char.name || '',
-      avatar: char.avatar || '',
-      description: char.description || '',
-      category: char.category || '',
-      tags: typeof char.tags === 'string' ? JSON.parse(char.tags) : (char.tags || []),
-      isPublic: char.isPublic ?? true,
-      isFeatured: char.isFeatured ?? false,
-      isNSFW: char.isNSFW ?? false,
-      personality: char.personality || '',
-      backstory: char.backstory || '',
-      speakingStyle: char.speakingStyle || '',
-      firstMessage: char.firstMessage || '',
-      exampleConversations: char.exampleConversations || [],
-      model: char.model || 'grok-3',
-      temperature: char.temperature || 0.7,
-      maxTokens: char.maxTokens || 1000,
-      memorySize: char.memorySize || 20,
-      systemPrompt: char.systemPrompt || ''
-    }
-  } catch (error) {
-    console.error('加载角色失败:', error)
-    ElMessage.error('加载角色失败')
-    handleClose()
-  } finally {
-    loading.value = false
-  }
-}
-
+// 方法
 const resetForm = () => {
-  formRef.value?.resetFields()
-  character.value = null
-  activeTab.value = 'basic'
+  Object.assign(form, {
+    name: '',
+    description: '',
+    avatar: '',
+    firstMessage: '',
+    personality: '',
+    backstory: '',
+    speakingStyle: '',
+    systemPrompt: '',
+    tags: [],
+    isPublic: false,
+    nsfw: false
+  })
+  formRef.value?.clearValidate()
 }
 
 const handleClose = () => {
-  visible.value = false
+  emit('update:modelValue', false)
+}
+
+const handleSubmit = async () => {
+  try {
+    await formRef.value?.validate()
+
+    submitting.value = true
+
+    const characterData = { ...form }
+
+    if (isEdit.value) {
+      const response = await api.put(`/api/characters/${props.character!.id}`, characterData)
+      if (response.data.success) {
+        ElMessage.success('角色修改成功')
+        emit('saved', response.data.character)
+        handleClose()
+      }
+    } else {
+      const response = await api.post('/api/characters', characterData)
+      if (response.data.success) {
+        ElMessage.success('角色创建成功')
+        emit('saved', response.data.character)
+        handleClose()
+      }
+    }
+  } catch (error: any) {
+    console.error('保存角色失败:', error)
+    ElMessage.error('保存失败: ' + (error.response?.data?.message || error.message))
+  } finally {
+    submitting.value = false
+  }
+}
+
+// 头像上传
+const handleAvatarSuccess = (response: any) => {
+  if (response.success) {
+    form.avatar = response.url
+    ElMessage.success('头像上传成功')
+  } else {
+    ElMessage.error('头像上传失败')
+  }
 }
 
 const beforeAvatarUpload = (file: File) => {
@@ -445,228 +434,203 @@ const beforeAvatarUpload = (file: File) => {
   const isLt2M = file.size / 1024 / 1024 < 2
 
   if (!isImage) {
-    ElMessage.error('只能上传图片文件')
+    ElMessage.error('头像文件必须是图片格式!')
     return false
   }
   if (!isLt2M) {
-    ElMessage.error('图片大小不能超过 2MB')
+    ElMessage.error('头像文件大小不能超过 2MB!')
     return false
   }
   return true
 }
 
-const handleAvatarSuccess = (response: any) => {
-  form.value.avatar = response.url
-  ElMessage.success('头像上传成功')
+// AI生成头像
+const generateAvatar = async () => {
+  try {
+    generatingAvatar.value = true
+
+    const response = await api.post('/api/ai/generate-avatar', {
+      name: form.name,
+      description: form.description,
+      personality: form.personality,
+      tags: form.tags
+    })
+
+    if (response.data.success) {
+      form.avatar = response.data.avatarUrl
+      ElMessage.success('AI头像生成成功')
+    }
+  } catch (error: any) {
+    console.error('生成头像失败:', error)
+    ElMessage.error('生成头像失败: ' + (error.response?.data?.message || error.message))
+  } finally {
+    generatingAvatar.value = false
+  }
 }
 
-const handleAvatarError = () => {
-  ElMessage.error('头像上传失败，请重试')
+// 标签管理
+const removeTag = (tag: string) => {
+  const index = form.tags.indexOf(tag)
+  if (index > -1) {
+    form.tags.splice(index, 1)
+  }
 }
 
-const removeAvatar = () => {
-  form.value.avatar = ''
-}
-
-const addExample = () => {
-  form.value.exampleConversations.push({
-    user: '',
-    character: ''
+const showInput = () => {
+  inputVisible.value = true
+  nextTick(() => {
+    inputRef.value?.input?.focus()
   })
 }
 
-const removeExample = (index: number) => {
-  form.value.exampleConversations.splice(index, 1)
+const handleInputConfirm = () => {
+  if (inputValue.value && !form.tags.includes(inputValue.value)) {
+    form.tags.push(inputValue.value)
+  }
+  inputVisible.value = false
+  inputValue.value = ''
 }
 
-const handleAIGenerate = async () => {
-  if (!form.value.name) {
-    ElMessage.warning('请先输入角色名称')
-    return
-  }
+// AI助手功能
+const handleAIGenerated = (aiData: any) => {
+  Object.assign(form, {
+    personality: aiData.personality || form.personality,
+    backstory: aiData.backstory || form.backstory,
+    speakingStyle: aiData.speakingStyle || form.speakingStyle,
+    firstMessage: aiData.firstMessage || form.firstMessage
+  })
 
-  const confirmResult = await ElMessageBox.confirm(
-    'AI将基于当前信息优化角色设定，这将覆盖部分现有内容。是否继续？',
-    '确认AI优化',
+  ElMessage.success('AI生成的内容已填入表单')
+}
+
+const previewCharacter = () => {
+  ElMessageBox.alert(
+    `<strong>角色名称:</strong> ${form.name}<br>
+     <strong>描述:</strong> ${form.description}<br>
+     <strong>性格:</strong> ${form.personality || '未设置'}<br>
+     <strong>首条消息:</strong> ${form.firstMessage}`,
+    '角色预览',
     {
-      type: 'warning',
-      confirmButtonText: '继续优化',
-      cancelButtonText: '取消'
+      dangerouslyUseHTMLString: true,
+      confirmButtonText: '确定'
     }
-  ).catch(() => false)
-
-  if (!confirmResult) return
-
-  aiGenerating.value = true
-  try {
-    const generated = await characterService.generateCharacter({
-      name: form.value.name,
-      tags: form.value.tags
-    })
-
-    // 只更新人设相关字段，保留其他设置
-    form.value.personality = generated.personality || form.value.personality
-    form.value.backstory = generated.backstory || form.value.backstory
-    form.value.speakingStyle = generated.speakingStyle || form.value.speakingStyle
-    form.value.firstMessage = generated.firstMessage || form.value.firstMessage
-
-    if (generated.description && !form.value.description) {
-      form.value.description = generated.description
-    }
-
-    ElMessage.success('AI优化完成')
-  } catch (error) {
-    console.error('AI优化失败:', error)
-    ElMessage.error('AI优化失败，请稍后重试')
-  } finally {
-    aiGenerating.value = false
-  }
+  )
 }
-
-const handleSubmit = async () => {
-  await formRef.value?.validate()
-
-  if (!props.characterId) return
-
-  submitting.value = true
-  try {
-    const updatedCharacter = await characterService.updateCharacter(props.characterId, form.value)
-    emit('success', updatedCharacter)
-    ElMessage.success('角色更新成功')
-    handleClose()
-  } catch (error) {
-    console.error('更新角色失败:', error)
-    ElMessage.error('更新角色失败')
-  } finally {
-    submitting.value = false
-  }
-}
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleString('zh-CN')
-}
-
-onMounted(() => {
-  if (visible.value && props.characterId) {
-    loadCharacter()
-  }
-})
 </script>
 
 <style lang="scss" scoped>
-.character-edit-dialog {
-  :deep(.el-dialog) {
-    background: rgba(30, 30, 40, 0.95);
-    border: 1px solid rgba(139, 92, 246, 0.3);
-  }
-}
+.character-edit-form {
+  max-height: 70vh;
+  overflow-y: auto;
 
-.loading-container {
-  padding: 40px;
-}
-
-.edit-form {
-  padding: 20px;
-}
-
-.avatar-uploader {
-  .el-upload {
-    border: 1px dashed rgba(139, 92, 246, 0.5);
+  .form-section {
+    background: rgba(30, 30, 40, 0.3);
     border-radius: 8px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s;
-
-    &:hover {
-      border-color: #8b5cf6;
-    }
-  }
-
-  .avatar {
-    width: 120px;
-    height: 120px;
-    display: block;
-    object-fit: cover;
-  }
-
-  .avatar-uploader-icon {
-    font-size: 28px;
-    color: #8b5cf6;
-    width: 120px;
-    height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .remove-avatar-btn {
-    margin-top: 10px;
-    width: 120px;
-  }
-}
-
-.switch-label {
-  margin-left: 10px;
-  font-size: 14px;
-  color: #e5e7eb;
-}
-
-.form-tip {
-  margin-top: 5px;
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.example-conversations {
-  .example-item {
-    position: relative;
-    padding: 15px;
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    border-radius: 8px;
-    margin-bottom: 15px;
-
-    .remove-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-    }
-  }
-}
-
-.stats-container {
-  .stat-item {
-    text-align: center;
     padding: 20px;
-    background: rgba(139, 92, 246, 0.1);
-    border-radius: 8px;
+    margin-bottom: 20px;
 
-    .stat-value {
-      font-size: 32px;
-      font-weight: bold;
-      color: #8b5cf6;
-      margin-bottom: 5px;
-    }
-
-    .stat-label {
-      font-size: 14px;
-      color: #9ca3af;
-    }
-  }
-
-  .creation-info {
-    margin-top: 30px;
-    padding: 20px;
-    background: rgba(17, 24, 39, 0.5);
-    border-radius: 8px;
-
-    p {
-      margin-bottom: 10px;
+    .section-title {
+      margin: 0 0 20px;
+      font-size: 16px;
+      font-weight: 600;
       color: #e5e7eb;
+      border-bottom: 2px solid rgba(139, 92, 246, 0.3);
+      padding-bottom: 8px;
+    }
+  }
 
-      strong {
-        color: #8b5cf6;
+  .avatar-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+
+    .avatar-uploader {
+      .avatar {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid rgba(139, 92, 246, 0.3);
       }
+
+      .avatar-placeholder {
+        width: 120px;
+        height: 120px;
+        border: 2px dashed rgba(139, 92, 246, 0.3);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+          border-color: #8b5cf6;
+          background: rgba(139, 92, 246, 0.1);
+        }
+
+        .avatar-uploader-icon {
+          font-size: 28px;
+          color: #8b5cf6;
+        }
+
+        .upload-text {
+          margin-top: 8px;
+          font-size: 14px;
+          color: #9ca3af;
+        }
+      }
+    }
+
+    .generate-avatar-btn {
+      background: linear-gradient(135deg, #8b5cf6, #c084fc);
+      border: none;
+    }
+  }
+
+  .tags-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+
+    .tag-item {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: rgba(139, 92, 246, 0.4);
+      color: #c084fc;
+    }
+
+    .tag-input {
+      width: 80px;
+    }
+
+    .button-new-tag {
+      border: 1px dashed rgba(139, 92, 246, 0.4);
+      color: #8b5cf6;
+      background: transparent;
+
+      &:hover {
+        background: rgba(139, 92, 246, 0.1);
+      }
+    }
+  }
+
+  .form-tip {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+
+  .ai-assistant-section {
+    margin-top: 24px;
+
+    .ai-tools {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
   }
 }
@@ -674,14 +638,69 @@ onMounted(() => {
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
 }
 
-.mb-2 {
-  margin-bottom: 8px;
+// 移动端优化
+@media (max-width: 768px) {
+  .character-edit-form {
+    .form-section {
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .avatar-upload {
+      .avatar-uploader {
+        .avatar,
+        .avatar-placeholder {
+          width: 100px;
+          height: 100px;
+        }
+      }
+    }
+
+    .ai-tools {
+      flex-direction: column;
+
+      .el-button {
+        width: 100%;
+      }
+    }
+  }
 }
 
-.mr-1 {
-  margin-right: 4px;
+// 深色主题样式
+:deep(.el-form-item__label) {
+  color: #d1d5db;
+}
+
+:deep(.el-input__inner) {
+  background: rgba(30, 30, 40, 0.6);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #e5e7eb;
+
+  &:focus {
+    border-color: #8b5cf6;
+  }
+}
+
+:deep(.el-textarea__inner) {
+  background: rgba(30, 30, 40, 0.6);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #e5e7eb;
+
+  &:focus {
+    border-color: #8b5cf6;
+  }
+}
+
+:deep(.el-radio__input.is-checked .el-radio__inner) {
+  background: #8b5cf6;
+  border-color: #8b5cf6;
+}
+
+:deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+  background: #8b5cf6;
+  border-color: #8b5cf6;
 }
 </style>

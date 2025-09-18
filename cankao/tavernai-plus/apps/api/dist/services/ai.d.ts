@@ -1,3 +1,15 @@
+interface ModelConfig {
+    id: string;
+    name: string;
+    provider: 'newapi' | 'openai' | 'anthropic' | 'google';
+    baseUrl?: string;
+    apiKey?: string;
+    maxTokens: number;
+    temperature: number;
+    description: string;
+    features: string[];
+    pricePer1k?: number;
+}
 export interface GenerateOptions {
     sessionId: string;
     userId: string;
@@ -26,21 +38,57 @@ export interface StreamChunk {
     }>;
 }
 declare class AIService {
-    generateChatResponse(options: GenerateOptions): Promise<any>;
-    generateChatStream(options: GenerateOptions): AsyncGenerator<string, void, unknown>;
-    private buildCharacterPrompt;
-    generateCharacterProfile(name: string, tags?: string[]): Promise<any>;
+    getAvailableModels(): Promise<ModelConfig[]>;
+    getModelInfo(modelId: string): Promise<ModelConfig | null>;
+    getModelStats(modelId: string, startDate: Date): Promise<{
+        totalRequests: number;
+        successfulRequests: number;
+        failedRequests: number;
+        totalTokensUsed: number;
+        averageResponseTime: number;
+    }>;
+    private createModelClient;
+    validateModel(modelId: string): Promise<boolean>;
+    getSupportedModels(): ModelConfig[];
+    getModelConfig(modelId: string): ModelConfig | null;
+    generateChatResponse(options: any): Promise<{
+        content: any;
+        tokensUsed: any;
+        model: any;
+    }>;
+    generateCharacterProfile(prompt: string, options?: any): Promise<any>;
+    healthCheck(): Promise<{
+        healthy: boolean;
+        responseTime: number;
+        details: {
+            available: boolean;
+            models: any;
+            responseTime: number;
+        } | {
+            available: boolean;
+            error: any;
+            lastChecked: number;
+        };
+        error?: undefined;
+    } | {
+        healthy: boolean;
+        responseTime: number;
+        error: any;
+        details?: undefined;
+    }>;
     checkAPIStatus(): Promise<{
         available: boolean;
         models: any;
-        error?: undefined;
+        responseTime: number;
     } | {
         available: boolean;
-        error: string;
-        models?: undefined;
+        error: any;
+        lastChecked: number;
     }>;
     estimateTokens(text: string): number;
+    private buildCharacterPrompt;
+    generateChatStream(options: GenerateOptions): AsyncGenerator<string, void, unknown>;
 }
 export declare const aiService: AIService;
-export {};
+export { ModelConfig };
 //# sourceMappingURL=ai.d.ts.map

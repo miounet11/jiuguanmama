@@ -1,12 +1,12 @@
 <template>
   <div class="character-list-page">
     <PageHeader title="角色广场" subtitle="探索精彩的AI角色世界" />
-    
+
     <!-- 搜索和筛选栏 -->
     <div class="filter-bar">
       <div class="search-box">
-        <el-input 
-          v-model="searchQuery" 
+        <el-input
+          v-model="searchQuery"
           placeholder="搜索角色名称、标签或描述..."
           size="large"
           clearable
@@ -18,36 +18,36 @@
           </template>
         </el-input>
       </div>
-      
+
       <div class="filter-options">
         <el-select v-model="sortBy" placeholder="排序方式" size="large" @change="fetchCharacters">
           <el-option label="最新创建" value="created" />
           <el-option label="评分最高" value="rating" />
           <el-option label="最受欢迎" value="popular" />
         </el-select>
-        
+
         <el-select v-model="selectedTags" multiple placeholder="选择标签" size="large" @change="fetchCharacters">
           <el-option v-for="tag in availableTags" :key="tag" :label="tag" :value="tag" />
         </el-select>
-        
+
         <el-button type="primary" size="large" @click="showCreateDialog = true">
           <el-icon class="mr-2"><Plus /></el-icon>
           创建角色
         </el-button>
       </div>
     </div>
-    
+
     <!-- 角色网格 -->
     <div class="character-grid" v-loading="loading">
-      <CharacterCard 
-        v-for="character in characters" 
+      <CharacterCard
+        v-for="character in characters"
         :key="character.id"
-        :character="character"
+        :character="{ ...character, avatar: character.avatar || undefined }"
         @click="handleCharacterClick(character)"
         @favorite="handleFavorite(character)"
       />
     </div>
-    
+
     <!-- 分页 -->
     <div class="pagination-wrapper" v-if="totalPages > 1">
       <el-pagination
@@ -58,9 +58,9 @@
         @current-change="fetchCharacters"
       />
     </div>
-    
+
     <!-- 创建角色对话框 -->
-    <CharacterCreateDialog 
+    <CharacterCreateDialog
       v-model="showCreateDialog"
       @success="handleCreateSuccess"
     />
@@ -84,7 +84,7 @@ const router = useRouter()
 const characters = ref<Character[]>([])
 const loading = ref(false)
 const searchQuery = ref('')
-const sortBy = ref('created')
+const sortBy = ref<'rating' | 'popular' | 'created'>('created')
 const selectedTags = ref<string[]>([])
 const currentPage = ref(1)
 const pageSize = 20
@@ -110,7 +110,7 @@ const fetchCharacters = async () => {
       search: searchQuery.value,
       tags: selectedTags.value
     })
-    
+
     characters.value = response.characters
     totalCharacters.value = response.pagination.total
   } catch (error) {
@@ -168,7 +168,7 @@ onMounted(() => {
   display: flex;
   gap: 20px;
   align-items: center;
-  
+
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: stretch;
@@ -183,7 +183,7 @@ onMounted(() => {
 .filter-options {
   display: flex;
   gap: 10px;
-  
+
   @media (max-width: 768px) {
     flex-wrap: wrap;
   }

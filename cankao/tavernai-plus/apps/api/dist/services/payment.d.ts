@@ -43,7 +43,7 @@ declare class PaymentService {
     }): Promise<{
         transactionId: any;
         paymentId: string;
-        clientSecret: string;
+        clientSecret: string | null;
         amount: number;
         currency: string;
         method: PaymentMethod;
@@ -77,7 +77,7 @@ declare class PaymentService {
     getUserSubscription(userId: string): Promise<{
         plan: SubscriptionPlan;
         isActive: boolean;
-        expiresAt: Date;
+        expiresAt: Date | null;
         credits: number;
         canUpgrade: boolean;
     }>;

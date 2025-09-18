@@ -1,10 +1,24 @@
 import { Request, Response, NextFunction } from 'express'
 import { AnyZodObject, ZodError } from 'zod'
 
-export const validate = (schema: AnyZodObject) => {
+export const validate = (schema: AnyZodObject, source: 'body' | 'query' | 'params' = 'body') => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await schema.parseAsync(req.body)
+      let dataToValidate
+      switch (source) {
+        case 'query':
+          dataToValidate = req.query
+          break
+        case 'params':
+          dataToValidate = req.params
+          break
+        case 'body':
+        default:
+          dataToValidate = req.body
+          break
+      }
+
+      await schema.parseAsync(dataToValidate)
       next()
     } catch (error) {
       if (error instanceof ZodError) {
@@ -16,7 +30,7 @@ export const validate = (schema: AnyZodObject) => {
           acc[field].push(err.message)
           return acc
         }, {} as Record<string, string[]>)
-        
+
         return res.status(422).json({
           success: false,
           message: 'Validation failed',

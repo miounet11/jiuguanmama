@@ -2,10 +2,23 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validate = void 0;
 const zod_1 = require("zod");
-const validate = (schema) => {
+const validate = (schema, source = 'body') => {
     return async (req, res, next) => {
         try {
-            await schema.parseAsync(req.body);
+            let dataToValidate;
+            switch (source) {
+                case 'query':
+                    dataToValidate = req.query;
+                    break;
+                case 'params':
+                    dataToValidate = req.params;
+                    break;
+                case 'body':
+                default:
+                    dataToValidate = req.body;
+                    break;
+            }
+            await schema.parseAsync(dataToValidate);
             next();
         }
         catch (error) {

@@ -87,7 +87,10 @@ const requireAdmin = async (req, res, next) => {
                 username: true,
                 email: true,
                 role: true,
-                isActive: true
+                credits: true,
+                subscriptionTier: true,
+                isActive: true,
+                isVerified: true
             }
         });
         if (!user || !user.isActive) {
@@ -166,18 +169,20 @@ const logAdminAction = async (req, res, next) => {
                 try {
                     await server_1.prisma.adminLog.create({
                         data: {
-                            userId: req.user.id,
+                            adminId: req.user.id,
                             action: `${req.method} ${req.originalUrl}`,
-                            ip: req.ip || req.socket.remoteAddress || '',
-                            userAgent: req.headers['user-agent'] || '',
-                            requestBody: req.body ? JSON.stringify(req.body) : null,
-                            responseStatus: res.statusCode,
-                            duration,
-                            metadata: {
+                            targetType: 'admin_action',
+                            targetId: null,
+                            details: JSON.stringify({
+                                requestBody: req.body,
+                                responseStatus: res.statusCode,
+                                duration,
                                 path: req.path,
                                 query: req.query,
                                 params: req.params
-                            }
+                            }),
+                            ip: req.ip || req.socket.remoteAddress || '',
+                            userAgent: req.headers['user-agent'] || ''
                         }
                     });
                 }

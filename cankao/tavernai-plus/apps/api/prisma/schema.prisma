@@ -1,5 +1,7 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+  previewFeatures = ["jsonProtocol"]
 }
 
 datasource db {
@@ -12,21 +14,21 @@ model User {
   id                    String    @id @default(uuid())
   username              String    @unique
   email                 String    @unique
-  passwordHash          String?
-  avatar                String?
-  bio                   String?
-  role                  String    @default("user") // user, admin, moderator
+  passwordHash          String?   // null表示OAuth用户
+  avatar                String?   // 头像URL，null表示使用默认头像
+  bio                   String?   // 用户简介
+  role                  String    @default("user") // user, admin, moderator, creator
   credits               Int       @default(100)
-  subscriptionTier      String    @default("free") // free, plus, pro
-  subscriptionExpiresAt DateTime?
-  isActive              Boolean   @default(true)
-  isVerified            Boolean   @default(false)
-  verificationToken     String?
-  resetPasswordToken    String?
-  resetPasswordExpires  DateTime?
-  lastLoginAt           DateTime?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  subscriptionTier      String    @default("free") // free, plus, pro, premium
+  subscriptionExpiresAt DateTime? @map("subscription_expires_at")
+  isActive              Boolean   @default(true) @map("is_active")
+  isVerified            Boolean   @default(false) @map("is_verified")
+  verificationToken     String?   @map("verification_token")
+  resetPasswordToken    String?   @map("reset_password_token")
+  resetPasswordExpires  DateTime? @map("reset_password_expires")
+  lastLoginAt           DateTime? @map("last_login_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
 
   // 关系
   characters       Character[]
@@ -46,6 +48,25 @@ model User {
   workflowInstances WorkflowInstance[]
   workflowRatings  WorkflowRating[]
   scheduledTasks   ScheduledTask[]
+  // 社区功能关系
+  following        Follow[] @relation("UserFollowing")
+  followers        Follow[] @relation("UserFollowers")
+  posts            Post[]
+  postLikes        PostLike[]
+  postShares       PostShare[]
+  comments         Comment[]
+  commentLikes     CommentLike[]
+  // 多模态AI关系
+  mediaFiles       MediaFile[]
+  aiRequests       AIRequest[]
+  voiceProfiles    VoiceProfile[]
+  imageGenerations ImageGeneration[]
+  // 推荐系统关系
+  userBehavior     UserBehavior[]
+  userProfile      UserProfile?
+  recommendationLogs RecommendationLog[]
+  userSimilarities UserSimilarity[] @relation("UserSimilarityUser1")
+  similarToUsers   UserSimilarity[] @relation("UserSimilarityUser2")
 }
 
 // OAuth 账号
@@ -93,26 +114,26 @@ model Character {
   firstMessage    String?
   systemPrompt    String?
   exampleDialogs  String?  // JSON stored as text for SQLite
-  avatar          String?
-  coverImage      String?
+  avatar          String?  // 头像URL，null表示使用默认头像
+  coverImage      String?  // 封面图片URL
   category        String   @default("原创")
-  tags            String   @default("[]") // JSON stored as text for SQLite
+  tags            String   @default("[]") // JSON array stored as string for SQLite
   language        String   @default("zh-CN")
   model           String   @default("gpt-3.5-turbo")
-  temperature     Float    @default(0.7)
-  maxTokens       Int      @default(1000)
-  isPublic        Boolean  @default(true)
-  isNSFW          Boolean  @default(false)
-  isFeatured      Boolean  @default(false)
-  rating          Float    @default(0)
-  ratingCount     Int      @default(0)
-  chatCount       Int      @default(0)
-  favoriteCount   Int      @default(0)
-  importedFrom    String?  // 记录导入来源
+  temperature     Float    @default(0.7) @map("temperature_value")
+  maxTokens       Int      @default(1000) @map("max_tokens")
+  isPublic        Boolean  @default(true) @map("is_public")
+  isNSFW          Boolean  @default(false) @map("is_nsfw")
+  isFeatured      Boolean  @default(false) @map("is_featured")
+  rating          Float    @default(0.0)
+  ratingCount     Int      @default(0) @map("rating_count")
+  chatCount       Int      @default(0) @map("chat_count")
+  favoriteCount   Int      @default(0) @map("favorite_count")
+  importedFrom    String?  // 记录导入来源：charai, tavern, etc.
   version         Int      @default(1)
-  metadata        String?    // JSON for PostgreSQL
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  metadata        String   @default("{}") // JSON object stored as string
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   // 关系
   creator            User              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
@@ -123,6 +144,12 @@ model Character {
   // 多角色聊天关系
   chatParticipants   ChatParticipant[]
   chatMessages       ChatMessage[]
+  // 社区功能关系
+  posts              Post[]
+  // 多模态AI关系
+  aiRequests         AIRequest[]
+  voiceProfiles      VoiceProfile[]
+  imageGenerations   ImageGeneration[]
 
   @@unique([name, creatorId])
   @@index([creatorId])
@@ -130,6 +157,14 @@ model Character {
   @@index([rating])
   @@index([category])
   @@index([isFeatured])
+  @@index([createdAt])
+  @@index([chatCount])
+  @@index([favoriteCount])
+  // 复合索引优化查询性能
+  @@index([isPublic, isFeatured])
+  @@index([isPublic, rating])
+  @@index([category, rating])
+  @@index([creatorId, isPublic])
 }
 
 // 聊天会话（单角色）
@@ -598,4 +633,422 @@ model ScheduledTask {
   @@index([creatorId])
   @@index([isEnabled])
   @@index([nextRunAt])
+}
+
+// 社区功能模型
+
+// 用户关注关系
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String   // 关注者ID
+  followingId String   // 被关注者ID
+  createdAt   DateTime @default(now())
+
+  // 关系
+  follower    User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+// 社区动态/帖子
+model Post {
+  id          String   @id @default(uuid())
+  authorId    String   // 作者ID
+  characterId String?  // 关联的角色ID（如果是角色分享）
+  content     String   // 动态内容
+  type        String   @default("text") // text, character_share, image, etc.
+  images      String?  // 图片URLs JSON数组
+  visibility  String   @default("public") // public, followers, private
+  viewCount   Int      @default(0)
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关系
+  author      User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  character   Character?   @relation(fields: [characterId], references: [id], onDelete: SetNull)
+  likes       PostLike[]
+  shares      PostShare[]
+  comments    Comment[]
+
+  @@index([authorId])
+  @@index([characterId])
+  @@index([visibility])
+  @@index([isDeleted])
+  @@index([createdAt])
+  @@index([type])
+}
+
+// 动态点赞
+model PostLike {
+  id        String   @id @default(uuid())
+  userId    String   // 点赞用户ID
+  postId    String   // 动态ID
+  createdAt DateTime @default(now())
+
+  // 关系
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([userId])
+  @@index([postId])
+}
+
+// 动态分享
+model PostShare {
+  id        String   @id @default(uuid())
+  userId    String   // 分享用户ID
+  postId    String   // 动态ID
+  platform  String   @default("internal") // internal, wechat, weibo, etc.
+  createdAt DateTime @default(now())
+
+  // 关系
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([postId])
+  @@index([platform])
+}
+
+// 评论
+model Comment {
+  id        String   @id @default(uuid())
+  postId    String   // 动态ID
+  authorId  String   // 评论作者ID
+  parentId  String?  // 父评论ID（回复功能）
+  content   String   // 评论内容
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关系
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  likes     CommentLike[]
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentId])
+  @@index([isDeleted])
+  @@index([createdAt])
+}
+
+// 评论点赞
+model CommentLike {
+  id        String   @id @default(uuid())
+  userId    String   // 点赞用户ID
+  commentId String   // 评论ID
+  createdAt DateTime @default(now())
+
+  // 关系
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+  @@index([userId])
+  @@index([commentId])
+}
+
+// 多模态AI功能模型
+
+// AI服务提供商配置
+model AIProvider {
+  id          String   @id @default(uuid())
+  name        String   @unique // openai, anthropic, elevenlabs, etc.
+  apiKey      String   // 加密存储的API密钥
+  baseUrl     String?  // 自定义API基础URL
+  models      String   // 支持的模型列表 JSON
+  isActive    Boolean  @default(true)
+  priority    Int      @default(1) // 优先级，数字越小优先级越高
+  rateLimit   Int      @default(60) // 每分钟请求限制
+  costFactor  Float    @default(1.0) // 成本系数
+  metadata    String   @default("{}") // 额外配置
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, priority])
+  @@index([name])
+}
+
+// 多媒体文件管理
+model MediaFile {
+  id           String   @id @default(uuid())
+  userId       String   // 上传用户ID
+  type         String   // audio, image, video, document
+  originalName String   // 原始文件名
+  fileName     String   // 存储文件名
+  filePath     String   // 文件路径/URL
+  mimeType     String   // MIME类型
+  size         Int      // 文件大小(字节)
+  duration     Float?   // 音频/视频时长(秒)
+  width        Int?     // 图像/视频宽度
+  height       Int?     // 图像/视频高度
+  isPublic     Boolean  @default(false) // 是否公开访问
+  metadata     String   @default("{}") // 额外元数据
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 关系
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([isPublic])
+  @@index([createdAt])
+}
+
+// AI请求记录和统计
+model AIRequest {
+  id           String   @id @default(uuid())
+  userId       String   // 请求用户ID
+  characterId  String?  // 关联角色ID
+  type         String   // text, image, tts, stt, vision
+  provider     String   // openai, anthropic, etc.
+  model        String   // gpt-4, dall-e-3, etc.
+  inputTokens  Int      @default(0) // 输入token数
+  outputTokens Int      @default(0) // 输出token数
+  totalTokens  Int      @default(0) // 总token数
+  cost         Float    @default(0) // 成本
+  duration     Int      @default(0) // 处理时间(毫秒)
+  status       String   @default("success") // success, failed, timeout
+  errorMessage String?  // 错误信息
+  outputUrl    String?  // 输出文件URL
+  metadata     String   @default("{}") // 请求元数据
+  createdAt    DateTime @default(now())
+
+  // 关系
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character    Character? @relation(fields: [characterId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([characterId])
+  @@index([type])
+  @@index([provider])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// 语音配置文件
+model VoiceProfile {
+  id          String   @id @default(uuid())
+  userId      String?  // 用户ID（用户自定义语音）
+  characterId String?  // 角色ID（角色专属语音）
+  name        String   // 语音配置名称
+  provider    String   // openai, elevenlabs, azure
+  voiceId     String   // 语音ID/名称
+  config      String   // 语音参数配置 JSON
+  isDefault   Boolean  @default(false) // 是否为默认语音
+  isActive    Boolean  @default(true)
+  sampleUrl   String?  // 语音样本URL
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关系
+  user        User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character   Character? @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([characterId])
+  @@index([provider])
+  @@index([isActive])
+}
+
+// 图像生成记录
+model ImageGeneration {
+  id            String   @id @default(uuid())
+  userId        String   // 生成用户ID
+  characterId   String?  // 关联角色ID
+  prompt        String   // 原始提示词
+  revisedPrompt String?  // AI修订的提示词
+  imageUrl      String   // 生成的图像URL
+  model         String   // 使用的模型
+  style         String   @default("natural") // natural, vivid, etc.
+  quality       String   @default("standard") // standard, hd
+  size          String   @default("1024x1024") // 图像尺寸
+  cost          Float    @default(0) // 生成成本
+  isPublic      Boolean  @default(false) // 是否公开
+  likes         Int      @default(0) // 点赞数
+  downloads     Int      @default(0) // 下载数
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 关系
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character     Character? @relation(fields: [characterId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([characterId])
+  @@index([isPublic])
+  @@index([createdAt])
+  @@index([likes])
+}
+
+// 推荐系统模型
+
+// 用户行为记录
+model UserBehavior {
+  id          String   @id @default(uuid())
+  userId      String   // 用户ID
+  action      String   // 行为类型：view, like, comment, share, favorite, download, chat, follow
+  targetType  String   // 目标类型：character, post, user
+  targetId    String   // 目标ID
+  weight      Float    @default(1.0) // 行为权重
+  sessionId   String?  // 会话ID（用于分析用户路径）
+  deviceType  String?  // 设备类型：web, mobile, tablet
+  source      String?  // 来源：recommendation, search, browse, direct
+  metadata    String?  // 额外元数据 JSON
+  createdAt   DateTime @default(now())
+
+  // 关系
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([targetType])
+  @@index([targetId])
+  @@index([createdAt])
+  @@index([userId, targetType])
+  @@index([userId, action])
+}
+
+// 用户画像
+model UserProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique // 用户ID
+  interests       String   @default("[]") // 兴趣标签 JSON数组
+  preferences     String   @default("{}") // 偏好设置 JSON对象
+  demographics    String   @default("{}") // 人口统计信息 JSON
+  behaviorPattern String   @default("{}") // 行为模式分析 JSON
+  activityLevel   String   @default("medium") // 活跃度：low, medium, high
+  preferredCategories String @default("[]") // 偏好分类 JSON数组
+  languagePreference String @default("zh-CN") // 语言偏好
+  timeZone        String?  // 时区
+  lastUpdated     DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  // 关系
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([activityLevel])
+  @@index([lastUpdated])
+}
+
+// 推荐日志
+model RecommendationLog {
+  id          String   @id @default(uuid())
+  userId      String   // 用户ID
+  type        String   // 推荐类型：character, post, user
+  targetId    String   // 推荐目标ID
+  algorithm   String   // 推荐算法：collaborative, content, hybrid
+  confidence  Float    @default(0.5) // 推荐置信度 0-1
+  position    Int      @default(0) // 推荐位置
+  clicked     Boolean  @default(false) // 是否点击
+  converted   Boolean  @default(false) // 是否转化（如收藏、关注等）
+  feedback    String?  // 用户反馈：like, dislike, not_interested
+  sessionId   String?  // 会话ID
+  context     String?  // 推荐上下文 JSON
+  abTestGroup String?  // A/B测试分组
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关系
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([algorithm])
+  @@index([clicked])
+  @@index([converted])
+  @@index([createdAt])
+  @@index([userId, type])
+}
+
+// 用户相似度矩阵
+model UserSimilarity {
+  id           String  @id @default(uuid())
+  user1Id      String  // 用户1 ID
+  user2Id      String  // 用户2 ID
+  similarity   Float   // 相似度分数 0-1
+  algorithm    String  @default("cosine") // 计算算法：cosine, pearson, jaccard
+  commonItems  Int     @default(0) // 共同物品数量
+  lastUpdated  DateTime @default(now())
+
+  // 关系
+  user1        User @relation("UserSimilarityUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2        User @relation("UserSimilarityUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+  @@index([similarity])
+  @@index([lastUpdated])
+}
+
+// 内容特征向量
+model ContentVector {
+  id          String   @id @default(uuid())
+  contentType String   // 内容类型：character, post
+  contentId   String   // 内容ID
+  vectorType  String   // 向量类型：tfidf, word2vec, bert
+  vector      String   // 特征向量 JSON数组
+  dimensions  Int      @default(0) // 向量维度
+  version     String   @default("1.0") // 向量版本
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([contentType, contentId, vectorType])
+  @@index([contentType])
+  @@index([contentId])
+  @@index([vectorType])
+  @@index([updatedAt])
+}
+
+// 推荐配置参数
+model RecommendationConfig {
+  id              String   @id @default(uuid())
+  name            String   @unique // 配置名称
+  algorithm       String   // 算法类型
+  parameters      String   // 算法参数 JSON
+  isActive        Boolean  @default(true) // 是否启用
+  priority        Int      @default(1) // 优先级
+  targetAudience  String?  // 目标用户群体
+  description     String?  // 配置描述
+  createdBy       String?  // 创建者
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([priority])
+  @@index([updatedAt])
+}
+
+// 推荐效果统计
+model RecommendationStats {
+  id              String   @id @default(uuid())
+  date            DateTime // 统计日期
+  algorithm       String   // 算法类型
+  totalRecommendations Int @default(0) // 总推荐数
+  clickedRecommendations Int @default(0) // 点击数
+  convertedRecommendations Int @default(0) // 转化数
+  clickThroughRate Float   @default(0) // 点击率
+  conversionRate  Float    @default(0) // 转化率
+  avgConfidence   Float    @default(0) // 平均置信度
+  uniqueUsers     Int      @default(0) // 独立用户数
+  diversity       Float    @default(0) // 推荐多样性
+  freshness       Float    @default(0) // 推荐新鲜度
+  createdAt       DateTime @default(now())
+
+  @@unique([date, algorithm])
+  @@index([date])
+  @@index([algorithm])
+  @@index([clickThroughRate])
+  @@index([conversionRate])
 }

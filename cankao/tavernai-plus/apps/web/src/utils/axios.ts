@@ -87,7 +87,7 @@ instance.interceptors.response.use(
           break
 
         default:
-          ElMessage.error(response.data?.message || '请求失败')
+          ElMessage.error((response.data as any)?.message || '请求失败')
       }
     } else if (error.code === 'ECONNABORTED') {
       ElMessage.error('请求超时，请检查网络连接')

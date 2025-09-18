@@ -1,0 +1,114 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 执行Pre-commit TypeScript类型检查..."
+
+# 获取变更的TypeScript文件
+CHANGED_TS_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|vue)$' || true)
+
+if [ -z "$CHANGED_TS_FILES" ]; then
+  echo "✅ 没有TypeScript文件变更，跳过类型检查"
+  exit 0
+fi
+
+echo "📁 检测到以下TypeScript文件变更："
+echo "$CHANGED_TS_FILES"
+
+# 函数：检查特定应用的类型
+check_app_types() {
+  local app_name=$1
+  local app_path=$2
+
+  echo "🔍 检查 $app_name 类型..."
+
+  cd "$app_path" || exit 1
+
+  # 检查是否有该应用的文件变更
+  local app_changed_files=$(echo "$CHANGED_TS_FILES" | grep "^$app_path" || true)
+
+  if [ -n "$app_changed_files" ]; then
+    echo "📝 $app_name 中变更的文件："
+    echo "$app_changed_files"
+
+    # 执行类型检查
+    if [ "$app_name" = "Web" ]; then
+      npx vue-tsc --noEmit --project tsconfig.json
+    else
+      npx tsc --noEmit --project tsconfig.json
+    fi
+
+    if [ $? -ne 0 ]; then
+      echo "❌ $app_name TypeScript类型检查失败!"
+      cd - > /dev/null
+      exit 1
+    fi
+
+    echo "✅ $app_name TypeScript类型检查通过"
+  else
+    echo "ℹ️  $app_name 没有文件变更，跳过检查"
+  fi
+
+  cd - > /dev/null
+}
+
+# 返回项目根目录
+cd "$(git rev-parse --show-toplevel)"
+
+# 确保依赖已安装
+if [ ! -d "node_modules" ]; then
+  echo "📦 安装依赖..."
+  npm ci
+fi
+
+# 生成Prisma客户端（如果需要）
+if [ -f "apps/api/prisma/schema.prisma" ]; then
+  echo "🗄️ 生成Prisma客户端..."
+  cd apps/api
+  npx prisma generate > /dev/null 2>&1
+  cd - > /dev/null
+fi
+
+# 检查根级别类型（如果有根级别TS文件变更）
+ROOT_TS_FILES=$(echo "$CHANGED_TS_FILES" | grep -v "^apps/" || true)
+if [ -n "$ROOT_TS_FILES" ]; then
+  echo "🔍 检查根级别TypeScript文件..."
+  npx tsc --noEmit --project tsconfig.json
+
+  if [ $? -ne 0 ]; then
+    echo "❌ 根级别TypeScript类型检查失败!"
+    exit 1
+  fi
+
+  echo "✅ 根级别TypeScript类型检查通过"
+fi
+
+# 检查各个应用
+check_app_types "API" "apps/api"
+check_app_types "Web" "apps/web"
+
+# 运行ESLint对变更的文件进行检查
+echo "🔍 对变更的文件运行ESLint..."
+echo "$CHANGED_TS_FILES" | xargs npx eslint --fix
+
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint检查失败!"
+  exit 1
+fi
+
+echo "✅ ESLint检查通过"
+
+# 将修复后的文件添加到暂存区
+echo "$CHANGED_TS_FILES" | xargs git add
+
+# 运行类型覆盖率检查（仅对变更文件）
+echo "🔍 检查类型覆盖率..."
+for file in $CHANGED_TS_FILES; do
+  if [[ $file == *.ts ]] || [[ $file == *.tsx ]]; then
+    npx type-coverage --detail "$file" --at-least 90 > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      echo "⚠️  警告: $file 的类型覆盖率可能不足90%"
+    fi
+  fi
+done
+
+echo "🎉 所有Pre-commit检查通过！"

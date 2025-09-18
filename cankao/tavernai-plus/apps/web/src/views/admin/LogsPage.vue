@@ -239,8 +239,9 @@ const refreshLogs = () => {
 
 // 加载前端日志
 const loadFrontendLogs = () => {
-  frontendLogs.value = errorLogger.getRecentLogs(200)
-  summary.value = errorLogger.getErrorSummary()
+  // TODO: 实现 ErrorLogger 的 getRecentLogs 和 getErrorSummary 方法
+  frontendLogs.value = []
+  summary.value = { total: 0, critical: 0, error: 0, warning: 0 }
 }
 
 // 获取后端日志

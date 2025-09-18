@@ -28,6 +28,10 @@ import characterRoutes from './routes/character'
 import chatRoutes from './routes/chat'
 // import chatroomRoutes from './routes/chatroom'
 import marketplaceRoutes from './routes/marketplace'
+import communityRoutes from './routes/community'
+import multimodalRoutes from './routes/multimodal'
+import recommendationRoutes from './routes/recommendation'
+import systemRoutes from './routes/system'
 import logsRoutes from './routes/logs'
 import aiFeaturesRoutes from './routes/ai-features'
 import modelsRoutes from './routes/models'
@@ -38,6 +42,11 @@ import personasRoutes from './routes/personas'
 
 // 导入工作流调度器
 
+// 导入可扩展性和性能优化服务
+import ScalabilityManager from './services/scalabilityManager'
+import PerformanceMonitor from './services/performanceMonitor'
+import CacheManager from './services/cacheManager'
+import DatabaseOptimizer from './services/databaseOptimizer'
 
 // 创建应用实例
 const app: Application = express()
@@ -100,6 +109,10 @@ app.use('/api/chat', chatRoutes)
 app.use('/api/chats', chatRoutes) // 支持复数形式，兼容前端调用
 // app.use('/api/chatrooms', chatroomRoutes) // 多角色聊天室 API
 app.use('/api/marketplace', marketplaceRoutes)
+app.use('/api/community', communityRoutes) // 社区功能 API
+app.use('/api/multimodal', multimodalRoutes) // 多模态AI功能 API
+app.use('/api/recommendations', recommendationRoutes) // 智能推荐系统 API
+app.use('/api/system', systemRoutes) // 系统管理和监控 API
 app.use('/api/logs', logsRoutes)
 app.use('/api/ai', aiFeaturesRoutes) // QuackAI 核心功能 API
 app.use('/api/models', modelsRoutes) // 多模型 AI 支持 API
@@ -179,7 +192,19 @@ async function startServer() {
       console.log('❌ AI 服务配置不完整，部分功能可能不可用')
     }
 
+    // 初始化性能优化服务
+    console.log('🔧 初始化性能优化服务...')
 
+    // 1. 初始化数据库优化
+    await DatabaseOptimizer.initialize()
+
+    // 2. 预热缓存系统
+    await CacheManager.warmup()
+
+    // 3. 初始化可扩展性管理器
+    await ScalabilityManager.initialize()
+
+    console.log('✅ 性能优化服务初始化完成')
 
     // 启动 HTTP 服务器
     httpServer.listen(envConfig.PORT, () => {
@@ -193,6 +218,11 @@ async function startServer() {
       console.log('   GET  /api/characters/* - 角色管理')
       console.log('   POST /api/chat/* - 对话服务')
       console.log('   GET  /api/ai/* - AI 功能')
+      console.log('   GET  /api/recommendations/* - 智能推荐系统')
+      console.log('   GET  /api/marketplace/* - 角色市场')
+      console.log('   GET  /api/community/* - 社区功能')
+      console.log('   POST /api/multimodal/* - 多模态AI')
+      console.log('   GET  /api/system/* - 系统管理和监控')
     })
   } catch (error) {
     console.error('❌ 服务器启动失败:', error)
@@ -204,7 +234,17 @@ async function startServer() {
 async function gracefulShutdown(signal: string) {
   console.log(`${signal} received, shutting down gracefully...`)
 
+  // 停止性能监控
+  PerformanceMonitor.stopMonitoring()
+  console.log('Performance monitoring stopped')
 
+  // 停止可扩展性管理器
+  ScalabilityManager.stopMonitoring()
+  console.log('Scalability manager stopped')
+
+  // 清理缓存
+  CacheManager.flushAll()
+  console.log('Cache cleared')
 
   httpServer.close(() => {
     console.log('HTTP server closed')

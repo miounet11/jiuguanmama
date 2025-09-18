@@ -34,6 +34,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: false }
   },
   {
+    path: '/marketplace',
+    name: 'Marketplace',
+    component: () => import('@/views/marketplace/MarketplaceView.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
     path: '/chat',
     name: 'Chat',
     component: () => import('@/views/chat/ChatPage.vue'),
@@ -87,6 +93,37 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/admin/LogsPage.vue'),
     meta: { requiresAuth: true }
   },
+  // 社区路由
+  {
+    path: '/community',
+    name: 'Community',
+    component: () => import('@/views/community/CommunityView.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/community/post/:postId',
+    name: 'PostDetail',
+    component: () => import('@/views/community/PostDetailView.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/community/user/:userId',
+    name: 'UserProfile',
+    component: () => import('@/views/community/UserProfileView.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/community/follow/:userId',
+    name: 'UserFollow',
+    component: () => import('@/views/community/UserFollowView.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/community/notifications',
+    name: 'Notifications',
+    component: () => import('@/views/community/NotificationsView.vue'),
+    meta: { requiresAuth: true }
+  },
   {
     path: '/404',
     name: 'NotFound',
@@ -103,7 +140,7 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior(to, from, savedPosition) {
+  scrollBehavior(_to, _from, savedPosition) {
     if (savedPosition) {
       return savedPosition
     } else {
@@ -113,7 +150,7 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const userStore = useUserStore()
 
   // 需要认证的路由

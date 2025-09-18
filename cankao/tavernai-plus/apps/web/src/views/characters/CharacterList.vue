@@ -242,9 +242,9 @@ const fetchCharacters = async () => {
     const response = await axios.get('/characters', { params })
 
     // 处理响应数据，适配不同格式
-    if (response.success) {
+    if (response.data.success) {
       // 转换数据格式以匹配前端需求
-      characters.value = response.characters.map((char: any) => ({
+      characters.value = response.data.characters.map((char: any) => ({
         id: char.id,
         name: char.name || '未命名角色',
         avatar: char.avatar || '',
@@ -258,7 +258,7 @@ const fetchCharacters = async () => {
         isPremium: char.isPremium || false
       }))
 
-      totalItems.value = response.pagination?.total || response.characters.length
+      totalItems.value = response.data.pagination?.total || response.data.characters.length
     } else {
       // 如果没有success标记，尝试直接使用数据
       if (Array.isArray(response)) {

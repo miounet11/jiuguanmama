@@ -118,7 +118,7 @@
       v-model:visible="showMentions"
       placement="top-start"
       :width="320"
-      trigger="manual"
+      :trigger="'manual' as any"
       popper-class="mention-popover"
     >
       <div class="mention-panel">
@@ -165,13 +165,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
   PictureRounded,
   Microphone,
-  Robot,
-  Promotion,
-  Loading
+  User as Robot  // 使用 User 图标替代不存在的 Robot
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
@@ -228,7 +226,7 @@ const showAIAssistant = ref(false)
 const showVoiceDialog = ref(false)
 
 // 引用
-const fileInput = ref<HTMLInputElement>()
+const fileInput = ref<HTMLInputElement | null>(null)
 
 // 提及相关
 const mentionQuery = ref('')
@@ -263,7 +261,9 @@ const filteredMentions = computed(() => {
 })
 
 // 方法
-const handleKeydown = (event: KeyboardEvent) => {
+const handleKeydown = (event: Event | KeyboardEvent) => {
+  // 类型守卫：确保是 KeyboardEvent
+  if (!(event instanceof KeyboardEvent)) return
   // Ctrl/Cmd + Enter 发送
   if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
     event.preventDefault()

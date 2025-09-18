@@ -27,9 +27,25 @@ const auth_1 = __importDefault(require("./routes/auth"));
 const user_1 = __importDefault(require("./routes/user"));
 const character_1 = __importDefault(require("./routes/character"));
 const chat_1 = __importDefault(require("./routes/chat"));
+// import chatroomRoutes from './routes/chatroom'
 const marketplace_1 = __importDefault(require("./routes/marketplace"));
+const community_1 = __importDefault(require("./routes/community"));
+const multimodal_1 = __importDefault(require("./routes/multimodal"));
+const recommendation_1 = __importDefault(require("./routes/recommendation"));
+const system_1 = __importDefault(require("./routes/system"));
 const logs_1 = __importDefault(require("./routes/logs"));
 const ai_features_1 = __importDefault(require("./routes/ai-features"));
+const models_1 = __importDefault(require("./routes/models"));
+const presets_1 = __importDefault(require("./routes/presets"));
+const worldinfo_1 = __importDefault(require("./routes/worldinfo"));
+const groupchat_1 = __importDefault(require("./routes/groupchat"));
+const personas_1 = __importDefault(require("./routes/personas"));
+// 导入工作流调度器
+// 导入可扩展性和性能优化服务
+const scalabilityManager_1 = __importDefault(require("./services/scalabilityManager"));
+const performanceMonitor_1 = __importDefault(require("./services/performanceMonitor"));
+const cacheManager_1 = __importDefault(require("./services/cacheManager"));
+const databaseOptimizer_1 = __importDefault(require("./services/databaseOptimizer"));
 // 创建应用实例
 const app = (0, express_1.default)();
 exports.app = app;
@@ -60,7 +76,7 @@ app.use((0, helmet_1.default)({
 }));
 // CORS 配置 - 简化配置以确保工作
 app.use((0, cors_1.default)({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -82,9 +98,20 @@ app.use('/api/users', user_1.default);
 app.use('/api/characters', character_1.default);
 app.use('/api/chat', chat_1.default);
 app.use('/api/chats', chat_1.default); // 支持复数形式，兼容前端调用
+// app.use('/api/chatrooms', chatroomRoutes) // 多角色聊天室 API
 app.use('/api/marketplace', marketplace_1.default);
+app.use('/api/community', community_1.default); // 社区功能 API
+app.use('/api/multimodal', multimodal_1.default); // 多模态AI功能 API
+app.use('/api/recommendations', recommendation_1.default); // 智能推荐系统 API
+app.use('/api/system', system_1.default); // 系统管理和监控 API
 app.use('/api/logs', logs_1.default);
 app.use('/api/ai', ai_features_1.default); // QuackAI 核心功能 API
+app.use('/api/models', models_1.default); // 多模型 AI 支持 API
+app.use('/api/presets', presets_1.default); // 聊天预设管理 API
+app.use('/api/worldinfo', worldinfo_1.default); // 世界信息管理 API
+app.use('/api/groupchat', groupchat_1.default); // 群组聊天 API
+app.use('/api/personas', personas_1.default); // 用户人格管理 API
+// app.use('/api/workflows', workflowRoutes) // 智能工作流 API - 已删除
 // 健康检查端点
 app.get('/health', async (req, res) => {
     try {
@@ -94,22 +121,27 @@ app.get('/health', async (req, res) => {
             environment: envConfig.NODE_ENV,
             version: '0.1.0',
             services: {
-                database: true, // Prisma 连接在启动时验证
+                database: true,
                 ai: {
                     configured: env_config_1.configValidator.checkAIConfig(),
-                    model: envConfig.DEFAULT_MODEL
+                    model: envConfig.DEFAULT_MODEL,
+                    reachable: false,
+                    error: null
                 }
             }
         };
         // 检查 AI 服务状态
         if (healthStatus.services.ai.configured) {
-            const aiHealth = await env_config_1.configValidator.getAIHealthStatus();
-            healthStatus.services.ai = {
-                configured: healthStatus.services.ai.configured,
-                model: healthStatus.services.ai.model,
-                reachable: aiHealth.reachable,
-                error: aiHealth.error
-            };
+            try {
+                const aiHealth = await env_config_1.configValidator.getAIHealthStatus();
+                healthStatus.services.ai.reachable = aiHealth.reachable || false;
+                if (aiHealth.error) {
+                    healthStatus.services.ai.error = aiHealth.error;
+                }
+            }
+            catch (aiError) {
+                healthStatus.services.ai.error = 'AI service check failed';
+            }
         }
         res.json(healthStatus);
     }
@@ -145,6 +177,15 @@ async function startServer() {
         else {
             console.log('❌ AI 服务配置不完整，部分功能可能不可用');
         }
+        // 初始化性能优化服务
+        console.log('🔧 初始化性能优化服务...');
+        // 1. 初始化数据库优化
+        await databaseOptimizer_1.default.initialize();
+        // 2. 预热缓存系统
+        await cacheManager_1.default.warmup();
+        // 3. 初始化可扩展性管理器
+        await scalabilityManager_1.default.initialize();
+        console.log('✅ 性能优化服务初始化完成');
         // 启动 HTTP 服务器
         httpServer.listen(envConfig.PORT, () => {
             console.log(`🚀 服务器运行在 http://${envConfig.HOST}:${envConfig.PORT}`);
@@ -157,6 +198,11 @@ async function startServer() {
             console.log('   GET  /api/characters/* - 角色管理');
             console.log('   POST /api/chat/* - 对话服务');
             console.log('   GET  /api/ai/* - AI 功能');
+            console.log('   GET  /api/recommendations/* - 智能推荐系统');
+            console.log('   GET  /api/marketplace/* - 角色市场');
+            console.log('   GET  /api/community/* - 社区功能');
+            console.log('   POST /api/multimodal/* - 多模态AI');
+            console.log('   GET  /api/system/* - 系统管理和监控');
         });
     }
     catch (error) {
@@ -165,24 +211,26 @@ async function startServer() {
     }
 }
 // 优雅关闭
-process.on('SIGTERM', async () => {
-    console.log('SIGTERM received, shutting down gracefully...');
+async function gracefulShutdown(signal) {
+    console.log(`${signal} received, shutting down gracefully...`);
+    // 停止性能监控
+    performanceMonitor_1.default.stopMonitoring();
+    console.log('Performance monitoring stopped');
+    // 停止可扩展性管理器
+    scalabilityManager_1.default.stopMonitoring();
+    console.log('Scalability manager stopped');
+    // 清理缓存
+    cacheManager_1.default.flushAll();
+    console.log('Cache cleared');
     httpServer.close(() => {
         console.log('HTTP server closed');
     });
     await exports.prisma.$disconnect();
     console.log('Database disconnected');
     process.exit(0);
-});
-process.on('SIGINT', async () => {
-    console.log('SIGINT received, shutting down gracefully...');
-    httpServer.close(() => {
-        console.log('HTTP server closed');
-    });
-    await exports.prisma.$disconnect();
-    console.log('Database disconnected');
-    process.exit(0);
-});
+}
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // 启动服务器
 startServer();
 //# sourceMappingURL=server.js.map

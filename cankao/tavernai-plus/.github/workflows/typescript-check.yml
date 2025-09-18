@@ -1,0 +1,189 @@
+name: TypeScript Type Check & Quality Assurance
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  typescript-check:
+    runs-on: ubuntu-latest
+    name: TypeScript类型检查
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: 安装依赖
+      run: npm ci
+
+    - name: 生成Prisma客户端
+      run: |
+        cd apps/api
+        npx prisma generate
+
+    - name: TypeScript类型检查 - 根目录
+      run: npx tsc --noEmit --project tsconfig.json
+
+    - name: TypeScript类型检查 - API
+      run: |
+        cd apps/api
+        npx tsc --noEmit --project tsconfig.json
+
+    - name: TypeScript类型检查 - Web
+      run: |
+        cd apps/web
+        npx vue-tsc --noEmit --project tsconfig.json
+
+    - name: 运行类型覆盖率检查
+      run: npx type-coverage --strict --at-least 95
+
+    - name: 生成类型检查报告
+      if: always()
+      run: |
+        npx tsc --noEmit --project tsconfig.json > typescript-report.txt 2>&1 || true
+        cd apps/api && npx tsc --noEmit --project tsconfig.json > ../../api-typescript-report.txt 2>&1 || true
+        cd ../web && npx vue-tsc --noEmit --project tsconfig.json > ../../web-typescript-report.txt 2>&1 || true
+
+    - name: 上传类型检查报告
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: typescript-reports
+        path: |
+          typescript-report.txt
+          api-typescript-report.txt
+          web-typescript-report.txt
+
+  type-coverage:
+    runs-on: ubuntu-latest
+    name: 类型覆盖率检查
+    needs: typescript-check
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: 安装依赖
+      run: npm ci
+
+    - name: 生成Prisma客户端
+      run: |
+        cd apps/api
+        npx prisma generate
+
+    - name: 检查类型覆盖率
+      run: |
+        echo "检查整体项目类型覆盖率..."
+        npx type-coverage --detail --strict --ignore-files "**/*.d.ts" > type-coverage-report.txt
+
+        echo "检查API类型覆盖率..."
+        cd apps/api
+        npx type-coverage --detail --strict --ignore-files "**/*.d.ts" > ../../api-type-coverage.txt
+
+        echo "检查Web类型覆盖率..."
+        cd ../web
+        npx type-coverage --detail --strict --ignore-files "**/*.d.ts" > ../../web-type-coverage.txt
+
+    - name: 类型覆盖率报告
+      if: always()
+      run: |
+        echo "=== 整体类型覆盖率 ==="
+        cat type-coverage-report.txt
+        echo -e "\n=== API类型覆盖率 ==="
+        cat api-type-coverage.txt
+        echo -e "\n=== Web类型覆盖率 ==="
+        cat web-type-coverage.txt
+
+    - name: 上传覆盖率报告
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: type-coverage-reports
+        path: |
+          type-coverage-report.txt
+          api-type-coverage.txt
+          web-type-coverage.txt
+
+  eslint-typescript:
+    runs-on: ubuntu-latest
+    name: ESLint TypeScript规则检查
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: 安装依赖
+      run: npm ci
+
+    - name: 运行ESLint TypeScript检查
+      run: |
+        npx eslint "**/*.{ts,tsx,vue}" --format=json --output-file=eslint-typescript-report.json || true
+        npx eslint "**/*.{ts,tsx,vue}" --format=stylish
+
+    - name: 上传ESLint报告
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: eslint-typescript-report
+        path: eslint-typescript-report.json
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    name: 依赖类型安全审计
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: 安装依赖
+      run: npm ci
+
+    - name: 检查TypeScript版本兼容性
+      run: |
+        echo "检查TypeScript版本..."
+        npx tsc --version
+
+        echo "检查@types包版本兼容性..."
+        npm list --depth=0 | grep "@types" > types-packages.txt || true
+        cat types-packages.txt
+
+    - name: 检查缺失的类型定义
+      run: |
+        echo "检查缺失的类型定义..."
+        npx are-the-types-wrong --pack . > missing-types-report.txt 2>&1 || true
+        cat missing-types-report.txt
+
+    - name: 上传依赖审计报告
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: dependency-audit-reports
+        path: |
+          types-packages.txt
+          missing-types-report.txt

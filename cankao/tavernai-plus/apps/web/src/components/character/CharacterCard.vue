@@ -143,9 +143,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 
 interface Character {
   id: string
@@ -194,6 +192,17 @@ const handleImageError = (event: Event) => {
 // 处理收藏
 const handleFavorite = () => {
   emit('favorite', props.character.id)
+}
+
+// 处理卡片点击
+const handleCardClick = () => {
+  emit('click', props.character)
+}
+
+// 开始聊天
+const router = useRouter()
+const startChat = () => {
+  router.push(`/chat/${props.character.id}`)
 }
 </script>
 

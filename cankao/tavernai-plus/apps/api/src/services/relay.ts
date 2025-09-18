@@ -115,27 +115,27 @@ class RelayService extends EventEmitter {
     try {
       // 从数据库加载渠道
       const channelsData = await prisma.channel.findMany({
-        where: { status: { not: 'deleted' } }
+        where: { isActive: true }
       })
 
       channelsData.forEach(ch => {
         const channel: Channel = {
           id: ch.id,
           name: ch.name,
-          type: ch.type,
-          key: ch.key,
-          endpoint: ch.endpoint,
-          models: ch.models as string[],
+          type: ch.provider, // 使用provider作为type
+          key: ch.apiKey,
+          endpoint: ch.baseUrl || '',
+          models: JSON.parse(ch.models || '[]') as string[],
           priority: ch.priority,
           weight: ch.weight,
-          status: ch.status as ChannelStatus,
-          balance: ch.balance,
-          rpm: ch.rpm,
-          tpm: ch.tpm,
-          errorCount: 0,
-          successCount: 0,
+          status: ch.isActive ? ChannelStatus.ACTIVE : ChannelStatus.DISABLED,
+          balance: 0, // 默认值，实际字段不存在
+          rpm: ch.rpmLimit || 0,
+          tpm: ch.tpmLimit || 0,
+          errorCount: ch.errorCount,
+          successCount: ch.usageCount, // 使用usageCount作为successCount
           avgLatency: 0,
-          metadata: ch.metadata
+          metadata: {} // 默认空对象，实际字段不存在
         }
 
         this.channels.set(channel.id, channel)
@@ -435,11 +435,9 @@ class RelayService extends EventEmitter {
       prisma.channel.update({
         where: { id: channel.id },
         data: {
-          successCount: channel.successCount,
+          usageCount: channel.successCount,
           errorCount: channel.errorCount,
-          avgLatency: channel.avgLatency,
-          lastUsedAt: channel.lastUsedAt,
-          lastErrorAt: channel.lastErrorAt
+          lastUsedAt: channel.lastUsedAt || new Date()
         }
       }).catch(console.error)
     })
@@ -454,20 +452,12 @@ class RelayService extends EventEmitter {
       await prisma.usageLog.create({
         data: {
           userId: ctx.userId,
-          channelId: channel.id,
-          model: ctx.model,
-          requestId: ctx.requestId,
-          promptTokens: tokens.prompt,
-          completionTokens: tokens.completion,
-          totalTokens: tokens.total,
-          cost,
-          latency: Date.now() - ctx.startTime,
-          success: true,
-          metadata: {
-            retryCount: ctx.retryCount,
-            temperature: ctx.temperature,
-            maxTokens: ctx.maxTokens
-          }
+          endpoint: '/v1/chat/completions',
+          method: 'POST',
+          statusCode: 200,
+          responseTime: Date.now() - ctx.startTime,
+          ip: '',
+          userAgent: ''
         }
       })
     } catch (error) {

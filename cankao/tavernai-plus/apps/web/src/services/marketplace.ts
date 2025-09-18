@@ -1,4 +1,4 @@
-import axios from './axios'
+import apiClient from './api'
 
 export interface MarketplaceFilter {
   category?: string
@@ -61,7 +61,7 @@ class MarketplaceService {
    */
   async getCharacters(filter: MarketplaceFilter = {}): Promise<MarketplaceResponse> {
     const params = new URLSearchParams()
-    
+
     if (filter.category) params.append('category', filter.category)
     if (filter.minRating) params.append('minRating', filter.minRating.toString())
     if (filter.language) params.append('language', filter.language)
@@ -69,47 +69,47 @@ class MarketplaceService {
     if (filter.sortBy) params.append('sortBy', filter.sortBy)
     if (filter.page) params.append('page', filter.page.toString())
     if (filter.limit) params.append('limit', filter.limit.toString())
-    
-    const response = await axios.get<MarketplaceResponse>(`/marketplace/characters?${params}`)
-    return response.data
+
+    const response = await apiClient.get(`/marketplace/characters?${params}`)
+    return response.data as MarketplaceResponse
   }
 
   /**
    * 获取特色角色
    */
   async getFeaturedCharacters(limit = 10): Promise<CharacterPreview[]> {
-    const response = await axios.get<CharacterPreview[]>('/marketplace/featured', {
+    const response = await apiClient.get('/marketplace/featured', {
       params: { limit }
     })
-    return response.data
+    return response.data as CharacterPreview[]
   }
 
   /**
    * 获取推荐角色
    */
   async getRecommendedCharacters(limit = 12): Promise<CharacterPreview[]> {
-    const response = await axios.get<CharacterPreview[]>('/marketplace/recommended', {
+    const response = await apiClient.get('/marketplace/recommended', {
       params: { limit }
     })
-    return response.data
+    return response.data as CharacterPreview[]
   }
 
   /**
    * 获取分类统计
    */
   async getCategoryStats(): Promise<CategoryStats[]> {
-    const response = await axios.get<CategoryStats[]>('/marketplace/categories/stats')
-    return response.data
+    const response = await apiClient.get('/marketplace/categories/stats')
+    return response.data as CategoryStats[]
   }
 
   /**
    * 获取热门创作者
    */
   async getTopCreators(limit = 5): Promise<TopCreator[]> {
-    const response = await axios.get<TopCreator[]>('/marketplace/creators/top', {
+    const response = await apiClient.get('/marketplace/creators/top', {
       params: { limit }
     })
-    return response.data
+    return response.data as TopCreator[]
   }
 
   /**
@@ -120,10 +120,10 @@ class MarketplaceService {
     language?: string
     limit?: number
   }): Promise<CharacterPreview[]> {
-    const response = await axios.get<CharacterPreview[]>('/marketplace/search', {
+    const response = await apiClient.get('/marketplace/search', {
       params: { query, ...options }
     })
-    return response.data
+    return response.data as CharacterPreview[]
   }
 
   /**
@@ -141,7 +141,7 @@ class MarketplaceService {
       lastUsed: string
     }
   }> {
-    const response = await axios.get(`/marketplace/characters/${id}`)
+    const response = await apiClient.get(`/marketplace/characters/${id}`)
     return response.data
   }
 
@@ -149,28 +149,28 @@ class MarketplaceService {
    * 收藏角色
    */
   async favoriteCharacter(id: string): Promise<void> {
-    await axios.post(`/marketplace/characters/${id}/favorite`)
+    await apiClient.post(`/marketplace/characters/${id}/favorite`)
   }
 
   /**
    * 取消收藏
    */
   async unfavoriteCharacter(id: string): Promise<void> {
-    await axios.delete(`/marketplace/characters/${id}/favorite`)
+    await apiClient.delete(`/marketplace/characters/${id}/favorite`)
   }
 
   /**
    * 评价角色
    */
   async rateCharacter(id: string, rating: number, comment?: string): Promise<void> {
-    await axios.post(`/marketplace/characters/${id}/rate`, { rating, comment })
+    await apiClient.post(`/marketplace/characters/${id}/rate`, { rating, comment })
   }
 
   /**
    * 导入角色到我的角色库
    */
   async importCharacter(id: string): Promise<{ characterId: string }> {
-    const response = await axios.post(`/marketplace/characters/${id}/import`)
+    const response = await apiClient.post(`/marketplace/characters/${id}/import`)
     return response.data
   }
 
@@ -188,7 +188,7 @@ class MarketplaceService {
     total: number
     averageRating: number
   }> {
-    const response = await axios.get(`/marketplace/characters/${id}/ratings`, {
+    const response = await apiClient.get(`/marketplace/characters/${id}/ratings`, {
       params: { page, limit }
     })
     return response.data
@@ -198,7 +198,7 @@ class MarketplaceService {
    * 举报不适当内容
    */
   async reportCharacter(id: string, reason: string, details?: string): Promise<void> {
-    await axios.post(`/marketplace/characters/${id}/report`, { reason, details })
+    await apiClient.post(`/marketplace/characters/${id}/report`, { reason, details })
   }
 
   /**
@@ -209,7 +209,7 @@ class MarketplaceService {
     count: number
     trend: 'up' | 'down' | 'stable'
   }>> {
-    const response = await axios.get('/marketplace/tags/trending', {
+    const response = await apiClient.get('/marketplace/tags/trending', {
       params: { limit }
     })
     return response.data
@@ -219,7 +219,7 @@ class MarketplaceService {
    * 获取用户的公开角色
    */
   async getUserPublicCharacters(userId: string, page = 1, limit = 12): Promise<MarketplaceResponse> {
-    const response = await axios.get(`/marketplace/users/${userId}/characters`, {
+    const response = await apiClient.get(`/marketplace/users/${userId}/characters`, {
       params: { page, limit }
     })
     return response.data

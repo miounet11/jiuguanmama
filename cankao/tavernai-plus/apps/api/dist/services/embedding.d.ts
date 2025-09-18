@@ -7,6 +7,19 @@ export interface EmbeddingResult {
     vector: number[];
     metadata?: any;
 }
+export interface VectorSearchRequest {
+    query: string;
+    collection?: string;
+    topK?: number;
+    threshold?: number;
+    includeMetadata?: boolean;
+}
+export interface VectorSearchResult {
+    id: string;
+    text: string;
+    score: number;
+    metadata?: any;
+}
 /**
  * 将文本转换为向量嵌入（模拟实现）
  * 实际应用中应该使用 OpenAI Embeddings API 或其他嵌入模型

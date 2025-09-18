@@ -1,5 +1,12 @@
 <template>
   <div class="chat-session-container">
+    <!-- 移动端遮罩层 -->
+    <div
+      v-if="!sidebarCollapsed && isMobile"
+      class="mobile-overlay"
+      @click="sidebarCollapsed = true"
+    ></div>
+
     <!-- 侧边栏 -->
     <div class="sidebar" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
       <!-- 折叠按钮 -->
@@ -168,63 +175,90 @@
           </div>
         </div>
 
-        <!-- 消息列表 -->
-        <div v-for="(message, index) in messages" :key="message.id" class="message-wrapper">
-          <div :class="['message-item', message.role]">
-            <!-- 消息头像 -->
-            <div class="message-avatar">
-              <img
-                v-if="message.role === 'assistant'"
-                :src="character?.avatar || '/default-avatar.png'"
-                :alt="character?.name"
-              />
-              <div v-else class="user-avatar">
-                <el-icon><User /></el-icon>
+        <!-- 虚拟滚动消息列表 -->
+        <div v-else class="virtual-message-list" ref="virtualList">
+          <!-- 上方填充空间 -->
+          <div v-if="virtualScrollTop > 0" :style="{ height: virtualScrollTop + 'px' }" class="virtual-spacer"></div>
+
+          <!-- 可见消息 -->
+          <div
+            v-for="(message, index) in displayMessages"
+            :key="message.id"
+            class="message-wrapper"
+            :data-index="message.originalIndex"
+          >
+            <div :class="['message-item', message.role]">
+              <!-- 消息头像 -->
+              <div class="message-avatar">
+                <img
+                  v-if="message.role === 'assistant'"
+                  :src="character?.avatar || '/default-avatar.png'"
+                  :alt="character?.name"
+                />
+                <div v-else class="user-avatar">
+                  <el-icon><User /></el-icon>
+                </div>
               </div>
-            </div>
 
-            <!-- 消息内容 -->
-            <div class="message-content">
-              <div class="message-header">
-                <span class="message-sender">
-                  {{ message.role === 'user' ? '你' : character?.name }}
-                </span>
-                <span class="message-time">{{ formatTime(message.timestamp) }}</span>
-              </div>
+              <!-- 消息内容 -->
+              <div class="message-content">
+                <div class="message-header">
+                  <span class="message-sender">
+                    {{ message.role === 'user' ? '你' : character?.name }}
+                  </span>
+                  <span class="message-time">{{ formatTime(message.timestamp) }}</span>
+                </div>
 
-              <div class="message-text" v-html="formatMessage(message.content)"></div>
+                <!-- 图像消息 -->
+                <div v-if="(message as any).imageUrl" class="message-image">
+                  <img
+                    :src="(message as any).imageUrl"
+                    :alt="(message as any).imagePrompt || '用户图像'"
+                    class="chat-image"
+                    @click="previewChatImage((message as any).imageUrl, (message as any).imagePrompt)"
+                  />
+                  <div v-if="(message as any).imagePrompt" class="image-prompt">
+                    {{ (message as any).imagePrompt }}
+                  </div>
+                </div>
 
-              <!-- 消息操作 -->
-              <div class="message-actions" v-if="message.role === 'assistant'">
-                <button
-                  @click="copyMessage(message.content)"
-                  title="复制"
-                  class="action-btn"
-                >
-                  <el-icon><DocumentCopy /></el-icon>
-                </button>
-                <button
-                  @click="regenerateMessage(index)"
-                  title="重新生成"
-                  class="action-btn"
-                  :disabled="isLoading"
-                >
-                  <el-icon><Refresh /></el-icon>
-                </button>
-                <button
-                  @click="rateMessage(message)"
-                  title="评价"
-                  class="action-btn"
-                >
-                  <el-icon><Star /></el-icon>
-                </button>
+                <div class="message-text" v-html="formatMessage(message.content)"></div>
+
+                <!-- 消息操作 -->
+                <div class="message-actions" v-if="message.role === 'assistant'">
+                  <button
+                    @click="copyMessage(message.content)"
+                    title="复制"
+                    class="action-btn"
+                  >
+                    <el-icon><DocumentCopy /></el-icon>
+                  </button>
+                  <button
+                    @click="regenerateMessage(message.originalIndex)"
+                    title="重新生成"
+                    class="action-btn"
+                    :disabled="isLoading"
+                  >
+                    <el-icon><Refresh /></el-icon>
+                  </button>
+                  <button
+                    @click="rateMessage(message)"
+                    title="评价"
+                    class="action-btn"
+                  >
+                    <el-icon><Star /></el-icon>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- 下方填充空间 -->
+          <div v-if="virtualScrollBottom > 0" :style="{ height: virtualScrollBottom + 'px' }" class="virtual-spacer"></div>
         </div>
 
         <!-- 输入指示器（优化版） -->
-        <div v-if="isTyping" class="message-wrapper">
+        <div v-if="isTyping" class="message-wrapper typing-wrapper">
           <div class="message-item assistant">
             <div class="message-avatar">
               <img
@@ -270,6 +304,25 @@
               @click="handleFileUpload"
               title="上传文件"
               :disabled="isLoading"
+            />
+            <!-- 语音输入按钮 -->
+            <el-button
+              size="small"
+              @click="startVoiceInput"
+              :type="isVoiceRecording ? 'danger' : 'primary'"
+              :title="isVoiceRecording ? '停止录音' : '语音输入'"
+              :disabled="isLoading"
+            >
+              <el-icon>
+                <component :is="isVoiceRecording ? 'VideoPlay' : 'Microphone'" />
+              </el-icon>
+            </el-button>
+            <!-- 图像功能 -->
+            <ChatImageFeatures
+              :current-character="character"
+              :messages="messages"
+              @image-generated="handleImageGenerated"
+              @image-message="handleImageMessage"
             />
           </div>
 
@@ -329,6 +382,59 @@
         </div>
       </div>
     </div>
+
+    <!-- 语音功能组件 -->
+    <ChatVoiceFeatures
+      :messages="messages"
+      :current-character="character"
+      :is-mobile="isMobile"
+      @voice-text-ready="handleVoiceTextReady"
+      @voice-message-play="handleVoiceMessagePlay"
+      @voice-message-stop="handleVoiceMessageStop"
+      @auto-voice-toggle="handleAutoVoiceToggle"
+    />
+
+    <!-- 语音输入对话框 -->
+    <el-dialog
+      v-model="showVoiceDialog"
+      title="语音输入"
+      width="500px"
+      :close-on-click-modal="false"
+    >
+      <VoiceInput
+        :auto-transcribe="true"
+        :show-advanced="false"
+        compact
+        @text-ready="handleVoiceTextReady"
+        @recording-start="handleVoiceRecordingStart"
+        @recording-stop="handleVoiceRecordingStop"
+        @error="handleVoiceError"
+      />
+
+      <template #footer>
+        <el-button @click="showVoiceDialog = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 图像预览对话框 -->
+    <el-dialog
+      v-model="showImagePreview"
+      title="图像预览"
+      width="80%"
+      :close-on-click-modal="true"
+    >
+      <div v-if="previewImageData" class="image-preview-container">
+        <img
+          :src="previewImageData.url"
+          :alt="previewImageData.prompt || '聊天图像'"
+          class="preview-chat-image"
+        />
+        <div v-if="previewImageData.prompt" class="preview-image-info">
+          <h4>生成提示词</h4>
+          <p>{{ previewImageData.prompt }}</p>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -338,12 +444,14 @@ import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   ChatDotRound, Star, User, Refresh, Setting, Download, Delete,
-  DocumentCopy, ArrowDown, Upload, Close, Position,
-  Expand, Fold, VideoPlay, VideoPause, FullScreen, Rank
+  DocumentCopy, ArrowDown, Upload, Close, Position, Microphone, VideoPlay
 } from '@element-plus/icons-vue'
 import { http } from '@/utils/axios'
 import ModelSelector from '@/components/common/ModelSelector.vue'
 import SillyTavernControls from '@/components/advanced/SillyTavernControls.vue'
+import ChatVoiceFeatures from '@/components/voice/ChatVoiceFeatures.vue'
+import VoiceInput from '@/components/voice/VoiceInput.vue'
+import ChatImageFeatures from '@/components/image/ChatImageFeatures.vue'
 
 const route = useRoute()
 
@@ -358,11 +466,20 @@ interface Message {
 const character = ref<any>(null)
 const messages = ref<Message[]>([])
 const inputMessage = ref('')
-const inputRef = ref<HTMLTextAreaElement>()
-const messagesContainer = ref<HTMLElement>()
+const inputRef = ref<HTMLTextAreaElement | null>(null)
+const messagesContainer = ref<HTMLElement | null>(null)
+const virtualList = ref<HTMLElement | null>(null)
 const isLoading = ref(false)
 const isTyping = ref(false)
 const isOnline = ref(true)
+
+// 虚拟滚动相关
+const virtualScrollTop = ref(0)
+const virtualScrollBottom = ref(0)
+const visibleMessages = ref<(Message & { originalIndex: number })[]>([])
+const messageHeight = 120 // 估算的单个消息高度
+const containerHeight = ref(600) // 容器高度
+const overscan = 5 // 上下额外渲染的消息数量
 
 // UI 状态
 const sidebarCollapsed = ref(false)
@@ -372,6 +489,11 @@ const showEmojiPicker = ref(false)
 const soundEnabled = ref(true)
 const fullscreen = ref(false)
 const isMobile = ref(false)
+
+// 语音功能状态
+const showVoiceDialog = ref(false)
+const isVoiceRecording = ref(false)
+const voiceEnabled = ref(true)
 
 // 移动端检测
 const checkMobile = () => {
@@ -410,6 +532,54 @@ const canSend = computed(() => {
 
 const canRegenerate = computed(() => {
   return messages.value.length > 0 && messages.value[messages.value.length - 1].role === 'assistant' && !isLoading.value
+})
+
+// 虚拟滚动计算
+const updateVirtualScroll = () => {
+  if (!messagesContainer.value || messages.value.length === 0) {
+    visibleMessages.value = []
+    virtualScrollTop.value = 0
+    virtualScrollBottom.value = 0
+    return
+  }
+
+  const scrollTop = messagesContainer.value.scrollTop
+  containerHeight.value = messagesContainer.value.clientHeight
+
+  // 计算可见区域的消息索引范围
+  const startIndex = Math.max(0, Math.floor(scrollTop / messageHeight) - overscan)
+  const endIndex = Math.min(
+    messages.value.length - 1,
+    Math.ceil((scrollTop + containerHeight.value) / messageHeight) + overscan
+  )
+
+  // 更新可见消息
+  visibleMessages.value = messages.value
+    .slice(startIndex, endIndex + 1)
+    .map((message, index) => ({
+      ...message,
+      originalIndex: startIndex + index
+    }))
+
+  // 计算填充空间
+  virtualScrollTop.value = startIndex * messageHeight
+  virtualScrollBottom.value = (messages.value.length - endIndex - 1) * messageHeight
+}
+
+// 监听消息变化，启用/禁用虚拟滚动
+const shouldUseVirtualScroll = computed(() => {
+  return messages.value.length > 50 // 超过50条消息启用虚拟滚动
+})
+
+// 如果不使用虚拟滚动，返回所有消息
+const displayMessages = computed(() => {
+  if (shouldUseVirtualScroll.value) {
+    return visibleMessages.value
+  }
+  return messages.value.map((message, index) => ({
+    ...message,
+    originalIndex: index
+  }))
 })
 
 const formatCount = (count: number) => {
@@ -480,6 +650,11 @@ const handleScroll = () => {
   const isNearBottom = scrollHeight - scrollTop - clientHeight < 100
 
   showScrollToBottom.value = !isNearBottom
+
+  // 如果启用虚拟滚动，更新可见消息
+  if (shouldUseVirtualScroll.value) {
+    updateVirtualScroll()
+  }
 }
 
 // 键盘处理
@@ -534,7 +709,8 @@ const regenerateMessage = async (messageIndex: number) => {
   messages.value = messagesToKeep
 
   // 重新发送用户消息
-  await sendMessageWithContent(lastUserMessage.content)
+  inputMessage.value = lastUserMessage.content
+  await sendMessage()
 }
 
 const regenerateLastMessage = async () => {
@@ -544,25 +720,101 @@ const regenerateLastMessage = async () => {
   }
 }
 
-const rateMessage = async (message: Message) => {
-  try {
-    const { value } = await ElMessageBox.prompt('请对这条消息评分 (1-5)', '消息评价', {
-      inputType: 'number',
-      inputValidator: (value: string) => {
-        const num = parseInt(value)
-        return num >= 1 && num <= 5 ? true : '请输入 1-5 之间的数字'
-      }
-    })
 
-    // 这里可以发送评分到服务器
-    ElMessage.success(`评分已提交: ${value}/5`)
-  } catch (error) {
-    // 用户取消评分
-  }
-}
 
 const handleFileUpload = () => {
   ElMessage.info('文件上传功能暂未实现')
+}
+
+// 语音功能方法
+const startVoiceInput = () => {
+  if (isVoiceRecording.value) {
+    // 如果正在录音，停止录音
+    isVoiceRecording.value = false
+  } else {
+    // 开始语音输入
+    showVoiceDialog.value = true
+  }
+}
+
+const handleVoiceTextReady = (text: string) => {
+  inputMessage.value = text
+  showVoiceDialog.value = false
+  nextTick(() => {
+    inputRef.value?.focus()
+  })
+}
+
+const handleVoiceRecordingStart = () => {
+  isVoiceRecording.value = true
+}
+
+const handleVoiceRecordingStop = () => {
+  isVoiceRecording.value = false
+}
+
+const handleVoiceError = (error: string) => {
+  ElMessage.error(`语音功能错误: ${error}`)
+  isVoiceRecording.value = false
+}
+
+const handleVoiceMessagePlay = (message: any) => {
+  // 处理语音消息播放
+  console.log('Playing voice for message:', message.id)
+}
+
+const handleVoiceMessageStop = () => {
+  // 处理语音消息停止
+  console.log('Voice message stopped')
+}
+
+const handleAutoVoiceToggle = (enabled: boolean) => {
+  // 处理自动语音回复开关
+  console.log('Auto voice reply:', enabled)
+  if (enabled) {
+    ElMessage.success('已开启自动语音回复')
+  } else {
+    ElMessage.info('已关闭自动语音回复')
+  }
+}
+
+// 图像功能处理方法
+const handleImageGenerated = (image: any) => {
+  // 处理生成的图像
+  console.log('图像生成完成:', image)
+  ElMessage.success('图像生成完成')
+}
+
+const handleImageMessage = (imageMessage: any) => {
+  // 将图像消息添加到聊天中
+  const message: Message = {
+    id: imageMessage.id,
+    role: 'user',
+    content: imageMessage.type === 'image' ?
+      `[图像] ${imageMessage.prompt || '用户发送了一张图像'}` :
+      imageMessage.content,
+    timestamp: imageMessage.timestamp
+  }
+
+  // 如果是图像消息，添加特殊处理
+  if (imageMessage.type === 'image') {
+    (message as any).imageUrl = imageMessage.content
+    (message as any).imagePrompt = imageMessage.prompt
+  }
+
+  messages.value.push(message)
+  scrollToBottom()
+
+  ElMessage.success('图像消息已发送')
+}
+
+// 图像预览方法
+const showImagePreview = ref(false)
+const previewImageData = ref<{url: string, prompt?: string} | null>(null)
+
+const previewChatImage = (imageUrl: string, prompt?: string) => {
+  previewImageData.value = { url: imageUrl, prompt }
+  showImagePreview.value = true
 }
 
 const scrollToBottom = () => {
@@ -654,19 +906,28 @@ const sendStreamingMessage = async (messageContent: string) => {
     isTyping.value = false
 
     try {
+      let buffer = ''
+
       while (true) {
         const { done, value } = await reader.read()
 
         if (done) break
 
         // 解析SSE数据
-        const chunk = new TextDecoder().decode(value)
-        const lines = chunk.split('\n')
+        buffer += new TextDecoder().decode(value)
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || '' // 保留最后一行未完整的数据
 
         for (const line of lines) {
           if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6).trim()
+
+            if (dataStr === '[DONE]') {
+              return
+            }
+
             try {
-              const data = JSON.parse(line.slice(6))
+              const data = JSON.parse(dataStr)
 
               if (data.type === 'connected') {
                 // 连接确认，更新用户消息ID
@@ -677,8 +938,11 @@ const sendStreamingMessage = async (messageContent: string) => {
               } else if (data.type === 'chunk') {
                 // 流式内容块
                 if (streamingMessage.value) {
-                  streamingMessage.value.content = data.fullContent
-                  scrollToBottom()
+                  streamingMessage.value.content = data.fullContent || data.content || ''
+                  // 触发界面更新
+                  nextTick(() => {
+                    scrollToBottom()
+                  })
                 }
               } else if (data.type === 'complete') {
                 // 流式完成
@@ -690,11 +954,12 @@ const sendStreamingMessage = async (messageContent: string) => {
               } else if (data.type === 'error') {
                 // 流式错误
                 if (streamingMessage.value) {
-                  streamingMessage.value.content = data.message
+                  streamingMessage.value.content = data.message || '抱歉，发生了错误。'
                 }
+                ElMessage.error('AI回复出现错误')
               }
             } catch (parseError) {
-              console.error('Failed to parse SSE data:', parseError)
+              console.error('Failed to parse SSE data:', parseError, 'Data:', dataStr)
             }
           }
         }
@@ -704,10 +969,12 @@ const sendStreamingMessage = async (messageContent: string) => {
       streamingMessage.value = null
     }
 
-  } catch (error) {
+  } catch (error: any) {
     if (error.name === 'AbortError') {
       console.log('Streaming aborted by user')
+      ElMessage.info('已停止生成')
     } else {
+      console.error('Streaming error:', error)
       throw error
     }
   }
@@ -812,21 +1079,10 @@ const clearChatWithConfirm = async () => {
   }
 }
 
-const clearChat = () => {
-  clearChatWithConfirm()
-}
 
-// 播放提示音
-const playNotificationSound = () => {
-  try {
-    const audio = new Audio('/notification.mp3')
-    audio.volume = 0.3
-    audio.play().catch(() => {
-      // 忽略播放失败
-    })
-  } catch (error) {
-    // 忽略错误
-  }
+
+const rateMessage = (message: any) => {
+  ElMessage.info('消息评价功能暂未实现')
 }
 
 const fetchChatData = async () => {
@@ -836,24 +1092,33 @@ const fetchChatData = async () => {
     messages.value = response.messages || []
   } catch (error) {
     console.error('Failed to fetch chat data:', error)
-    // 模拟数据
+    ElMessage.error('加载对话数据失败')
+    // 设置默认角色信息
     character.value = {
+      id: route.params.characterId as string,
       name: '助手',
-      avatar: '',
-      creator: '系统'
+      avatar: '/default-avatar.png',
+      creator: '系统',
+      description: '一个友好的AI助手',
+      chatCount: 0,
+      rating: 5.0
     }
     messages.value = []
   }
 }
 
-onMounted(() => {
-  fetchChatData()
+onMounted(async () => {
+  await fetchChatData()
 
   // 检测移动端
   checkMobile()
 
+  // 初始化容器
+  await nextTick()
+  initializeContainer()
+
   // 监听窗口大小变化
-  window.addEventListener('resize', checkMobile)
+  window.addEventListener('resize', handleResize)
 
   // 移动端优化：在移动端默认折叠侧边栏
   if (isMobile.value) {
@@ -866,68 +1131,168 @@ onMounted(() => {
   }
 })
 
+// 清理事件监听器
+const cleanup = () => {
+  window.removeEventListener('resize', handleResize)
+}
+
+// 组件卸载时清理
+import { onUnmounted } from 'vue'
+onUnmounted(cleanup)
+
+// 监听消息变化
 watch(messages, () => {
+  // 如果启用虚拟滚动，更新显示
+  if (shouldUseVirtualScroll.value) {
+    updateVirtualScroll()
+  }
   scrollToBottom()
+}, { deep: true })
+
+// 监听容器大小变化
+watch(containerHeight, () => {
+  if (shouldUseVirtualScroll.value) {
+    updateVirtualScroll()
+  }
 })
+
+// 添加窗口大小变化监听
+const handleResize = () => {
+  if (messagesContainer.value) {
+    containerHeight.value = messagesContainer.value.clientHeight
+  }
+  checkMobile()
+
+  if (shouldUseVirtualScroll.value) {
+    updateVirtualScroll()
+  }
+}
+
+// 初始化时设置容器高度
+const initializeContainer = () => {
+  if (messagesContainer.value) {
+    containerHeight.value = messagesContainer.value.clientHeight
+    if (shouldUseVirtualScroll.value) {
+      updateVirtualScroll()
+    }
+  }
+}
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables.scss';
+@import '@/styles/mixins.scss';
+
 .chat-session-container {
   display: flex;
   height: 100vh;
-  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
-  color: #e5e7eb;
+  background: linear-gradient(135deg, $dark-bg-primary 0%, rgba($dark-bg-secondary, 0.8) 100%);
+  color: $text-primary;
+
+  // 移动端优化
+  @include mobile-only {
+    flex-direction: column;
+    height: 100vh;
+    position: relative;
+  }
+}
+
+// 移动端遮罩层
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba($dark-bg-primary, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+
+  @include desktop-up {
+    display: none;
+  }
 }
 
 // 侧边栏样式
 .sidebar {
   width: 320px;
-  background: rgba(30, 30, 40, 0.95);
-  border-right: 1px solid rgba(139, 92, 246, 0.2);
+  background: rgba($dark-bg-secondary, 0.95);
+  border-right: 1px solid rgba($primary-500, 0.2);
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
+  transition: all $transition-base;
   position: relative;
+  backdrop-filter: blur(10px);
 
   &.sidebar-collapsed {
     width: 60px;
   }
 
+  // 移动端侧边栏
+  @include mobile-only {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    width: 280px;
+    transform: translateX(-100%);
+
+    &:not(.sidebar-collapsed) {
+      transform: translateX(0);
+    }
+  }
+
   .sidebar-toggle {
     position: absolute;
-    top: 20px;
+    top: $space-5;
     right: -15px;
     z-index: 10;
     width: 30px;
     height: 30px;
-    background: rgba(139, 92, 246, 0.2);
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    background: rgba($primary-500, 0.2);
+    border: 1px solid rgba($primary-500, 0.3);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #c084fc;
+    color: $primary-300;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all $transition-base;
 
     &:hover {
-      background: rgba(139, 92, 246, 0.3);
+      background: rgba($primary-500, 0.3);
       transform: scale(1.1);
     }
 
     &.sidebar-toggle-collapsed {
       right: -15px;
     }
+
+    // 移动端切换按钮
+    @include mobile-only {
+      position: fixed;
+      top: $space-4;
+      right: $space-4;
+      z-index: 1001;
+      background: rgba($primary-500, 0.9);
+      border-color: rgba($primary-500, 0.6);
+    }
   }
 
   .character-info {
-    padding: 25px 20px;
-    border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+    padding: $space-6 $space-5;
+    border-bottom: 1px solid rgba($primary-500, 0.1);
+
+    // 移动端角色信息
+    @include mobile-only {
+      padding: $space-4;
+    }
 
     .character-header {
       display: flex;
       align-items: flex-start;
-      gap: 15px;
+      gap: $space-4;
 
       .character-avatar-wrapper {
         position: relative;
@@ -935,9 +1300,9 @@ watch(messages, () => {
         .character-avatar {
           width: 60px;
           height: 60px;
-          border-radius: 12px;
+          border-radius: $rounded-lg;
           object-fit: cover;
-          border: 2px solid rgba(139, 92, 246, 0.3);
+          border: 2px solid rgba($primary-500, 0.3);
         }
 
         .online-indicator {
@@ -947,11 +1312,11 @@ watch(messages, () => {
           width: 14px;
           height: 14px;
           border-radius: 50%;
-          background: #6b7280;
-          border: 2px solid rgba(30, 30, 40, 0.95);
+          background: $gray-500;
+          border: 2px solid rgba($dark-bg-secondary, 0.95);
 
           &.online {
-            background: #10b981;
+            background: $success-color;
           }
         }
       }
@@ -960,31 +1325,31 @@ watch(messages, () => {
         flex: 1;
 
         .character-name {
-          margin: 0 0 5px;
-          font-size: 18px;
-          font-weight: 600;
-          color: #f3f4f6;
+          margin: 0 0 $space-1;
+          font-size: $text-lg;
+          font-weight: $font-weight-semibold;
+          color: $text-primary;
         }
 
         .character-creator {
-          margin: 0 0 10px;
-          font-size: 14px;
-          color: #9ca3af;
+          margin: 0 0 $space-2;
+          font-size: $text-sm;
+          color: $text-tertiary;
         }
 
         .character-stats {
           display: flex;
-          gap: 15px;
+          gap: $space-4;
 
           .stat-item {
             display: flex;
             align-items: center;
-            gap: 4px;
-            font-size: 12px;
-            color: #9ca3af;
+            gap: $space-1;
+            font-size: $text-xs;
+            color: $text-tertiary;
 
             .el-icon {
-              color: #fbbf24;
+              color: $secondary-400;
             }
           }
         }
@@ -995,26 +1360,33 @@ watch(messages, () => {
   .quick-actions {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    padding: 15px 20px;
-    border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+    gap: $space-2;
+    padding: $space-4 $space-5;
+    border-bottom: 1px solid rgba($primary-500, 0.1);
+
+    // 移动端快速操作
+    @include mobile-only {
+      grid-template-columns: repeat(3, 1fr);
+      padding: $space-3 $space-4;
+    }
 
     .quick-action-btn {
       width: 40px;
       height: 40px;
-      background: rgba(139, 92, 246, 0.1);
-      border: 1px solid rgba(139, 92, 246, 0.2);
-      border-radius: 8px;
-      color: #c084fc;
+      background: rgba($primary-500, 0.1);
+      border: 1px solid rgba($primary-500, 0.2);
+      border-radius: $rounded-md;
+      color: $primary-300;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all $transition-base;
 
       &:hover:not(:disabled) {
-        background: rgba(139, 92, 246, 0.2);
+        background: rgba($primary-500, 0.2);
         transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba($primary-500, 0.3);
       }
 
       &:disabled {
@@ -1023,40 +1395,52 @@ watch(messages, () => {
       }
 
       &.danger {
-        border-color: rgba(239, 68, 68, 0.3);
-        color: #ef4444;
+        border-color: rgba($error-color, 0.3);
+        color: $error-color;
 
         &:hover {
-          background: rgba(239, 68, 68, 0.1);
+          background: rgba($error-color, 0.1);
         }
       }
     }
   }
 
   .sillytavern-controls {
-    padding: 15px 20px;
-    border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+    padding: $space-4 $space-5;
+    border-bottom: 1px solid rgba($primary-500, 0.1);
+
+    // 移动端控制面板
+    @include mobile-only {
+      padding: $space-3 $space-4;
+    }
   }
 
   .settings-panel {
     flex: 1;
-    padding: 20px;
+    padding: $space-5;
     overflow-y: auto;
 
+    // 移动端设置面板
+    @include mobile-only {
+      padding: $space-4;
+    }
+
     h3 {
-      margin: 0 0 20px;
-      font-size: 16px;
-      color: #f3f4f6;
+      margin: 0 0 $space-5;
+      font-size: $text-lg;
+      color: $text-primary;
+      font-weight: $font-weight-semibold;
     }
 
     .setting-group {
-      margin-bottom: 20px;
+      margin-bottom: $space-5;
 
       label {
         display: block;
-        margin-bottom: 8px;
-        font-size: 14px;
-        color: #9ca3af;
+        margin-bottom: $space-2;
+        font-size: $text-sm;
+        color: $text-secondary;
+        font-weight: $font-weight-medium;
       }
 
       .el-select {
@@ -1315,7 +1699,7 @@ watch(messages, () => {
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: #9ca3af;
+        background: $text-tertiary;
         animation: typing-bounce 1.4s infinite ease-in-out both;
 
         &:nth-child(1) {
@@ -1329,77 +1713,121 @@ watch(messages, () => {
     }
 
     .typing-text {
-      font-size: 14px;
-      color: #9ca3af;
+      font-size: $text-sm;
+      color: $text-tertiary;
     }
   }
 
   .scroll-to-bottom {
     position: absolute;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(139, 92, 246, 0.9);
+    bottom: $space-5;
+    right: $space-5;
+    background: rgba($primary-500, 0.9);
     color: white;
-    border-radius: 20px;
-    padding: 8px 12px;
+    border-radius: $rounded-full;
+    padding: $space-2 $space-3;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    gap: $space-1;
+    font-size: $text-xs;
+    transition: all $transition-base;
+    box-shadow: 0 4px 12px rgba($primary-500, 0.3);
 
     &:hover {
-      background: rgba(139, 92, 246, 1);
+      background: rgba($primary-500, 1);
       transform: translateY(-2px);
+    }
+
+    // 移动端滚动按钮
+    @include mobile-only {
+      bottom: $space-20; // 避免被输入框遮挡
+      right: $space-4;
+      padding: $space-3;
     }
   }
 }
 
 // 输入区域
 .chat-input-area {
-  background: rgba(30, 30, 40, 0.95);
-  border-top: 1px solid rgba(139, 92, 246, 0.2);
-  padding: 20px;
+  background: rgba($dark-bg-secondary, 0.95);
+  border-top: 1px solid rgba($primary-500, 0.2);
+  padding: $space-5;
+  backdrop-filter: blur(10px);
+
+  // 移动端输入区域
+  @include mobile-only {
+    padding: $space-4;
+    position: relative;
+    z-index: 100;
+  }
 
   .input-container {
     display: flex;
-    gap: 12px;
+    gap: $space-3;
     align-items: flex-end;
+
+    // 移动端输入容器
+    @include mobile-only {
+      gap: $space-2;
+      flex-wrap: wrap;
+    }
 
     .input-actions {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: $space-2;
+
+      // 移动端操作按钮
+      @include mobile-only {
+        flex-direction: row;
+        order: 2;
+        width: 100%;
+        justify-content: space-between;
+        margin-top: $space-2;
+      }
     }
 
     .input-wrapper {
       flex: 1;
       position: relative;
 
+      // 移动端输入包装器
+      @include mobile-only {
+        order: 1;
+        width: 100%;
+      }
+
       .message-input {
         width: 100%;
-        min-height: 44px;
+        min-height: 44px; // 符合触控目标标准
         max-height: 120px;
-        padding: 12px 16px;
-        background: rgba(17, 24, 39, 0.8);
-        border: 1px solid rgba(139, 92, 246, 0.3);
-        border-radius: 12px;
-        color: #f3f4f6;
-        font-size: 14px;
-        line-height: 1.4;
+        padding: $space-3 $space-4;
+        background: rgba($gray-900, 0.8);
+        border: 1px solid rgba($primary-500, 0.3);
+        border-radius: $rounded-xl;
+        color: $text-primary;
+        font-size: $text-base;
+        line-height: $leading-normal;
         resize: none;
-        transition: all 0.3s ease;
+        transition: all $transition-base;
+
+        // 移动端输入框优化
+        @include mobile-only {
+          min-height: 48px; // 移动端增大触控目标
+          padding: $space-4;
+          font-size: 16px; // 防止iOS缩放
+          border-radius: $rounded-lg;
+        }
 
         &:focus {
           outline: none;
-          border-color: #8b5cf6;
-          box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+          border-color: $primary-500;
+          box-shadow: 0 0 0 3px rgba($primary-500, 0.1);
         }
 
         &::placeholder {
-          color: #6b7280;
+          color: $text-muted;
         }
 
         &:disabled {
@@ -1410,49 +1838,109 @@ watch(messages, () => {
 
       .input-stats {
         position: absolute;
-        bottom: -20px;
+        bottom: -$space-5;
         right: 0;
-        font-size: 11px;
-        color: #6b7280;
+        font-size: $text-xs;
+        color: $text-muted;
+
+        // 移动端统计信息
+        @include mobile-only {
+          bottom: -$space-4;
+        }
       }
     }
 
     .send-actions {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: $space-2;
+
+      // 移动端发送操作
+      @include mobile-only {
+        flex-direction: row;
+        gap: $space-3;
+      }
+
+      .action-btn {
+        min-width: 44px;
+        min-height: 44px;
+        border-radius: $rounded-lg;
+        transition: all $transition-base;
+
+        // 移动端按钮优化
+        @include mobile-only {
+          min-width: 48px;
+          min-height: 48px;
+          padding: $space-3;
+        }
+
+        &:active {
+          transform: scale(0.95);
+        }
+      }
     }
   }
 
   .emoji-picker {
-    margin-top: 12px;
-    background: rgba(17, 24, 39, 0.9);
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    border-radius: 12px;
-    padding: 12px;
+    margin-top: $space-3;
+    background: rgba($gray-900, 0.9);
+    border: 1px solid rgba($primary-500, 0.3);
+    border-radius: $rounded-xl;
+    padding: $space-3;
+    backdrop-filter: blur(10px);
+
+    // 移动端表情选择器
+    @include mobile-only {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: 0;
+      border-radius: $rounded-xl $rounded-xl 0 0;
+      padding: $space-4;
+      z-index: 1000;
+    }
 
     .emoji-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(32px, 1fr));
-      gap: 6px;
+      grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+      gap: $space-2;
       max-width: 300px;
 
+      // 移动端表情网格
+      @include mobile-only {
+        grid-template-columns: repeat(8, 1fr);
+        max-width: none;
+        gap: $space-1;
+      }
+
       .emoji-btn {
-        width: 32px;
-        height: 32px;
+        width: 44px;
+        height: 44px;
         border: none;
         background: transparent;
-        border-radius: 6px;
+        border-radius: $rounded-md;
         cursor: pointer;
-        font-size: 16px;
+        font-size: $text-lg;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.3s ease;
+        transition: all $transition-base;
+
+        // 移动端表情按钮
+        @include mobile-only {
+          width: 48px;
+          height: 48px;
+          font-size: $text-xl;
+        }
 
         &:hover {
-          background: rgba(139, 92, 246, 0.2);
-          transform: scale(1.2);
+          background: rgba($primary-500, 0.2);
+          transform: scale(1.1);
+        }
+
+        &:active {
+          transform: scale(0.95);
         }
       }
     }
@@ -1466,6 +1954,67 @@ watch(messages, () => {
   40% {
     transform: scale(1);
   }
+}
+
+/* 图像消息样式 */
+.message-image {
+  margin: 8px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 300px;
+}
+
+.chat-image {
+  width: 100%;
+  height: auto;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 6px;
+}
+
+.chat-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.image-prompt {
+  padding: 8px;
+  background: var(--el-bg-color-page);
+  border-top: 1px solid var(--el-border-color-light);
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  line-height: 1.4;
+}
+
+/* 图像预览样式 */
+.image-preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.preview-chat-image {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.preview-image-info {
+  width: 100%;
+  text-align: left;
+}
+
+.preview-image-info h4 {
+  margin: 0 0 8px 0;
+  color: var(--el-text-color-primary);
+}
+
+.preview-image-info p {
+  margin: 0;
+  color: var(--el-text-color-regular);
+  line-height: 1.5;
 }
 
 // 响应式设计

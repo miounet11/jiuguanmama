@@ -6,7 +6,9 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "strict": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["node", "vite/client"],
+    "target": "ES2022"
   },
   "include": [
     "vite.config.ts"

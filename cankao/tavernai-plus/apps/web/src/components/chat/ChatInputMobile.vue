@@ -115,8 +115,7 @@ import { ref, computed, watch, nextTick } from 'vue'
 import {
   PictureRounded,
   Microphone,
-  Promotion,
-  Loading,
+
   InfoFilled
 } from '@element-plus/icons-vue'
 
@@ -183,7 +182,10 @@ const canSend = computed(() => {
 })
 
 // 方法
-const handleKeydown = (event: KeyboardEvent) => {
+const handleKeydown = (event: Event | KeyboardEvent) => {
+  // 类型守卫：确保是 KeyboardEvent
+  if (!(event instanceof KeyboardEvent)) return
+
   // Enter发送（移动端通常依赖发送按钮）
   if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey) {
     event.preventDefault()
