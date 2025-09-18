@@ -83,7 +83,7 @@ export class CharacterAIService {
         maxTokens: character.maxTokens || 1000
       })
 
-      if (response.success && response.content) {
+      if (response.content) {
         // 应用角色说话风格后处理
         const styledResponse = this.applyCharacterStyle(response.content, character)
 
@@ -355,7 +355,7 @@ export class CharacterAIService {
           maxTokens: 50
         })
 
-        if (response.success && response.content) {
+        if (response.content) {
           const suggestion = this.applyCharacterStyle(response.content, character)
           suggestions.push(suggestion)
         }

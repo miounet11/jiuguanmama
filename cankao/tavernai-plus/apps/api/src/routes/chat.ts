@@ -126,7 +126,7 @@ router.get('/:characterId', authenticate, async (req: AuthRequest, res, next) =>
 // 发送消息到指定角色会话 (兼容前端的 /api/chats/{characterId}/messages 调用)
 router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res, next) => {
   try {
-    const { content } = req.body
+    const { content, settings = {}, stream = false } = req.body
     const { characterId } = req.params
 
     // 验证角色是否存在
@@ -158,9 +158,9 @@ router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res
           title: `与${character.name}的对话`,
           metadata: JSON.stringify({
             systemPrompt: character.firstMessage || `你好！我是${character.name}`,
-            temperature: 0.7,
-            maxTokens: 1000,
-            model: 'grok-3'
+            temperature: settings.temperature || 0.7,
+            maxTokens: settings.maxTokens || 1000,
+            model: settings.model || 'grok-3'
           })
         }
       })
@@ -196,85 +196,178 @@ router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res
       }
     })
 
-    // 同步生成 AI 回复
-    try {
-      // 获取历史消息作为上下文
-      const recentMessages = await prisma.message.findMany({
-        where: {
-          sessionId: session.id,
-          deleted: false
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-        select: {
-          role: true,
-          content: true
-        }
-      })
-
-      // 构建消息历史
-      const messageHistory = recentMessages
-        .reverse()
-        .map(msg => ({
-          role: msg.role as 'user' | 'assistant',
-          content: msg.content
-        }))
-
-      // 生成AI回复
-      const aiResponse = await aiService.generateChatResponse({
+    // 获取历史消息作为上下文
+    const recentMessages = await prisma.message.findMany({
+      where: {
         sessionId: session.id,
-        userId: req.user!.id,
-        characterId: character.id,
-        messages: messageHistory,
-        model: session.model || 'grok-3',
-        temperature: 0.7,
-        maxTokens: 1000,
-        stream: false
+        deleted: false
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+      select: {
+        role: true,
+        content: true
+      }
+    })
+
+    // 构建消息历史
+    const messageHistory = recentMessages
+      .reverse()
+      .map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content
+      }))
+
+    if (stream) {
+      // 流式响应
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control',
+        'X-Accel-Buffering': 'no'
       })
 
-      // 创建AI消息
-      const aiMessage = await prisma.message.create({
-        data: {
+      // 发送连接确认
+      res.write(`data: ${JSON.stringify({
+        type: 'connected',
+        userMessage: {
+          id: userMessage.id,
+          content: userMessage.content,
+          timestamp: userMessage.createdAt
+        }
+      })}\n\n`)
+
+      let fullContent = ''
+      let aiMessage: any = null
+
+      try {
+        // 使用流式生成
+        const streamGenerator = aiService.generateChatStream({
           sessionId: session.id,
+          userId: req.user!.id,
           characterId: character.id,
-          role: 'assistant',
-          content: aiResponse.content,
-          tokens: aiService.estimateTokens(aiResponse.content)
+          messages: messageHistory,
+          model: settings.model || session.model || 'grok-3',
+          temperature: settings.temperature || 0.7,
+          maxTokens: settings.maxTokens || 1000
+        })
+
+        for await (const chunk of streamGenerator) {
+          if (chunk && chunk.trim()) {
+            fullContent += chunk
+            // 发送流式数据块
+            res.write(`data: ${JSON.stringify({
+              type: 'chunk',
+              content: chunk,
+              fullContent: fullContent
+            })}\n\n`)
+          }
         }
-      })
 
-      // 更新会话统计
-      await prisma.chatSession.update({
-        where: { id: session.id },
-        data: {
-          messageCount: { increment: 2 }, // 用户消息 + AI回复
-          lastMessageAt: new Date(),
-          totalTokens: { increment: userMessage.tokens + aiMessage.tokens }
+        // 保存完整的AI消息
+        if (fullContent.trim()) {
+          aiMessage = await prisma.message.create({
+            data: {
+              sessionId: session.id,
+              characterId: character.id,
+              role: 'assistant',
+              content: fullContent,
+              tokens: aiService.estimateTokens(fullContent)
+            }
+          })
+
+          // 更新会话统计
+          await prisma.chatSession.update({
+            where: { id: session.id },
+            data: {
+              messageCount: { increment: 1 },
+              lastMessageAt: new Date(),
+              totalTokens: { increment: aiMessage.tokens }
+            }
+          })
         }
-      })
 
-      // 返回AI回复消息给前端
-      res.json({
-        success: true,
-        id: aiMessage.id,
-        content: aiMessage.content,
-        timestamp: aiMessage.createdAt,
-        userMessage
-      })
+        // 发送完成信号
+        res.write(`data: ${JSON.stringify({
+          type: 'complete',
+          id: aiMessage?.id || Date.now().toString(),
+          content: fullContent,
+          timestamp: aiMessage?.createdAt || new Date()
+        })}\n\n`)
 
-    } catch (aiError) {
-      console.error('生成 AI 回复失败:', aiError)
-      // 如果AI回复失败，至少返回成功的用户消息
-      res.json({
-        success: true,
-        id: Date.now().toString(),
-        content: '抱歉，我现在无法响应。请稍后再试。',
-        timestamp: new Date(),
-        userMessage
-      })
+      } catch (error) {
+        console.error('流式生成失败:', error)
+        res.write(`data: ${JSON.stringify({
+          type: 'error',
+          message: '抱歉，我现在无法响应。请稍后再试。'
+        })}\n\n`)
+      } finally {
+        res.end()
+      }
+
+    } else {
+      // 非流式响应（原有逻辑）
+      try {
+        // 生成AI回复
+        const aiResponse = await aiService.generateChatResponse({
+          sessionId: session.id,
+          userId: req.user!.id,
+          characterId: character.id,
+          messages: messageHistory,
+          model: settings.model || session.model || 'grok-3',
+          temperature: settings.temperature || 0.7,
+          maxTokens: settings.maxTokens || 1000,
+          stream: false
+        })
+
+        // 创建AI消息
+        const aiMessage = await prisma.message.create({
+          data: {
+            sessionId: session.id,
+            characterId: character.id,
+            role: 'assistant',
+            content: aiResponse.content,
+            tokens: aiService.estimateTokens(aiResponse.content)
+          }
+        })
+
+        // 更新会话统计
+        await prisma.chatSession.update({
+          where: { id: session.id },
+          data: {
+            messageCount: { increment: 1 },
+            lastMessageAt: new Date(),
+            totalTokens: { increment: aiMessage.tokens }
+          }
+        })
+
+        // 返回AI回复消息给前端
+        res.json({
+          success: true,
+          id: aiMessage.id,
+          content: aiMessage.content,
+          timestamp: aiMessage.createdAt,
+          userMessage
+        })
+
+      } catch (aiError) {
+        console.error('生成 AI 回复失败:', aiError)
+        // 如果AI回复失败，至少返回成功的用户消息
+        res.json({
+          success: true,
+          id: Date.now().toString(),
+          content: '抱歉，我现在无法响应。请稍后再试。',
+          timestamp: new Date(),
+          userMessage
+        })
+      }
     }
   } catch (error) {
-    next(error)
+    if (!res.headersSent) {
+      next(error)
+    }
   }
 })
 

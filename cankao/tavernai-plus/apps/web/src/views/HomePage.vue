@@ -9,13 +9,25 @@
           与AI角色自由对话，创造无限可能
         </p>
         <div class="hero-actions">
-          <router-link to="/characters" class="btn btn-primary btn-lg">
-            <i class="fas fa-compass"></i>
-            探索角色
-          </router-link>
-          <router-link to="/chat" class="btn btn-secondary btn-lg">
-            <i class="fas fa-comments"></i>
-            开始聊天
+          <el-button
+            type="primary"
+            size="large"
+            @click="openQuickStart"
+            class="hero-btn-primary"
+          >
+            <el-icon class="mr-2"><ChatDotRound /></el-icon>
+            立即开始聊天
+          </el-button>
+          <router-link to="/characters">
+            <el-button
+              type="default"
+              size="large"
+              plain
+              class="hero-btn-secondary"
+            >
+              <el-icon class="mr-2"><Compass /></el-icon>
+              探索角色
+            </el-button>
           </router-link>
         </div>
       </div>
@@ -92,16 +104,42 @@
         </router-link>
       </div>
     </section>
+
+    <!-- 快速开始对话框 -->
+    <QuickStartDialog v-model:visible="showQuickStart" />
+
+    <!-- 快速开始浮动按钮 -->
+    <el-affix :offset="20" position="bottom">
+      <div class="fixed bottom-6 right-6 z-50">
+        <el-button
+          type="primary"
+          size="large"
+          circle
+          @click="openQuickStart"
+          class="quick-start-fab shadow-lg hover:shadow-xl"
+        >
+          <el-icon size="24"><ChatDotRound /></el-icon>
+        </el-button>
+      </div>
+    </el-affix>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ChatDotRound, Compass } from '@element-plus/icons-vue'
+import QuickStartDialog from '@/components/common/QuickStartDialog.vue'
 import { http } from '@/utils/axios';
 
-const router = useRouter();
-const popularCharacters = ref([]);
+const router = useRouter()
+const popularCharacters = ref([])
+const showQuickStart = ref(false)
+
+// 快速开始功能
+const openQuickStart = () => {
+  showQuickStart.value = true
+}
 
 onMounted(async () => {
   // 获取热门角色

@@ -30,6 +30,11 @@ import chatRoutes from './routes/chat'
 import marketplaceRoutes from './routes/marketplace'
 import logsRoutes from './routes/logs'
 import aiFeaturesRoutes from './routes/ai-features'
+import modelsRoutes from './routes/models'
+import presetsRoutes from './routes/presets'
+import worldinfoRoutes from './routes/worldinfo'
+import groupchatRoutes from './routes/groupchat'
+import personasRoutes from './routes/personas'
 
 // 导入工作流调度器
 
@@ -97,6 +102,11 @@ app.use('/api/chats', chatRoutes) // 支持复数形式，兼容前端调用
 app.use('/api/marketplace', marketplaceRoutes)
 app.use('/api/logs', logsRoutes)
 app.use('/api/ai', aiFeaturesRoutes) // QuackAI 核心功能 API
+app.use('/api/models', modelsRoutes) // 多模型 AI 支持 API
+app.use('/api/presets', presetsRoutes) // 聊天预设管理 API
+app.use('/api/worldinfo', worldinfoRoutes) // 世界信息管理 API
+app.use('/api/groupchat', groupchatRoutes) // 群组聊天 API
+app.use('/api/personas', personasRoutes) // 用户人格管理 API
 // app.use('/api/workflows', workflowRoutes) // 智能工作流 API - 已删除
 
 // 健康检查端点

@@ -928,3 +928,53 @@
 2025-09-17T13:19:56.649842Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/prisma/dev.db"), AnchoredSystemPathBuf("apps/api/logs/combined.log")}
 2025-09-17T13:19:56.649854Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/api"), path: AnchoredSystemPathBuf("apps/api") }}))
 2025-09-17T13:19:56.668085Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-09-17T13:31:05.646707Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/ai.ts")}
+2025-09-17T13:31:05.646716Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-09-17T13:31:25.246980Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/ai.ts")}
+2025-09-17T13:31:25.246989Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-09-17T13:31:48.446751Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/ai.ts")}
+2025-09-17T13:31:48.446764Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-09-17T13:33:51.646735Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/character/CharacterEditDialog.vue")}
+2025-09-17T13:33:51.646745Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:35:54.846787Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/routes/chat.ts")}
+2025-09-17T13:35:54.846796Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-09-17T13:36:23.246513Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:36:23.246521Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:36:33.646676Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:36:33.646685Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:38:07.146957Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:38:07.146967Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:38:40.948208Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:38:40.948217Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:38:58.748313Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:38:58.748323Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:39:20.948008Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:39:20.948017Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:39:57.248330Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:39:57.248339Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:41:08.948477Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:41:08.948487Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:41:56.048462Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/ai.ts")}
+2025-09-17T13:41:56.048473Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-09-17T13:42:13.048813Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/ai.ts")}
+2025-09-17T13:42:13.048822Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-09-17T13:44:19.402587Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/routes/models.ts")}
+2025-09-17T13:44:19.402596Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-09-17T13:44:37.901008Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/server.ts")}
+2025-09-17T13:44:37.901017Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-09-17T13:44:45.300644Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/server.ts")}
+2025-09-17T13:44:45.300653Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-09-17T13:46:00.801532Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/ModelSelector.vue")}
+2025-09-17T13:46:00.801541Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:46:42.100532Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:46:42.100541Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:46:55.300382Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:46:55.300397Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:47:09.500292Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:47:09.500301Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:48:13.199986Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:48:13.199995Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:48:23.399992Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:48:23.400001Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-17T13:48:48.297970Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/views/chat/ChatSession.vue")}
+2025-09-17T13:48:48.297978Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@tavernai/web"), path: AnchoredSystemPathBuf("apps/web") }}))

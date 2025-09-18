@@ -1,5 +1,10 @@
 <template>
-  <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group">
+  <el-card
+    class="character-card group cursor-pointer h-full"
+    :body-style="{ padding: '0' }"
+    shadow="hover"
+    @click="handleCardClick"
+  >
     <!-- 角色图片 -->
     <div class="relative h-64 bg-gradient-to-br from-indigo-400 to-purple-400 overflow-hidden">
       <!-- 图片 -->
@@ -21,46 +26,40 @@
       <!-- 标签 -->
       <div class="absolute top-2 left-2 right-2 flex justify-between">
         <div class="flex gap-2">
-          <span v-if="character.isNew"
-                class="px-2 py-1 bg-green-500 text-white text-xs rounded-full">
+          <el-tag v-if="character.isNew" type="success" size="small" class="opacity-90">
             新
-          </span>
-          <span v-if="character.isPremium"
-                class="px-2 py-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white text-xs rounded-full">
+          </el-tag>
+          <el-tag v-if="character.isPremium" type="warning" size="small" class="opacity-90">
             高级
-          </span>
-          <span v-if="character.isNSFW"
-                class="px-2 py-1 bg-red-500 text-white text-xs rounded-full">
+          </el-tag>
+          <el-tag v-if="character.isNSFW" type="danger" size="small" class="opacity-90">
             NSFW
-          </span>
+          </el-tag>
         </div>
 
         <!-- 收藏按钮 -->
-        <button
+        <el-button
           @click.stop="handleFavorite"
-          class="p-1.5 bg-white/80 backdrop-blur rounded-full hover:bg-white transition-colors"
-        >
-          <svg
-            :class="[
-              'w-5 h-5 transition-colors',
-              character.isFavorited ? 'text-red-500 fill-current' : 'text-gray-600'
-            ]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-          </svg>
-        </button>
+          :icon="character.isFavorited ? 'StarFilled' : 'Star'"
+          type="text"
+          size="small"
+          circle
+          class="favorite-btn bg-white/80 backdrop-blur hover:bg-white"
+          :class="{ 'favorited': character.isFavorited }"
+        />
       </div>
 
       <!-- 悬停遮罩 -->
       <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <div class="absolute bottom-4 left-4 right-4">
-          <button class="w-full px-4 py-2 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 transition-colors">
+          <el-button
+            @click.stop="startChat"
+            type="primary"
+            class="w-full"
+            size="large"
+          >
             开始对话
-          </button>
+          </el-button>
         </div>
       </div>
     </div>
@@ -69,12 +68,15 @@
     <div class="p-4">
       <!-- 角色名和创建者 -->
       <div class="mb-2">
-        <h3 class="font-semibold text-lg text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+        <el-text
+          tag="h3"
+          class="font-semibold text-lg text-gray-900 truncate group-hover:text-indigo-600 transition-colors block"
+        >
           {{ character.name }}
-        </h3>
-        <p class="text-sm text-gray-500">
+        </el-text>
+        <el-text type="info" size="small">
           by {{ character.creator?.username || '匿名用户' }}
-        </p>
+        </el-text>
       </div>
 
       <!-- 描述 -->
@@ -84,19 +86,23 @@
 
       <!-- 标签 -->
       <div v-if="character.tags && character.tags.length > 0" class="flex flex-wrap gap-1 mb-3">
-        <span
+        <el-tag
           v-for="(tag, index) in character.tags.slice(0, 3)"
           :key="index"
-          class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
+          size="small"
+          type="info"
+          effect="plain"
         >
           {{ tag }}
-        </span>
-        <span
+        </el-tag>
+        <el-tag
           v-if="character.tags.length > 3"
-          class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
+          size="small"
+          type="info"
+          effect="plain"
         >
           +{{ character.tags.length - 3 }}
-        </span>
+        </el-tag>
       </div>
 
       <!-- 统计信息 -->
@@ -133,11 +139,13 @@
         </div>
       </div>
     </div>
-  </div>
+  </el-card>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 
 interface Character {
   id: string

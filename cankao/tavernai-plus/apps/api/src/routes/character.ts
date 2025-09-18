@@ -225,7 +225,14 @@ router.get('/tags/popular', async (req, res, next) => {
 // AI 生成角色
 router.post('/generate', authenticate, async (req: AuthRequest, res, next) => {
   try {
-    const { name, tags = [] } = req.body
+    const {
+      name,
+      tags = [],
+      description = '',
+      style = 'anime',
+      personality = 'cheerful',
+      background = 'modern'
+    } = req.body
 
     if (!name) {
       return res.status(400).json({
@@ -234,8 +241,17 @@ router.post('/generate', authenticate, async (req: AuthRequest, res, next) => {
       })
     }
 
+    // 构建详细的生成提示
+    const prompt = description || `创建一个名为"${name}"的AI角色`
+
     // 调用 AI 服务生成角色设定
-    const generated = await aiService.generateCharacterProfile(name, tags)
+    const generated = await aiService.generateCharacterProfile(prompt, {
+      name,
+      tags,
+      style,
+      personality,
+      background
+    })
 
     res.json({
       success: true,
@@ -594,6 +610,162 @@ router.get('/:id/reviews', async (req, res, next) => {
     })
   } catch (error) {
     next(error)
+  }
+})
+
+// 导出角色 (SillyTavern 格式)
+router.get('/:id/export', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const character = await prisma.character.findUnique({
+      where: { id: req.params.id },
+      include: {
+        creator: {
+          select: {
+            username: true
+          }
+        }
+      }
+    })
+
+    if (!character) {
+      return res.status(404).json({
+        success: false,
+        message: 'Character not found'
+      })
+    }
+
+    // 检查访问权限
+    if (!character.isPublic && character.creatorId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      })
+    }
+
+    // 转换为 SillyTavern 格式
+    const sillytavernFormat = {
+      name: character.name,
+      description: character.description,
+      personality: character.personality || '',
+      scenario: character.scenario || '',
+      first_mes: character.firstMessage || '',
+      mes_example: character.exampleDialogs || '',
+      createdAt: character.createdAt.getTime(),
+      avatar: 'none',
+      chat: character.name + ' - ' + new Date().toISOString(),
+      talkativeness: character.temperature ? character.temperature.toString() : '0.7',
+      fav: false,
+      tags: typeof character.tags === 'string' ? JSON.parse(character.tags) : character.tags || [],
+      spec: 'chara_card_v2',
+      spec_version: '2.0',
+      data: {
+        name: character.name,
+        description: character.description,
+        personality: character.personality || '',
+        scenario: character.scenario || '',
+        first_mes: character.firstMessage || '',
+        mes_example: character.exampleDialogs || '',
+        creator_notes: character.backstory || '',
+        system_prompt: character.systemPrompt || '',
+        post_history_instructions: '',
+        alternate_greetings: [],
+        character_book: null,
+        tags: typeof character.tags === 'string' ? JSON.parse(character.tags) : character.tags || [],
+        creator: character.creator.username,
+        character_version: character.version?.toString() || '1',
+        extensions: {}
+      }
+    }
+
+    // 设置下载文件名 - 使用安全的ASCII字符
+    const safeFilename = `character_${character.id.slice(0, 8)}.json`
+
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`)
+    res.json(sillytavernFormat)
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 导入角色 (SillyTavern 格式)
+router.post('/import', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { characterData, makePublic = false } = req.body
+
+    if (!characterData) {
+      return res.status(400).json({
+        success: false,
+        message: '请提供角色数据'
+      })
+    }
+
+    // 解析 SillyTavern 格式
+    let parsedData
+    if (typeof characterData === 'string') {
+      try {
+        parsedData = JSON.parse(characterData)
+      } catch {
+        return res.status(400).json({
+          success: false,
+          message: '无效的JSON格式'
+        })
+      }
+    } else {
+      parsedData = characterData
+    }
+
+    // 兼容不同版本的 SillyTavern 格式
+    const data = parsedData.data || parsedData
+
+    // 检查是否已存在同名角色
+    const existingCharacter = await prisma.character.findFirst({
+      where: {
+        name: data.name,
+        creatorId: req.user!.id
+      }
+    })
+
+    if (existingCharacter) {
+      return res.status(409).json({
+        success: false,
+        message: '同名角色已存在，请修改角色名称后重试'
+      })
+    }
+
+    // 创建角色
+    const character = await prisma.character.create({
+      data: {
+        name: data.name || 'Imported Character',
+        description: data.description || '',
+        personality: data.personality || '',
+        backstory: data.creator_notes || '',
+        speakingStyle: '',
+        scenario: data.scenario || '',
+        firstMessage: data.first_mes || '',
+        systemPrompt: data.system_prompt || '',
+        exampleDialogs: data.mes_example || '',
+        tags: JSON.stringify(data.tags || []),
+        temperature: parseFloat(data.talkativeness) || 0.7,
+        maxTokens: 1000,
+        model: 'gpt-3.5-turbo',
+        isPublic: makePublic,
+        importedFrom: 'SillyTavern',
+        creatorId: req.user!.id
+      }
+    })
+
+    res.json({
+      success: true,
+      character,
+      message: '角色导入成功'
+    })
+  } catch (error) {
+    console.error('导入角色失败:', error)
+    res.status(500).json({
+      success: false,
+      message: '导入角色失败，请检查文件格式'
+    })
   }
 })
 

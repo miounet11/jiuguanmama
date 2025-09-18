@@ -1,4 +1,0 @@
-[
-  {"id":"admin","username":"admin","role":"管理员","password":"admin123"},
-  {"id":"user1","username":"小明","role":"普通用户","password":"test123"}
-]
