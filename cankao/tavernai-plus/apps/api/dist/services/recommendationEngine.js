@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RecommendationEngine = void 0;
-const client_1 = require("@prisma/client");
+const { PrismaClient } = require('../../node_modules/.prisma/client');
 const perf_hooks_1 = require("perf_hooks");
-const prisma = new client_1.PrismaClient();
+const prisma = new PrismaClient();
 // 用户行为权重
 const BEHAVIOR_WEIGHTS = {
     view: 1,
@@ -94,7 +94,7 @@ class RecommendationEngine {
             // 限制结果数量
             recommendations = recommendations.slice(0, config.maxResults);
             // 记录推荐日志
-            await this.logRecommendation(userId, 'character', recommendations.map(r => r.id), config.algorithm);
+            await this.logRecommendation(userId, 'character', recommendations.map((r) => r.id), config.algorithm);
             const confidence = this.calculateConfidence(recommendations, userBehavior.length);
             const duration = perf_hooks_1.performance.now() - startTime;
             console.log(`角色推荐完成: ${duration.toFixed(2)}ms, ${recommendations.length}个结果`);

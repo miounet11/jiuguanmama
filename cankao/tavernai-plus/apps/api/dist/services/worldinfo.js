@@ -36,9 +36,9 @@ class WorldInfoService {
             priority: entry.priority || 50,
             isActive: entry.isActive !== false,
             context: {
-                always: false,
-                probability: 1,
-                ...entry.context
+                ...entry.context,
+                probability: entry.context?.probability ?? 1,
+                always: entry.context?.always ?? false
             }
         };
         // 生成向量嵌入（用于语义搜索）

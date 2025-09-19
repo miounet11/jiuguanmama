@@ -3,15 +3,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.app = exports.wsServer = exports.io = exports.prisma = void 0;
+exports.app = exports.prisma = void 0;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const compression_1 = __importDefault(require("compression"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const http_1 = require("http");
-const client_1 = require("@prisma/client");
-const websocket_1 = __importDefault(require("./websocket"));
+const { PrismaClient } = require('../node_modules/.prisma/client');
+// import WebSocketServer from './websocket'  // 临时禁用以快速启动
 // 配置环境变量
 dotenv_1.default.config();
 // 导入配置验证器
@@ -27,7 +27,7 @@ const auth_1 = __importDefault(require("./routes/auth"));
 const user_1 = __importDefault(require("./routes/user"));
 const character_1 = __importDefault(require("./routes/character"));
 const chat_1 = __importDefault(require("./routes/chat"));
-// import chatroomRoutes from './routes/chatroom'
+const chatroom_1 = __importDefault(require("./routes/chatroom"));
 const marketplace_1 = __importDefault(require("./routes/marketplace"));
 const community_1 = __importDefault(require("./routes/community"));
 const multimodal_1 = __importDefault(require("./routes/multimodal"));
@@ -51,11 +51,11 @@ const app = (0, express_1.default)();
 exports.app = app;
 const httpServer = (0, http_1.createServer)(app);
 // 创建数据库客户端
-exports.prisma = new client_1.PrismaClient();
+exports.prisma = new PrismaClient();
 // 创建 WebSocket 服务器
-const wsServer = new websocket_1.default(httpServer);
-exports.wsServer = wsServer;
-exports.io = wsServer.getIO();
+// const wsServer = new WebSocketServer(httpServer)  // 临时禁用
+// export const io = wsServer.getIO()
+// export { wsServer }
 // 基础中间件 - 配置安全头
 app.use((0, helmet_1.default)({
     contentSecurityPolicy: {
@@ -98,7 +98,7 @@ app.use('/api/users', user_1.default);
 app.use('/api/characters', character_1.default);
 app.use('/api/chat', chat_1.default);
 app.use('/api/chats', chat_1.default); // 支持复数形式，兼容前端调用
-// app.use('/api/chatrooms', chatroomRoutes) // 多角色聊天室 API
+app.use('/api/chatrooms', chatroom_1.default); // 多角色聊天室 API
 app.use('/api/marketplace', marketplace_1.default);
 app.use('/api/community', community_1.default); // 社区功能 API
 app.use('/api/multimodal', multimodal_1.default); // 多模态AI功能 API

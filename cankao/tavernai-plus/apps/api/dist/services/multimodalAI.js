@@ -3,12 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const client_1 = require("@prisma/client");
+const { PrismaClient } = require('../../node_modules/.prisma/client');
 const openai_1 = __importDefault(require("openai"));
 const promises_1 = __importDefault(require("fs/promises"));
 const path_1 = __importDefault(require("path"));
 const axios_1 = __importDefault(require("axios"));
-const prisma = new client_1.PrismaClient();
+const prisma = new PrismaClient();
 class MultimodalAIService {
     openai;
     providers = new Map();
@@ -226,8 +226,8 @@ class MultimodalAIService {
                 size: imageConfig.size,
                 style: imageConfig.style
             });
-            const imageUrl = response.data[0].url;
-            const revisedPrompt = response.data[0].revised_prompt;
+            const imageUrl = response.data?.[0]?.url;
+            const revisedPrompt = response.data?.[0]?.revised_prompt;
             // 下载并保存图像
             const imageResponse = await axios_1.default.get(imageUrl, { responseType: 'arraybuffer' });
             const fileName = `image_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.png`;

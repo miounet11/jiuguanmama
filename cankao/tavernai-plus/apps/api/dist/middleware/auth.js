@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.requireCredits = exports.requireSubscription = exports.requireAdmin = exports.requireRole = exports.optionalAuth = exports.authenticate = exports.PasswordManager = exports.TokenManager = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const client_1 = require("@prisma/client");
+const { PrismaClient } = require('../../node_modules/.prisma/client');
 const env_config_1 = require("../config/env.config");
-const prisma = new client_1.PrismaClient();
+const prisma = new PrismaClient();
 /**
  * JWT Token 管理器
  */

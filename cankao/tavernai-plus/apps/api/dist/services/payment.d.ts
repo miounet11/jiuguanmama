@@ -77,8 +77,8 @@ declare class PaymentService {
     getUserSubscription(userId: string): Promise<{
         plan: SubscriptionPlan;
         isActive: boolean;
-        expiresAt: Date | null;
-        credits: number;
+        expiresAt: any;
+        credits: any;
         canUpgrade: boolean;
     }>;
     cancelSubscription(userId: string): Promise<{

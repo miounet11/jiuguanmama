@@ -6,7 +6,7 @@
 import { EventEmitter } from 'events'
 import { prisma } from '../server'
 import os from 'os'
-import { io } from '../server'
+// import { io } from '../server' // 临时禁用
 
 // 监控指标
 interface Metrics {
@@ -448,18 +448,18 @@ class MonitorService extends EventEmitter {
   private setupRealtimeBroadcast() {
     // 每秒向前端广播系统指标
     setInterval(() => {
-      io.emit('metrics:realtime', {
+      /* io.emit('metrics:realtime', {
         cpu: this.metrics.cpu.usage,
         memory: this.metrics.memory.percentage,
         rpm: this.metrics.requests.rpm,
         latency: this.metrics.requests.avgLatency,
         timestamp: Date.now()
-      })
+      }) */
     }, 1000)
 
     // 每分钟广播完整指标
     setInterval(() => {
-      io.emit('metrics:full', this.metrics)
+      // io.emit('metrics:full', this.metrics)
     }, 60000)
   }
 

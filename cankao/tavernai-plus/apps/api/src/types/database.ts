@@ -3,21 +3,21 @@
  * 基于Prisma生成的类型，提供类型安全的数据库操作
  */
 
-import {
-  User as PrismaUser,
-  Character as PrismaCharacter,
-  ChatSession as PrismaChatSession,
-  Message as PrismaMessage,
-  CharacterFavorite as PrismaCharacterFavorite,
-  CharacterRating as PrismaCharacterRating,
-  ChatRoom as PrismaChatRoom,
-  ChatParticipant as PrismaChatParticipant,
-  ChatMessage as PrismaChatMessage,
-  Transaction as PrismaTransaction,
-  OAuthAccount as PrismaOAuthAccount,
-  RefreshToken as PrismaRefreshToken,
+const {
+  User: PrismaUser,
+  Character: PrismaCharacter,
+  ChatSession: PrismaChatSession,
+  Message: PrismaMessage,
+  CharacterFavorite: PrismaCharacterFavorite,
+  CharacterRating: PrismaCharacterRating,
+  ChatRoom: PrismaChatRoom,
+  ChatParticipant: PrismaChatParticipant,
+  ChatMessage: PrismaChatMessage,
+  Transaction: PrismaTransaction,
+  OAuthAccount: PrismaOAuthAccount,
+  RefreshToken: PrismaRefreshToken,
   Prisma
-} from '@prisma/client'
+} = require('../../node_modules/.prisma/client')
 
 // 基础数据库实体类型
 export type DbUser = PrismaUser

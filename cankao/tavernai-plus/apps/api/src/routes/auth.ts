@@ -3,7 +3,7 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
-import { prisma } from '../server'
+import { prisma } from '../lib/prisma'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import { validate } from '../middleware/validate'
 
@@ -32,13 +32,13 @@ const generateTokens = (user: { id: string; email: string; username: string }) =
     process.env.JWT_SECRET || 'default-secret-change-this',
     { expiresIn: '15m' } as any
   )
-  
+
   const refreshToken = jwt.sign(
     { userId: user.id, type: 'refresh' },
     process.env.JWT_REFRESH_SECRET || 'default-refresh-secret-change-this',
     { expiresIn: '7d' } as any
   )
-  
+
   return { accessToken, refreshToken }
 }
 
@@ -46,7 +46,7 @@ const generateTokens = (user: { id: string; email: string; username: string }) =
 router.post('/register', validate(registerSchema), async (req, res, next) => {
   try {
     const { username, email, password } = req.body
-    
+
     // 检查用户是否已存在
     const existingUser = await prisma.user.findFirst({
       where: {
@@ -56,19 +56,19 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
         ]
       }
     })
-    
+
     if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: existingUser.email === email 
-          ? 'Email already registered' 
+        message: existingUser.email === email
+          ? 'Email already registered'
           : 'Username already taken'
       })
     }
-    
+
     // 加密密码
     const passwordHash = await bcrypt.hash(password, 10)
-    
+
     // 创建用户
     const user = await prisma.user.create({
       data: {
@@ -89,10 +89,10 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
         createdAt: true
       }
     })
-    
+
     // 生成令牌
     const { accessToken, refreshToken } = generateTokens(user)
-    
+
     // 保存刷新令牌
     await prisma.refreshToken.create({
       data: {
@@ -101,7 +101,7 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7天
       }
     })
-    
+
     res.status(201).json({
       success: true,
       accessToken,
@@ -110,6 +110,7 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
     })
   } catch (error) {
     next(error)
+    return
   }
 })
 
@@ -117,7 +118,7 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
 router.post('/login', validate(loginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body
-    
+
     // 查找用户
     const user = await prisma.user.findUnique({
       where: { email },
@@ -135,40 +136,40 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
         createdAt: true
       }
     })
-    
+
     if (!user || !user.passwordHash) {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
       })
     }
-    
+
     if (!user.isActive) {
       return res.status(403).json({
         success: false,
         message: 'Account has been deactivated'
       })
     }
-    
+
     // 验证密码
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
-    
+
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
       })
     }
-    
+
     // 更新最后登录时间
     await prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() }
     })
-    
+
     // 生成令牌
     const { accessToken, refreshToken } = generateTokens(user)
-    
+
     // 保存刷新令牌
     await prisma.refreshToken.create({
       data: {
@@ -177,10 +178,10 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       }
     })
-    
+
     // 移除密码字段
     const { passwordHash, ...userWithoutPassword } = user
-    
+
     res.json({
       success: true,
       accessToken,
@@ -189,6 +190,7 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
     })
   } catch (error) {
     next(error)
+    return
   }
 })
 
@@ -196,45 +198,45 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
 router.post('/refresh', validate(refreshTokenSchema), async (req, res, next) => {
   try {
     const { refreshToken } = req.body
-    
+
     // 验证刷新令牌
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as {
       userId: string
       type: string
     }
-    
+
     if (decoded.type !== 'refresh') {
       return res.status(401).json({
         success: false,
         message: 'Invalid refresh token'
       })
     }
-    
+
     // 检查令牌是否存在于数据库
     const storedToken = await prisma.refreshToken.findUnique({
       where: { token: refreshToken },
       include: { user: true }
     })
-    
+
     if (!storedToken || storedToken.expiresAt < new Date()) {
       return res.status(401).json({
         success: false,
         message: 'Refresh token expired or invalid'
       })
     }
-    
+
     // 删除旧的刷新令牌
     await prisma.refreshToken.delete({
       where: { id: storedToken.id }
     })
-    
+
     // 生成新令牌
     const { accessToken, refreshToken: newRefreshToken } = generateTokens({
       id: storedToken.user.id,
       email: storedToken.user.email,
       username: storedToken.user.username
     })
-    
+
     // 保存新的刷新令牌
     await prisma.refreshToken.create({
       data: {
@@ -243,7 +245,7 @@ router.post('/refresh', validate(refreshTokenSchema), async (req, res, next) => 
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       }
     })
-    
+
     res.json({
       success: true,
       accessToken,
@@ -257,31 +259,33 @@ router.post('/refresh', validate(refreshTokenSchema), async (req, res, next) => 
       })
     }
     next(error)
+    return
   }
 })
 
 // 退出登录
-router.post('/logout', authenticate, async (req: AuthRequest, res, next) => {
+router.post('/logout', authenticate, async (req, res, next) => {
   try {
     // 删除用户的所有刷新令牌
     await prisma.refreshToken.deleteMany({
-      where: { userId: req.user!.id }
+      where: { userId: (req as AuthRequest).user!.id }
     })
-    
+
     res.json({
       success: true,
       message: 'Logged out successfully'
     })
   } catch (error) {
     next(error)
+    return
   }
 })
 
 // 获取当前用户信息
-router.get('/profile', authenticate, async (req: AuthRequest, res, next) => {
+router.get('/profile', authenticate, async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
-      where: { id: req.user!.id },
+      where: { id: (req as AuthRequest).user!.id },
       select: {
         id: true,
         username: true,
@@ -295,20 +299,21 @@ router.get('/profile', authenticate, async (req: AuthRequest, res, next) => {
         createdAt: true
       }
     })
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       })
     }
-    
+
     res.json({
       success: true,
       user
     })
   } catch (error) {
     next(error)
+    return
   }
 })
 

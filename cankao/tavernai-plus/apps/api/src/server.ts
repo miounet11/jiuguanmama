@@ -4,8 +4,8 @@ import helmet from 'helmet'
 import compression from 'compression'
 import dotenv from 'dotenv'
 import { createServer } from 'http'
-import { PrismaClient } from '@prisma/client'
-import WebSocketServer from './websocket'
+const { PrismaClient } = require('../node_modules/.prisma/client')
+// import WebSocketServer from './websocket'  // 临时禁用以快速启动
 
 // 配置环境变量
 dotenv.config()
@@ -26,7 +26,7 @@ import authRoutes from './routes/auth'
 import userRoutes from './routes/user'
 import characterRoutes from './routes/character'
 import chatRoutes from './routes/chat'
-// import chatroomRoutes from './routes/chatroom'
+import chatroomRoutes from './routes/chatroom'
 import marketplaceRoutes from './routes/marketplace'
 import communityRoutes from './routes/community'
 import multimodalRoutes from './routes/multimodal'
@@ -56,9 +56,9 @@ const httpServer = createServer(app)
 export const prisma = new PrismaClient()
 
 // 创建 WebSocket 服务器
-const wsServer = new WebSocketServer(httpServer)
-export const io = wsServer.getIO()
-export { wsServer }
+// const wsServer = new WebSocketServer(httpServer)  // 临时禁用
+// export const io = wsServer.getIO()
+// export { wsServer }
 
 // 基础中间件 - 配置安全头
 app.use(helmet({
@@ -107,7 +107,7 @@ app.use('/api/users', userRoutes)
 app.use('/api/characters', characterRoutes)
 app.use('/api/chat', chatRoutes)
 app.use('/api/chats', chatRoutes) // 支持复数形式，兼容前端调用
-// app.use('/api/chatrooms', chatroomRoutes) // 多角色聊天室 API
+app.use('/api/chatrooms', chatroomRoutes) // 多角色聊天室 API
 app.use('/api/marketplace', marketplaceRoutes)
 app.use('/api/community', communityRoutes) // 社区功能 API
 app.use('/api/multimodal', multimodalRoutes) // 多模态AI功能 API
@@ -136,7 +136,7 @@ app.get('/health', async (req, res) => {
           configured: configValidator.checkAIConfig(),
           model: envConfig.DEFAULT_MODEL,
           reachable: false,
-          error: null
+          error: null as string | null
         }
       }
     }

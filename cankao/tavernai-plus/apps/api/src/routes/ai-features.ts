@@ -5,7 +5,7 @@ import { summonService } from '../services/summon'
 import { worldInfoService } from '../services/worldinfo'
 import { storybookService } from '../services/storybook'
 import { characterGeneratorService } from '../services/character-generator'
-import { prisma } from '../server'
+import { prisma } from '../lib/prisma'
 
 const router = Router()
 
@@ -54,7 +54,7 @@ router.get('/guidance/suggestions/:sessionId', authenticate, async (req: AuthReq
       take: 5
     })
 
-    const context = recentMessages.map(m => m.content).join(' ')
+    const context = recentMessages.map((m: any) => m.content).join(' ')
     const suggestions = await guidanceService.getSuggestions(sessionId, context)
 
     res.json({

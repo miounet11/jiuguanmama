@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { authenticate, optionalAuth, AuthRequest } from '../middleware/auth'
-import { prisma } from '../server'
+import { prisma } from '../lib/prisma'
 import { aiService } from '../services/ai'
 
 const router = Router()
@@ -74,7 +74,7 @@ router.get('/', optionalAuth, async (req: AuthRequest, res, next) => {
     })
 
     // 添加是否收藏标记
-    const charactersWithFavorite = characters.map(char => ({
+    const charactersWithFavorite = characters.map((char: any) => ({
       ...char,
       isFavorited: char._count.favorites > 0,
       isNew: new Date(char.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
@@ -179,7 +179,7 @@ router.get('/favorites', authenticate, async (req: AuthRequest, res, next) => {
 
     res.json({
       success: true,
-      characters: favorites.map(f => f.character)
+      characters: favorites.map((f: any) => f.character)
     })
   } catch (error) {
     next(error)
@@ -198,7 +198,7 @@ router.get('/tags/popular', async (req, res, next) => {
 
     // 统计标签出现频率
     const tagCount: Record<string, number> = {}
-    characters.forEach(char => {
+    characters.forEach((char: any) => {
       const tags = typeof char.tags === 'string' ? JSON.parse(char.tags) : char.tags
       if (Array.isArray(tags)) {
         tags.forEach(tag => {
@@ -506,7 +506,7 @@ router.post('/:id/rate', authenticate, async (req: AuthRequest, res, next) => {
       where: { characterId }
     })
 
-    const avgRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+    const avgRating = ratings.reduce((sum: any, r: any) => sum + r.rating, 0) / ratings.length
 
     await prisma.character.update({
       where: { id: characterId },
@@ -593,7 +593,7 @@ router.get('/:id/reviews', async (req, res, next) => {
 
     res.json({
       success: true,
-      reviews: reviews.map(review => ({
+      reviews: reviews.map((review: any) => ({
         id: review.id,
         username: review.user.username,
         userAvatar: review.user.avatar,

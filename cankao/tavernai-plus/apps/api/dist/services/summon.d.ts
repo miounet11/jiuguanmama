@@ -27,82 +27,17 @@ declare class SummonService {
      */
     summonCharacter(options: SummonOptions): Promise<{
         success: boolean;
-        systemMessage: {
-            id: string;
-            metadata: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string | null;
-            role: string;
-            content: string;
-            sessionId: string;
-            characterId: string | null;
-            tokens: number;
-            edited: boolean;
-            deleted: boolean;
-        };
-        introMessage: {
-            id: string;
-            metadata: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string | null;
-            role: string;
-            content: string;
-            sessionId: string;
-            characterId: string | null;
-            tokens: number;
-            edited: boolean;
-            deleted: boolean;
-        };
+        systemMessage: any;
+        introMessage: any;
         activeCharacters: any;
     } | {
         success: boolean;
-        farewellMessage: {
-            id: string;
-            metadata: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string | null;
-            role: string;
-            content: string;
-            sessionId: string;
-            characterId: string | null;
-            tokens: number;
-            edited: boolean;
-            deleted: boolean;
-        };
-        joinMessage: {
-            id: string;
-            metadata: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string | null;
-            role: string;
-            content: string;
-            sessionId: string;
-            characterId: string | null;
-            tokens: number;
-            edited: boolean;
-            deleted: boolean;
-        };
+        farewellMessage: any;
+        joinMessage: any;
         currentCharacter: any;
     } | {
         success: boolean;
-        tempMessage: {
-            id: string;
-            metadata: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string | null;
-            role: string;
-            content: string;
-            sessionId: string;
-            characterId: string | null;
-            tokens: number;
-            edited: boolean;
-            deleted: boolean;
-        };
+        tempMessage: any;
         duration: number;
         character: any;
     }>;
@@ -125,14 +60,7 @@ declare class SummonService {
     /**
      * 获取可召唤的角色列表
      */
-    getSummonableCharacters(sessionId: string, userId: string): Promise<{
-        description: string;
-        id: string;
-        name: string;
-        avatar: string | null;
-        category: string;
-        tags: string;
-    }[]>;
+    getSummonableCharacters(sessionId: string, userId: string): Promise<any>;
     /**
      * 管理多角色对话流程
      */

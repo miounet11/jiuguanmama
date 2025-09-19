@@ -22,7 +22,6 @@ declare const envSchema: z.ZodObject<{
     SMTP_PASS: z.ZodOptional<z.ZodString>;
     REDIS_URL: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    DEFAULT_MODEL: string;
     NODE_ENV: "development" | "production" | "test";
     PORT: number;
     HOST: string;
@@ -32,38 +31,39 @@ declare const envSchema: z.ZodObject<{
     CLIENT_URL: string;
     NEWAPI_KEY: string;
     NEWAPI_BASE_URL: string;
+    DEFAULT_MODEL: string;
     NEWAPI_MAX_TOKENS: number;
     NEWAPI_TEMPERATURE: number;
-    GOOGLE_CLIENT_ID?: string | undefined;
-    GOOGLE_CLIENT_SECRET?: string | undefined;
-    DISCORD_CLIENT_ID?: string | undefined;
-    DISCORD_CLIENT_SECRET?: string | undefined;
     SMTP_HOST?: string | undefined;
     SMTP_PORT?: number | undefined;
     SMTP_USER?: string | undefined;
     SMTP_PASS?: string | undefined;
+    GOOGLE_CLIENT_ID?: string | undefined;
+    GOOGLE_CLIENT_SECRET?: string | undefined;
+    DISCORD_CLIENT_ID?: string | undefined;
+    DISCORD_CLIENT_SECRET?: string | undefined;
     REDIS_URL?: string | undefined;
 }, {
     DATABASE_URL: string;
     JWT_SECRET: string;
     JWT_REFRESH_SECRET: string;
     NEWAPI_KEY: string;
-    DEFAULT_MODEL?: string | undefined;
+    SMTP_HOST?: string | undefined;
+    SMTP_PORT?: string | undefined;
+    SMTP_USER?: string | undefined;
+    SMTP_PASS?: string | undefined;
     NODE_ENV?: "development" | "production" | "test" | undefined;
     PORT?: string | undefined;
     HOST?: string | undefined;
     CLIENT_URL?: string | undefined;
     NEWAPI_BASE_URL?: string | undefined;
+    DEFAULT_MODEL?: string | undefined;
     NEWAPI_MAX_TOKENS?: string | undefined;
     NEWAPI_TEMPERATURE?: string | undefined;
     GOOGLE_CLIENT_ID?: string | undefined;
     GOOGLE_CLIENT_SECRET?: string | undefined;
     DISCORD_CLIENT_ID?: string | undefined;
     DISCORD_CLIENT_SECRET?: string | undefined;
-    SMTP_HOST?: string | undefined;
-    SMTP_PORT?: string | undefined;
-    SMTP_USER?: string | undefined;
-    SMTP_PASS?: string | undefined;
     REDIS_URL?: string | undefined;
 }>;
 export type EnvConfig = z.infer<typeof envSchema>;
@@ -103,7 +103,6 @@ export declare class ConfigValidator {
 }
 export declare const configValidator: ConfigValidator;
 export declare const getEnvConfig: () => {
-    DEFAULT_MODEL: string;
     NODE_ENV: "development" | "production" | "test";
     PORT: number;
     HOST: string;
@@ -113,16 +112,17 @@ export declare const getEnvConfig: () => {
     CLIENT_URL: string;
     NEWAPI_KEY: string;
     NEWAPI_BASE_URL: string;
+    DEFAULT_MODEL: string;
     NEWAPI_MAX_TOKENS: number;
     NEWAPI_TEMPERATURE: number;
-    GOOGLE_CLIENT_ID?: string | undefined;
-    GOOGLE_CLIENT_SECRET?: string | undefined;
-    DISCORD_CLIENT_ID?: string | undefined;
-    DISCORD_CLIENT_SECRET?: string | undefined;
     SMTP_HOST?: string | undefined;
     SMTP_PORT?: number | undefined;
     SMTP_USER?: string | undefined;
     SMTP_PASS?: string | undefined;
+    GOOGLE_CLIENT_ID?: string | undefined;
+    GOOGLE_CLIENT_SECRET?: string | undefined;
+    DISCORD_CLIENT_ID?: string | undefined;
+    DISCORD_CLIENT_SECRET?: string | undefined;
     REDIS_URL?: string | undefined;
 };
 export {};

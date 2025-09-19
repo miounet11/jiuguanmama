@@ -30,6 +30,8 @@ __exportStar(require("../utils/query-builder"), exports);
 __exportStar(require("../services/database"), exports);
 // 迁移工具
 __exportStar(require("../utils/migration-helpers"), exports);
+// 常用类型别名
+const { PrismaClient, Prisma } = require('../node_modules/.prisma/client');
 // 类型守卫函数重导出
 var database_1 = require("./database");
 Object.defineProperty(exports, "isValidUserRole", { enumerable: true, get: function () { return database_1.isValidUserRole; } });

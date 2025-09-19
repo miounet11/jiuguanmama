@@ -6,10 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebSocketServer = void 0;
 const socket_io_1 = require("socket.io");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const client_1 = require("@prisma/client");
+const { PrismaClient } = require('../node_modules/.prisma/client');
 const logger_1 = require("./services/logger");
 const chatroom_1 = __importDefault(require("./services/chatroom"));
-const prisma = new client_1.PrismaClient();
+const prisma = new PrismaClient();
 // 延迟加载配置以避免循环依赖
 let config = null;
 const getConfig = () => {
@@ -85,7 +85,7 @@ class WebSocketServer {
             prisma.user.findUnique({
                 where: { id: decoded.userId },
                 select: { id: true, username: true, isActive: true }
-            }).then(user => {
+            }).then((user) => {
                 if (user && user.isActive) {
                     socket.userId = user.id;
                     socket.username = user.username;
@@ -97,7 +97,7 @@ class WebSocketServer {
                 else {
                     callback(false);
                 }
-            }).catch(error => {
+            }).catch((error) => {
                 logger_1.logger.error('Socket authentication error', { error });
                 callback(false);
             });

@@ -2,7 +2,6 @@
  * 数据库实体类型定义
  * 基于Prisma生成的类型，提供类型安全的数据库操作
  */
-import { User as PrismaUser, Character as PrismaCharacter, ChatSession as PrismaChatSession, Message as PrismaMessage, CharacterFavorite as PrismaCharacterFavorite, CharacterRating as PrismaCharacterRating, ChatRoom as PrismaChatRoom, ChatParticipant as PrismaChatParticipant, ChatMessage as PrismaChatMessage, Transaction as PrismaTransaction, OAuthAccount as PrismaOAuthAccount, RefreshToken as PrismaRefreshToken, Prisma } from '@prisma/client';
 export type DbUser = PrismaUser;
 export type DbCharacter = PrismaCharacter;
 export type DbChatSession = PrismaChatSession;

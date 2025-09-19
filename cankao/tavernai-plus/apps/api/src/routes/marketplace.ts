@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express'
 import { authenticate, AuthRequest } from '../middleware/auth'
-import { prisma } from '../server'
+import { prisma } from '../lib/prisma'
 
 const router = Router()
 
@@ -50,7 +50,7 @@ router.get('/characters', async (req: Request, res: Response) => {
     }
 
     const skip = (Number(page) - 1) * Number(limit)
-    
+
     const [characters, total] = await Promise.all([
       prisma.character.findMany({
         where,
@@ -72,7 +72,7 @@ router.get('/characters', async (req: Request, res: Response) => {
     const pages = Math.ceil(total / Number(limit))
 
     res.json({
-      characters: characters.map(char => ({
+      characters: characters.map((char: any) => ({
         ...char,
         favorites: char._count.favorites,
         ratingCount: char._count.ratings,
@@ -94,7 +94,7 @@ router.get('/characters', async (req: Request, res: Response) => {
 router.get('/featured', async (req: Request, res: Response) => {
   try {
     const limit = Math.min(Number(req.query.limit) || 10, 20)
-    
+
     const characters = await prisma.character.findMany({
       where: {
         isPublic: true,
@@ -115,7 +115,7 @@ router.get('/featured', async (req: Request, res: Response) => {
       }
     })
 
-    res.json(characters.map(char => ({
+    res.json(characters.map((char: any) => ({
       ...char,
       favorites: char._count.favorites,
       ratingCount: char._count.ratings,
@@ -145,9 +145,9 @@ router.get('/recommended', authenticate, async (req: AuthRequest, res: Response)
       }
     })
 
-    const preferredCategories = [...new Set(recentChats.map(c => c.character.category))]
+    const preferredCategories = [...new Set(recentChats.map((c: any) => c.character.category))]
     // Parse tags from JSON strings
-    const preferredTags = [...new Set(recentChats.flatMap(c => {
+    const preferredTags = [...new Set(recentChats.flatMap((c: any) => {
       const tags = typeof c.character.tags === 'string' ? JSON.parse(c.character.tags) : c.character.tags
       return Array.isArray(tags) ? tags : []
     }))]
@@ -185,7 +185,7 @@ router.get('/recommended', authenticate, async (req: AuthRequest, res: Response)
         where: {
           isPublic: true,
           NOT: {
-            id: { in: characters.map(c => c.id) }
+            id: { in: characters.map((c: any) => c.id) }
           }
         },
         orderBy: { favorites: { _count: 'desc' } },
@@ -233,7 +233,7 @@ router.get('/categories/stats', async (req: Request, res: Response) => {
       '书籍': 'book'
     }
 
-    res.json(categories.map(cat => ({
+    res.json(categories.map((cat: any) => ({
       name: cat.category,
       count: cat._count.category,
       icon: categoryIcons[cat.category] || 'default'
@@ -248,7 +248,7 @@ router.get('/categories/stats', async (req: Request, res: Response) => {
 router.get('/creators/top', async (req: Request, res: Response) => {
   try {
     const limit = Math.min(Number(req.query.limit) || 5, 10)
-    
+
     const creators = await prisma.user.findMany({
       where: {
         characters: {
@@ -275,10 +275,10 @@ router.get('/creators/top', async (req: Request, res: Response) => {
       take: limit
     })
 
-    const topCreators = creators.map(creator => {
-      const totalFavorites = creator.characters.reduce((sum, char) => 
+    const topCreators = creators.map((creator: any) => {
+      const totalFavorites = creator.characters.reduce((sum: any, char: any) =>
         sum + char._count.favorites, 0)
-      const avgRating = creator.characters.reduce((sum, char) => 
+      const avgRating = creator.characters.reduce((sum: any, char: any) =>
         sum + (char.rating || 0), 0) / creator.characters.length
 
       return {
@@ -337,7 +337,7 @@ router.get('/search', async (req: Request, res: Response) => {
       }
     })
 
-    res.json(characters.map(char => ({
+    res.json(characters.map((char: any) => ({
       ...char,
       favorites: char._count.favorites,
       ratingCount: char._count.ratings
@@ -352,7 +352,7 @@ router.get('/search', async (req: Request, res: Response) => {
 router.get('/characters/:id', async (req: Request, res: Response) => {
   try {
     const character = await prisma.character.findUnique({
-      where: { 
+      where: {
         id: req.params.id,
         isPublic: true
       },
@@ -361,8 +361,8 @@ router.get('/characters/:id', async (req: Request, res: Response) => {
           select: { id: true, username: true, avatar: true }
         },
         _count: {
-          select: { 
-            favorites: true, 
+          select: {
+            favorites: true,
             ratings: true,
             chatSessions: true
           }
@@ -392,7 +392,7 @@ router.get('/characters/:id', async (req: Request, res: Response) => {
       }
     })
 
-    const avgSessionLength = character._count.chatSessions > 0 
+    const avgSessionLength = character._count.chatSessions > 0
       ? Math.round(totalMessages / character._count.chatSessions)
       : 0
 
@@ -497,7 +497,7 @@ router.post('/characters/:id/rate', authenticate, async (req: AuthRequest, res: 
       select: { rating: true }
     })
 
-    const avgRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+    const avgRating = ratings.reduce((sum: any, r: any) => sum + r.rating, 0) / ratings.length
 
     await prisma.character.update({
       where: { id: characterId },
@@ -519,7 +519,7 @@ router.post('/characters/:id/import', authenticate, async (req: AuthRequest, res
 
     // 获取源角色
     const sourceCharacter = await prisma.character.findUnique({
-      where: { 
+      where: {
         id: sourceCharacterId,
         isPublic: true
       }
@@ -531,7 +531,7 @@ router.post('/characters/:id/import', authenticate, async (req: AuthRequest, res
 
     // 创建角色副本
     const { id, creatorId, createdAt, updatedAt, ...characterData } = sourceCharacter
-    
+
     const newCharacter = await prisma.character.create({
       data: {
         ...characterData,

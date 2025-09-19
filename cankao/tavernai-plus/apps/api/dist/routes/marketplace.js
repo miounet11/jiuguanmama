@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_1 = require("../middleware/auth");
-const server_1 = require("../server");
+const prisma_1 = require("../lib/prisma");
 const router = (0, express_1.Router)();
 // 获取市场角色列表
 router.get('/characters', async (req, res) => {
@@ -41,7 +41,7 @@ router.get('/characters', async (req, res) => {
         }
         const skip = (Number(page) - 1) * Number(limit);
         const [characters, total] = await Promise.all([
-            server_1.prisma.character.findMany({
+            prisma_1.prisma.character.findMany({
                 where,
                 orderBy,
                 skip,
@@ -55,11 +55,11 @@ router.get('/characters', async (req, res) => {
                     }
                 }
             }),
-            server_1.prisma.character.count({ where })
+            prisma_1.prisma.character.count({ where })
         ]);
         const pages = Math.ceil(total / Number(limit));
         res.json({
-            characters: characters.map(char => ({
+            characters: characters.map((char) => ({
                 ...char,
                 favorites: char._count.favorites,
                 ratingCount: char._count.ratings,
@@ -81,7 +81,7 @@ router.get('/characters', async (req, res) => {
 router.get('/featured', async (req, res) => {
     try {
         const limit = Math.min(Number(req.query.limit) || 10, 20);
-        const characters = await server_1.prisma.character.findMany({
+        const characters = await prisma_1.prisma.character.findMany({
             where: {
                 isPublic: true,
                 isFeatured: true
@@ -100,7 +100,7 @@ router.get('/featured', async (req, res) => {
                 }
             }
         });
-        res.json(characters.map(char => ({
+        res.json(characters.map((char) => ({
             ...char,
             favorites: char._count.favorites,
             ratingCount: char._count.ratings,
@@ -118,7 +118,7 @@ router.get('/recommended', auth_1.authenticate, async (req, res) => {
         const limit = Math.min(Number(req.query.limit) || 12, 30);
         const userId = req.user.id;
         // 获取用户最近使用的角色类别
-        const recentChats = await server_1.prisma.chatSession.findMany({
+        const recentChats = await prisma_1.prisma.chatSession.findMany({
             where: { userId },
             orderBy: { updatedAt: 'desc' },
             take: 10,
@@ -128,14 +128,14 @@ router.get('/recommended', auth_1.authenticate, async (req, res) => {
                 }
             }
         });
-        const preferredCategories = [...new Set(recentChats.map(c => c.character.category))];
+        const preferredCategories = [...new Set(recentChats.map((c) => c.character.category))];
         // Parse tags from JSON strings
-        const preferredTags = [...new Set(recentChats.flatMap(c => {
+        const preferredTags = [...new Set(recentChats.flatMap((c) => {
                 const tags = typeof c.character.tags === 'string' ? JSON.parse(c.character.tags) : c.character.tags;
                 return Array.isArray(tags) ? tags : [];
             }))];
         // 基于偏好推荐角色
-        const characters = await server_1.prisma.character.findMany({
+        const characters = await prisma_1.prisma.character.findMany({
             where: {
                 isPublic: true,
                 NOT: { creatorId: userId },
@@ -162,11 +162,11 @@ router.get('/recommended', auth_1.authenticate, async (req, res) => {
         // 如果推荐不足，补充热门角色
         let finalCharacters = characters;
         if (characters.length < limit) {
-            const popular = await server_1.prisma.character.findMany({
+            const popular = await prisma_1.prisma.character.findMany({
                 where: {
                     isPublic: true,
                     NOT: {
-                        id: { in: characters.map(c => c.id) }
+                        id: { in: characters.map((c) => c.id) }
                     }
                 },
                 orderBy: { favorites: { _count: 'desc' } },
@@ -196,7 +196,7 @@ router.get('/recommended', auth_1.authenticate, async (req, res) => {
 // 获取分类统计
 router.get('/categories/stats', async (req, res) => {
     try {
-        const categories = await server_1.prisma.character.groupBy({
+        const categories = await prisma_1.prisma.character.groupBy({
             by: ['category'],
             where: { isPublic: true },
             _count: { category: true }
@@ -211,7 +211,7 @@ router.get('/categories/stats', async (req, res) => {
             '电影': 'movie',
             '书籍': 'book'
         };
-        res.json(categories.map(cat => ({
+        res.json(categories.map((cat) => ({
             name: cat.category,
             count: cat._count.category,
             icon: categoryIcons[cat.category] || 'default'
@@ -226,7 +226,7 @@ router.get('/categories/stats', async (req, res) => {
 router.get('/creators/top', async (req, res) => {
     try {
         const limit = Math.min(Number(req.query.limit) || 5, 10);
-        const creators = await server_1.prisma.user.findMany({
+        const creators = await prisma_1.prisma.user.findMany({
             where: {
                 characters: {
                     some: { isPublic: true }
@@ -251,7 +251,7 @@ router.get('/creators/top', async (req, res) => {
             },
             take: limit
         });
-        const topCreators = creators.map(creator => {
+        const topCreators = creators.map((creator) => {
             const totalFavorites = creator.characters.reduce((sum, char) => sum + char._count.favorites, 0);
             const avgRating = creator.characters.reduce((sum, char) => sum + (char.rating || 0), 0) / creator.characters.length;
             return {
@@ -290,7 +290,7 @@ router.get('/search', async (req, res) => {
             where.category = category;
         if (language)
             where.language = language;
-        const characters = await server_1.prisma.character.findMany({
+        const characters = await prisma_1.prisma.character.findMany({
             where,
             orderBy: [
                 { rating: 'desc' },
@@ -306,7 +306,7 @@ router.get('/search', async (req, res) => {
                 }
             }
         });
-        res.json(characters.map(char => ({
+        res.json(characters.map((char) => ({
             ...char,
             favorites: char._count.favorites,
             ratingCount: char._count.ratings
@@ -320,7 +320,7 @@ router.get('/search', async (req, res) => {
 // 获取单个角色详情
 router.get('/characters/:id', async (req, res) => {
     try {
-        const character = await server_1.prisma.character.findUnique({
+        const character = await prisma_1.prisma.character.findUnique({
             where: {
                 id: req.params.id,
                 isPublic: true
@@ -351,7 +351,7 @@ router.get('/characters/:id', async (req, res) => {
         if (!character) {
             return res.status(404).json({ error: 'Character not found' });
         }
-        const totalMessages = await server_1.prisma.message.count({
+        const totalMessages = await prisma_1.prisma.message.count({
             where: {
                 session: {
                     characterId: character.id
@@ -382,7 +382,7 @@ router.post('/characters/:id/favorite', auth_1.authenticate, async (req, res) =>
     try {
         const userId = req.user.id;
         const characterId = req.params.id;
-        const existing = await server_1.prisma.characterFavorite.findUnique({
+        const existing = await prisma_1.prisma.characterFavorite.findUnique({
             where: {
                 userId_characterId: { userId, characterId }
             }
@@ -390,7 +390,7 @@ router.post('/characters/:id/favorite', auth_1.authenticate, async (req, res) =>
         if (existing) {
             return res.status(400).json({ error: 'Already favorited' });
         }
-        await server_1.prisma.characterFavorite.create({
+        await prisma_1.prisma.characterFavorite.create({
             data: { userId, characterId }
         });
         res.json({ message: 'Character favorited successfully' });
@@ -405,7 +405,7 @@ router.delete('/characters/:id/favorite', auth_1.authenticate, async (req, res) 
     try {
         const userId = req.user.id;
         const characterId = req.params.id;
-        await server_1.prisma.characterFavorite.delete({
+        await prisma_1.prisma.characterFavorite.delete({
             where: {
                 userId_characterId: { userId, characterId }
             }
@@ -427,14 +427,14 @@ router.post('/characters/:id/rate', auth_1.authenticate, async (req, res) => {
             return res.status(400).json({ error: 'Invalid rating. Must be between 1 and 5' });
         }
         // 检查是否已评价
-        const existing = await server_1.prisma.characterRating.findUnique({
+        const existing = await prisma_1.prisma.characterRating.findUnique({
             where: {
                 userId_characterId: { userId, characterId }
             }
         });
         if (existing) {
             // 更新评价
-            await server_1.prisma.characterRating.update({
+            await prisma_1.prisma.characterRating.update({
                 where: {
                     userId_characterId: { userId, characterId }
                 },
@@ -443,17 +443,17 @@ router.post('/characters/:id/rate', auth_1.authenticate, async (req, res) => {
         }
         else {
             // 创建新评价
-            await server_1.prisma.characterRating.create({
+            await prisma_1.prisma.characterRating.create({
                 data: { userId, characterId, rating, comment }
             });
         }
         // 更新角色平均评分
-        const ratings = await server_1.prisma.characterRating.findMany({
+        const ratings = await prisma_1.prisma.characterRating.findMany({
             where: { characterId },
             select: { rating: true }
         });
         const avgRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
-        await server_1.prisma.character.update({
+        await prisma_1.prisma.character.update({
             where: { id: characterId },
             data: { rating: Math.round(avgRating * 10) / 10 }
         });
@@ -470,7 +470,7 @@ router.post('/characters/:id/import', auth_1.authenticate, async (req, res) => {
         const userId = req.user.id;
         const sourceCharacterId = req.params.id;
         // 获取源角色
-        const sourceCharacter = await server_1.prisma.character.findUnique({
+        const sourceCharacter = await prisma_1.prisma.character.findUnique({
             where: {
                 id: sourceCharacterId,
                 isPublic: true
@@ -481,7 +481,7 @@ router.post('/characters/:id/import', auth_1.authenticate, async (req, res) => {
         }
         // 创建角色副本
         const { id, creatorId, createdAt, updatedAt, ...characterData } = sourceCharacter;
-        const newCharacter = await server_1.prisma.character.create({
+        const newCharacter = await prisma_1.prisma.character.create({
             data: {
                 ...characterData,
                 name: `${characterData.name} (导入)`,

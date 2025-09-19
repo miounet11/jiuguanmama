@@ -1,22 +1,18 @@
 # API 后端模块
 
-[根目录](../../CLAUDE.md) > **api**
+[根目录](../../../../CLAUDE.md) > [TavernAI Plus](../../CLAUDE.md) > **api**
 
 ## 变更记录 (Changelog)
 
-### [2025-09-17 20:25:02] - 深度补捞与架构完善
-- 详细扫描controllers/目录：admin控制器架构（用户、系统、日志、统计、模型管理）
-- 新增middleware组件：validate（Zod验证）、requestLogger（请求日志）、rateLimiter（限流）
-- 扩展utils工具集：json处理工具、errorLogger（文件日志系统）
-- 发现高级AI服务：character-generator（AI角色生成服务，支持NAI3/DALL-E头像生成）
-- 新增环境配置：生产、测试环境配置文件（.env.production、.env.test）
-- 完善数据库策略：丰富的种子数据（5个完整角色设定，包含对话示例）
-
-### [2025-09-17 19:54:33] - API架构文档初始化
-- 完整梳理Express.js + TypeScript + Prisma架构
-- 记录RESTful API端点和WebSocket服务
-- 整理AI服务集成和中间件系统
-- 建立开发和部署指南
+### [2025-09-19 15:42:22] - 项目架构文档初始化完成 ✨
+- **建立面包屑导航**：添加到根目录和主项目的清晰层级导航
+- **完成全面架构分析**：完整梳理 Express + TypeScript + Prisma 架构
+- **详细扫描controllers/目录**：admin控制器架构（用户、系统、日志、统计、模型管理）
+- **新增middleware组件**：validate（Zod验证）、requestLogger（请求日志）、rateLimiter（限流）
+- **扩展utils工具集**：json处理工具、errorLogger（文件日志系统）
+- **发现高级AI服务**：character-generator（AI角色生成服务，支持NAI3/DALL-E头像生成）
+- **新增环境配置**：生产、测试环境配置文件（.env.production、.env.test）
+- **完善数据库策略**：丰富的种子数据（5个完整角色设定，包含对话示例）
 
 ---
 

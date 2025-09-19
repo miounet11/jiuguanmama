@@ -146,7 +146,7 @@ export class CacheManager {
       return false
     }
 
-    return cache.set(key, value, ttl)
+    return cache.set(key, value, ttl || 0)
   }
 
   /**
@@ -328,7 +328,7 @@ export class CacheManager {
         take: 50
       })
 
-      popularCharacters.forEach(character => {
+      popularCharacters.forEach((character: any) => {
         this.set('characters', `character:${character.id}`, character)
       })
 
@@ -346,7 +346,7 @@ export class CacheManager {
         take: 100
       })
 
-      activeUsers.forEach(user => {
+      activeUsers.forEach((user: any) => {
         this.set('users', `user:${user.id}`, user)
       })
 
@@ -463,7 +463,7 @@ export class CacheManager {
 
     let success = true
     Object.entries(keyValuePairs).forEach(([key, value]) => {
-      if (!cache.set(key, value, ttl)) {
+      if (!cache.set(key, value, ttl || 0)) {
         success = false
       }
     })

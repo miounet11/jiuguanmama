@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('../../node_modules/.prisma/client')
 import { getEnvConfig } from '../config/env.config'
 
 const prisma = new PrismaClient()
@@ -26,7 +26,7 @@ declare global {
 
 // 导出认证后的请求类型
 export interface AuthRequest extends Request {
-  user: {
+  user?: {
     id: string
     username: string
     email: string

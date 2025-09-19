@@ -650,7 +650,7 @@ class AIService {
       })
 
       const totalRequests = messages.length
-      const totalTokensUsed = messages.reduce((sum, msg) => sum + (msg.tokens || 0), 0)
+      const totalTokensUsed = messages.reduce((sum: any, msg: any) => sum + (msg.tokens || 0), 0)
 
       // 计算成功率（简化处理，假设所有记录都是成功的）
       const successfulRequests = totalRequests

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_1 = require("../middleware/auth");
 const ai_1 = require("../services/ai");
-const server_1 = require("../server");
+const socket_1 = require("../lib/socket");
 const router = (0, express_1.Router)();
 // 获取用户的群组聊天列表
 router.get('/', auth_1.authenticate, async (req, res, next) => {
@@ -212,7 +212,8 @@ router.post('/:id/messages', auth_1.authenticate, async (req, res, next) => {
             messageType: 'text'
         };
         // 通过WebSocket广播消息给群组成员
-        server_1.io.to(`group_${id}`).emit('groupMessage', userMessage);
+        const io = (0, socket_1.getSocket)();
+        io.to(`group_${id}`).emit('groupMessage', userMessage);
         // 触发AI角色自动回复
         setTimeout(async () => {
             await handleGroupAutoReplies(id, userMessage);
@@ -283,7 +284,8 @@ async function handleGroupAutoReplies(groupId, triggerMessage) {
                                 tokensUsed: aiResponse.tokensUsed
                             };
                             // 广播AI回复
-                            server_1.io.to(`group_${groupId}`).emit('groupMessage', aiMessage);
+                            const io = (0, socket_1.getSocket)();
+                            io.to(`group_${groupId}`).emit('groupMessage', aiMessage);
                             // TODO: 保存到数据库
                         }
                     }
@@ -364,7 +366,8 @@ router.post('/:id/participants', auth_1.authenticate, async (req, res, next) => 
         };
         // TODO: 保存到数据库
         // 通知群组成员
-        server_1.io.to(`group_${id}`).emit('participantJoined', newParticipant);
+        const io = (0, socket_1.getSocket)();
+        io.to(`group_${id}`).emit('participantJoined', newParticipant);
         res.json({
             success: true,
             participant: newParticipant,
@@ -383,7 +386,8 @@ router.delete('/:id/participants/:participantId', auth_1.authenticate, async (re
         // TODO: 不能移除群组所有者
         // TODO: 从数据库删除
         // 通知群组成员
-        server_1.io.to(`group_${id}`).emit('participantLeft', { participantId });
+        const io = (0, socket_1.getSocket)();
+        io.to(`group_${id}`).emit('participantLeft', { participantId });
         res.json({
             success: true,
             message: '参与者移除成功'

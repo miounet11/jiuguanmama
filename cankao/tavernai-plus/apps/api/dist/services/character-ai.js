@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CharacterAIService = void 0;
-const client_1 = require("@prisma/client");
+const { PrismaClient } = require('../../node_modules/.prisma/client');
 const logger_1 = require("./logger");
 const ai_1 = require("./ai");
-const prisma = new client_1.PrismaClient();
+const prisma = new PrismaClient();
 /**
  * AI角色个性化服务
  * 专门处理角色的个性化回复和上下文管理
@@ -101,6 +101,10 @@ class CharacterAIService {
             }
             return {
                 ...character,
+                personality: character.personality || '',
+                systemPrompt: character.systemPrompt || undefined,
+                speakingStyle: character.speakingStyle || undefined,
+                backstory: character.backstory || undefined,
                 exampleDialogs
             };
         }
@@ -213,7 +217,7 @@ class CharacterAIService {
             const totalTokens = recentMessages.reduce((sum, msg) => sum + msg.tokens, 0);
             const totalLength = recentMessages.reduce((sum, msg) => sum + msg.content.length, 0);
             // 分析常用短语（简单实现）
-            const allText = recentMessages.map(msg => msg.content).join(' ');
+            const allText = recentMessages.map((msg) => msg.content).join(' ');
             const words = allText.split(/\s+/);
             const wordFreq = words.reduce((freq, word) => {
                 freq[word] = (freq[word] || 0) + 1;

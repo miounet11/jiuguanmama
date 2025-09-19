@@ -2,7 +2,6 @@
  * 类型安全的数据库访问层
  * 提供高级查询构造器和优化的数据访问模式
  */
-import { PrismaClient, Prisma } from '@prisma/client';
 import { DbUser, DbCharacter, DbChatSession, DbMessage, CharacterListOptions, ChatSessionListOptions, CharacterWithCreator, CharacterWithStats, ChatSessionWithCharacter, MessageWithRelations } from '../types/database';
 export declare class DatabaseService {
     private prisma;
@@ -34,12 +33,7 @@ export declare class DatabaseService {
         /**
          * 获取用户统计信息
          */
-        getStats: (userId: string) => Promise<{
-            characters: number;
-            chatSessions: number;
-            favorites: number;
-            ratings: number;
-        } | null>;
+        getStats: (userId: string) => Promise<any>;
         /**
          * 删除用户（软删除）
          */
@@ -190,63 +184,24 @@ export declare class DatabaseService {
          */
         getSystemStats: () => Promise<{
             users: {
-                total: number;
-                active: number;
+                total: any;
+                active: any;
             };
             characters: {
-                total: number;
-                public: number;
+                total: any;
+                public: any;
             };
             sessions: {
-                total: number;
+                total: any;
             };
             messages: {
-                total: number;
+                total: any;
             };
         }>;
         /**
          * 获取热门角色
          */
-        getPopularCharacters: (limit?: number) => Promise<({
-            creator: {
-                id: string;
-                username: string;
-                avatar: string | null;
-            };
-        } & {
-            description: string;
-            id: string;
-            metadata: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            avatar: string | null;
-            model: string;
-            temperature: number;
-            maxTokens: number;
-            personality: string | null;
-            backstory: string | null;
-            speakingStyle: string | null;
-            firstMessage: string | null;
-            creatorId: string;
-            fullDescription: string | null;
-            scenario: string | null;
-            systemPrompt: string | null;
-            exampleDialogs: string | null;
-            coverImage: string | null;
-            category: string;
-            tags: string;
-            language: string;
-            isPublic: boolean;
-            isNSFW: boolean;
-            isFeatured: boolean;
-            rating: number;
-            ratingCount: number;
-            chatCount: number;
-            favoriteCount: number;
-            importedFrom: string | null;
-            version: number;
-        })[]>;
+        getPopularCharacters: (limit?: number) => Promise<any>;
     };
 }
 export declare const createDatabaseService: (prisma: PrismaClient) => DatabaseService;

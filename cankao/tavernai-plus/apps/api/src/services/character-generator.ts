@@ -134,7 +134,7 @@ Requirements:
 4. Tags should accurately summarize character traits`
     }
 
-    return prompts[language] || prompts['zh-CN']
+    return (prompts as any)[language] || prompts['zh-CN']
   }
 
   /**
@@ -159,7 +159,7 @@ Requirements:
           cartoon: '卡通风格',
           fantasy: '奇幻风格'
         }
-        parts.push(`风格：${styleMap[style] || style}`)
+        parts.push(`风格：${(styleMap as any)[style] || style}`)
       }
 
       if (personality) {
@@ -170,7 +170,7 @@ Requirements:
           romantic: '浪漫多情',
           adventurous: '冒险精神'
         }
-        parts.push(`性格倾向：${personalityMap[personality] || personality}`)
+        parts.push(`性格倾向：${(personalityMap as any)[personality] || personality}`)
       }
 
       if (background) {
@@ -180,7 +180,7 @@ Requirements:
           scifi: '科幻未来',
           historical: '历史古代'
         }
-        parts.push(`背景设定：${backgroundMap[background] || background}`)
+        parts.push(`背景设定：${(backgroundMap as any)[background] || background}`)
       }
     } else {
       parts.push(`Create a character based on: ${prompt}`)
@@ -434,7 +434,7 @@ ${context ? `场景：${context}` : ''}
       appearance: '外貌特征、穿着打扮、气质风格'
     }
 
-    const prompt = `请优化和扩展以下角色的${aspectPrompts[aspect]}：
+    const prompt = `请优化和扩展以下角色的${(aspectPrompts as any)[aspect]}：
 
 角色名：${characterName}
 当前设定：${current}

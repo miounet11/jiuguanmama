@@ -5,6 +5,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.quickFixes = exports.createMigrationHelpers = exports.MigrationHelpers = void 0;
+const { PrismaClient } = require('../../node_modules/.prisma/client');
 const database_1 = require("../types/database");
 class MigrationHelpers {
     prisma;

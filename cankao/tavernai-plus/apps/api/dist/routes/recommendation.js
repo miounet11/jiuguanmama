@@ -24,7 +24,7 @@ router.get('/characters', auth_1.authenticate, async (req, res) => {
             data: {
                 recommendations,
                 algorithm: options.algorithm,
-                totalCount: recommendations.length
+                totalCount: Array.isArray(recommendations.characters) ? recommendations.characters.length : 0
             }
         });
     }
@@ -55,7 +55,7 @@ router.get('/posts', auth_1.authenticate, async (req, res) => {
             data: {
                 recommendations,
                 algorithm: options.algorithm,
-                totalCount: recommendations.length
+                totalCount: Array.isArray(recommendations.posts) ? recommendations.posts.length : 0
             }
         });
     }
@@ -188,8 +188,8 @@ router.get('/stats', auth_1.authenticate, async (req, res) => {
             }
         });
         const totalRecommendations = recommendations.length;
-        const clickedRecommendations = recommendations.filter(r => r.clicked).length;
-        const usefulRecommendations = recommendations.filter(r => r.useful).length;
+        const clickedRecommendations = recommendations.filter((r) => r.clicked).length;
+        const usefulRecommendations = recommendations.filter((r) => r.useful).length;
         const clickRate = totalRecommendations > 0 ? clickedRecommendations / totalRecommendations : 0;
         const usefulRate = totalRecommendations > 0 ? usefulRecommendations / totalRecommendations : 0;
         // 获取模型性能

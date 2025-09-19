@@ -33,7 +33,7 @@ router.get('/characters', authenticate, async (req: AuthRequest, res: Response) 
       data: {
         recommendations,
         algorithm: options.algorithm,
-        totalCount: recommendations.length
+        totalCount: Array.isArray(recommendations.characters) ? recommendations.characters.length : 0
       }
     })
   } catch (error) {
@@ -73,7 +73,7 @@ router.get('/posts', authenticate, async (req: AuthRequest, res: Response) => {
       data: {
         recommendations,
         algorithm: options.algorithm,
-        totalCount: recommendations.length
+        totalCount: Array.isArray(recommendations.posts) ? recommendations.posts.length : 0
       }
     })
   } catch (error) {
@@ -223,8 +223,8 @@ router.get('/stats', authenticate, async (req: AuthRequest, res: Response) => {
     })
 
     const totalRecommendations = recommendations.length
-    const clickedRecommendations = recommendations.filter(r => r.clicked).length
-    const usefulRecommendations = recommendations.filter(r => r.useful).length
+    const clickedRecommendations = recommendations.filter((r: any) => r.clicked).length
+    const usefulRecommendations = recommendations.filter((r: any) => r.useful).length
 
     const clickRate = totalRecommendations > 0 ? clickedRecommendations / totalRecommendations : 0
     const usefulRate = totalRecommendations > 0 ? usefulRecommendations / totalRecommendations : 0

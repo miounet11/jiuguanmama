@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express'
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('../../node_modules/.prisma/client')
 import { authenticate, AuthRequest } from '../middleware/auth'
 import multimodalAI from '../services/multimodalAI'
 import multer from 'multer'

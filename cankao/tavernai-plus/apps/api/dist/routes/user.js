@@ -2,13 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_1 = require("../middleware/auth");
-const server_1 = require("../server");
+const prisma_1 = require("../lib/prisma");
 const router = (0, express_1.Router)();
 // 获取用户列表（仅供管理员）
 router.get('/', auth_1.authenticate, async (req, res, next) => {
     try {
         // TODO: 添加管理员权限检查
-        const users = await server_1.prisma.user.findMany({
+        const users = await prisma_1.prisma.user.findMany({
             select: {
                 id: true,
                 username: true,
@@ -32,7 +32,7 @@ router.get('/', auth_1.authenticate, async (req, res, next) => {
 // 获取指定用户信息
 router.get('/:id', async (req, res, next) => {
     try {
-        const user = await server_1.prisma.user.findUnique({
+        const user = await prisma_1.prisma.user.findUnique({
             where: { id: req.params.id },
             select: {
                 id: true,

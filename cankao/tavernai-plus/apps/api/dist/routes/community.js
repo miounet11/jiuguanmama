@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const { PrismaClient } = require('../../node_modules/.prisma/client');
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
+const prisma = new PrismaClient();
 // 敏感词过滤（简单实现，生产环境需要更完善的过滤器）
 const sensitiveWords = ['垃圾', '广告', '恶意', '欺诈'];
 const filterContent = (content) => {
@@ -111,7 +111,7 @@ router.get('/users/:id/followers', async (req, res) => {
             where: { followingId: userId }
         });
         res.json({
-            followers: followers.map(f => f.follower),
+            followers: followers.map((f) => f.follower),
             pagination: {
                 page,
                 limit,
@@ -153,7 +153,7 @@ router.get('/users/:id/following', async (req, res) => {
             where: { followerId: userId }
         });
         res.json({
-            following: following.map(f => f.following),
+            following: following.map((f) => f.following),
             pagination: {
                 page,
                 limit,
@@ -252,7 +252,7 @@ router.get('/posts', async (req, res) => {
                 where: { followerId: userId },
                 select: { followingId: true }
             });
-            const followingIds = following.map(f => f.followingId);
+            const followingIds = following.map((f) => f.followingId);
             followingIds.push(userId); // 包含自己的动态
             whereCondition.authorId = {
                 in: followingIds

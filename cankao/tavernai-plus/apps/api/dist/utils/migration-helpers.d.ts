@@ -2,10 +2,10 @@
  * 数据库迁移辅助工具
  * 提供类型安全的数据迁移和Schema变更工具
  */
-import { PrismaClient } from '@prisma/client';
+declare const PrismaClient: any;
 export declare class MigrationHelpers {
     private prisma;
-    constructor(prisma: PrismaClient);
+    constructor(prisma: InstanceType<typeof PrismaClient>);
     /**
      * 迁移角色数据：确保JSON字段格式正确
      */
@@ -26,9 +26,9 @@ export declare class MigrationHelpers {
      * 清理孤儿数据
      */
     cleanupOrphanedData(): Promise<{
-        favorites: number;
-        ratings: number;
-        messages: number;
+        favorites: any;
+        ratings: any;
+        messages: any;
     }>;
     /**
      * 验证数据完整性
@@ -59,7 +59,7 @@ export declare class MigrationHelpers {
 /**
  * 迁移工具函数
  */
-export declare const createMigrationHelpers: (prisma: PrismaClient) => MigrationHelpers;
+export declare const createMigrationHelpers: (prisma: InstanceType<typeof PrismaClient>) => MigrationHelpers;
 /**
  * 快速修复常见问题的工具函数
  */
@@ -67,17 +67,18 @@ export declare const quickFixes: {
     /**
      * 修复空的JSON字段
      */
-    fixEmptyJsonFields: (prisma: PrismaClient) => Promise<void>;
+    fixEmptyJsonFields: (prisma: InstanceType<typeof PrismaClient>) => Promise<void>;
     /**
      * 重新计算所有统计数据
      */
-    recalculateAllStats: (prisma: PrismaClient) => Promise<void>;
+    recalculateAllStats: (prisma: InstanceType<typeof PrismaClient>) => Promise<void>;
     /**
      * 数据完整性检查
      */
-    validateIntegrity: (prisma: PrismaClient) => Promise<{
+    validateIntegrity: (prisma: InstanceType<typeof PrismaClient>) => Promise<{
         valid: boolean;
         issues: string[];
     }>;
 };
+export {};
 //# sourceMappingURL=migration-helpers.d.ts.map

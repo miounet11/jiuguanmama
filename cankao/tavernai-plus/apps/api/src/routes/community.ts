@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express'
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('../../node_modules/.prisma/client')
 import { authenticate, AuthRequest } from '../middleware/auth'
 
 const router = Router()
@@ -126,7 +126,7 @@ router.get('/users/:id/followers', async (req: Request, res: Response) => {
     })
 
     res.json({
-      followers: followers.map(f => f.follower),
+      followers: followers.map((f: any) => f.follower),
       pagination: {
         page,
         limit,
@@ -171,7 +171,7 @@ router.get('/users/:id/following', async (req: Request, res: Response) => {
     })
 
     res.json({
-      following: following.map(f => f.following),
+      following: following.map((f: any) => f.following),
       pagination: {
         page,
         limit,
@@ -280,7 +280,7 @@ router.get('/posts', async (req: Request, res: Response) => {
         select: { followingId: true }
       })
 
-      const followingIds = following.map(f => f.followingId)
+      const followingIds = following.map((f: any) => f.followingId)
       followingIds.push(userId) // 包含自己的动态
 
       whereCondition.authorId = {

@@ -5,6 +5,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getDatabaseService = exports.createDatabaseService = exports.DatabaseService = void 0;
+const { PrismaClient, Prisma } = require('../../node_modules/.prisma/client');
 const database_1 = require("../types/database");
 class DatabaseService {
     prisma;

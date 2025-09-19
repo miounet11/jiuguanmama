@@ -5,6 +5,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isDbChatSession = exports.isDbCharacter = exports.isDbUser = exports.DEFAULT_CHAT_SESSION_METADATA = exports.DEFAULT_CHARACTER_METADATA = exports.stringifyChatSessionMetadata = exports.stringifyCharacterMetadata = exports.stringifyCharacterExampleDialogs = exports.stringifyCharacterTags = exports.parseChatSessionMetadata = exports.parseCharacterMetadata = exports.parseCharacterExampleDialogs = exports.parseCharacterTags = exports.isValidCharacterCategory = exports.isValidSubscriptionTier = exports.isValidUserRole = void 0;
+const { User: PrismaUser, Character: PrismaCharacter, ChatSession: PrismaChatSession, Message: PrismaMessage, CharacterFavorite: PrismaCharacterFavorite, CharacterRating: PrismaCharacterRating, ChatRoom: PrismaChatRoom, ChatParticipant: PrismaChatParticipant, ChatMessage: PrismaChatMessage, Transaction: PrismaTransaction, OAuthAccount: PrismaOAuthAccount, RefreshToken: PrismaRefreshToken, Prisma } = require('../../node_modules/.prisma/client');
 // 类型验证工具函数
 const isValidUserRole = (role) => {
     return ['user', 'creator', 'admin', 'moderator'].includes(role);

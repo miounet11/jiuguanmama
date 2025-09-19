@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('../../node_modules/.prisma/client')
 import fs from 'fs'
 import path from 'path'
 

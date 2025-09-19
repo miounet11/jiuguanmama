@@ -41,13 +41,13 @@ export declare class CharacterMapper {
      * 转换为角色基本信息（用于列表显示）
      */
     static toCharacterSummary(character: DbCharacter): {
-        id: string;
-        name: string;
-        avatar: string | null;
-        description: string;
-        category: string;
-        rating: number;
-        isNSFW: boolean;
+        id: any;
+        name: any;
+        avatar: any;
+        description: any;
+        category: any;
+        rating: any;
+        isNSFW: any;
     };
 }
 /**

@@ -3,7 +3,7 @@
  * 提供高级查询构造器和优化的数据访问模式
  */
 
-import { PrismaClient, Prisma } from '@prisma/client'
+const { PrismaClient, Prisma } = require('../../node_modules/.prisma/client')
 import {
   DbUser,
   DbCharacter,

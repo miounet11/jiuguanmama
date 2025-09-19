@@ -121,7 +121,7 @@ class CacheManager {
             console.warn(`Cache ${cacheName} not found`);
             return false;
         }
-        return cache.set(key, value, ttl);
+        return cache.set(key, value, ttl || 0);
     }
     /**
      * 删除缓存值
@@ -267,7 +267,7 @@ class CacheManager {
                 },
                 take: 50
             });
-            popularCharacters.forEach(character => {
+            popularCharacters.forEach((character) => {
                 this.set('characters', `character:${character.id}`, character);
             });
             // 预热活跃用户
@@ -283,7 +283,7 @@ class CacheManager {
                 orderBy: { lastLogin: 'desc' },
                 take: 100
             });
-            activeUsers.forEach(user => {
+            activeUsers.forEach((user) => {
                 this.set('users', `user:${user.id}`, user);
             });
             // 预热热门内容
@@ -381,7 +381,7 @@ class CacheManager {
         }
         let success = true;
         Object.entries(keyValuePairs).forEach(([key, value]) => {
-            if (!cache.set(key, value, ttl)) {
+            if (!cache.set(key, value, ttl || 0)) {
                 success = false;
             }
         });

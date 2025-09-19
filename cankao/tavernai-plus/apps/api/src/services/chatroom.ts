@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('../../node_modules/.prisma/client')
 import { logger } from './logger'
 import { aiService } from './ai'
 import { CharacterAIService } from './character-ai'
@@ -110,13 +110,13 @@ export class ChatRoomService {
       }
 
       // 检查参与者数量限制
-      const activeParticipants = room.participants.filter(p => p.isActive).length
+      const activeParticipants = room.participants.filter((p: any) => p.isActive).length
       if (activeParticipants >= room.maxParticipants) {
         throw new Error('聊天室已满')
       }
 
       // 检查用户或角色是否已在房间中
-      const existing = room.participants.find(p =>
+      const existing = room.participants.find((p: any) =>
         (data.userId && p.userId === data.userId) ||
         (data.characterId && p.characterId === data.characterId)
       )
@@ -387,7 +387,7 @@ export class ChatRoomService {
       })
 
       // 构建上下文消息
-      const contextMessages = recentMessages.reverse().map(msg => ({
+      const contextMessages = recentMessages.reverse().map((msg: any) => ({
         role: (msg.characterId ? 'assistant' : 'user') as 'assistant' | 'user',
         content: `${msg.sender?.username || msg.character?.name || 'Unknown'}: ${msg.content}`,
         characterId: msg.characterId || undefined,
@@ -499,7 +499,7 @@ export class ChatRoomService {
       // 检查访问权限
       const hasAccess = !room.isPrivate ||
         room.ownerId === userId ||
-        room.participants.some(p => p.userId === userId)
+        room.participants.some((p: any) => p.userId === userId)
 
       if (!hasAccess) {
         throw new Error('无权限访问该聊天室')

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('../../node_modules/.prisma/client')
 import OpenAI from 'openai'
 import fs from 'fs/promises'
 import path from 'path'
@@ -321,8 +321,8 @@ class MultimodalAIService {
         style: imageConfig.style as 'natural' | 'vivid'
       })
 
-      const imageUrl = response.data[0].url!
-      const revisedPrompt = response.data[0].revised_prompt
+      const imageUrl = response.data?.[0]?.url!
+      const revisedPrompt = response.data?.[0]?.revised_prompt
 
       // 下载并保存图像
       const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' })
@@ -488,7 +488,7 @@ class MultimodalAIService {
 
     const stats = {
       totalRequests: requests.length,
-      totalCost: requests.reduce((sum, req) => sum + req.cost, 0),
+      totalCost: requests.reduce((sum: any, req: any) => sum + req.cost, 0),
       breakdown: {
         text: { requests: 0, cost: 0 },
         image: { requests: 0, cost: 0 },

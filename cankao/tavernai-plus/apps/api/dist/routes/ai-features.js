@@ -7,7 +7,7 @@ const summon_1 = require("../services/summon");
 const worldinfo_1 = require("../services/worldinfo");
 const storybook_1 = require("../services/storybook");
 const character_generator_1 = require("../services/character-generator");
-const server_1 = require("../server");
+const prisma_1 = require("../lib/prisma");
 const router = (0, express_1.Router)();
 // ==================== 指导回复 API ====================
 /**
@@ -43,12 +43,12 @@ router.get('/guidance/suggestions/:sessionId', auth_1.authenticate, async (req, 
     try {
         const { sessionId } = req.params;
         // 获取会话上下文
-        const recentMessages = await server_1.prisma.message.findMany({
+        const recentMessages = await prisma_1.prisma.message.findMany({
             where: { sessionId },
             orderBy: { createdAt: 'desc' },
             take: 5
         });
-        const context = recentMessages.map(m => m.content).join(' ');
+        const context = recentMessages.map((m) => m.content).join(' ');
         const suggestions = await guidance_1.guidanceService.getSuggestions(sessionId, context);
         res.json({
             success: true,

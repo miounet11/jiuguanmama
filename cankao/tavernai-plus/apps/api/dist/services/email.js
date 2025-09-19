@@ -63,7 +63,7 @@ class EmailService {
             port,
             secure: port === 465,
             auth: { user, pass },
-            from
+            from: from || user || 'noreply@example.com'
         };
     }
     // 生成验证码

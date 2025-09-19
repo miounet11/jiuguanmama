@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import { authenticate, AuthRequest } from '../middleware/auth'
-import { prisma } from '../server'
+import { prisma } from '../lib/prisma'
 import { aiService } from '../services/ai'
-import { io } from '../server'
+import { getSocket } from '../lib/socket'
 
 const router = Router()
 
@@ -278,6 +278,7 @@ router.post('/:id/messages', authenticate, async (req: AuthRequest, res, next) =
     }
 
     // 通过WebSocket广播消息给群组成员
+    const io = getSocket()
     io.to(`group_${id}`).emit('groupMessage', userMessage)
 
     // 触发AI角色自动回复
@@ -356,6 +357,7 @@ async function handleGroupAutoReplies(groupId: string, triggerMessage: any) {
               }
 
               // 广播AI回复
+              const io = getSocket()
               io.to(`group_${groupId}`).emit('groupMessage', aiMessage)
 
               // TODO: 保存到数据库
@@ -444,6 +446,7 @@ router.post('/:id/participants', authenticate, async (req: AuthRequest, res, nex
     // TODO: 保存到数据库
 
     // 通知群组成员
+    const io = getSocket()
     io.to(`group_${id}`).emit('participantJoined', newParticipant)
 
     res.json({
@@ -466,6 +469,7 @@ router.delete('/:id/participants/:participantId', authenticate, async (req: Auth
     // TODO: 从数据库删除
 
     // 通知群组成员
+    const io = getSocket()
     io.to(`group_${id}`).emit('participantLeft', { participantId })
 
     res.json({

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { authenticate, AuthRequest } from '../middleware/auth'
-import { prisma } from '../server'
-import { io } from '../server'
+import { prisma } from '../lib/prisma'
+import { getSocket } from '../lib/socket'
 import { aiService } from '../services/ai'
 import { guidanceService } from '../services/guidance'
 import { summonService } from '../services/summon'
@@ -213,7 +213,7 @@ router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res
     // 构建消息历史
     const messageHistory = recentMessages
       .reverse()
-      .map(msg => ({
+      .map((msg: any) => ({
         role: msg.role as 'user' | 'assistant',
         content: msg.content
       }))
@@ -600,6 +600,7 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
     })
 
     // 通过 WebSocket 广播用户消息
+    const io = getSocket()
     io.to(`session:${req.params.sessionId}`).emit('message', {
       type: 'user_message',
       sessionId: req.params.sessionId,
@@ -629,7 +630,7 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
         const messageHistory = recentMessages
           .reverse()
           .slice(0, -1) // 排除刚发送的消息（已在上面）
-          .map(msg => ({
+          .map((msg: any) => ({
             role: msg.role as 'user' | 'assistant',
             content: msg.content
           }))
@@ -681,6 +682,7 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
 
           // 每收到一定数量的块就发送一次
           if (chunkCount % 3 === 0) {
+            const io = getSocket()
             io.to(`session:${req.params.sessionId}`).emit('message_chunk', {
               sessionId: req.params.sessionId,
               messageId: aiMessage.id,
@@ -719,6 +721,7 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
         })
 
         // 发送完整消息
+        const io = getSocket()
         io.to(`session:${req.params.sessionId}`).emit('message', {
           type: 'assistant_message',
           sessionId: req.params.sessionId,
@@ -726,6 +729,7 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
         })
       } catch (error) {
         console.error('生成 AI 回复失败:', error)
+        const io = getSocket()
         io.to(`session:${req.params.sessionId}`).emit('error', {
           message: '生成回复失败',
           error: error instanceof Error ? error.message : '未知错误'
@@ -977,7 +981,7 @@ router.post('/sessions/:sessionId/messages/:messageId/regenerate', authenticate,
 router.post('/sessions/:sessionId/stop', authenticate, async (req: AuthRequest, res, next) => {
   try {
     // TODO: 实现停止 AI 生成的逻辑
-
+    const io = getSocket()
     io.to(`session:${req.params.sessionId}`).emit('generation_stopped', {
       sessionId: req.params.sessionId
     })

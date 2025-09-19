@@ -10,14 +10,7 @@ export declare class ApiUsageLogger {
         ip?: string;
         userAgent?: string;
     }): Promise<void>;
-    static getUsageStats(timeframe?: 'hour' | 'day' | 'week' | 'month'): Promise<(import(".prisma/client").Prisma.PickEnumerable<import(".prisma/client").Prisma.UsageLogGroupByOutputType, ("method" | "endpoint")[]> & {
-        _count: {
-            id: number;
-        };
-        _avg: {
-            responseTime: number | null;
-        };
-    })[]>;
+    static getUsageStats(timeframe?: 'hour' | 'day' | 'week' | 'month'): Promise<any>;
 }
 export declare class ErrorTracker {
     static trackError(error: Error, context?: any): Promise<void>;

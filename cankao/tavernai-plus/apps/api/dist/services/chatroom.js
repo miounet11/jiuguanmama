@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatRoomService = void 0;
-const client_1 = require("@prisma/client");
+const { PrismaClient } = require('../../node_modules/.prisma/client');
 const logger_1 = require("./logger");
 const character_ai_1 = require("./character-ai");
-const prisma = new client_1.PrismaClient();
+const prisma = new PrismaClient();
 /**
  * 多角色聊天室服务
  */
@@ -69,12 +69,12 @@ class ChatRoomService {
                 throw new Error('聊天室已关闭');
             }
             // 检查参与者数量限制
-            const activeParticipants = room.participants.filter(p => p.isActive).length;
+            const activeParticipants = room.participants.filter((p) => p.isActive).length;
             if (activeParticipants >= room.maxParticipants) {
                 throw new Error('聊天室已满');
             }
             // 检查用户或角色是否已在房间中
-            const existing = room.participants.find(p => (data.userId && p.userId === data.userId) ||
+            const existing = room.participants.find((p) => (data.userId && p.userId === data.userId) ||
                 (data.characterId && p.characterId === data.characterId));
             if (existing) {
                 if (existing.isActive) {
@@ -316,7 +316,7 @@ class ChatRoomService {
                 take: 15
             });
             // 构建上下文消息
-            const contextMessages = recentMessages.reverse().map(msg => ({
+            const contextMessages = recentMessages.reverse().map((msg) => ({
                 role: (msg.characterId ? 'assistant' : 'user'),
                 content: `${msg.sender?.username || msg.character?.name || 'Unknown'}: ${msg.content}`,
                 characterId: msg.characterId || undefined,
@@ -418,7 +418,7 @@ class ChatRoomService {
             // 检查访问权限
             const hasAccess = !room.isPrivate ||
                 room.ownerId === userId ||
-                room.participants.some(p => p.userId === userId);
+                room.participants.some((p) => p.userId === userId);
             if (!hasAccess) {
                 throw new Error('无权限访问该聊天室');
             }

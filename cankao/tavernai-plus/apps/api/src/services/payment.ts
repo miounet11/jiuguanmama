@@ -351,7 +351,7 @@ class PaymentService {
     // 注意：支付宝的完整集成需要企业认证和签约
     // 这里提供基础实现框架
 
-    const params = {
+    const params: any = {
       app_id: process.env.ALIPAY_APP_ID,
       method: 'alipay.trade.page.pay',
       format: 'JSON',

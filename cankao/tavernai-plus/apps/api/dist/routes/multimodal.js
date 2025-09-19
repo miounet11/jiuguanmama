@@ -4,14 +4,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const { PrismaClient } = require('../../node_modules/.prisma/client');
 const auth_1 = require("../middleware/auth");
 const multimodalAI_1 = __importDefault(require("../services/multimodalAI"));
 const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
 const promises_1 = __importDefault(require("fs/promises"));
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
+const prisma = new PrismaClient();
 // 配置文件上传
 const storage = multer_1.default.diskStorage({
     destination: async (req, file, cb) => {

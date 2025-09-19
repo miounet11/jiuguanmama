@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('../../node_modules/.prisma/client')
 import { logger } from './logger'
 import { aiService } from './ai'
 
@@ -147,6 +147,10 @@ export class CharacterAIService {
 
       return {
         ...character,
+        personality: character.personality || '',
+        systemPrompt: character.systemPrompt || undefined,
+        speakingStyle: character.speakingStyle || undefined,
+        backstory: character.backstory || undefined,
         exampleDialogs
       }
     } catch (error) {
@@ -285,13 +289,13 @@ export class CharacterAIService {
       }
 
       // 计算统计数据
-      const totalTokens = recentMessages.reduce((sum, msg) => sum + msg.tokens, 0)
-      const totalLength = recentMessages.reduce((sum, msg) => sum + msg.content.length, 0)
+      const totalTokens = recentMessages.reduce((sum: any, msg: any) => sum + msg.tokens, 0)
+      const totalLength = recentMessages.reduce((sum: any, msg: any) => sum + msg.content.length, 0)
 
       // 分析常用短语（简单实现）
-      const allText = recentMessages.map(msg => msg.content).join(' ')
+      const allText = recentMessages.map((msg: any) => msg.content).join(' ')
       const words = allText.split(/\s+/)
-      const wordFreq = words.reduce((freq: any, word) => {
+      const wordFreq = words.reduce((freq: any, word: any) => {
         freq[word] = (freq[word] || 0) + 1
         return freq
       }, {})
@@ -302,7 +306,7 @@ export class CharacterAIService {
         .map(([word]) => word)
 
       // 分析活跃时间模式
-      const hourCounts = recentMessages.reduce((counts: any, msg) => {
+      const hourCounts = recentMessages.reduce((counts: any, msg: any) => {
         const hour = new Date(msg.createdAt).getHours()
         counts[hour] = (counts[hour] || 0) + 1
         return counts

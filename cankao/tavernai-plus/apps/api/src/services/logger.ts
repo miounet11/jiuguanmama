@@ -104,7 +104,7 @@ export class ApiUsageLogger {
     userAgent?: string
   }) {
     try {
-      const { PrismaClient } = await import('@prisma/client')
+      const { PrismaClient } = require('../../node_modules/.prisma/client')
       const prisma = new PrismaClient()
 
       await prisma.usageLog.create({
@@ -127,7 +127,7 @@ export class ApiUsageLogger {
 
   static async getUsageStats(timeframe: 'hour' | 'day' | 'week' | 'month' = 'day') {
     try {
-      const { PrismaClient } = await import('@prisma/client')
+      const { PrismaClient } = require('../../node_modules/.prisma/client')
       const prisma = new PrismaClient()
 
       const now = new Date()
@@ -200,7 +200,7 @@ export class ErrorTracker {
     metadata?: any
   }) {
     try {
-      const { PrismaClient } = await import('@prisma/client')
+      const { PrismaClient } = require('../../node_modules/.prisma/client')
       const prisma = new PrismaClient()
 
       await prisma.alert.create({

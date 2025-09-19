@@ -5,6 +5,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createAdvancedQueries = exports.createQueryBuilder = exports.AdvancedQueries = exports.QueryBuilderFactory = exports.MessageQueryBuilder = exports.ChatSessionQueryBuilder = exports.CharacterQueryBuilder = exports.QueryBuilder = void 0;
+const { PrismaClient, Prisma } = require('../../node_modules/.prisma/client');
 const database_1 = require("../types/database");
 /**
  * 基础查询构造器
@@ -619,7 +620,7 @@ class AdvancedQueries {
         const characters = await builder.execute();
         // 在应用层进行标签过滤（SQLite限制）
         if (tags.length > 0) {
-            const filteredCharacters = characters.filter(char => {
+            const filteredCharacters = characters.filter((char) => {
                 const characterTags = (0, database_1.parseCharacterTags)(char.tags);
                 return tags.some(tag => characterTags.some(charTag => charTag.toLowerCase().includes(tag.toLowerCase())));
             });

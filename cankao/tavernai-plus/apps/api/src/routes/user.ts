@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { authenticate, AuthRequest } from '../middleware/auth'
-import { prisma } from '../server'
+import { prisma } from '../lib/prisma'
 
 const router = Router()
 
@@ -20,7 +20,7 @@ router.get('/', authenticate, async (req, res, next) => {
       },
       take: 20
     })
-    
+
     res.json({
       success: true,
       users
@@ -50,14 +50,14 @@ router.get('/:id', async (req, res, next) => {
         }
       }
     })
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       })
     }
-    
+
     res.json({
       success: true,
       user

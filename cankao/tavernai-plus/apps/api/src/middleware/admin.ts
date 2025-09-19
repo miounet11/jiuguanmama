@@ -210,7 +210,7 @@ export const logAdminAction = async (
         try {
           await prisma.adminLog.create({
             data: {
-              adminId: req.user.id,
+              adminId: req.user?.id || '',
               action: `${req.method} ${req.originalUrl}`,
               targetType: 'admin_action',
               targetId: null,

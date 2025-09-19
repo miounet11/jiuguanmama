@@ -254,7 +254,7 @@ router.delete('/:roomId/characters/:characterId', authenticate, async (req, res,
 
     // 验证用户权限（房主或管理员）
     const room = await ChatRoomService.getRoomDetails(roomId, userId)
-    const userParticipant = room.participants.find(p => p.userId === userId)
+    const userParticipant = room.participants.find((p: any) => p.userId === userId)
 
     if (!userParticipant || !['owner', 'admin'].includes(userParticipant.role)) {
       return res.status(403).json({

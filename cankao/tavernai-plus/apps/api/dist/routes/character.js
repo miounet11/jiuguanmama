@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_1 = require("../middleware/auth");
-const server_1 = require("../server");
+const prisma_1 = require("../lib/prisma");
 const ai_1 = require("../services/ai");
 const router = (0, express_1.Router)();
 // 获取公开角色列表
@@ -26,7 +26,7 @@ router.get('/', auth_1.optionalAuth, async (req, res, next) => {
         // if (tags && Array.isArray(tags) && tags.length > 0) {
         //   where.tags = { hasSome: tags }
         // }
-        const characters = await server_1.prisma.character.findMany({
+        const characters = await prisma_1.prisma.character.findMany({
             where,
             select: {
                 id: true,
@@ -62,12 +62,12 @@ router.get('/', auth_1.optionalAuth, async (req, res, next) => {
             take: Number(limit)
         });
         // 添加是否收藏标记
-        const charactersWithFavorite = characters.map(char => ({
+        const charactersWithFavorite = characters.map((char) => ({
             ...char,
             isFavorited: char._count.favorites > 0,
             isNew: new Date(char.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
         }));
-        const total = await server_1.prisma.character.count({ where });
+        const total = await prisma_1.prisma.character.count({ where });
         res.json({
             success: true,
             characters: charactersWithFavorite,
@@ -86,7 +86,7 @@ router.get('/', auth_1.optionalAuth, async (req, res, next) => {
 // 获取热门角色
 router.get('/popular', auth_1.optionalAuth, async (req, res, next) => {
     try {
-        const characters = await server_1.prisma.character.findMany({
+        const characters = await prisma_1.prisma.character.findMany({
             where: {
                 isPublic: true,
                 isFeatured: false // 不包括特色角色
@@ -127,7 +127,7 @@ router.get('/popular', auth_1.optionalAuth, async (req, res, next) => {
 // 获取我的角色
 router.get('/my', auth_1.authenticate, async (req, res, next) => {
     try {
-        const characters = await server_1.prisma.character.findMany({
+        const characters = await prisma_1.prisma.character.findMany({
             where: { creatorId: req.user.id },
             orderBy: { updatedAt: 'desc' }
         });
@@ -143,7 +143,7 @@ router.get('/my', auth_1.authenticate, async (req, res, next) => {
 // 获取收藏的角色
 router.get('/favorites', auth_1.authenticate, async (req, res, next) => {
     try {
-        const favorites = await server_1.prisma.characterFavorite.findMany({
+        const favorites = await prisma_1.prisma.characterFavorite.findMany({
             where: { userId: req.user.id },
             include: {
                 character: {
@@ -162,7 +162,7 @@ router.get('/favorites', auth_1.authenticate, async (req, res, next) => {
         });
         res.json({
             success: true,
-            characters: favorites.map(f => f.character)
+            characters: favorites.map((f) => f.character)
         });
     }
     catch (error) {
@@ -172,13 +172,13 @@ router.get('/favorites', auth_1.authenticate, async (req, res, next) => {
 // 获取热门标签
 router.get('/tags/popular', async (req, res, next) => {
     try {
-        const characters = await server_1.prisma.character.findMany({
+        const characters = await prisma_1.prisma.character.findMany({
             where: { isPublic: true },
             select: { tags: true }
         });
         // 统计标签出现频率
         const tagCount = {};
-        characters.forEach(char => {
+        characters.forEach((char) => {
             const tags = typeof char.tags === 'string' ? JSON.parse(char.tags) : char.tags;
             if (Array.isArray(tags)) {
                 tags.forEach(tag => {
@@ -236,7 +236,7 @@ router.post('/generate', auth_1.authenticate, async (req, res, next) => {
 // 获取单个角色详情
 router.get('/:id', auth_1.optionalAuth, async (req, res, next) => {
     try {
-        const character = await server_1.prisma.character.findUnique({
+        const character = await prisma_1.prisma.character.findUnique({
             where: { id: req.params.id },
             include: {
                 creator: {
@@ -285,7 +285,7 @@ router.get('/:id', auth_1.optionalAuth, async (req, res, next) => {
 // 创建新角色
 router.post('/', auth_1.authenticate, async (req, res, next) => {
     try {
-        const character = await server_1.prisma.character.create({
+        const character = await prisma_1.prisma.character.create({
             data: {
                 ...req.body,
                 creatorId: req.user.id
@@ -304,7 +304,7 @@ router.post('/', auth_1.authenticate, async (req, res, next) => {
 router.put('/:id', auth_1.authenticate, async (req, res, next) => {
     try {
         // 验证所有权
-        const existing = await server_1.prisma.character.findUnique({
+        const existing = await prisma_1.prisma.character.findUnique({
             where: { id: req.params.id }
         });
         if (!existing || existing.creatorId !== req.user.id) {
@@ -313,7 +313,7 @@ router.put('/:id', auth_1.authenticate, async (req, res, next) => {
                 message: 'Access denied'
             });
         }
-        const character = await server_1.prisma.character.update({
+        const character = await prisma_1.prisma.character.update({
             where: { id: req.params.id },
             data: req.body
         });
@@ -330,7 +330,7 @@ router.put('/:id', auth_1.authenticate, async (req, res, next) => {
 router.delete('/:id', auth_1.authenticate, async (req, res, next) => {
     try {
         // 验证所有权
-        const existing = await server_1.prisma.character.findUnique({
+        const existing = await prisma_1.prisma.character.findUnique({
             where: { id: req.params.id }
         });
         if (!existing || existing.creatorId !== req.user.id) {
@@ -339,7 +339,7 @@ router.delete('/:id', auth_1.authenticate, async (req, res, next) => {
                 message: 'Access denied'
             });
         }
-        await server_1.prisma.character.delete({
+        await prisma_1.prisma.character.delete({
             where: { id: req.params.id }
         });
         res.json({
@@ -357,7 +357,7 @@ router.post('/:id/favorite', auth_1.authenticate, async (req, res, next) => {
         const characterId = req.params.id;
         const userId = req.user.id;
         // 检查是否已收藏
-        const existing = await server_1.prisma.characterFavorite.findUnique({
+        const existing = await prisma_1.prisma.characterFavorite.findUnique({
             where: {
                 userId_characterId: {
                     userId,
@@ -367,7 +367,7 @@ router.post('/:id/favorite', auth_1.authenticate, async (req, res, next) => {
         });
         if (existing) {
             // 取消收藏
-            await server_1.prisma.characterFavorite.delete({
+            await prisma_1.prisma.characterFavorite.delete({
                 where: {
                     userId_characterId: {
                         userId,
@@ -375,7 +375,7 @@ router.post('/:id/favorite', auth_1.authenticate, async (req, res, next) => {
                     }
                 }
             });
-            await server_1.prisma.character.update({
+            await prisma_1.prisma.character.update({
                 where: { id: characterId },
                 data: { favoriteCount: { decrement: 1 } }
             });
@@ -386,13 +386,13 @@ router.post('/:id/favorite', auth_1.authenticate, async (req, res, next) => {
         }
         else {
             // 添加收藏
-            await server_1.prisma.characterFavorite.create({
+            await prisma_1.prisma.characterFavorite.create({
                 data: {
                     userId,
                     characterId
                 }
             });
-            await server_1.prisma.character.update({
+            await prisma_1.prisma.character.update({
                 where: { id: characterId },
                 data: { favoriteCount: { increment: 1 } }
             });
@@ -419,7 +419,7 @@ router.post('/:id/rate', auth_1.authenticate, async (req, res, next) => {
             });
         }
         // 检查是否已评分
-        const existing = await server_1.prisma.characterRating.findUnique({
+        const existing = await prisma_1.prisma.characterRating.findUnique({
             where: {
                 userId_characterId: {
                     userId,
@@ -429,7 +429,7 @@ router.post('/:id/rate', auth_1.authenticate, async (req, res, next) => {
         });
         if (existing) {
             // 更新评分
-            await server_1.prisma.characterRating.update({
+            await prisma_1.prisma.characterRating.update({
                 where: {
                     userId_characterId: {
                         userId,
@@ -441,7 +441,7 @@ router.post('/:id/rate', auth_1.authenticate, async (req, res, next) => {
         }
         else {
             // 新增评分
-            await server_1.prisma.characterRating.create({
+            await prisma_1.prisma.characterRating.create({
                 data: {
                     userId,
                     characterId,
@@ -450,11 +450,11 @@ router.post('/:id/rate', auth_1.authenticate, async (req, res, next) => {
             });
         }
         // 重新计算平均评分
-        const ratings = await server_1.prisma.characterRating.findMany({
+        const ratings = await prisma_1.prisma.characterRating.findMany({
             where: { characterId }
         });
         const avgRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
-        await server_1.prisma.character.update({
+        await prisma_1.prisma.character.update({
             where: { id: characterId },
             data: {
                 rating: avgRating,
@@ -473,7 +473,7 @@ router.post('/:id/rate', auth_1.authenticate, async (req, res, next) => {
 // 克隆角色
 router.post('/:id/clone', auth_1.authenticate, async (req, res, next) => {
     try {
-        const original = await server_1.prisma.character.findUnique({
+        const original = await prisma_1.prisma.character.findUnique({
             where: { id: req.params.id }
         });
         if (!original || (!original.isPublic && original.creatorId !== req.user.id)) {
@@ -483,7 +483,7 @@ router.post('/:id/clone', auth_1.authenticate, async (req, res, next) => {
             });
         }
         const { id, creatorId, chatCount, favoriteCount, rating, ratingCount, createdAt, updatedAt, ...characterData } = original;
-        const cloned = await server_1.prisma.character.create({
+        const cloned = await prisma_1.prisma.character.create({
             data: {
                 ...characterData,
                 name: `${characterData.name} (副本)`,
@@ -504,7 +504,7 @@ router.post('/:id/clone', auth_1.authenticate, async (req, res, next) => {
 router.get('/:id/reviews', async (req, res, next) => {
     try {
         const { page = 1, limit = 10 } = req.query;
-        const reviews = await server_1.prisma.characterRating.findMany({
+        const reviews = await prisma_1.prisma.characterRating.findMany({
             where: {
                 characterId: req.params.id,
                 // 只显示有评论文本的评分
@@ -523,7 +523,7 @@ router.get('/:id/reviews', async (req, res, next) => {
             skip: (Number(page) - 1) * Number(limit),
             take: Number(limit)
         });
-        const total = await server_1.prisma.characterRating.count({
+        const total = await prisma_1.prisma.characterRating.count({
             where: {
                 characterId: req.params.id,
                 comment: { not: null }
@@ -531,7 +531,7 @@ router.get('/:id/reviews', async (req, res, next) => {
         });
         res.json({
             success: true,
-            reviews: reviews.map(review => ({
+            reviews: reviews.map((review) => ({
                 id: review.id,
                 username: review.user.username,
                 userAvatar: review.user.avatar,
@@ -554,7 +554,7 @@ router.get('/:id/reviews', async (req, res, next) => {
 // 导出角色 (SillyTavern 格式)
 router.get('/:id/export', auth_1.authenticate, async (req, res, next) => {
     try {
-        const character = await server_1.prisma.character.findUnique({
+        const character = await prisma_1.prisma.character.findUnique({
             where: { id: req.params.id },
             include: {
                 creator: {
@@ -650,7 +650,7 @@ router.post('/import', auth_1.authenticate, async (req, res, next) => {
         // 兼容不同版本的 SillyTavern 格式
         const data = parsedData.data || parsedData;
         // 检查是否已存在同名角色
-        const existingCharacter = await server_1.prisma.character.findFirst({
+        const existingCharacter = await prisma_1.prisma.character.findFirst({
             where: {
                 name: data.name,
                 creatorId: req.user.id
@@ -663,7 +663,7 @@ router.post('/import', auth_1.authenticate, async (req, res, next) => {
             });
         }
         // 创建角色
-        const character = await server_1.prisma.character.create({
+        const character = await prisma_1.prisma.character.create({
             data: {
                 name: data.name || 'Imported Character',
                 description: data.description || '',
@@ -702,7 +702,7 @@ router.get('/:id/related', async (req, res, next) => {
     try {
         const { limit = 6 } = req.query;
         // 获取当前角色信息
-        const currentCharacter = await server_1.prisma.character.findUnique({
+        const currentCharacter = await prisma_1.prisma.character.findUnique({
             where: { id: req.params.id },
             select: { category: true, tags: true }
         });
@@ -713,7 +713,7 @@ router.get('/:id/related', async (req, res, next) => {
             });
         }
         // 基于分类和标签推荐相关角色
-        const relatedCharacters = await server_1.prisma.character.findMany({
+        const relatedCharacters = await prisma_1.prisma.character.findMany({
             where: {
                 id: { not: req.params.id }, // 排除自己
                 isPublic: true,

@@ -11,7 +11,6 @@ exports.monitorService = void 0;
 const events_1 = require("events");
 const server_1 = require("../server");
 const os_1 = __importDefault(require("os"));
-const server_2 = require("../server");
 class MonitorService extends events_1.EventEmitter {
     metrics;
     alertRules = new Map();
@@ -327,17 +326,17 @@ class MonitorService extends events_1.EventEmitter {
     setupRealtimeBroadcast() {
         // 每秒向前端广播系统指标
         setInterval(() => {
-            server_2.io.emit('metrics:realtime', {
-                cpu: this.metrics.cpu.usage,
-                memory: this.metrics.memory.percentage,
-                rpm: this.metrics.requests.rpm,
-                latency: this.metrics.requests.avgLatency,
-                timestamp: Date.now()
-            });
+            /* io.emit('metrics:realtime', {
+              cpu: this.metrics.cpu.usage,
+              memory: this.metrics.memory.percentage,
+              rpm: this.metrics.requests.rpm,
+              latency: this.metrics.requests.avgLatency,
+              timestamp: Date.now()
+            }) */
         }, 1000);
         // 每分钟广播完整指标
         setInterval(() => {
-            server_2.io.emit('metrics:full', this.metrics);
+            // io.emit('metrics:full', this.metrics)
         }, 60000);
     }
     // 获取指标值

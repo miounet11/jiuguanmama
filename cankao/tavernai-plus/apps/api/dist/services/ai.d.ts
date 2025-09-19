@@ -41,10 +41,10 @@ declare class AIService {
     getAvailableModels(): Promise<ModelConfig[]>;
     getModelInfo(modelId: string): Promise<ModelConfig | null>;
     getModelStats(modelId: string, startDate: Date): Promise<{
-        totalRequests: number;
-        successfulRequests: number;
+        totalRequests: any;
+        successfulRequests: any;
         failedRequests: number;
-        totalTokensUsed: number;
+        totalTokensUsed: any;
         averageResponseTime: number;
     }>;
     private createModelClient;

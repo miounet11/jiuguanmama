@@ -2,13 +2,13 @@
  * 类型安全的查询构造器
  * 提供链式查询API和优化的查询模式
  */
-import { Prisma, PrismaClient } from '@prisma/client';
+declare const PrismaClient: any;
 import { CharacterListOptions, ChatSessionListOptions } from '../types/database';
 /**
  * 基础查询构造器
  */
 export declare class QueryBuilder<T> {
-    protected prisma: PrismaClient;
+    protected prisma: InstanceType<typeof PrismaClient>;
     protected model: string;
     protected where: any;
     protected orderBy: any[];
@@ -16,7 +16,7 @@ export declare class QueryBuilder<T> {
     protected select: any;
     protected skip: number;
     protected take: number;
-    constructor(prisma: PrismaClient, model: string);
+    constructor(prisma: InstanceType<typeof PrismaClient>, model: string);
     /**
      * 添加WHERE条件
      */
@@ -50,7 +50,7 @@ export declare class QueryBuilder<T> {
  * 角色查询构造器
  */
 export declare class CharacterQueryBuilder extends QueryBuilder<Prisma.CharacterFindManyArgs> {
-    constructor(prisma: PrismaClient);
+    constructor(prisma: InstanceType<typeof PrismaClient>);
     /**
      * 应用角色列表选项
      */
@@ -90,90 +90,24 @@ export declare class CharacterQueryBuilder extends QueryBuilder<Prisma.Character
     /**
      * 执行查询
      */
-    execute(): Promise<{
-        description: string;
-        id: string;
-        metadata: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        name: string;
-        avatar: string | null;
-        model: string;
-        temperature: number;
-        maxTokens: number;
-        personality: string | null;
-        backstory: string | null;
-        speakingStyle: string | null;
-        firstMessage: string | null;
-        creatorId: string;
-        fullDescription: string | null;
-        scenario: string | null;
-        systemPrompt: string | null;
-        exampleDialogs: string | null;
-        coverImage: string | null;
-        category: string;
-        tags: string;
-        language: string;
-        isPublic: boolean;
-        isNSFW: boolean;
-        isFeatured: boolean;
-        rating: number;
-        ratingCount: number;
-        chatCount: number;
-        favoriteCount: number;
-        importedFrom: string | null;
-        version: number;
-    }[]>;
+    execute(): Promise<any>;
     /**
      * 执行计数查询
      */
-    count(): Promise<number>;
+    count(): Promise<any>;
     /**
      * 执行分页查询
      */
     executeWithCount(): Promise<{
-        items: {
-            description: string;
-            id: string;
-            metadata: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            avatar: string | null;
-            model: string;
-            temperature: number;
-            maxTokens: number;
-            personality: string | null;
-            backstory: string | null;
-            speakingStyle: string | null;
-            firstMessage: string | null;
-            creatorId: string;
-            fullDescription: string | null;
-            scenario: string | null;
-            systemPrompt: string | null;
-            exampleDialogs: string | null;
-            coverImage: string | null;
-            category: string;
-            tags: string;
-            language: string;
-            isPublic: boolean;
-            isNSFW: boolean;
-            isFeatured: boolean;
-            rating: number;
-            ratingCount: number;
-            chatCount: number;
-            favoriteCount: number;
-            importedFrom: string | null;
-            version: number;
-        }[];
-        total: number;
+        items: any;
+        total: any;
     }>;
 }
 /**
  * 聊天会话查询构造器
  */
 export declare class ChatSessionQueryBuilder extends QueryBuilder<Prisma.ChatSessionFindManyArgs> {
-    constructor(prisma: PrismaClient);
+    constructor(prisma: InstanceType<typeof PrismaClient>);
     /**
      * 应用会话列表选项
      */
@@ -205,56 +139,24 @@ export declare class ChatSessionQueryBuilder extends QueryBuilder<Prisma.ChatSes
     /**
      * 执行查询
      */
-    execute(): Promise<{
-        id: string;
-        metadata: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        userId: string;
-        model: string;
-        characterId: string;
-        lastMessageAt: Date | null;
-        messageCount: number;
-        totalTokens: number;
-        title: string | null;
-        presetId: string | null;
-        worldInfoId: string | null;
-        isArchived: boolean;
-        isPinned: boolean;
-    }[]>;
+    execute(): Promise<any>;
     /**
      * 执行计数查询
      */
-    count(): Promise<number>;
+    count(): Promise<any>;
     /**
      * 执行分页查询
      */
     executeWithCount(): Promise<{
-        items: {
-            id: string;
-            metadata: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            model: string;
-            characterId: string;
-            lastMessageAt: Date | null;
-            messageCount: number;
-            totalTokens: number;
-            title: string | null;
-            presetId: string | null;
-            worldInfoId: string | null;
-            isArchived: boolean;
-            isPinned: boolean;
-        }[];
-        total: number;
+        items: any;
+        total: any;
     }>;
 }
 /**
  * 消息查询构造器
  */
 export declare class MessageQueryBuilder extends QueryBuilder<Prisma.MessageFindManyArgs> {
-    constructor(prisma: PrismaClient);
+    constructor(prisma: InstanceType<typeof PrismaClient>);
     /**
      * 按会话过滤
      */
@@ -278,31 +180,18 @@ export declare class MessageQueryBuilder extends QueryBuilder<Prisma.MessageFind
     /**
      * 执行查询
      */
-    execute(): Promise<{
-        id: string;
-        metadata: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        userId: string | null;
-        role: string;
-        content: string;
-        sessionId: string;
-        characterId: string | null;
-        tokens: number;
-        edited: boolean;
-        deleted: boolean;
-    }[]>;
+    execute(): Promise<any>;
     /**
      * 执行计数查询
      */
-    count(): Promise<number>;
+    count(): Promise<any>;
 }
 /**
  * 查询构造器工厂
  */
 export declare class QueryBuilderFactory {
     private prisma;
-    constructor(prisma: PrismaClient);
+    constructor(prisma: InstanceType<typeof PrismaClient>);
     /**
      * 创建角色查询构造器
      */
@@ -321,103 +210,31 @@ export declare class QueryBuilderFactory {
  */
 export declare class AdvancedQueries {
     private prisma;
-    constructor(prisma: PrismaClient);
+    constructor(prisma: InstanceType<typeof PrismaClient>);
     /**
      * 获取角色的详细统计信息
      */
     getCharacterDetailedStats(characterId: string): Promise<{
-        basic: {
-            createdAt: Date;
-            _count: {
-                chatSessions: number;
-                messages: number;
-            };
-            rating: number;
-            ratingCount: number;
-            chatCount: number;
-            favoriteCount: number;
-        } | null;
-        recentChats: number;
-        topUsers: (Prisma.PickEnumerable<Prisma.ChatSessionGroupByOutputType, "userId"[]> & {
-            _count: {
-                userId: number;
-            };
-        })[];
-        ratingDistribution: (Prisma.PickEnumerable<Prisma.CharacterRatingGroupByOutputType, "rating"[]> & {
-            _count: {
-                rating: number;
-            };
-        })[];
+        basic: any;
+        recentChats: any;
+        topUsers: any;
+        ratingDistribution: any;
     }>;
     /**
      * 获取用户的聊天统计
      */
     getUserChatStats(userId: string): Promise<{
-        totalSessions: number;
-        totalMessages: number;
-        favoriteCharacters: number;
-        recentActivity: ({
-            character: {
-                id: string;
-                name: string;
-                avatar: string | null;
-            };
-        } & {
-            id: string;
-            metadata: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            model: string;
-            characterId: string;
-            lastMessageAt: Date | null;
-            messageCount: number;
-            totalTokens: number;
-            title: string | null;
-            presetId: string | null;
-            worldInfoId: string | null;
-            isArchived: boolean;
-            isPinned: boolean;
-        })[];
+        totalSessions: any;
+        totalMessages: any;
+        favoriteCharacters: any;
+        recentActivity: any;
     }>;
     /**
      * 搜索角色（支持标签过滤）
      */
-    searchCharacters(query: string, tags?: string[], options?: CharacterListOptions): Promise<{
-        description: string;
-        id: string;
-        metadata: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        name: string;
-        avatar: string | null;
-        model: string;
-        temperature: number;
-        maxTokens: number;
-        personality: string | null;
-        backstory: string | null;
-        speakingStyle: string | null;
-        firstMessage: string | null;
-        creatorId: string;
-        fullDescription: string | null;
-        scenario: string | null;
-        systemPrompt: string | null;
-        exampleDialogs: string | null;
-        coverImage: string | null;
-        category: string;
-        tags: string;
-        language: string;
-        isPublic: boolean;
-        isNSFW: boolean;
-        isFeatured: boolean;
-        rating: number;
-        ratingCount: number;
-        chatCount: number;
-        favoriteCount: number;
-        importedFrom: string | null;
-        version: number;
-    }[]>;
+    searchCharacters(query: string, tags?: string[], options?: CharacterListOptions): Promise<any>;
 }
-export declare const createQueryBuilder: (prisma: PrismaClient) => QueryBuilderFactory;
-export declare const createAdvancedQueries: (prisma: PrismaClient) => AdvancedQueries;
+export declare const createQueryBuilder: (prisma: InstanceType<typeof PrismaClient>) => QueryBuilderFactory;
+export declare const createAdvancedQueries: (prisma: InstanceType<typeof PrismaClient>) => AdvancedQueries;
+export {};
 //# sourceMappingURL=query-builder.d.ts.map

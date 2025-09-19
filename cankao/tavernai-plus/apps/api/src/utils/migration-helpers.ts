@@ -3,7 +3,7 @@
  * 提供类型安全的数据迁移和Schema变更工具
  */
 
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('../../node_modules/.prisma/client')
 import {
   stringifyCharacterTags,
   stringifyCharacterExampleDialogs,
@@ -17,7 +17,7 @@ import {
 } from '../types/database'
 
 export class MigrationHelpers {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: InstanceType<typeof PrismaClient>) {}
 
   /**
    * 迁移角色数据：确保JSON字段格式正确
@@ -405,7 +405,7 @@ export class MigrationHelpers {
 /**
  * 迁移工具函数
  */
-export const createMigrationHelpers = (prisma: PrismaClient) => {
+export const createMigrationHelpers = (prisma: InstanceType<typeof PrismaClient>) => {
   return new MigrationHelpers(prisma)
 }
 
@@ -416,7 +416,7 @@ export const quickFixes = {
   /**
    * 修复空的JSON字段
    */
-  fixEmptyJsonFields: async (prisma: PrismaClient) => {
+  fixEmptyJsonFields: async (prisma: InstanceType<typeof PrismaClient>) => {
     const migration = new MigrationHelpers(prisma)
     await migration.migrateCharacterJsonFields()
     await migration.migrateChatSessionJsonFields()
@@ -425,7 +425,7 @@ export const quickFixes = {
   /**
    * 重新计算所有统计数据
    */
-  recalculateAllStats: async (prisma: PrismaClient) => {
+  recalculateAllStats: async (prisma: InstanceType<typeof PrismaClient>) => {
     const migration = new MigrationHelpers(prisma)
     await migration.recalculateCharacterStats()
     await migration.recalculateChatSessionStats()
@@ -434,7 +434,7 @@ export const quickFixes = {
   /**
    * 数据完整性检查
    */
-  validateIntegrity: async (prisma: PrismaClient) => {
+  validateIntegrity: async (prisma: InstanceType<typeof PrismaClient>) => {
     const migration = new MigrationHelpers(prisma)
     return migration.validateDataIntegrity()
   }

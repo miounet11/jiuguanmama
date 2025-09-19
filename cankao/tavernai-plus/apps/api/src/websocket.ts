@@ -1,7 +1,7 @@
 import { Server as HTTPServer } from 'http'
 import { Server as SocketIOServer, Socket } from 'socket.io'
 import jwt from 'jsonwebtoken'
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('../node_modules/.prisma/client')
 import { logger } from './services/logger'
 import ChatRoomService from './services/chatroom'
 const prisma = new PrismaClient()
@@ -115,7 +115,7 @@ export class WebSocketServer {
       prisma.user.findUnique({
         where: { id: decoded.userId },
         select: { id: true, username: true, isActive: true }
-      }).then(user => {
+      }).then((user: any) => {
         if (user && user.isActive) {
           socket.userId = user.id
           socket.username = user.username
@@ -127,7 +127,7 @@ export class WebSocketServer {
         } else {
           callback(false)
         }
-      }).catch(error => {
+      }).catch((error: any) => {
         logger.error('Socket authentication error', { error })
         callback(false)
       })

@@ -301,7 +301,7 @@ class AIService {
       })
 
       const totalRequests = messages.length
-      const totalTokensUsed = messages.reduce((sum, msg) => sum + (msg.tokens || 0), 0)
+      const totalTokensUsed = messages.reduce((sum: any, msg: any) => sum + (msg.tokens || 0), 0)
       const successfulRequests = totalRequests
       const failedRequests = 0
       const averageResponseTime = 1500

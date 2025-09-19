@@ -3,7 +3,7 @@
  * 提供链式查询API和优化的查询模式
  */
 
-import { Prisma, PrismaClient } from '@prisma/client'
+const { PrismaClient, Prisma } = require('../../node_modules/.prisma/client')
 import {
   CharacterListOptions,
   ChatSessionListOptions,
@@ -21,7 +21,7 @@ export class QueryBuilder<T> {
   protected skip: number = 0
   protected take: number = 20
 
-  constructor(protected prisma: PrismaClient, protected model: string) {}
+  constructor(protected prisma: InstanceType<typeof PrismaClient>, protected model: string) {}
 
   /**
    * 添加WHERE条件
@@ -107,7 +107,7 @@ export class QueryBuilder<T> {
  * 角色查询构造器
  */
 export class CharacterQueryBuilder extends QueryBuilder<Prisma.CharacterFindManyArgs> {
-  constructor(prisma: PrismaClient) {
+  constructor(prisma: InstanceType<typeof PrismaClient>) {
     super(prisma, 'character')
   }
 
@@ -319,7 +319,7 @@ export class CharacterQueryBuilder extends QueryBuilder<Prisma.CharacterFindMany
  * 聊天会话查询构造器
  */
 export class ChatSessionQueryBuilder extends QueryBuilder<Prisma.ChatSessionFindManyArgs> {
-  constructor(prisma: PrismaClient) {
+  constructor(prisma: InstanceType<typeof PrismaClient>) {
     super(prisma, 'chatSession')
   }
 
@@ -462,7 +462,7 @@ export class ChatSessionQueryBuilder extends QueryBuilder<Prisma.ChatSessionFind
  * 消息查询构造器
  */
 export class MessageQueryBuilder extends QueryBuilder<Prisma.MessageFindManyArgs> {
-  constructor(prisma: PrismaClient) {
+  constructor(prisma: InstanceType<typeof PrismaClient>) {
     super(prisma, 'message')
   }
 
@@ -547,7 +547,7 @@ export class MessageQueryBuilder extends QueryBuilder<Prisma.MessageFindManyArgs
  * 查询构造器工厂
  */
 export class QueryBuilderFactory {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: InstanceType<typeof PrismaClient>) {}
 
   /**
    * 创建角色查询构造器
@@ -575,7 +575,7 @@ export class QueryBuilderFactory {
  * 高级查询工具
  */
 export class AdvancedQueries {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: InstanceType<typeof PrismaClient>) {}
 
   /**
    * 获取角色的详细统计信息
@@ -709,7 +709,7 @@ export class AdvancedQueries {
 
     // 在应用层进行标签过滤（SQLite限制）
     if (tags.length > 0) {
-      const filteredCharacters = characters.filter(char => {
+      const filteredCharacters = characters.filter((char: any) => {
         const characterTags = parseCharacterTags(char.tags)
         return tags.some(tag =>
           characterTags.some(charTag =>
@@ -725,10 +725,10 @@ export class AdvancedQueries {
 }
 
 // 导出工厂函数
-export const createQueryBuilder = (prisma: PrismaClient) => {
+export const createQueryBuilder = (prisma: InstanceType<typeof PrismaClient>) => {
   return new QueryBuilderFactory(prisma)
 }
 
-export const createAdvancedQueries = (prisma: PrismaClient) => {
+export const createAdvancedQueries = (prisma: InstanceType<typeof PrismaClient>) => {
   return new AdvancedQueries(prisma)
 }

@@ -1,23 +1,19 @@
 # Web 前端模块
 
-[根目录](../../CLAUDE.md) > **web**
+[根目录](../../../../CLAUDE.md) > [TavernAI Plus](../../CLAUDE.md) > **web**
 
 ## 变更记录 (Changelog)
 
-### [2025-09-17 20:25:02] - 深度补捞与现代化架构完善
-- 发现并记录高级WebSocket集成：useWebSocket组合式函数（自动重连、聊天室功能）
-- 新增stores状态管理：character.ts（完整CRUD+收藏）、chat.ts（会话+WebSocket通信）
-- 完善composables系统：Vue 3组合式函数架构
-- 新增环境配置：.env.development（API端点配置）
-- 识别UI组件系统：ErrorBoundary、LoadingOverlay、Pagination等通用组件
-- 发现聊天室功能：ChatSession组合、多用户WebSocket通信
-- 新增工作流组件：workflow/ 目录业务流程组件
-
-### [2025-09-17 19:54:33] - Web前端架构文档初始化
-- 完整梳理Vue 3 + TypeScript + Element Plus架构
-- 记录组件系统、路由结构和状态管理
-- 整理UI/UX设计规范和开发工作流
-- 建立测试策略和部署指南
+### [2025-09-19 15:42:22] - 项目架构文档初始化完成 ✨
+- **建立面包屑导航**：添加到根目录和主项目的清晰层级导航
+- **完成现代化架构分析**：完整梳理 Vue 3 + TypeScript + Element Plus 架构
+- **发现并记录高级WebSocket集成**：useWebSocket组合式函数（自动重连、聊天室功能）
+- **新增stores状态管理**：character.ts（完整CRUD+收藏）、chat.ts（会话+WebSocket通信）
+- **完善composables系统**：Vue 3组合式函数架构
+- **新增环境配置**：.env.development（API端点配置）
+- **识别UI组件系统**：ErrorBoundary、LoadingOverlay、Pagination等通用组件
+- **发现聊天室功能**：ChatSession组合、多用户WebSocket通信
+- **新增工作流组件**：workflow/ 目录业务流程组件
 
 ---
 
@@ -158,7 +154,7 @@ useChatRoomWebSocket().summonCharacter(roomId, characterId)
 ```json
 {
   "dependencies": {
-    "vue": "^3.4.15",
+    "vue": "^3.5.21",
     "typescript": "^5.3.3",
     "vue-router": "^4.2.5",
     "pinia": "^2.1.7",
@@ -175,14 +171,15 @@ useChatRoomWebSocket().summonCharacter(roomId, characterId)
 ```json
 {
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.3",
+    "@vitejs/plugin-vue": "^5.2.4",
     "@vue/compiler-sfc": "^3.4.15",
-    "vite": "^6.0.0",
+    "vite": "^5.4.20",
     "vitest": "^1.1.1",
     "vue-tsc": "^2.0.29",
     "eslint": "^8.56.0",
     "eslint-plugin-vue": "^9.19.2",
-    "postcss": "^8.4.32",
+    "postcss": "^8.4.33",
+    "sass": "^1.69.7",
     "tailwindcss": "^3.4.0"
   }
 }

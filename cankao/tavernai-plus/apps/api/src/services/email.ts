@@ -56,7 +56,7 @@ class EmailService {
       })
 
       // 验证配置
-      this.transporter.verify((error, success) => {
+      this.transporter.verify((error: any, success: any) => {
         if (error) {
           console.error('邮件服务配置错误:', error)
           this.transporter = null
@@ -86,7 +86,7 @@ class EmailService {
       port,
       secure: port === 465,
       auth: { user, pass },
-      from
+      from: from || user || 'noreply@example.com'
     }
   }
 

@@ -20,11 +20,8 @@ export * from '../services/database'
 export * from '../utils/migration-helpers'
 
 // 常用类型别名
-export type {
-  // Prisma原生类型
-  PrismaClient,
-  Prisma
-} from '@prisma/client'
+const { PrismaClient, Prisma } = require('../node_modules/.prisma/client')
+export type { PrismaClient, Prisma }
 
 // 常用组合类型
 export type DatabaseService = import('../services/database').DatabaseService

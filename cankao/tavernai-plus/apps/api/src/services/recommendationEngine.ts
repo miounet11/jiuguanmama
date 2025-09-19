@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('../../node_modules/.prisma/client')
 import { performance } from 'perf_hooks'
 
 const prisma = new PrismaClient()
@@ -129,7 +129,7 @@ export class RecommendationEngine {
       recommendations = recommendations.slice(0, config.maxResults)
 
       // 记录推荐日志
-      await this.logRecommendation(userId, 'character', recommendations.map(r => r.id), config.algorithm)
+      await this.logRecommendation(userId, 'character', recommendations.map((r: any) => r.id), config.algorithm)
 
       const confidence = this.calculateConfidence(recommendations, userBehavior.length)
       const duration = performance.now() - startTime

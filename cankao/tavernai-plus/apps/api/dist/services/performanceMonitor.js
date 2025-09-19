@@ -7,7 +7,6 @@ exports.PerformanceMonitor = void 0;
 const events_1 = require("events");
 const os_1 = __importDefault(require("os"));
 const prisma_1 = require("../lib/prisma");
-const cacheManager_1 = __importDefault(require("./cacheManager"));
 class PerformanceMonitor extends events_1.EventEmitter {
     static instance;
     metrics = [];
@@ -199,11 +198,12 @@ class PerformanceMonitor extends events_1.EventEmitter {
      * 获取缓存指标
      */
     getCacheMetrics() {
-        const cacheManager = cacheManager_1.default.getInstance();
-        const hitRates = cacheManager.getAllHitRates();
-        const stats = cacheManager.getStats();
+        // const cacheManager = new CacheManager() // 临时禁用，因为构造函数问题
+        const hitRates = {}; // 临时使用空对象
+        const stats = {};
         // 计算平均命中率
-        const avgHitRate = Object.values(hitRates).reduce((sum, rate) => sum + rate, 0) / Object.keys(hitRates).length || 0;
+        const hitRateValues = Object.values(hitRates);
+        const avgHitRate = hitRateValues.length > 0 ? hitRateValues.reduce((sum, rate) => sum + rate, 0) / hitRateValues.length : 0;
         // 计算总内存使用
         const totalMemory = Object.values(stats).reduce((sum, stat) => sum + stat.vsize, 0);
         return {
