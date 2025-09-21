@@ -223,7 +223,7 @@ import { useUserStore } from '@/stores/user'
 import { useCommunityStore } from '@/stores/community'
 import CreatePostDialog from '@/components/community/CreatePostDialog.vue'
 import {
-  Home,
+  House,
   Avatar,
   Compass,
   ChatDotRound,
@@ -268,7 +268,7 @@ const showSearch = computed(() => {
 
 // 导航菜单配置
 const navigationItems = computed(() => [
-  { path: '/', label: '首页', icon: Home },
+  { path: '/', label: '首页', icon: House },
   { path: '/characters', label: '角色', icon: Avatar },
   { path: '/marketplace', label: '市场', icon: Compass },
   { path: '/community', label: '社区', icon: ChatDotRound, badge: unreadCount.value > 0 ? unreadCount.value : undefined },

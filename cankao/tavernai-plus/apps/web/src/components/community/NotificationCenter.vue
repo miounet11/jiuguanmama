@@ -90,10 +90,10 @@ import { Notification } from '@/types/community'
 import NotificationItem from './NotificationItem.vue'
 import {
   Bell,
-  Heart,
+  Star,
   ChatLineRound,
   User,
-  At,
+  Message,
   Setting,
   Refresh,
   Loading
@@ -130,10 +130,10 @@ const observer = ref<IntersectionObserver>()
 // 筛选选项
 const filterOptions = computed(() => [
   { value: 'all', label: '全部', icon: Bell, count: stats.all },
-  { value: 'like', label: '点赞', icon: Heart, count: stats.like },
+  { value: 'like', label: '点赞', icon: Star, count: stats.like },
   { value: 'comment', label: '评论', icon: ChatLineRound, count: stats.comment },
   { value: 'follow', label: '关注', icon: User, count: stats.follow },
-  { value: 'mention', label: '提及', icon: At, count: stats.mention },
+  { value: 'mention', label: '提及', icon: Message, count: stats.mention },
   { value: 'system', label: '系统', icon: Setting, count: stats.system }
 ])
 

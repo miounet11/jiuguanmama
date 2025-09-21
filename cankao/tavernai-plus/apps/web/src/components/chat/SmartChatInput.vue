@@ -169,7 +169,7 @@ import { ref, computed, watch } from 'vue'
 import {
   PictureRounded,
   Microphone,
-  User as Robot  // 使用 User 图标替代不存在的 Robot
+  User
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 

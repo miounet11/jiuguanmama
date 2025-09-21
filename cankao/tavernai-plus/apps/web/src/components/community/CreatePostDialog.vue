@@ -147,7 +147,7 @@
         <el-radio-group v-model="form.visibility">
           <el-radio value="public" class="mb-2">
             <div class="flex items-center space-x-2">
-              <el-icon><Globe /></el-icon>
+              <el-icon><Position /></el-icon>
               <div>
                 <div class="font-medium">公开</div>
                 <div class="text-xs text-gray-500">所有人都可以看到</div>
@@ -231,7 +231,7 @@ import {
   Picture,
   Avatar,
   Plus,
-  Globe,
+  Position,
   User,
   Lock,
   View,

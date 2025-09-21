@@ -173,7 +173,7 @@
             </div>
 
             <div v-else-if="posts.length === 0" class="text-center py-12">
-              <el-icon class="text-6xl text-gray-500 mb-4"><DocumentEmpty /></el-icon>
+              <el-icon class="text-6xl text-gray-500 mb-4"><Document /></el-icon>
               <p class="text-gray-400 text-lg">{{ isOwnProfile ? '你还没有发布任何动态' : '该用户还没有发布任何动态' }}</p>
               <p class="text-gray-500 text-sm mt-2">{{ isOwnProfile ? '发布你的第一条动态吧！' : '关注该用户获取最新动态' }}</p>
             </div>
@@ -298,9 +298,9 @@ import {
   Document,
   Avatar,
   Clock,
-  DocumentEmpty,
+  Document,
   ChatLineRound,
-  Heart
+  Star
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { formatDistanceToNow } from 'date-fns'

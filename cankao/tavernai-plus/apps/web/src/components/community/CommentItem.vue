@@ -190,8 +190,8 @@ import { useCommunityStore } from '@/stores/community'
 import { Comment } from '@/types/community'
 import {
   CircleCheck,
-  Heart,
-  HeartFilled,
+  Star,
+  StarFilled,
   ChatLineRound,
   Flag,
   More,

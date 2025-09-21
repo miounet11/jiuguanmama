@@ -405,7 +405,7 @@ import {
 } from 'element-plus'
 import {
   Microphone, VideoPlay, Refresh, Delete, Star, DocumentCopy,
-  FolderAdd, ArrowUp, ArrowDown, PlayList, Coin, Loading
+  FolderAdd, ArrowUp, ArrowDown, List, Coin, Loading
 } from '@element-plus/icons-vue'
 import VoicePlayer from './VoicePlayer.vue'
 import { useVoice, type VoiceProfile, type TTSRequest, type AudioRecording, SUPPORTED_LANGUAGES } from '@/composables/useVoice'

@@ -5,7 +5,7 @@
       <!-- 音频信息显示 -->
       <div class="audio-info" v-if="audioData && !compact">
         <div class="audio-title">
-          <el-icon><Headphone /></el-icon>
+          <el-icon><Microphone /></el-icon>
           <span>{{ audioData.title || '语音消息' }}</span>
         </div>
         <div class="audio-meta" v-if="showMetadata">
@@ -191,8 +191,8 @@ import {
   ElDropdownItem, ElCollapse, ElCollapseItem
 } from 'element-plus'
 import {
-  VideoPlay, VideoPause, Close, Headphone, Download, ArrowDown,
-  VolumeDown, VolumeMute, VolumeUp, Loading
+  VideoPlay, VideoPause, Close, Microphone, Download, ArrowDown,
+  Mute, Mute, Microphone, Loading
 } from '@element-plus/icons-vue'
 import { useVoice, type AudioRecording } from '@/composables/useVoice'
 
@@ -285,11 +285,11 @@ const speedOptions = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4]
 // 计算属性
 const volumeIcon = computed(() => {
   if (isMuted.value || currentVolume.value === 0) {
-    return VolumeMute
+    return Mute
   } else if (currentVolume.value < 50) {
-    return VolumeDown
+    return Mute
   } else {
-    return VolumeUp
+    return Microphone
   }
 })
 

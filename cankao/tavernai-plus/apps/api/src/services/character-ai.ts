@@ -146,12 +146,16 @@ export class CharacterAIService {
       }
 
       return {
-        ...character,
+        id: character.id,
+        name: character.name,
         personality: character.personality || '',
-        systemPrompt: character.systemPrompt || undefined,
-        speakingStyle: character.speakingStyle || undefined,
-        backstory: character.backstory || undefined,
-        exampleDialogs
+        systemPrompt: character.systemPrompt || '',
+        speakingStyle: character.speakingStyle || '',
+        backstory: character.backstory || '',
+        exampleDialogs,
+        model: character.model || 'grok-3',
+        temperature: character.temperature || 0.8,
+        maxTokens: character.maxTokens || 1000
       }
     } catch (error) {
       logger.error('Failed to get character personality', { error, characterId })

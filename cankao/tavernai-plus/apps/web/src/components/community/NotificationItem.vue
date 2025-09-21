@@ -61,7 +61,7 @@
                         标记已读
                       </el-dropdown-item>
                       <el-dropdown-item v-else command="mark-unread">
-                        <el-icon><CircleDot /></el-icon>
+                        <el-icon><CircleCheck /></el-icon>
                         标记未读
                       </el-dropdown-item>
                       <el-dropdown-item command="delete" class="text-red-500" divided>
@@ -84,15 +84,15 @@
 import { computed } from 'vue'
 import { Notification } from '@/types/community'
 import {
-  Heart,
+  Star,
   ChatLineRound,
   User,
-  At,
+  Message,
   Bell,
   Setting,
   More,
   Check,
-  CircleDot,
+  CircleCheck,
   Delete
 } from '@element-plus/icons-vue'
 import { formatDistanceToNow } from 'date-fns'

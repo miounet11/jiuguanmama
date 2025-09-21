@@ -194,7 +194,7 @@
 
             <!-- 空状态 -->
             <div v-else-if="!loading && posts.length === 0" class="text-center py-12">
-              <el-icon class="text-6xl text-gray-500 mb-4"><DocumentEmpty /></el-icon>
+              <el-icon class="text-6xl text-gray-500 mb-4"><Document /></el-icon>
               <p class="text-gray-400 text-lg">暂无动态</p>
               <p class="text-gray-500 text-sm mt-2">成为第一个发布动态的人吧！</p>
             </div>
@@ -304,7 +304,7 @@ import {
   Picture,
   Refresh,
   Loading,
-  DocumentEmpty,
+  Document,
   EditPen,
   Avatar
 } from '@element-plus/icons-vue'

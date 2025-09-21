@@ -147,7 +147,7 @@
           <div class="flex items-center gap-3">
             <!-- 收藏数 -->
             <div class="flex items-center gap-1">
-              <el-icon><Heart /></el-icon>
+              <el-icon><Star /></el-icon>
               <span>{{ formatNumber(character.favorites) }}</span>
             </div>
 
@@ -260,7 +260,7 @@
             <!-- 统计信息 -->
             <div class="flex items-center gap-4 text-sm text-gray-400">
               <div class="flex items-center gap-1">
-                <el-icon><Heart /></el-icon>
+                <el-icon><Star /></el-icon>
                 <span>{{ formatNumber(character.favorites) }}</span>
               </div>
               <div class="flex items-center gap-1">
@@ -284,7 +284,6 @@ import { ElMessage } from 'element-plus'
 import {
   Star,
   StarFilled,
-  Heart,
   Download,
   View,
   ChatRound

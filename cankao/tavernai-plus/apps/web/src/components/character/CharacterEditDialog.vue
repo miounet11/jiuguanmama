@@ -207,7 +207,7 @@
         <!-- AI助手生成 -->
         <div class="ai-assistant-section">
           <el-divider>
-            <el-icon><Robot /></el-icon>
+            <el-icon><User /></el-icon>
             AI助手
           </el-divider>
 
@@ -260,7 +260,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, nextTick, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, MagicStick, Robot, View } from '@element-plus/icons-vue'
+import { Plus, MagicStick, User, View } from '@element-plus/icons-vue'
 import { api } from '@/services/api'
 import AICharacterGenerator from './AICharacterGenerator.vue'
 

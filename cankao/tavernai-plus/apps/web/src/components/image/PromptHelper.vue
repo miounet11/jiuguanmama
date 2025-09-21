@@ -442,7 +442,7 @@ import { ref, reactive, computed, watch, onMounted, defineEmits, defineProps } f
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   MagicStick, Refresh, Picture, Download, Delete, Collection, Share,
-  TrendCharts, Bulb, Star, Warning
+  TrendCharts, Star, Warning
 } from '@element-plus/icons-vue'
 import { http } from '@/utils/axios'
 

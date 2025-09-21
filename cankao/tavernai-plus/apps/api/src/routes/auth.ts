@@ -43,7 +43,7 @@ const generateTokens = (user: { id: string; email: string; username: string }) =
 }
 
 // 注册
-router.post('/register', validate(registerSchema), async (req, res, next) => {
+router.post('/register', validate(registerSchema), async (req, res, next): Promise<void> => {
   try {
     const { username, email, password } = req.body
 
@@ -58,12 +58,13 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
     })
 
     if (existingUser) {
-      return res.status(409).json({
+      res.status(409).json({
         success: false,
         message: existingUser.email === email
           ? 'Email already registered'
           : 'Username already taken'
       })
+      return
     }
 
     // 加密密码
@@ -115,7 +116,7 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
 })
 
 // 登录
-router.post('/login', validate(loginSchema), async (req, res, next) => {
+router.post('/login', validate(loginSchema), async (req, res, next): Promise<void> => {
   try {
     const { email, password } = req.body
 
@@ -138,27 +139,30 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
     })
 
     if (!user || !user.passwordHash) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'Invalid email or password'
       })
+      return
     }
 
     if (!user.isActive) {
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         message: 'Account has been deactivated'
       })
+      return
     }
 
     // 验证密码
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
 
     if (!isPasswordValid) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'Invalid email or password'
       })
+      return
     }
 
     // 更新最后登录时间
@@ -195,7 +199,7 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
 })
 
 // 刷新令牌
-router.post('/refresh', validate(refreshTokenSchema), async (req, res, next) => {
+router.post('/refresh', validate(refreshTokenSchema), async (req, res, next): Promise<void> => {
   try {
     const { refreshToken } = req.body
 
@@ -206,10 +210,11 @@ router.post('/refresh', validate(refreshTokenSchema), async (req, res, next) => 
     }
 
     if (decoded.type !== 'refresh') {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'Invalid refresh token'
       })
+      return
     }
 
     // 检查令牌是否存在于数据库
@@ -219,10 +224,11 @@ router.post('/refresh', validate(refreshTokenSchema), async (req, res, next) => 
     })
 
     if (!storedToken || storedToken.expiresAt < new Date()) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'Refresh token expired or invalid'
       })
+      return
     }
 
     // 删除旧的刷新令牌
@@ -253,10 +259,11 @@ router.post('/refresh', validate(refreshTokenSchema), async (req, res, next) => 
     })
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'Refresh token expired'
       })
+      return
     }
     next(error)
     return
@@ -264,11 +271,11 @@ router.post('/refresh', validate(refreshTokenSchema), async (req, res, next) => 
 })
 
 // 退出登录
-router.post('/logout', authenticate, async (req, res, next) => {
+router.post('/logout', authenticate, async (req: AuthRequest, res, next): Promise<void> => {
   try {
     // 删除用户的所有刷新令牌
     await prisma.refreshToken.deleteMany({
-      where: { userId: (req as AuthRequest).user!.id }
+      where: { userId: req.user!.id }
     })
 
     res.json({
@@ -282,10 +289,10 @@ router.post('/logout', authenticate, async (req, res, next) => {
 })
 
 // 获取当前用户信息
-router.get('/profile', authenticate, async (req, res, next) => {
+router.get('/profile', authenticate, async (req: AuthRequest, res, next): Promise<void> => {
   try {
     const user = await prisma.user.findUnique({
-      where: { id: (req as AuthRequest).user!.id },
+      where: { id: req.user!.id },
       select: {
         id: true,
         username: true,
@@ -301,10 +308,11 @@ router.get('/profile', authenticate, async (req, res, next) => {
     })
 
     if (!user) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         message: 'User not found'
       })
+      return
     }
 
     res.json({

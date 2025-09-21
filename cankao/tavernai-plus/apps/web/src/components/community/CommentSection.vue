@@ -35,11 +35,11 @@
             <div class="flex items-center justify-between mt-3">
               <div class="flex items-center space-x-3">
                 <el-button size="small" @click="showEmojiPicker = !showEmojiPicker">
-                  <el-icon><Smile /></el-icon>
+                  <el-icon><Star /></el-icon>
                   表情
                 </el-button>
                 <el-button size="small" @click="showMentionPanel = !showMentionPanel">
-                  <el-icon><At /></el-icon>
+                  <el-icon><Message /></el-icon>
                   提及
                 </el-button>
               </div>
@@ -119,7 +119,7 @@ import { Comment, CommentCreateData } from '@/types/community'
 import CommentItem from './CommentItem.vue'
 import EmojiPicker from '@/components/chat/EmojiPicker.vue'
 import MentionPanel from '@/components/chat/MentionPanel.vue'
-import { Smile, At, Loading, ChatDotRound } from '@element-plus/icons-vue'
+import { Star, Message, Loading, ChatDotRound } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
 interface Props {

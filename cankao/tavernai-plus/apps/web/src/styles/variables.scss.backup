@@ -120,20 +120,6 @@ $section-gap: $spacing-8;
 $page-padding: $spacing-6;
 $container-max-width: 1200px;
 
-
-// 向后兼容别名（用于旧代码中的 $space-* 变量）
-$space-0: $spacing-0;
-$space-1: $spacing-1;
-$space-2: $spacing-2;
-$space-3: $spacing-3;
-$space-4: $spacing-4;
-$space-5: $spacing-5;
-$space-6: $spacing-6;
-$space-8: $spacing-8;
-$space-10: $spacing-10;
-$space-12: $spacing-12;
-$space-16: $spacing-16;
-$space-20: $spacing-20;
 // 圆角系统
 $border-radius-sm: 0.25rem;
 $border-radius-base: 0.5rem;

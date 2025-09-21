@@ -43,7 +43,7 @@
 
         <!-- 空状态 -->
         <div v-else-if="characters.length === 0" class="text-center py-8">
-          <el-icon class="text-4xl text-gray-500 mb-2"><DocumentEmpty /></el-icon>
+          <el-icon class="text-4xl text-gray-500 mb-2"><Document /></el-icon>
           <p class="text-gray-400">没有找到角色</p>
         </div>
 
@@ -120,7 +120,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { Character } from '@/types/character'
 import { useCharacterStore } from '@/stores/character'
-import { Loading, DocumentEmpty } from '@element-plus/icons-vue'
+import { Loading, Document } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { debounce } from 'lodash-es'
 
