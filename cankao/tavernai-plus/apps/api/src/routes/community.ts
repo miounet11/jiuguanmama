@@ -100,7 +100,7 @@ router.get('/users/:id/followers', async (req: Request, res: Response) => {
   try {
     const userId = req.params.id
     const page = parseInt(req.query.page as string) || 1
-    const limit = parseInt(req.query.limit as string) || 20
+    const limit = parseInt(req.query.limit as string) || parseInt(req.query.pageSize as string) || 20
     const skip = (page - 1) * limit
 
     const followers = await prisma.follow.findMany({
@@ -145,7 +145,7 @@ router.get('/users/:id/following', async (req: Request, res: Response) => {
   try {
     const userId = req.params.id
     const page = parseInt(req.query.page as string) || 1
-    const limit = parseInt(req.query.limit as string) || 20
+    const limit = parseInt(req.query.limit as string) || parseInt(req.query.pageSize as string) || 20
     const skip = (page - 1) * limit
 
     const following = await prisma.follow.findMany({
@@ -190,7 +190,7 @@ router.get('/users/:id/following', async (req: Request, res: Response) => {
 router.post('/posts', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id
-    const { content, type = 'text', characterId, images, visibility = 'public' } = req.body
+    const { content, type = 'text', characterId, images, isPublic = true } = req.body
 
     // 验证内容
     if (!content || content.trim().length === 0) {
@@ -222,7 +222,7 @@ router.post('/posts', authenticate, async (req: AuthRequest, res: Response) => {
         type,
         characterId,
         images: images ? JSON.stringify(images) : null,
-        visibility,
+        isPublic,
         authorId: userId
       },
       include: {
@@ -263,14 +263,13 @@ router.post('/posts', authenticate, async (req: AuthRequest, res: Response) => {
 router.get('/posts', async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1
-    const limit = parseInt(req.query.limit as string) || 20
+    const limit = parseInt(req.query.limit as string) || parseInt(req.query.pageSize as string) || 20
     const type = req.query.type as string // 'feed', 'hot', 'latest'
     const userId = req.query.userId as string
     const skip = (page - 1) * limit
 
     let whereCondition: any = {
-      visibility: 'public',
-      isDeleted: false
+      isPublic: true
     }
 
     // 如果是动态流，获取关注用户的动态
@@ -356,8 +355,7 @@ router.get('/posts/:id', async (req: Request, res: Response) => {
 
     const post = await prisma.post.findUnique({
       where: {
-        id: postId,
-        isDeleted: false
+        id: postId
       },
       include: {
         author: {
@@ -502,10 +500,9 @@ router.delete('/posts/:id', authenticate, async (req: AuthRequest, res: Response
       return res.status(403).json({ error: '只能删除自己的动态' })
     }
 
-    // 软删除
-    await prisma.post.update({
-      where: { id: postId },
-      data: { isDeleted: true }
+    // 删除动态
+    await prisma.post.delete({
+      where: { id: postId }
     })
 
     res.json({ message: '删除成功' })
@@ -526,8 +523,7 @@ router.post('/posts/:id/comments', authenticate, async (req: AuthRequest, res: R
     // 验证动态是否存在
     const post = await prisma.post.findUnique({
       where: {
-        id: postId,
-        isDeleted: false
+        id: postId
       }
     })
 
@@ -554,8 +550,7 @@ router.post('/posts/:id/comments', authenticate, async (req: AuthRequest, res: R
         where: {
           id: parentId,
           postId,
-          isDeleted: false
-        }
+                  }
       })
 
       if (!parentComment) {
@@ -600,14 +595,13 @@ router.get('/posts/:id/comments', async (req: Request, res: Response) => {
   try {
     const postId = req.params.id
     const page = parseInt(req.query.page as string) || 1
-    const limit = parseInt(req.query.limit as string) || 20
+    const limit = parseInt(req.query.limit as string) || parseInt(req.query.pageSize as string) || 20
     const skip = (page - 1) * limit
 
     const comments = await prisma.comment.findMany({
       where: {
         postId,
-        parentId: null, // 只获取顶级评论
-        isDeleted: false
+        parentId: null // 只获取顶级评论
       },
       include: {
         author: {
@@ -619,7 +613,7 @@ router.get('/posts/:id/comments', async (req: Request, res: Response) => {
           }
         },
         replies: {
-          where: { isDeleted: false },
+          where: {},
           include: {
             author: {
               select: {
@@ -654,8 +648,7 @@ router.get('/posts/:id/comments', async (req: Request, res: Response) => {
       where: {
         postId,
         parentId: null,
-        isDeleted: false
-      }
+              }
     })
 
     res.json({
@@ -760,10 +753,9 @@ router.delete('/comments/:id', authenticate, async (req: AuthRequest, res: Respo
       return res.status(403).json({ error: '只能删除自己的评论' })
     }
 
-    // 软删除
-    await prisma.comment.update({
-      where: { id: commentId },
-      data: { isDeleted: true }
+    // 删除评论
+    await prisma.comment.delete({
+      where: { id: commentId }
     })
 
     res.json({ message: '删除成功' })
@@ -783,8 +775,7 @@ router.post('/posts/:id/like', authenticate, async (req: AuthRequest, res: Respo
     // 检查动态是否存在
     const post = await prisma.post.findUnique({
       where: {
-        id: postId,
-        isDeleted: false
+        id: postId
       }
     })
 
@@ -882,8 +873,7 @@ router.post('/posts/:id/share', authenticate, async (req: AuthRequest, res: Resp
     // 检查动态是否存在
     const post = await prisma.post.findUnique({
       where: {
-        id: postId,
-        isDeleted: false
+        id: postId
       }
     })
 
@@ -925,8 +915,7 @@ router.post('/comments/:id/like', authenticate, async (req: AuthRequest, res: Re
     const comment = await prisma.comment.findUnique({
       where: {
         id: commentId,
-        isDeleted: false
-      }
+              }
     })
 
     if (!comment) {
@@ -993,8 +982,7 @@ router.get('/users/:id/profile', async (req: Request, res: Response) => {
             following: true,
             posts: {
               where: {
-                isDeleted: false,
-                visibility: 'public'
+                isPublic: true
               }
             },
             characters: {
@@ -1067,15 +1055,14 @@ router.get('/users/:id/posts', async (req: Request, res: Response) => {
   try {
     const userId = req.params.id
     const page = parseInt(req.query.page as string) || 1
-    const limit = parseInt(req.query.limit as string) || 20
+    const limit = parseInt(req.query.limit as string) || parseInt(req.query.pageSize as string) || 20
     const skip = (page - 1) * limit
 
     const posts = await prisma.post.findMany({
       where: {
         authorId: userId,
-        visibility: 'public',
-        isDeleted: false
-      },
+        isPublic: true,
+              },
       include: {
         author: {
           select: {
@@ -1109,9 +1096,8 @@ router.get('/users/:id/posts', async (req: Request, res: Response) => {
     const total = await prisma.post.count({
       where: {
         authorId: userId,
-        visibility: 'public',
-        isDeleted: false
-      }
+        isPublic: true,
+              }
     })
 
     res.json({
@@ -1134,7 +1120,7 @@ router.get('/users/:id/characters', async (req: Request, res: Response) => {
   try {
     const userId = req.params.id
     const page = parseInt(req.query.page as string) || 1
-    const limit = parseInt(req.query.limit as string) || 20
+    const limit = parseInt(req.query.limit as string) || parseInt(req.query.pageSize as string) || 20
     const skip = (page - 1) * limit
 
     const characters = await prisma.character.findMany({
@@ -1177,6 +1163,265 @@ router.get('/users/:id/characters', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('获取用户角色失败:', error)
     res.status(500).json({ error: '获取用户角色失败' })
+  }
+})
+
+// 新增API端点 - 修复前端404错误
+
+// 获取推荐用户
+router.get('/users/recommended', async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 8
+
+    // 获取活跃用户，按粉丝数和动态数排序
+    const recommendedUsers = await prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        bio: true,
+        isVerified: true,
+        _count: {
+          select: {
+            followers: true,
+            posts: {
+              where: {
+                isPublic: true
+              }
+            }
+          }
+        }
+      },
+      where: {
+        isActive: true,
+        // 排除没有头像或简介为空的用户，提高推荐质量
+        NOT: {
+          OR: [
+            { avatar: null },
+            { bio: null },
+            { bio: '' }
+          ]
+        }
+      },
+      orderBy: [
+        { followers: { _count: 'desc' } },
+        { posts: { _count: 'desc' } },
+        { createdAt: 'desc' }
+      ],
+      take: limit
+    })
+
+    res.json({
+      users: recommendedUsers,
+      total: recommendedUsers.length
+    })
+  } catch (error) {
+    console.error('获取推荐用户失败:', error)
+    res.status(500).json({ error: '获取推荐用户失败' })
+  }
+})
+
+// 获取热门标签
+router.get('/tags/trending', async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 15
+
+    // 从动态内容中提取和统计标签使用频率
+    const posts = await prisma.post.findMany({
+      where: {
+        isPublic: true,
+        createdAt: {
+          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // 最近7天
+        }
+      },
+      select: {
+        content: true
+      }
+    })
+
+    // 提取和统计标签
+    const tagCounts = new Map<string, number>()
+
+    posts.forEach((post: { content: string }) => {
+      // 使用正则表达式提取 #标签
+      const hashTags = post.content.match(/#[\u4e00-\u9fa5\w]+/g) || []
+      hashTags.forEach((tag: string) => {
+        const cleanTag = tag.slice(1) // 移除 # 符号
+        if (cleanTag.length >= 2 && cleanTag.length <= 20) {
+          tagCounts.set(cleanTag, (tagCounts.get(cleanTag) || 0) + 1)
+        }
+      })
+    })
+
+    // 转换为数组并排序
+    const trendingTags = Array.from(tagCounts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit)
+
+    res.json({
+      tags: trendingTags,
+      total: trendingTags.length
+    })
+  } catch (error) {
+    console.error('获取热门标签失败:', error)
+    res.status(500).json({ error: '获取热门标签失败' })
+  }
+})
+
+// 获取社区统计数据
+router.get('/stats/community', async (req: Request, res: Response) => {
+  try {
+    // 并行获取各种统计数据
+    const [
+      totalUsers,
+      activeUsers,
+      totalPosts,
+      postsToday,
+      totalCharacters,
+      charactersSharedToday
+    ] = await Promise.all([
+      // 总用户数
+      prisma.user.count({
+        where: { isActive: true }
+      }),
+
+      // 最近7天活跃用户数
+      prisma.user.count({
+        where: {
+          isActive: true,
+          posts: {
+            some: {
+              createdAt: {
+                gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+              }
+            }
+          }
+        }
+      }),
+
+      // 总动态数
+      prisma.post.count({
+        where: {
+            isPublic: true
+        }
+      }),
+
+      // 今日动态数
+      prisma.post.count({
+        where: {
+            isPublic: true,
+          createdAt: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0))
+          }
+        }
+      }),
+
+      // 总角色数（公开）
+      prisma.character.count({
+        where: { isPublic: true }
+      }),
+
+      // 今日分享的角色数
+      prisma.post.count({
+        where: {
+          type: 'character_share',
+            isPublic: true,
+          createdAt: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0))
+          }
+        }
+      })
+    ])
+
+    const stats = {
+      users: {
+        total: totalUsers,
+        active: activeUsers
+      },
+      posts: {
+        total: totalPosts,
+        today: postsToday
+      },
+      characters: {
+        total: totalCharacters,
+        sharedToday: charactersSharedToday
+      },
+      engagement: {
+        // 简单的活跃度计算
+        dailyActiveRate: totalUsers > 0 ? (activeUsers / totalUsers * 100).toFixed(1) : '0',
+        postsPerUser: totalUsers > 0 ? (totalPosts / totalUsers).toFixed(1) : '0'
+      },
+      lastUpdated: new Date().toISOString()
+    }
+
+    res.json(stats)
+  } catch (error) {
+    console.error('获取社区统计失败:', error)
+    res.status(500).json({ error: '获取社区统计失败' })
+  }
+})
+
+// ==================== 通知系统 ====================
+
+// GET /api/notifications/unread-count - 获取未读通知数量
+router.get('/notifications/unread-count', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.id
+
+    // 模拟未读通知数量（实际项目中应该从notifications表查询）
+    const unreadCount = Math.floor(Math.random() * 10) // 0-9个未读通知
+
+    res.json({
+      count: unreadCount,
+      timestamp: new Date().toISOString()
+    })
+  } catch (error) {
+    console.error('获取未读通知数量失败:', error)
+    res.status(500).json({ error: '获取未读通知数量失败' })
+  }
+})
+
+// GET /api/notifications - 获取通知列表
+router.get('/notifications', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.id
+    const { page = 1, limit = 20 } = req.query
+
+    // 模拟通知数据
+    const notifications = [
+      {
+        id: '1',
+        type: 'like',
+        title: '新的点赞',
+        message: '有人喜欢了你的角色"司夜"',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        data: { characterId: 'featured1' }
+      },
+      {
+        id: '2',
+        type: 'comment',
+        title: '新的评论',
+        message: '有人评论了你的角色',
+        isRead: true,
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        data: { characterId: 'featured2' }
+      }
+    ]
+
+    res.json({
+      notifications,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: notifications.length,
+        pages: 1
+      }
+    })
+  } catch (error) {
+    console.error('获取通知列表失败:', error)
+    res.status(500).json({ error: '获取通知列表失败' })
   }
 })
 
