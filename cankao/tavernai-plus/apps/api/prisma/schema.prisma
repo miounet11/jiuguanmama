@@ -79,6 +79,12 @@ model User {
   // 系统管理
   usageLogs      UsageLog[]
   scheduledTasks ScheduledTask[]
+
+  // 渐进式功能披露
+  userMode          UserMode?
+  featureUsageLogs  FeatureUsageLog[]
+  featureUnlocks    FeatureUnlock[]
+  modeTransitions   ModeTransition[]
 }
 
 // 角色模型
@@ -953,4 +959,79 @@ model PostShare {
   @@unique([postId, userId])
   @@index([postId])
   @@index([userId])
+}
+
+// 渐进式功能披露系统
+
+// 用户模式表
+model UserMode {
+  id           String   @id @default(uuid())
+  userId       String   @unique @map("user_id")
+  currentMode  String   @default("simplified") @map("current_mode") // 'simplified' | 'expert'
+  totalSessions Int     @default(0) @map("total_sessions")
+  messagesCount Int     @default(0) @map("messages_count")
+  charactersUsed Int    @default(0) @map("characters_used")
+  skillLevel   String   @default("beginner") @map("skill_level") // 'beginner' | 'intermediate' | 'advanced' | 'expert'
+  preferences  String   @default("{}") // JSON字段存储用户偏好
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([currentMode])
+  @@index([skillLevel])
+}
+
+// 功能使用记录表
+model FeatureUsageLog {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  featureId      String   @map("feature_id")
+  isExpertFeature Boolean @default(false) @map("is_expert_feature")
+  usageCount     Int      @default(1) @map("usage_count")
+  firstUsedAt    DateTime @default(now()) @map("first_used_at")
+  lastUsedAt     DateTime @default(now()) @map("last_used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, featureId], name: "user_feature_unique")
+  @@index([userId])
+  @@index([featureId])
+  @@index([lastUsedAt])
+  @@index([isExpertFeature])
+}
+
+// 功能解锁记录表
+model FeatureUnlock {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  featureId      String   @map("feature_id")
+  unlockTrigger  String   @map("unlock_trigger") // 'usage' | 'time' | 'manual' | 'achievement'
+  unlockCondition String? @map("unlock_condition")
+  unlockedAt     DateTime @default(now()) @map("unlocked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([featureId])
+  @@index([unlockedAt])
+  @@index([unlockTrigger])
+}
+
+// 模式切换历史表
+model ModeTransition {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  fromMode      String   @map("from_mode") // 'simplified' | 'expert'
+  toMode        String   @map("to_mode") // 'simplified' | 'expert'
+  reason        String?  // 切换原因
+  userInitiated Boolean  @default(true) @map("user_initiated")
+  transitionedAt DateTime @default(now()) @map("transitioned_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([transitionedAt])
+  @@index([toMode])
 }
