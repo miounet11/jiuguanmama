@@ -1,0 +1,414 @@
+// =====================================
+// 渐进式披露样式使用示例
+// TavernAI Plus - Issue #16 Stream E
+// 提供组件集成的样式示例和最佳实践
+// =====================================
+
+// 导入基础样式
+@import 'progressive-disclosure';
+@import 'mode-transitions';
+
+// ==================== 组件使用示例 ====================
+
+// 示例1：角色发现页面的渐进式披露
+.character-discovery-progressive {
+  // 使用渐进式披露包装器
+  @extend .progressive-disclosure-wrapper;
+
+  // 特定作用域样式
+  &.scope-character-discovery {
+    .feature-container {
+      // 角色浏览网格
+      .character-grid {
+        display: grid;
+        gap: var(--disclosure-gap);
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+
+        // 简洁模式：单列布局
+        .simplified-mode & {
+          grid-template-columns: 1fr;
+          gap: var(--feature-item-gap);
+        }
+
+        // 专家模式：多列布局
+        .expert-mode & {
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        }
+      }
+
+      // 高级搜索面板
+      .advanced-search-panel {
+        // 在简洁模式下隐藏
+        .simplified-mode & {
+          @extend .expert-only;
+        }
+
+        // 专家模式下的高级搜索样式
+        .expert-mode & {
+          @extend .expert-feature;
+          border-radius: $border-radius-lg;
+          padding: $spacing-4;
+          margin-bottom: $spacing-4;
+        }
+      }
+    }
+  }
+}
+
+// 示例2：聊天页面的渐进式披露
+.chat-progressive {
+  @extend .progressive-disclosure-wrapper;
+
+  &.scope-chat {
+    // AI模型选择器
+    .ai-model-selector {
+      .simplified-mode & {
+        // 简洁模式：隐藏高级选项
+        .advanced-options {
+          display: none;
+        }
+
+        // 只显示基础模型选择
+        .basic-model-select {
+          width: 100%;
+        }
+      }
+
+      .expert-mode & {
+        @extend .expert-feature;
+
+        // 专家模式：显示完整配置
+        .advanced-options {
+          @extend .progressive-show;
+          margin-top: $spacing-3;
+        }
+
+        .temperature-slider,
+        .max-tokens-input,
+        .system-prompt-textarea {
+          margin-bottom: $spacing-2;
+        }
+      }
+    }
+
+    // 消息编辑功能
+    .message-editing {
+      .simplified-mode & {
+        @extend .expert-only;
+      }
+
+      .expert-mode & {
+        @extend .expert-feature;
+
+        .edit-buttons {
+          opacity: 0;
+          transition: opacity var(--disclosure-transition-fast);
+        }
+
+        &:hover .edit-buttons {
+          opacity: 1;
+        }
+      }
+    }
+
+    // 对话导出功能
+    .chat-export {
+      .simplified-mode & {
+        @extend .expert-only;
+      }
+
+      .expert-mode & {
+        @extend .expert-feature;
+
+        &.newly-unlocked {
+          @extend .newly-unlocked;
+        }
+      }
+    }
+  }
+}
+
+// 示例3：角色创建页面的渐进式披露
+.character-creation-progressive {
+  @extend .progressive-disclosure-wrapper;
+
+  &.scope-character-creation {
+    // 基础创建表单
+    .basic-creation-form {
+      // 在所有模式下都显示
+      .feature-container & {
+        display: block;
+      }
+
+      .form-fields {
+        display: grid;
+        gap: $spacing-3;
+
+        .simplified-mode & {
+          grid-template-columns: 1fr;
+        }
+
+        .expert-mode & {
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+      }
+    }
+
+    // AI生成功能
+    .ai-generation-panel {
+      .simplified-mode & {
+        // 简化版：只显示一键生成按钮
+        .advanced-generation-options {
+          display: none;
+        }
+      }
+
+      .expert-mode & {
+        @extend .expert-feature;
+
+        // 专家版：显示详细生成选项
+        .advanced-generation-options {
+          @extend .progressive-show;
+
+          .generation-templates,
+          .style-options,
+          .personality-sliders {
+            margin-bottom: $spacing-3;
+          }
+        }
+      }
+    }
+
+    // 高级设定
+    .advanced-character-settings {
+      .simplified-mode & {
+        @extend .expert-only;
+      }
+
+      .expert-mode & {
+        @extend .expert-feature;
+
+        .settings-tabs {
+          .el-tabs__item {
+            font-size: $font-size-sm;
+          }
+        }
+
+        .setting-group {
+          margin-bottom: $spacing-4;
+          padding: $spacing-3;
+          border: 1px solid var(--disclosure-border);
+          border-radius: $border-radius-base;
+        }
+      }
+    }
+  }
+}
+
+// ==================== 动画集成示例 ====================
+
+// 示例：Vue组件中的动画使用
+.vue-transition-examples {
+  // 功能解锁通知
+  .feature-unlock-notification-container {
+    .feature-unlock-enter-active,
+    .feature-unlock-leave-active {
+      @extend .feature-unlock-enter-active;
+    }
+
+    .feature-unlock-enter-from {
+      @extend .feature-unlock-enter-from;
+    }
+
+    .feature-unlock-leave-to {
+      @extend .feature-unlock-leave-to;
+    }
+  }
+
+  // 模式切换容器
+  .mode-switch-container {
+    .mode-switch-enter-active {
+      @extend .mode-switch-enter-active;
+    }
+
+    .mode-switch-leave-active {
+      @extend .mode-switch-leave-active;
+    }
+
+    .mode-switch-enter-from,
+    .mode-switch-leave-to {
+      @extend .mode-switch-enter-from;
+    }
+  }
+}
+
+// ==================== 最佳实践示例 ====================
+
+// 正确的功能项结构
+.feature-item-best-practice {
+  // 基础功能项
+  &.core-feature {
+    @extend .feature-item;
+
+    // 添加核心功能标识
+    &::before {
+      content: "⭐";
+      position: absolute;
+      top: $spacing-1;
+      left: $spacing-1;
+      font-size: $font-size-xs;
+      opacity: 0.7;
+    }
+  }
+
+  // 专家功能项
+  &.expert-feature {
+    @extend .feature-item;
+    @extend .expert-feature;
+  }
+
+  // 新解锁功能项
+  &.newly-unlocked-feature {
+    @extend .feature-item;
+    @extend .newly-unlocked;
+  }
+
+  // 禁用功能项
+  &.disabled-feature {
+    @extend .feature-item;
+    @extend .feature-disabled;
+  }
+}
+
+// 正确的模式切换器集成
+.mode-switcher-integration {
+  @extend .mode-switcher;
+
+  // Element Plus Switch定制
+  :deep(.el-switch) {
+    // 使用设计系统的颜色
+    --el-switch-on-color: var(--progressive-primary);
+    --el-switch-off-color: var(--mode-simplified);
+
+    // 自定义尺寸
+    --el-switch-font-size: #{$font-size-sm};
+
+    // 动画增强
+    .el-switch__core {
+      transition: all var(--mode-transition-duration) var(--mode-ease-enter);
+    }
+  }
+
+  // 响应式调整
+  @include mobile-only {
+    padding: $spacing-2;
+
+    :deep(.el-switch) {
+      --el-switch-font-size: #{$font-size-xs};
+    }
+  }
+}
+
+// 升级建议组件集成
+.upgrade-suggestion-integration {
+  @extend .upgrade-suggestion;
+
+  // 自定义内容布局
+  .suggestion-header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+    margin-bottom: $spacing-3;
+
+    .suggestion-icon {
+      font-size: $font-size-xl;
+      color: var(--progressive-primary);
+    }
+
+    .suggestion-title {
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+    }
+  }
+
+  .suggestion-body {
+    margin-bottom: $spacing-3;
+    line-height: $line-height-relaxed;
+    color: $text-secondary;
+  }
+
+  .suggestion-actions {
+    @extend .suggestion-actions;
+
+    // 按钮样式定制
+    .primary-action {
+      @include button-variant($primary-color);
+    }
+
+    .secondary-action {
+      @include button-variant(transparent, $text-secondary);
+      border: 1px solid var(--disclosure-border);
+
+      &:hover {
+        background: var(--disclosure-bg);
+      }
+    }
+  }
+}
+
+// ==================== 调试和开发辅助 ====================
+
+// 开发模式：显示调试信息
+.development-mode {
+  .progressive-disclosure-wrapper {
+    // 在左上角显示当前模式
+    &::before {
+      content: attr(data-mode);
+      position: absolute;
+      top: -$spacing-2;
+      left: 0;
+      font-size: $font-size-xs;
+      color: var(--progressive-primary);
+      background: var(--disclosure-bg);
+      padding: 2px $spacing-1;
+      border-radius: $border-radius-sm;
+      border: 1px solid var(--disclosure-border);
+      z-index: 1000;
+    }
+  }
+
+  .feature-item {
+    // 显示功能状态
+    &::after {
+      content: attr(data-feature-state);
+      position: absolute;
+      top: $spacing-1;
+      right: $spacing-1;
+      font-size: $font-size-xs;
+      color: $text-muted;
+      background: rgba($bg-card, 0.9);
+      padding: 1px $spacing-1;
+      border-radius: $border-radius-sm;
+      border: 1px solid var(--disclosure-border);
+    }
+  }
+}
+
+// 性能监控：显示动画性能
+.performance-monitor {
+  .progressive-disclosure-wrapper {
+    // 标记动画性能关键元素
+    &.mode-switching {
+      outline: 2px dashed orange;
+      outline-offset: 2px;
+    }
+  }
+
+  .feature-item {
+    // 标记将发生动画的元素
+    &.will-animate {
+      outline: 1px dashed green;
+      outline-offset: 1px;
+    }
+  }
+}
