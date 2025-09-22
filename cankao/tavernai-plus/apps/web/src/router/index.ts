@@ -50,9 +50,18 @@ const routes: RouteRecordRaw[] = [
     path: '/characters/:id',
     name: 'CharacterDetail',
     component: () => import(/* webpackChunkName: "characters" */ '@/views/characters/CharacterDetail.vue'),
-    meta: { 
+    meta: {
       requiresAuth: false,
       title: '角色详情 - TavernAI Plus'
+    }
+  },
+  {
+    path: '/characters-progressive',
+    name: 'CharactersProgressive',
+    component: () => import(/* webpackChunkName: "characters" */ '@/views/characters/CharacterListWithProgressive.vue'),
+    meta: {
+      requiresAuth: false,
+      title: '探索角色 (渐进式) - TavernAI Plus'
     }
   },
 
@@ -72,7 +81,7 @@ const routes: RouteRecordRaw[] = [
     path: '/chat',
     name: 'Chat',
     component: () => import(/* webpackChunkName: "chat-core" */ '@/views/chat/ChatPage.vue'),
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: '对话中心 - TavernAI Plus'
     }
@@ -81,9 +90,30 @@ const routes: RouteRecordRaw[] = [
     path: '/chat/:characterId',
     name: 'ChatSession',
     component: () => import(/* webpackChunkName: "chat-core" */ '@/views/chat/ChatSession.vue'),
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: '角色对话 - TavernAI Plus'
+    }
+  },
+
+  // 快速对话相关页面 - 一键开始对话流程
+  {
+    path: '/quick-chat',
+    name: 'QuickChat',
+    component: () => import(/* webpackChunkName: "quick-chat" */ '@/views/chat/QuickChatPage.vue'),
+    meta: {
+      requiresAuth: false, // 可以让未登录用户体验，但创建会话时需要登录
+      title: '快速开始对话 - TavernAI Plus',
+      preload: true
+    }
+  },
+  {
+    path: '/quick-chat/:characterId',
+    name: 'QuickChatWithCharacter',
+    component: () => import(/* webpackChunkName: "quick-chat" */ '@/views/chat/QuickChatPage.vue'),
+    meta: {
+      requiresAuth: false,
+      title: '快速开始对话 - TavernAI Plus'
     }
   },
 
@@ -217,13 +247,32 @@ const routes: RouteRecordRaw[] = [
     }
   },
 
+  // 测试页面 (仅开发环境)
+  ...(import.meta.env.DEV ? [{
+    path: '/test/quick-chat',
+    name: 'QuickChatTest',
+    component: () => import(/* webpackChunkName: "test" */ '@/views/test/QuickChatTestPage.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Quick Chat 功能测试 - TavernAI Plus'
+    }
+  }, {
+    path: '/test/progressive-disclosure',
+    name: 'ProgressiveDisclosureTest',
+    component: () => import(/* webpackChunkName: "test" */ '@/views/test/ProgressiveDisclosureTestPage.vue'),
+    meta: {
+      requiresAuth: false,
+      title: '渐进式披露系统测试 - TavernAI Plus'
+    }
+  }] : []),
+
   // 错误页面
   {
     path: '/404',
     name: 'NotFound',
     component: () => import(/* webpackChunkName: "error" */ '@/views/NotFound.vue'),
-    meta: { 
-      requiresAuth: false, 
+    meta: {
+      requiresAuth: false,
       hideLayout: true,
       title: '页面未找到 - TavernAI Plus'
     }
