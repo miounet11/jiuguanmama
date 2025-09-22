@@ -3,6 +3,13 @@
 @import './mixins.scss';
 @import './utilities.scss';
 
+// 导入设计token系统
+@import './design-tokens.scss';
+
+// 导入渐进式披露样式系统 (Issue #16)
+@import './progressive-disclosure.scss';
+@import './mode-transitions.scss';
+
 // Element Plus 主题覆盖
 :root {
   --el-color-primary: #{$primary-color};

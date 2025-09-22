@@ -1,0 +1,623 @@
+// =====================================
+// 渐进式功能披露样式系统
+// TavernAI Plus - Issue #16 Stream E
+// =====================================
+
+// 导入基础设计系统
+@import 'variables';
+@import 'mixins';
+
+// ==================== 渐进式披露专用变量 ====================
+
+:root {
+  // 渐进式披露主题色彩
+  --progressive-primary: #{$primary-500};
+  --progressive-primary-light: #{$primary-300};
+  --progressive-primary-dark: #{$primary-700};
+  --progressive-secondary: #{$secondary-500};
+  --progressive-accent: #{$info-color};
+
+  // 功能状态色彩
+  --feature-locked: #{$gray-400};
+  --feature-unlocked: #{$success-color};
+  --feature-expert: #{$primary-600};
+  --feature-highlight: #{$warning-color};
+
+  // 模式切换色彩
+  --mode-simplified: #{$gray-600};
+  --mode-expert: #{$primary-500};
+  --mode-transition: #{$secondary-500};
+
+  // 披露容器样式
+  --disclosure-bg: #{$dark-bg-card};
+  --disclosure-border: #{$dark-bg-tertiary};
+  --disclosure-shadow: #{$shadow-lg};
+
+  // 间距系统（渐进式披露专用）
+  --disclosure-padding: #{$spacing-4};
+  --disclosure-gap: #{$spacing-3};
+  --feature-item-gap: #{$spacing-2};
+  --mode-switcher-padding: #{$spacing-3};
+
+  // 动画时长
+  --disclosure-transition-fast: 200ms;
+  --disclosure-transition-normal: 300ms;
+  --disclosure-transition-slow: 500ms;
+
+  // 高度值（用于动画）
+  --feature-item-height: 48px;
+  --notification-height: 120px;
+  --mode-switcher-height: 56px;
+}
+
+// 暗色主题调整
+[data-theme="dark"] {
+  --disclosure-bg: #{$dark-bg-card};
+  --disclosure-border: #{$dark-bg-tertiary};
+  --feature-locked: #{$gray-500};
+}
+
+// ==================== 渐进式披露容器 ====================
+
+.progressive-disclosure-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: var(--disclosure-gap);
+
+  // 基础布局
+  display: flex;
+  flex-direction: column;
+  gap: var(--disclosure-gap);
+}
+
+// ==================== 模式切换器 ====================
+
+.mode-switcher {
+  @include flex-between;
+  gap: $spacing-2;
+  padding: var(--mode-switcher-padding);
+  background: var(--disclosure-bg);
+  border: 1px solid var(--disclosure-border);
+  border-radius: $border-radius-lg;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  transition: all var(--disclosure-transition-normal) ease-out;
+
+  // 响应式调整
+  @include mobile-only {
+    padding: $spacing-2;
+    font-size: $font-size-xs;
+  }
+
+  // 悬停效果
+  &:hover {
+    background: rgba($primary-color, 0.05);
+    border-color: rgba($primary-color, 0.2);
+    transform: translateY(-1px);
+    box-shadow: var(--disclosure-shadow);
+  }
+
+  // 模式指示器
+  &.simplified-mode {
+    border-left: 3px solid var(--mode-simplified);
+  }
+
+  &.expert-mode {
+    border-left: 3px solid var(--mode-expert);
+  }
+
+  // 模式信息图标
+  .mode-info {
+    color: $text-muted;
+    cursor: help;
+    transition: color var(--disclosure-transition-fast) ease-out;
+
+    &:hover {
+      color: var(--progressive-primary);
+    }
+  }
+
+  // Element Plus Switch 样式调整
+  :deep(.el-switch) {
+    --el-switch-on-color: var(--progressive-primary);
+    --el-switch-off-color: var(--mode-simplified);
+
+    .el-switch__label {
+      font-size: $font-size-xs;
+      font-weight: $font-weight-medium;
+    }
+  }
+}
+
+// ==================== 功能容器 ====================
+
+.feature-container {
+  position: relative;
+  width: 100%;
+  transition: all var(--disclosure-transition-normal) cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  // 简洁模式样式
+  &.simplified-mode {
+    .expert-only {
+      // 专家功能在简洁模式下完全隐藏
+      display: none !important;
+      opacity: 0;
+      height: 0;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .feature-item {
+      margin-bottom: var(--feature-item-gap);
+
+      // 简化功能项样式
+      &.core-feature {
+        border-left: 2px solid var(--feature-unlocked);
+        background: rgba($success-color, 0.05);
+      }
+    }
+
+    // 简化模式下的布局紧凑化
+    .feature-grid {
+      grid-template-columns: 1fr;
+      gap: var(--feature-item-gap);
+    }
+  }
+
+  // 专家模式样式
+  &.expert-mode {
+    .feature-item {
+      margin-bottom: $spacing-3;
+
+      // 专家功能高亮
+      &.expert-feature {
+        border-left: 3px solid var(--feature-expert);
+        padding-left: $spacing-3;
+        background: rgba($primary-color, 0.08);
+        border-radius: $border-radius-base;
+
+        // 专家功能标识
+        &::before {
+          content: "👑";
+          position: absolute;
+          top: $spacing-1;
+          right: $spacing-2;
+          font-size: $font-size-xs;
+          opacity: 0.8;
+        }
+      }
+
+      // 新解锁功能高亮
+      &.newly-unlocked {
+        border-left-color: var(--feature-highlight);
+        background: rgba($warning-color, 0.1);
+        position: relative;
+        animation: newFeatureGlow 2s ease-out;
+
+        &::after {
+          content: "✨ 新功能";
+          position: absolute;
+          top: -$spacing-1;
+          right: $spacing-2;
+          background: var(--feature-highlight);
+          color: white;
+          font-size: $font-size-xs;
+          padding: 2px $spacing-1;
+          border-radius: $border-radius-sm;
+          font-weight: $font-weight-semibold;
+        }
+      }
+    }
+
+    // 专家模式下的网格布局
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: $spacing-4;
+
+      @include mobile-only {
+        grid-template-columns: 1fr;
+        gap: var(--feature-item-gap);
+      }
+    }
+  }
+
+  // 作用域特定样式
+  &.scope-character-discovery {
+    .feature-item {
+      &.character-search {
+        background: rgba($info-color, 0.05);
+        border-left-color: $info-color;
+      }
+    }
+  }
+
+  &.scope-chat {
+    .feature-item {
+      &.ai-model-selection {
+        background: rgba($primary-color, 0.08);
+        border-left-color: var(--progressive-primary);
+      }
+    }
+  }
+
+  &.scope-character-creation {
+    .feature-item {
+      &.ai-generation {
+        background: rgba($secondary-color, 0.05);
+        border-left-color: var(--progressive-secondary);
+      }
+    }
+  }
+}
+
+// ==================== 功能项基础样式 ====================
+
+.feature-item {
+  position: relative;
+  padding: $spacing-3;
+  border-radius: $border-radius-base;
+  transition: all var(--disclosure-transition-normal) ease-out;
+  border-left: 2px solid transparent;
+
+  // 响应式调整
+  @include mobile-only {
+    padding: var(--feature-item-gap);
+  }
+
+  // 悬停效果
+  &:hover {
+    transform: translateX(4px);
+    box-shadow: $shadow-base;
+  }
+
+  // 禁用状态
+  &.feature-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+    filter: grayscale(30%);
+  }
+
+  // 加载状态
+  &.feature-loading {
+    position: relative;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba($primary-color, 0.1), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+  }
+}
+
+// ==================== 升级建议组件 ====================
+
+.upgrade-suggestion {
+  background: linear-gradient(135deg, rgba($primary-color, 0.1), rgba($secondary-color, 0.1));
+  border: 1px solid rgba($primary-color, 0.2);
+  border-radius: $border-radius-lg;
+  padding: $spacing-4;
+  margin: $spacing-4 0;
+  position: relative;
+  overflow: hidden;
+
+  // 背景装饰
+  &::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba($primary-color, 0.1) 0%, transparent 70%);
+    animation: suggestionPulse 3s ease-in-out infinite;
+    z-index: 0;
+  }
+
+  // 内容区域
+  .suggestion-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .suggestion-actions {
+    margin-top: $spacing-3;
+    display: flex;
+    gap: $spacing-2;
+
+    @include mobile-only {
+      flex-direction: column;
+    }
+
+    .el-button {
+      flex: 1;
+
+      @include mobile-only {
+        width: 100%;
+      }
+    }
+  }
+
+  // 响应式调整
+  @include mobile-only {
+    margin: var(--feature-item-gap) 0;
+    padding: $spacing-3;
+  }
+}
+
+// ==================== 功能解锁通知 ====================
+
+.feature-unlock-notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: var(--disclosure-bg);
+  border: 2px solid var(--feature-highlight);
+  border-radius: $border-radius-xl;
+  padding: $spacing-4;
+  box-shadow: var(--disclosure-shadow), 0 0 20px rgba($warning-color, 0.3);
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  max-width: 360px;
+  min-width: 320px;
+  z-index: var(--z-toast);
+  backdrop-filter: blur(10px);
+
+  // 响应式调整
+  @include mobile-only {
+    top: 60px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+    min-width: auto;
+    padding: $spacing-3;
+  }
+
+  // 解锁图标
+  .unlock-icon {
+    color: var(--feature-highlight);
+    font-size: 28px;
+    animation: unlockIconSpin 0.6s ease-out;
+
+    @include mobile-only {
+      font-size: 24px;
+    }
+  }
+
+  // 内容区域
+  .unlock-content {
+    flex: 1;
+    min-width: 0;
+
+    h4 {
+      margin: 0 0 $spacing-1 0;
+      color: $text-primary;
+      font-size: $font-size-base;
+      font-weight: $font-weight-semibold;
+
+      @include mobile-only {
+        font-size: $font-size-sm;
+      }
+    }
+
+    p {
+      margin: 0 0 $spacing-1 0;
+      font-weight: $font-weight-semibold;
+      color: var(--feature-highlight);
+      @include text-truncate;
+    }
+
+    small {
+      color: $text-secondary;
+      line-height: $line-height-tight;
+      font-size: $font-size-xs;
+      @include text-line-clamp(2);
+    }
+  }
+
+  // 关闭按钮
+  .el-button {
+    flex-shrink: 0;
+  }
+
+  // 装饰性动画背景
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent, rgba($warning-color, 0.1), transparent);
+    border-radius: inherit;
+    animation: notificationShimmer 2s ease-in-out infinite;
+    z-index: -1;
+  }
+}
+
+// ==================== 工具类 ====================
+
+// 渐进式显示
+.progressive-show {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all var(--disclosure-transition-normal) ease-out;
+}
+
+.progressive-hide {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all var(--disclosure-transition-normal) ease-out;
+}
+
+// 特征状态指示
+.feature-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-1;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  padding: 2px $spacing-1;
+  border-radius: $border-radius-sm;
+
+  &.locked {
+    background: rgba($gray-400, 0.2);
+    color: var(--feature-locked);
+  }
+
+  &.unlocked {
+    background: rgba($success-color, 0.2);
+    color: var(--feature-unlocked);
+  }
+
+  &.expert {
+    background: rgba($primary-color, 0.2);
+    color: var(--feature-expert);
+  }
+
+  &.highlighted {
+    background: rgba($warning-color, 0.2);
+    color: var(--feature-highlight);
+    animation: indicatorPulse 1.5s ease-in-out infinite;
+  }
+}
+
+// 模式标识
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  padding: 2px $spacing-2;
+  border-radius: $border-radius-full;
+
+  &.simplified {
+    background: rgba($gray-600, 0.1);
+    color: var(--mode-simplified);
+    border: 1px solid rgba($gray-600, 0.2);
+  }
+
+  &.expert {
+    background: rgba($primary-color, 0.1);
+    color: var(--mode-expert);
+    border: 1px solid rgba($primary-color, 0.2);
+  }
+}
+
+// ==================== 动画定义 ====================
+
+// 新功能发光效果
+@keyframes newFeatureGlow {
+  0% {
+    box-shadow: 0 0 0 rgba($warning-color, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba($warning-color, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba($warning-color, 0.4);
+  }
+}
+
+// 建议脉冲动画
+@keyframes suggestionPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+// 解锁图标旋转
+@keyframes unlockIconSpin {
+  0% {
+    transform: rotate(-10deg) scale(0.8);
+  }
+  50% {
+    transform: rotate(5deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+// 通知背景闪烁
+@keyframes notificationShimmer {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+// 指示器脉冲
+@keyframes indicatorPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+// 加载动画
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+// ==================== 可访问性和动效偏好 ====================
+
+// 减少动效设置
+@include prefers-reduced-motion {
+  .progressive-disclosure-wrapper,
+  .feature-container,
+  .feature-item,
+  .mode-switcher,
+  .upgrade-suggestion,
+  .feature-unlock-notification {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .feature-item:hover {
+    transform: none !important;
+  }
+
+  .mode-switcher:hover {
+    transform: none !important;
+  }
+}
+
+// 高对比度模式支持
+@media (prefers-contrast: high) {
+  .feature-item {
+    border-width: 2px;
+  }
+
+  .mode-switcher {
+    border-width: 2px;
+  }
+
+  .feature-unlock-notification {
+    border-width: 3px;
+  }
+}
