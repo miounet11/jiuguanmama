@@ -511,6 +511,66 @@ router.post('/characters/:id/rate', authenticate, async (req: AuthRequest, res: 
   }
 })
 
+// 获取角色评价
+router.get('/characters/:id/ratings', async (req: Request, res: Response) => {
+  try {
+    const { page = 1, limit = 10 } = req.query
+    const characterId = req.params.id
+
+    const skip = (Number(page) - 1) * Number(limit)
+
+    const [ratings, total] = await Promise.all([
+      prisma.characterRating.findMany({
+        where: {
+          characterId,
+          comment: { not: null } // 只显示有评论的评价
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              avatar: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: Number(limit)
+      }),
+      prisma.characterRating.count({
+        where: {
+          characterId,
+          comment: { not: null }
+        }
+      })
+    ])
+
+    const pages = Math.ceil(total / Number(limit))
+
+    res.json({
+      ratings: ratings.map((rating: any) => ({
+        id: rating.id,
+        rating: rating.rating,
+        comment: rating.comment,
+        createdAt: rating.createdAt,
+        user: {
+          username: rating.user.username,
+          avatar: rating.user.avatar
+        }
+      })),
+      total,
+      page: Number(page),
+      pages,
+      hasNext: Number(page) < pages,
+      hasPrev: Number(page) > 1
+    })
+  } catch (error) {
+    console.error('Get character ratings error:', error)
+    res.status(500).json({ error: 'Failed to fetch character ratings' })
+  }
+})
+
 // 导入角色到我的角色库
 router.post('/characters/:id/import', authenticate, async (req: AuthRequest, res: Response) => {
   try {

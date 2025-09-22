@@ -1,13 +1,13 @@
 const { PrismaClient } = require('../node_modules/.prisma/client')
 import bcrypt from 'bcryptjs'
-import {
-  stringifyCharacterTags,
-  stringifyCharacterExampleDialogs,
-  stringifyCharacterMetadata,
-  DEFAULT_CHARACTER_METADATA
-} from '../src/types/database'
 
 const prisma = new PrismaClient()
+
+// 简化的工具函数
+const stringifyCharacterTags = (tags: string[]): string => JSON.stringify(tags || [])
+const stringifyCharacterExampleDialogs = (dialogs: any[]): string => JSON.stringify(dialogs || [])
+const stringifyCharacterMetadata = (metadata: any): string => JSON.stringify(metadata || {})
+const DEFAULT_CHARACTER_METADATA = {}
 
 // 用户数据生成器
 const generateUsers = () => {

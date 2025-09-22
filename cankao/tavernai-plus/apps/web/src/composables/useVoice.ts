@@ -433,7 +433,7 @@ export function useVoice() {
       formData.append('audio', audioToTranscribe.blob, `audio_${audioToTranscribe.id}.webm`)
       formData.append('language', 'auto') // 自动检测语言
 
-      const response = await http.post('/api/multimodal/voice/transcribe', formData, {
+      const response = await http.post('/multimodal/voice/transcribe', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -483,7 +483,7 @@ export function useVoice() {
       }
 
       // 调用 API
-      const response = await http.post('/api/multimodal/voice/synthesize', {
+      const response = await http.post('/multimodal/voice/synthesize', {
         text: request.text,
         voice: request.voiceProfile.voice,
         language: request.voiceProfile.language,
@@ -539,7 +539,7 @@ export function useVoice() {
   // 语音配置管理
   const loadVoiceProfiles = async () => {
     try {
-      const response = await http.get('/api/multimodal/voice/profiles')
+      const response = await http.get('/multimodal/voice/profiles')
       voiceProfiles.value = response.profiles || []
 
       // 设置默认语音配置
@@ -565,7 +565,7 @@ export function useVoice() {
 
   const createVoiceProfile = async (profile: Omit<VoiceProfile, 'id'>): Promise<VoiceProfile | null> => {
     try {
-      const response = await http.post('/api/multimodal/voice/profiles', profile)
+      const response = await http.post('/multimodal/voice/profiles', profile)
       const newProfile: VoiceProfile = {
         id: response.id,
         ...profile
@@ -582,7 +582,7 @@ export function useVoice() {
 
   const updateVoiceProfile = async (profile: VoiceProfile): Promise<boolean> => {
     try {
-      await http.put(`/api/multimodal/voice/profiles/${profile.id}`, profile)
+      await http.put(`/multimodal/voice/profiles/${profile.id}`, profile)
 
       const index = voiceProfiles.value.findIndex(p => p.id === profile.id)
       if (index !== -1) {
@@ -599,7 +599,7 @@ export function useVoice() {
 
   const deleteVoiceProfile = async (profileId: string): Promise<boolean> => {
     try {
-      await http.delete(`/api/multimodal/voice/profiles/${profileId}`)
+      await http.delete(`/multimodal/voice/profiles/${profileId}`)
 
       voiceProfiles.value = voiceProfiles.value.filter(p => p.id !== profileId)
 

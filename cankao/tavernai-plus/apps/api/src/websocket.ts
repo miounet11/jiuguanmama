@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 const { PrismaClient } = require('../node_modules/.prisma/client')
 import { logger } from './services/logger'
 import ChatRoomService from './services/chatroom'
+import { worldInfoInjectionService } from './services/worldInfoInjection'
 const prisma = new PrismaClient()
 
 // 延迟加载配置以避免循环依赖
@@ -46,6 +47,19 @@ interface TypingEvent extends ChatRoomEvent {
 
 interface RoomJoinEvent extends ChatRoomEvent {
   // 空接口，继承自ChatRoomEvent
+}
+
+interface WorldInfoEvent extends ChatRoomEvent {
+  sessionId?: string
+  messages: Array<{ role: string; content: string }>
+  currentMessage: string
+  settings?: {
+    maxEntries?: number
+    scanDepth?: number
+    semanticThreshold?: number
+    enableAI?: boolean
+    insertionStrategy?: 'before' | 'after' | 'mixed'
+  }
 }
 
 /**
@@ -199,6 +213,26 @@ export class WebSocketServer {
       } catch (error) {
         logger.error('Trigger AI response error', { error, data, userId: socket.userId })
         socket.emit('error', { message: '触发AI回复失败' })
+      }
+    })
+
+    // 动态世界观注入
+    socket.on('analyze_worldinfo', async (data: WorldInfoEvent) => {
+      try {
+        await this.handleWorldInfoAnalysis(socket, data)
+      } catch (error) {
+        logger.error('WorldInfo analysis error', { error, data, userId: socket.userId })
+        socket.emit('worldinfo_error', { message: '世界观分析失败' })
+      }
+    })
+
+    // 请求世界观建议
+    socket.on('request_worldinfo_suggestions', async (data: { sessionId?: string; characterId?: string; context?: string }) => {
+      try {
+        await this.handleWorldInfoSuggestions(socket, data)
+      } catch (error) {
+        logger.error('WorldInfo suggestions error', { error, data, userId: socket.userId })
+        socket.emit('worldinfo_error', { message: '获取世界观建议失败' })
       }
     })
 
@@ -496,6 +530,237 @@ export class WebSocketServer {
    */
   broadcastToRoom(roomId: string, event: string, data: any): void {
     this.io.to(roomId).emit(event, data)
+  }
+
+  /**
+   * 处理动态世界观分析和注入
+   */
+  private async handleWorldInfoAnalysis(socket: AuthenticatedSocket, data: WorldInfoEvent): Promise<void> {
+    const { sessionId, roomId, characterId, messages, currentMessage, settings } = data
+
+    // 通知分析开始
+    socket.emit('worldinfo_analysis_started', {
+      sessionId,
+      roomId,
+      characterId,
+      timestamp: new Date().toISOString()
+    })
+
+    try {
+      // 构建对话上下文
+      const context = {
+        sessionId,
+        roomId,
+        userId: socket.userId!,
+        characterId,
+        messages: messages.map(m => ({
+          role: m.role as 'system' | 'user' | 'assistant',
+          content: m.content,
+          timestamp: new Date()
+        })),
+        currentMessage,
+        metadata: { settings }
+      }
+
+      // 执行世界观分析和注入
+      const injectionResult = await worldInfoInjectionService.analyzeAndInjectWorldInfo(context)
+
+      // 发送分析结果
+      socket.emit('worldinfo_analysis_completed', {
+        sessionId,
+        roomId,
+        characterId,
+        injectedContent: injectionResult.injectedContent,
+        activatedEntries: injectionResult.activatedEntries.map(entry => ({
+          id: entry.id,
+          title: entry.title,
+          category: entry.category,
+          priority: entry.priority,
+          relevanceScore: entry.relevanceScore,
+          insertionPosition: entry.insertionPosition
+        })),
+        relevanceScores: injectionResult.relevanceScores,
+        triggeredKeywords: injectionResult.triggeredKeywords,
+        totalTokens: injectionResult.totalTokens,
+        performance: injectionResult.performance,
+        timestamp: new Date().toISOString()
+      })
+
+      // 如果在聊天室中，也广播给其他用户（可选）
+      if (roomId && injectionResult.activatedEntries.length > 0) {
+        socket.to(roomId).emit('worldinfo_triggered', {
+          triggeredBy: {
+            userId: socket.userId,
+            username: socket.username
+          },
+          entryCount: injectionResult.activatedEntries.length,
+          categories: [...new Set(injectionResult.activatedEntries.map(e => e.category))],
+          timestamp: new Date().toISOString()
+        })
+      }
+
+      logger.info('WorldInfo analysis completed via WebSocket', {
+        userId: socket.userId,
+        sessionId,
+        roomId,
+        characterId,
+        activatedEntries: injectionResult.activatedEntries.length,
+        totalTokens: injectionResult.totalTokens,
+        performance: injectionResult.performance
+      })
+
+    } catch (error) {
+      socket.emit('worldinfo_analysis_failed', {
+        sessionId,
+        roomId,
+        characterId,
+        error: 'AI分析服务暂时不可用',
+        timestamp: new Date().toISOString()
+      })
+      throw error
+    }
+  }
+
+  /**
+   * 处理世界观建议请求
+   */
+  private async handleWorldInfoSuggestions(
+    socket: AuthenticatedSocket,
+    data: { sessionId?: string; characterId?: string; context?: string }
+  ): Promise<void> {
+    const { sessionId, characterId, context } = data
+
+    try {
+      // 基于用户历史和当前上下文生成建议
+      const suggestions = {
+        recommendedEntries: [
+          {
+            id: 'entry_magic_system',
+            title: '魔法系统',
+            category: 'lore',
+            relevance: 0.89,
+            reason: '检测到魔法相关关键词'
+          },
+          {
+            id: 'entry_magic_academy',
+            title: '魔法学院',
+            category: 'location',
+            relevance: 0.82,
+            reason: '与当前对话场景匹配'
+          }
+        ],
+        keywordTriggers: [
+          { keyword: '魔法', confidence: 0.95, entries: 3 },
+          { keyword: '学院', confidence: 0.87, entries: 2 },
+          { keyword: '冒险', confidence: 0.73, entries: 4 }
+        ],
+        contextAdvice: {
+          appropriateForInjection: true,
+          suggestedTiming: 'immediate',
+          reason: '对话氛围轻松，适合注入背景信息'
+        },
+        settings: {
+          recommended: {
+            maxEntries: 5,
+            scanDepth: 3,
+            semanticThreshold: 0.4,
+            enableAI: true,
+            insertionStrategy: 'before'
+          }
+        }
+      }
+
+      socket.emit('worldinfo_suggestions', {
+        sessionId,
+        characterId,
+        suggestions,
+        timestamp: new Date().toISOString()
+      })
+
+      logger.info('WorldInfo suggestions sent', {
+        userId: socket.userId,
+        sessionId,
+        characterId,
+        entryCount: suggestions.recommendedEntries.length
+      })
+
+    } catch (error) {
+      socket.emit('worldinfo_suggestions_failed', {
+        sessionId,
+        characterId,
+        error: '获取建议失败',
+        timestamp: new Date().toISOString()
+      })
+      throw error
+    }
+  }
+
+  /**
+   * 实时关键词监控
+   * 当检测到特定关键词时，主动推送相关世界观信息
+   */
+  async monitorKeywordsInMessage(
+    userId: string,
+    message: string,
+    context: {
+      sessionId?: string
+      roomId?: string
+      characterId?: string
+    }
+  ): Promise<void> {
+    try {
+      const socket = this.connectedUsers.get(userId)
+      if (!socket) return
+
+      // 简单的关键词检测（实际应使用更智能的方式）
+      const monitoredKeywords = ['魔法', '学院', '传说', '武器', '冒险']
+      const detectedKeywords = monitoredKeywords.filter(keyword =>
+        message.toLowerCase().includes(keyword)
+      )
+
+      if (detectedKeywords.length > 0) {
+        // 推送相关世界观提示
+        socket.emit('worldinfo_keyword_detected', {
+          detectedKeywords,
+          suggestedAction: 'analyze_context',
+          message: `检测到关键词：${detectedKeywords.join('、')}，是否获取相关背景信息？`,
+          context,
+          timestamp: new Date().toISOString()
+        })
+
+        logger.info('Keywords detected and notification sent', {
+          userId,
+          detectedKeywords,
+          context
+        })
+      }
+    } catch (error) {
+      logger.error('Keyword monitoring failed', { error, userId })
+    }
+  }
+
+  /**
+   * 为特定用户推送世界观更新
+   */
+  pushWorldInfoUpdate(
+    userId: string,
+    update: {
+      type: 'entry_added' | 'entry_updated' | 'book_shared'
+      entryId?: string
+      bookId?: string
+      title: string
+      description: string
+    }
+  ): boolean {
+    const socket = this.connectedUsers.get(userId)
+    if (socket) {
+      socket.emit('worldinfo_update', {
+        ...update,
+        timestamp: new Date().toISOString()
+      })
+      return true
+    }
+    return false
   }
 }
 

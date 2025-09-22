@@ -460,6 +460,10 @@ router.get('/dashboard', authenticate, async (req: AuthRequest, res: Response) =
 /**
  * 计算系统健康评分
  */
+
+/**
+ * 计算系统健康评分
+ */
 function calculateHealthScore(components: any): number {
   let score = 100
   let issues = 0

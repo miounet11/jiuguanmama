@@ -455,6 +455,66 @@ router.post('/:id/favorite', authenticate, async (req: AuthRequest, res, next) =
   }
 })
 
+// 收藏/取消收藏角色 (别名：like)
+router.post('/:id/like', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const characterId = req.params.id
+    const userId = req.user!.id
+
+    // 检查是否已收藏
+    const existing = await prisma.characterFavorite.findUnique({
+      where: {
+        userId_characterId: {
+          userId,
+          characterId
+        }
+      }
+    })
+
+    if (existing) {
+      // 取消收藏
+      await prisma.characterFavorite.delete({
+        where: {
+          userId_characterId: {
+            userId,
+            characterId
+          }
+        }
+      })
+
+      await prisma.character.update({
+        where: { id: characterId },
+        data: { favoriteCount: { decrement: 1 } }
+      })
+
+      res.json({
+        success: true,
+        message: 'Unfavorited'
+      })
+    } else {
+      // 添加收藏
+      await prisma.characterFavorite.create({
+        data: {
+          userId,
+          characterId
+        }
+      })
+
+      await prisma.character.update({
+        where: { id: characterId },
+        data: { favoriteCount: { increment: 1 } }
+      })
+
+      res.json({
+        success: true,
+        message: 'Favorited'
+      })
+    }
+  } catch (error) {
+    next(error)
+  }
+})
+
 // 评分角色
 router.post('/:id/rate', authenticate, async (req: AuthRequest, res, next) => {
   try {

@@ -210,15 +210,15 @@
                 </div>
 
                 <!-- 图像消息 -->
-                <div v-if="(message as any).imageUrl" class="message-image">
+                <div v-if="message.imageUrl" class="message-image">
                   <img
-                    :src="(message as any).imageUrl"
-                    :alt="(message as any).imagePrompt || '用户图像'"
+                    :src="message.imageUrl"
+                    :alt="message.imagePrompt || '用户图像'"
                     class="chat-image"
-                    @click="previewChatImage((message as any).imageUrl, (message as any).imagePrompt)"
+                    @click="previewChatImage(message.imageUrl, message.imagePrompt)"
                   />
-                  <div v-if="(message as any).imagePrompt" class="image-prompt">
-                    {{ (message as any).imagePrompt }}
+                  <div v-if="message.imagePrompt" class="image-prompt">
+                    {{ message.imagePrompt }}
                   </div>
                 </div>
 
@@ -798,8 +798,8 @@ const handleImageMessage = (imageMessage: any) => {
 
   // 如果是图像消息，添加特殊处理
   if (imageMessage.type === 'image') {
-    (message as any).imageUrl = imageMessage.content
-    (message as any).imagePrompt = imageMessage.prompt
+    message.imageUrl = imageMessage.content
+    message.imagePrompt = imageMessage.prompt
   }
 
   messages.value.push(message)
@@ -871,7 +871,8 @@ const sendMessage = async () => {
 
 const sendStreamingMessage = async (messageContent: string) => {
   try {
-    const response = await fetch(`/api/chats/${route.params.characterId}/messages`, {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3007'
+    const response = await fetch(`${API_BASE_URL}/api/chats/${route.params.characterId}/messages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1195,6 +1196,36 @@ const initializeContainer = () => {
     height: 100vh;
     position: relative;
   }
+
+  /* 全屏模式移动端优化 */
+  &.fullscreen {
+    .sidebar {
+      display: none;
+    }
+
+    .chat-main {
+      height: 100vh;
+    }
+
+    .chat-header {
+      display: none;
+    }
+
+    .message-area {
+      height: calc(100vh - 100px);
+    }
+
+    .input-area {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: $dark-bg-primary;
+      border-top: 1px solid $bg-tertiary;
+      padding: 12px;
+    }
+  }
 }
 
 // 移动端遮罩层
@@ -1300,7 +1331,7 @@ const initializeContainer = () => {
         .character-avatar {
           width: 60px;
           height: 60px;
-          border-radius: $rounded-lg;
+          border-radius: $border-radius-lg;
           object-fit: cover;
           border: 2px solid rgba($primary-500, 0.3);
         }
@@ -1326,14 +1357,14 @@ const initializeContainer = () => {
 
         .character-name {
           margin: 0 0 $space-1;
-          font-size: $text-lg;
+          font-size: $font-size-lg;
           font-weight: $font-weight-semibold;
           color: $text-primary;
         }
 
         .character-creator {
           margin: 0 0 $space-2;
-          font-size: $text-sm;
+          font-size: $font-size-sm;
           color: $text-tertiary;
         }
 
@@ -1345,7 +1376,7 @@ const initializeContainer = () => {
             display: flex;
             align-items: center;
             gap: $space-1;
-            font-size: $text-xs;
+            font-size: $font-size-xs;
             color: $text-tertiary;
 
             .el-icon {
@@ -1375,7 +1406,7 @@ const initializeContainer = () => {
       height: 40px;
       background: rgba($primary-500, 0.1);
       border: 1px solid rgba($primary-500, 0.2);
-      border-radius: $rounded-md;
+      border-radius: $border-radius-base;
       color: $primary-300;
       display: flex;
       align-items: center;
@@ -1427,7 +1458,7 @@ const initializeContainer = () => {
 
     h3 {
       margin: 0 0 $space-5;
-      font-size: $text-lg;
+      font-size: $font-size-lg;
       color: $text-primary;
       font-weight: $font-weight-semibold;
     }
@@ -1438,7 +1469,7 @@ const initializeContainer = () => {
       label {
         display: block;
         margin-bottom: $space-2;
-        font-size: $text-sm;
+        font-size: $font-size-sm;
         color: $text-secondary;
         font-weight: $font-weight-medium;
       }
@@ -1713,7 +1744,7 @@ const initializeContainer = () => {
     }
 
     .typing-text {
-      font-size: $text-sm;
+      font-size: $font-size-sm;
       color: $text-tertiary;
     }
   }
@@ -1724,13 +1755,13 @@ const initializeContainer = () => {
     right: $space-5;
     background: rgba($primary-500, 0.9);
     color: white;
-    border-radius: $rounded-full;
+    border-radius: $border-radius-full;
     padding: $space-2 $space-3;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: $space-1;
-    font-size: $text-xs;
+    font-size: $font-size-xs;
     transition: all $transition-base;
     box-shadow: 0 4px 12px rgba($primary-500, 0.3);
 
@@ -1805,10 +1836,10 @@ const initializeContainer = () => {
         padding: $space-3 $space-4;
         background: rgba($gray-900, 0.8);
         border: 1px solid rgba($primary-500, 0.3);
-        border-radius: $rounded-xl;
+        border-radius: $border-radius-xl;
         color: $text-primary;
-        font-size: $text-base;
-        line-height: $leading-normal;
+        font-size: $font-size-base;
+        line-height: $line-height-normal;
         resize: none;
         transition: all $transition-base;
 
@@ -1817,7 +1848,7 @@ const initializeContainer = () => {
           min-height: 48px; // 移动端增大触控目标
           padding: $space-4;
           font-size: 16px; // 防止iOS缩放
-          border-radius: $rounded-lg;
+          border-radius: $border-radius-lg;
         }
 
         &:focus {
@@ -1840,7 +1871,7 @@ const initializeContainer = () => {
         position: absolute;
         bottom: -$space-5;
         right: 0;
-        font-size: $text-xs;
+        font-size: $font-size-xs;
         color: $text-muted;
 
         // 移动端统计信息
@@ -1864,7 +1895,7 @@ const initializeContainer = () => {
       .action-btn {
         min-width: 44px;
         min-height: 44px;
-        border-radius: $rounded-lg;
+        border-radius: $border-radius-lg;
         transition: all $transition-base;
 
         // 移动端按钮优化
@@ -1885,7 +1916,7 @@ const initializeContainer = () => {
     margin-top: $space-3;
     background: rgba($gray-900, 0.9);
     border: 1px solid rgba($primary-500, 0.3);
-    border-radius: $rounded-xl;
+    border-radius: $border-radius-xl;
     padding: $space-3;
     backdrop-filter: blur(10px);
 
@@ -1896,7 +1927,7 @@ const initializeContainer = () => {
       left: 0;
       right: 0;
       margin: 0;
-      border-radius: $rounded-xl $rounded-xl 0 0;
+      border-radius: $border-radius-xl $border-radius-xl 0 0;
       padding: $space-4;
       z-index: 1000;
     }
@@ -1919,9 +1950,9 @@ const initializeContainer = () => {
         height: 44px;
         border: none;
         background: transparent;
-        border-radius: $rounded-md;
+        border-radius: $border-radius-base;
         cursor: pointer;
-        font-size: $text-lg;
+        font-size: $font-size-lg;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1931,7 +1962,7 @@ const initializeContainer = () => {
         @include mobile-only {
           width: 48px;
           height: 48px;
-          font-size: $text-xl;
+          font-size: $font-size-xl;
         }
 
         &:hover {
@@ -2201,30 +2232,6 @@ const initializeContainer = () => {
     }
   }
 
-  /* 全屏模式移动端优化 */
-  &.fullscreen {
-    .sidebar {
-      display: none;
-    }
-
-    .chat-main {
-      height: 100vh;
-    }
-
-    .chat-header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: var(--el-bg-color);
-      border-bottom: 1px solid var(--el-border-color-light);
-    }
-
-    .chat-input-area {
-      position: sticky;
-      bottom: 0;
-      z-index: 100;
-    }
-  }
 }
 
 /* 更小屏幕设备优化 */

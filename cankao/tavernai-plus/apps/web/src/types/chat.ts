@@ -32,6 +32,8 @@ export interface Message {
   metadata?: any
   user?: User
   character?: Character
+  imageUrl?: string
+  imagePrompt?: string
   createdAt: string
   updatedAt: string
 }

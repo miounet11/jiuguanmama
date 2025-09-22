@@ -257,7 +257,7 @@ router.get('/feature-unlocks', auth, async (req, res) => {
     });
 
     res.json({
-      unlocks: unlocks.map(unlock => ({
+      unlocks: unlocks.map((unlock: any) => ({
         featureId: unlock.featureId,
         unlockedAt: unlock.unlockedAt,
         trigger: unlock.unlockTrigger,

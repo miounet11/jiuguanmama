@@ -243,8 +243,6 @@ import {
   Edit,
   Delete,
   CircleCheck,
-  Star,
-  StarFilled,
   ChatLineRound
 } from '@element-plus/icons-vue'
 import { formatDistanceToNow } from 'date-fns'

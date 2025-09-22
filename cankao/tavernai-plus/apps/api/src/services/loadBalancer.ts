@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import cluster from 'cluster'
+import cluster, { Worker } from 'cluster'
 import os from 'os'
 
 export interface WorkerInfo {
@@ -177,7 +177,7 @@ export class LoadBalancer extends EventEmitter {
   /**
    * 启动单个工作进程
    */
-  startWorker(): cluster.Worker | null {
+  startWorker(): Worker | null {
     if (this.workers.size >= this.config.maxWorkers) {
       console.log('⚠️ 已达到最大工作进程数')
       return null
@@ -352,7 +352,7 @@ export class LoadBalancer extends EventEmitter {
   /**
    * 获取最佳工作进程
    */
-  getBestWorker(): cluster.Worker | null {
+  getBestWorker(): Worker | null {
     const availableWorkers = Array.from(this.workers.entries())
       .filter(([_, info]) => info.status === 'online' && info.health !== 'critical')
       .sort(([_, a], [__, b]) => {
@@ -437,7 +437,7 @@ export class LoadBalancer extends EventEmitter {
         reject(new Error('请求超时'))
       }, 30000)
 
-      worker.once('message', (response) => {
+      worker.once('message', (response: any) => {
         if (response.requestId === requestId) {
           clearTimeout(timeout)
           if (response.error) {

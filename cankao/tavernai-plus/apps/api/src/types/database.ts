@@ -3,35 +3,35 @@
  * 基于Prisma生成的类型，提供类型安全的数据库操作
  */
 
-const {
-  User: PrismaUser,
-  Character: PrismaCharacter,
-  ChatSession: PrismaChatSession,
-  Message: PrismaMessage,
-  CharacterFavorite: PrismaCharacterFavorite,
-  CharacterRating: PrismaCharacterRating,
-  ChatRoom: PrismaChatRoom,
-  ChatParticipant: PrismaChatParticipant,
-  ChatMessage: PrismaChatMessage,
-  Transaction: PrismaTransaction,
-  OAuthAccount: PrismaOAuthAccount,
-  RefreshToken: PrismaRefreshToken,
+import {
+  User,
+  Character,
+  ChatSession,
+  Message,
+  CharacterFavorite,
+  CharacterRating,
+  ChatRoom,
+  ChatParticipant,
+  ChatMessage,
+  Transaction,
+  OAuthAccount,
+  RefreshToken,
   Prisma
-} = require('../../node_modules/.prisma/client')
+} from '@prisma/client'
 
 // 基础数据库实体类型
-export type DbUser = PrismaUser
-export type DbCharacter = PrismaCharacter
-export type DbChatSession = PrismaChatSession
-export type DbMessage = PrismaMessage
-export type DbCharacterFavorite = PrismaCharacterFavorite
-export type DbCharacterRating = PrismaCharacterRating
-export type DbChatRoom = PrismaChatRoom
-export type DbChatParticipant = PrismaChatParticipant
-export type DbChatMessage = PrismaChatMessage
-export type DbTransaction = PrismaTransaction
-export type DbOAuthAccount = PrismaOAuthAccount
-export type DbRefreshToken = PrismaRefreshToken
+export type DbUser = User
+export type DbCharacter = Character
+export type DbChatSession = ChatSession
+export type DbMessage = Message
+export type DbCharacterFavorite = CharacterFavorite
+export type DbCharacterRating = CharacterRating
+export type DbChatRoom = ChatRoom
+export type DbChatParticipant = ChatParticipant
+export type DbChatMessage = ChatMessage
+export type DbTransaction = Transaction
+export type DbOAuthAccount = OAuthAccount
+export type DbRefreshToken = RefreshToken
 
 // 用户相关类型
 export type UserWithStats = DbUser & {

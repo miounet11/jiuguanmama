@@ -39,7 +39,7 @@
 
     <div class="container mx-auto px-4 pb-12">
       <!-- 特色角色轮播 -->
-      <section v-if="featuredCharacters.length > 0" class="mb-12">
+      <section v-if="featuredCharacters && featuredCharacters.length > 0" class="mb-12">
         <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
           <el-icon class="text-yellow-400"><Star /></el-icon>
           特色推荐
@@ -138,7 +138,7 @@
             <h3 class="text-lg font-semibold text-white mb-4">热门分类</h3>
             <div class="space-y-2">
               <div
-                v-for="category in categories"
+                v-for="category in (categories || [])"
                 :key="category.name"
                 class="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
                 :class="{ 'bg-purple-500/20': currentFilters.category === category.name }"
@@ -158,7 +158,7 @@
             <h3 class="text-lg font-semibold text-white mb-4">热门标签</h3>
             <div class="flex flex-wrap gap-2">
               <el-tag
-                v-for="tag in trendingTags"
+                v-for="tag in (trendingTags || [])"
                 :key="tag.tag"
                 :type="currentFilters.tags?.includes(tag.tag) ? 'primary' : 'info'"
                 class="cursor-pointer"
@@ -230,7 +230,7 @@
             </div>
           </div>
 
-          <div v-else-if="characters.length === 0" class="text-center py-12">
+          <div v-else-if="!characters || characters.length === 0" class="text-center py-12">
             <div class="text-6xl mb-4">🔍</div>
             <h3 class="text-xl font-semibold text-white mb-2">暂无找到角色</h3>
             <p class="text-gray-400 mb-6">试试调整搜索条件或浏览其他分类</p>
@@ -244,7 +244,7 @@
               class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
             >
               <CharacterMarketCard
-                v-for="character in characters"
+                v-for="character in (characters || [])"
                 :key="character.id"
                 :character="character"
                 @click="showCharacterDetail"
@@ -256,7 +256,7 @@
             <!-- 列表视图 -->
             <div v-else class="space-y-4">
               <CharacterMarketCard
-                v-for="character in characters"
+                v-for="character in (characters || [])"
                 :key="character.id"
                 :character="character"
                 mode="list"
@@ -312,6 +312,12 @@ import CharacterMarketCard from '@/components/character/CharacterMarketCard.vue'
 import CharacterMarketDetail from '@/components/character/CharacterMarketDetail.vue'
 import MarketplaceFilters from '@/components/marketplace/MarketplaceFilters.vue'
 import marketplaceService, { type MarketplaceFilter, type CharacterPreview } from '@/services/marketplace'
+import { useUserStore } from '@/stores/user'
+import { useRouter } from 'vue-router'
+
+// Stores 和 Router
+const userStore = useUserStore()
+const router = useRouter()
 
 // 响应式数据
 const loading = ref(false)
@@ -376,11 +382,13 @@ const loadCharacters = async () => {
     }
 
     const response = await marketplaceService.getCharacters(filters)
-    characters.value = response.characters
-    totalCharacters.value = response.total
+    characters.value = response.characters || []
+    totalCharacters.value = response.total || 0
   } catch (error) {
     console.error('加载角色失败:', error)
     ElMessage.error('加载角色失败，请稍后重试')
+    characters.value = []
+    totalCharacters.value = 0
   } finally {
     loading.value = false
   }
@@ -391,6 +399,7 @@ const loadFeaturedCharacters = async () => {
     featuredCharacters.value = await marketplaceService.getFeaturedCharacters(5)
   } catch (error) {
     console.error('加载特色角色失败:', error)
+    featuredCharacters.value = []
   }
 }
 
@@ -398,9 +407,11 @@ const loadCategories = async () => {
   try {
     filtersLoading.value = true
     categories.value = await marketplaceService.getCategoryStats()
-    stats.categories = categories.value.length
+    stats.categories = categories.value?.length || 0
   } catch (error) {
     console.error('加载分类失败:', error)
+    categories.value = []
+    stats.categories = 0
   } finally {
     filtersLoading.value = false
   }
@@ -411,6 +422,7 @@ const loadTrendingTags = async () => {
     trendingTags.value = await marketplaceService.getTrendingTags(20)
   } catch (error) {
     console.error('加载热门标签失败:', error)
+    trendingTags.value = []
   }
 }
 
@@ -473,6 +485,13 @@ const showCharacterDetail = (character: CharacterPreview) => {
 }
 
 const handleFavorite = async (characterId: string) => {
+  // 检查用户登录状态
+  if (!userStore.isAuthenticated) {
+    ElMessage.warning('请先登录后再收藏角色')
+    router.push('/login')
+    return
+  }
+
   try {
     // 找到对应角色并切换收藏状态
     const character = characters.value.find(c => c.id === characterId)
@@ -488,9 +507,9 @@ const handleFavorite = async (characterId: string) => {
 
     character.isFavorited = !character.isFavorited
     ElMessage.success(character.isFavorited ? '已加入收藏' : '已取消收藏')
-  } catch (error) {
+  } catch (error: any) {
     console.error('收藏操作失败:', error)
-    ElMessage.error('操作失败，请稍后重试')
+    ElMessage.error(error.message || '操作失败，请稍后重试')
   }
 }
 

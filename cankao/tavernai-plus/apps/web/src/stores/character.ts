@@ -276,6 +276,135 @@ export const useCharacterStore = defineStore('character', () => {
     currentPage.value = 1
   }
 
+  // 获取快速对话角色信息 (Quick Chat 功能)
+  const getCharacterForQuickChat = async (characterId: string) => {
+    try {
+      // 先从缓存中查找
+      let character = characters.value.find(c => c.id === characterId)
+
+      if (!character) {
+        // 如果缓存中没有，从API获取
+        character = await fetchCharacter(characterId)
+      }
+
+      if (character) {
+        // 缓存最近使用的角色
+        cacheRecentCharacter(character)
+        return character
+      }
+
+      return null
+    } catch (error) {
+      console.error('获取快速对话角色失败:', error)
+      return null
+    }
+  }
+
+  // 缓存最近使用的角色
+  const recentCharacters = ref<Character[]>([])
+  const maxRecentCharacters = 10
+
+  const cacheRecentCharacter = (character: Character) => {
+    // 移除已存在的角色（避免重复）
+    const existingIndex = recentCharacters.value.findIndex(c => c.id === character.id)
+    if (existingIndex !== -1) {
+      recentCharacters.value.splice(existingIndex, 1)
+    }
+
+    // 添加到最前面
+    recentCharacters.value.unshift(character)
+
+    // 限制数量
+    if (recentCharacters.value.length > maxRecentCharacters) {
+      recentCharacters.value = recentCharacters.value.slice(0, maxRecentCharacters)
+    }
+
+    // 保存到本地存储
+    try {
+      localStorage.setItem('recent_characters', JSON.stringify(recentCharacters.value))
+    } catch (error) {
+      console.warn('保存最近角色失败:', error)
+    }
+  }
+
+  // 加载最近使用的角色
+  const loadRecentCharacters = () => {
+    try {
+      const saved = localStorage.getItem('recent_characters')
+      if (saved) {
+        recentCharacters.value = JSON.parse(saved)
+      }
+    } catch (error) {
+      console.warn('加载最近角色失败:', error)
+      recentCharacters.value = []
+    }
+  }
+
+  // 获取推荐角色（Quick Chat 功能）
+  const getRecommendedCharacters = async (limit: number = 6) => {
+    try {
+      // 优先显示最近使用的角色
+      if (recentCharacters.value.length > 0) {
+        const recentCount = Math.min(limit / 2, recentCharacters.value.length)
+        const popularCount = limit - recentCount
+
+        // 获取流行角色
+        await fetchCharacters({
+          limit: popularCount,
+          sort: 'popular'
+        })
+
+        // 合并最近使用和流行角色，去重
+        const recommended = [
+          ...recentCharacters.value.slice(0, recentCount),
+          ...characters.value.filter(c =>
+            !recentCharacters.value.some(rc => rc.id === c.id)
+          ).slice(0, popularCount)
+        ]
+
+        return recommended.slice(0, limit)
+      } else {
+        // 没有最近角色，只返回流行角色
+        await fetchCharacters({
+          limit: limit,
+          sort: 'popular'
+        })
+        return characters.value.slice(0, limit)
+      }
+    } catch (error) {
+      console.error('获取推荐角色失败:', error)
+      return []
+    }
+  }
+
+  // 智能角色推荐（基于用户喜好）
+  const getSmartRecommendations = async (preferences?: {
+    tags?: string[]
+    categories?: string[]
+    ageRating?: string
+  }) => {
+    try {
+      const params: any = {
+        limit: 12,
+        sort: 'rating'
+      }
+
+      // 应用用户偏好
+      if (preferences?.tags?.length) {
+        params.tags = preferences.tags.join(',')
+      }
+      if (preferences?.categories?.length) {
+        params.category = preferences.categories[0] // 暂时只支持单个分类
+      }
+
+      await fetchCharacters(params)
+      return characters.value
+    } catch (error) {
+      console.error('获取智能推荐失败:', error)
+      return []
+    }
+  }
+
   return {
     // 状态
     characters,
@@ -306,6 +435,14 @@ export const useCharacterStore = defineStore('character', () => {
     filterByCategory,
     sortCharacters,
     goToPage,
-    resetFilters
+    resetFilters,
+
+    // Quick Chat 专用方法
+    getCharacterForQuickChat,
+    recentCharacters,
+    cacheRecentCharacter,
+    loadRecentCharacters,
+    getRecommendedCharacters,
+    getSmartRecommendations
   }
 })

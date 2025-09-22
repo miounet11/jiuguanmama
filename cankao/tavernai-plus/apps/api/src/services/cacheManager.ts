@@ -319,11 +319,11 @@ export class CacheManager {
             select: { id: true, username: true, avatar: true }
           },
           _count: {
-            select: { conversations: true }
+            select: { chatSessions: true }
           }
         },
         orderBy: {
-          conversations: { _count: 'desc' }
+          chatSessions: { _count: 'desc' }
         },
         take: 50
       })

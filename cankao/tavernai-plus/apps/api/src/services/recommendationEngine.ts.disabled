@@ -1,10 +1,18 @@
-const { PrismaClient } = require('../../node_modules/.prisma/client')
+import { PrismaClient } from '@prisma/client'
 import { performance } from 'perf_hooks'
 
 const prisma = new PrismaClient()
 
 // 推荐算法类型
 export type RecommendationType = 'character' | 'post' | 'user' | 'creator'
+
+// 用户档案接口
+interface UserProfile {
+  interests: string[]
+  preferences: Record<string, any>
+  demographics: Record<string, any>
+  behavior: Record<string, any>
+}
 
 // 推荐配置
 interface RecommendationConfig {
@@ -36,7 +44,7 @@ const TIME_DECAY_FACTOR = 0.1 // 每天衰减10%
  * 支持多种推荐算法和实时个性化推荐
  */
 export class RecommendationEngine {
-  private userProfiles: Map<string, any> = new Map()
+  private userProfiles: Map<string, UserProfile> = new Map()
   private itemVectors: Map<string, number[]> = new Map()
   private userSimilarities: Map<string, Map<string, number>> = new Map()
   private config: RecommendationConfig = {
@@ -447,7 +455,7 @@ export class RecommendationEngine {
       })
 
       const algorithmPerformance: { [key: string]: number } = {}
-      algorithmStats.forEach(stat => {
+      algorithmStats.forEach((stat: any) => {
         algorithmPerformance[stat.algorithm] = stat._avg.confidence || 0
       })
 
@@ -465,7 +473,7 @@ export class RecommendationEngine {
       })
 
       const topRecommendedItems = await Promise.all(
-        topItems.map(async (item) => {
+        topItems.map(async (item: any) => {
           const character = await prisma.character.findUnique({
             where: { id: item.targetId },
             select: { id: true, name: true, avatar: true, rating: true }
@@ -507,7 +515,7 @@ export class RecommendationEngine {
         }
       })
 
-      profiles.forEach(profile => {
+      profiles.forEach((profile: any) => {
         this.userProfiles.set(profile.userId, {
           interests: JSON.parse(profile.interests || '[]'),
           preferences: JSON.parse(profile.preferences || '{}'),
@@ -542,7 +550,7 @@ export class RecommendationEngine {
         }
       })
 
-      characters.forEach(character => {
+      characters.forEach((character: any) => {
         const vector = this.extractCharacterFeatures(character)
         this.itemVectors.set(character.id, vector)
       })
@@ -574,7 +582,7 @@ export class RecommendationEngine {
         })
 
         const userRatings = new Map<string, number>()
-        behaviors.forEach(behavior => {
+        behaviors.forEach((behavior: any) => {
           const currentRating = userRatings.get(behavior.targetId) || 0
           userRatings.set(behavior.targetId, currentRating + behavior.weight)
         })
@@ -583,10 +591,10 @@ export class RecommendationEngine {
       }
 
       // 计算用户间相似度（余弦相似度）
-      for (const userId1 of users.map(u => u.id)) {
+      for (const userId1 of users.map((u: any) => u.id)) {
         const similarities = new Map<string, number>()
 
-        for (const userId2 of users.map(u => u.id)) {
+        for (const userId2 of users.map((u: any) => u.id)) {
           if (userId1 !== userId2) {
             const similarity = this.calculateCosineSimilarity(
               userItemMatrix.get(userId1) || new Map(),
@@ -1384,50 +1392,6 @@ export class RecommendationEngine {
     }
   }
 
-  /**
-   * 重新计算用户相似度矩阵
-   */
-  private async computeUserSimilarities(): Promise<void> {
-    try {
-      const users = await prisma.user.findMany({
-        where: { isActive: true },
-        select: { id: true }
-      })
-
-      this.userSimilarities.clear()
-
-      for (const user of users) {
-        const userBehaviors = await this.getUserBehaviorData(user.id, 'character')
-        const userRatings = new Map<string, number>()
-
-        userBehaviors.forEach(behavior => {
-          userRatings.set(behavior.targetId, behavior.weight)
-        })
-
-        const similarities = new Map<string, number>()
-
-        for (const otherUser of users) {
-          if (user.id === otherUser.id) continue
-
-          const otherBehaviors = await this.getUserBehaviorData(otherUser.id, 'character')
-          const otherRatings = new Map<string, number>()
-
-          otherBehaviors.forEach(behavior => {
-            otherRatings.set(behavior.targetId, behavior.weight)
-          })
-
-          const similarity = this.calculateCosineSimilarity(userRatings, otherRatings)
-          if (similarity > 0.1) {
-            similarities.set(otherUser.id, similarity)
-          }
-        }
-
-        this.userSimilarities.set(user.id, similarities)
-      }
-    } catch (error) {
-      console.error('计算用户相似度失败:', error)
-    }
-  }
 
   /**
    * 重新计算物品特征向量
@@ -1448,7 +1412,7 @@ export class RecommendationEngine {
 
       this.itemVectors.clear()
 
-      characters.forEach(character => {
+      characters.forEach((character: any) => {
         // 简化的特征向量生成
         const vector = new Array(100).fill(0)
 

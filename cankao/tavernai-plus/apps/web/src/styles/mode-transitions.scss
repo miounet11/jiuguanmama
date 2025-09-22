@@ -377,7 +377,7 @@
   }
   100% {
     opacity: 0;
-    transform: translateX(-calc(var(--mode-slide-distance) * 2)) scale(0.8);
+    transform: translateX(calc(-2 * var(--mode-slide-distance))) scale(0.8);
     height: 0;
     margin: 0;
     padding: 0;

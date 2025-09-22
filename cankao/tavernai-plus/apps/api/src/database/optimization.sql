@@ -16,13 +16,13 @@ CREATE INDEX IF NOT EXISTS idx_characters_nsfw ON Character(isNsfw);
 CREATE INDEX IF NOT EXISTS idx_characters_featured ON Character(isFeatured) WHERE isFeatured = true;
 
 -- 3. 对话相关索引
-CREATE INDEX IF NOT EXISTS idx_conversations_user ON Conversation(userId);
-CREATE INDEX IF NOT EXISTS idx_conversations_character ON Conversation(characterId);
-CREATE INDEX IF NOT EXISTS idx_conversations_created_at ON Conversation(createdAt);
-CREATE INDEX IF NOT EXISTS idx_conversations_updated_at ON Conversation(updatedAt);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_user ON ChatSession(userId);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_character ON ChatSession(characterId);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_created_at ON ChatSession(createdAt);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_updated_at ON ChatSession(updatedAt);
 
 -- 4. 消息相关索引
-CREATE INDEX IF NOT EXISTS idx_messages_conversation ON Message(conversationId);
+CREATE INDEX IF NOT EXISTS idx_messages_session ON Message(sessionId);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON Message(createdAt);
 CREATE INDEX IF NOT EXISTS idx_messages_role ON Message(role);
 
@@ -97,11 +97,11 @@ SELECT
     c.*,
     u.username as creatorName,
     u.avatar as creatorAvatar,
-    COUNT(DISTINCT conv.id) as conversationCount,
+    COUNT(DISTINCT conv.id) as sessionCount,
     AVG(CASE WHEN ub.action = 'rate' THEN ub.weight END) as avgRating
 FROM Character c
 LEFT JOIN User u ON c.creatorId = u.id
-LEFT JOIN Conversation conv ON c.id = conv.characterId
+LEFT JOIN ChatSession conv ON c.id = conv.characterId
 LEFT JOIN UserBehavior ub ON c.id = ub.targetId AND ub.targetType = 'character'
 WHERE c.isPublic = true AND c.isDeleted = false
 GROUP BY c.id;
@@ -109,15 +109,15 @@ GROUP BY c.id;
 CREATE VIEW IF NOT EXISTS TrendingCharacters AS
 SELECT
     c.*,
-    COUNT(DISTINCT conv.id) as recentConversations,
+    COUNT(DISTINCT conv.id) as recentSessions,
     COUNT(DISTINCT ub.id) as recentInteractions
 FROM Character c
-LEFT JOIN Conversation conv ON c.id = conv.characterId AND conv.createdAt > datetime('now', '-7 days')
+LEFT JOIN ChatSession conv ON c.id = conv.characterId AND conv.createdAt > datetime('now', '-7 days')
 LEFT JOIN UserBehavior ub ON c.id = ub.targetId AND ub.targetType = 'character' AND ub.timestamp > datetime('now', '-7 days')
 WHERE c.isPublic = true AND c.isDeleted = false
 GROUP BY c.id
-HAVING recentConversations > 0 OR recentInteractions > 0
-ORDER BY (recentConversations + recentInteractions) DESC;
+HAVING recentSessions > 0 OR recentInteractions > 0
+ORDER BY (recentSessions + recentInteractions) DESC;
 
 CREATE VIEW IF NOT EXISTS UserRecommendationStats AS
 SELECT

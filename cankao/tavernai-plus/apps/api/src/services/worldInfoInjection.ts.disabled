@@ -1,0 +1,824 @@
+import { prisma } from '../server'
+import { aiService } from './ai'
+import { logger } from './logger'
+
+/**
+ * 动态世界观注入服务
+ * Issue #15: 智能关键词触发的动态世界观注入系统
+ */
+
+export interface WorldInfoEntry {
+  id: string
+  bookId: string
+  title: string
+  content: string
+  keywords: string[]
+  secondaryKeywords?: string[]
+  keywordFilter: 'AND' | 'OR' | 'NOT'
+  priority: number
+  orderIndex: number
+  isEnabled: boolean
+  probability: number
+  insertionPosition: 'before' | 'after' | 'top' | 'bottom'
+  insertionDepth: number
+  contextLength: number
+  preventRecursion: boolean
+  selectiveLogic: string
+  constant: boolean
+  category: string
+  comment?: string
+  embedding?: number[]
+  relevanceScore?: number
+  activationCount: number
+  lastActivated?: Date
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface WorldInfoBook {
+  id: string
+  name: string
+  description?: string
+  creatorId: string
+  isPublic: boolean
+  isGlobal: boolean
+  characterIds: string[]
+  settings: {
+    maxEntries: number
+    scanDepth: number
+    insertionStrategy: 'before' | 'after' | 'mixed'
+    budgetCap: number
+    recursiveScanning: boolean
+    semanticThreshold: number
+    enableAI: boolean
+  }
+  metadata: any
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ConversationContext {
+  sessionId?: string
+  roomId?: string
+  userId: string
+  characterId?: string
+  messages: Array<{
+    role: 'system' | 'user' | 'assistant'
+    content: string
+    timestamp?: Date
+  }>
+  currentMessage: string
+  metadata?: any
+}
+
+export interface InjectionResult {
+  activatedEntries: WorldInfoEntry[]
+  injectedContent: string
+  relevanceScores: Record<string, number>
+  triggeredKeywords: Record<string, string[]>
+  totalTokens: number
+  performance: {
+    analysisTime: number
+    injectionTime: number
+    totalTime: number
+  }
+}
+
+export interface KeywordAnalysisResult {
+  detectedKeywords: string[]
+  entities: Array<{
+    text: string
+    type: 'PERSON' | 'LOCATION' | 'ORGANIZATION' | 'EVENT' | 'ITEM' | 'CONCEPT'
+    confidence: number
+  }>
+  sentiment: {
+    score: number // -1 to 1
+    magnitude: number
+    emotion: string
+  }
+  context: {
+    theme: string
+    topics: string[]
+    relevantConcepts: string[]
+  }
+}
+
+class WorldInfoInjectionService {
+  private cache = new Map<string, any>()
+  private readonly CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+  /**
+   * 主要入口：分析对话并动态注入世界观信息
+   */
+  async analyzeAndInjectWorldInfo(context: ConversationContext): Promise<InjectionResult> {
+    const startTime = Date.now()
+
+    try {
+      // 1. 智能关键词识别和上下文分析
+      const analysisStart = Date.now()
+      const keywordAnalysis = await this.analyzeConversationContext(context)
+      const analysisTime = Date.now() - analysisStart
+
+      // 2. 获取相关世界观书籍
+      const relevantBooks = await this.getRelevantWorldInfoBooks(context)
+
+      // 3. 扫描并激活相关条目
+      const injectionStart = Date.now()
+      const activatedEntries = await this.scanAndActivateEntries(
+        relevantBooks,
+        context,
+        keywordAnalysis
+      )
+
+      // 4. 生成注入内容
+      const injectedContent = await this.generateInjectionContent(
+        activatedEntries,
+        context,
+        keywordAnalysis
+      )
+
+      // 5. 记录激活日志
+      await this.logActivations(activatedEntries, context, keywordAnalysis)
+
+      const injectionTime = Date.now() - injectionStart
+      const totalTime = Date.now() - startTime
+
+      return {
+        activatedEntries,
+        injectedContent,
+        relevanceScores: this.calculateRelevanceScores(activatedEntries, keywordAnalysis),
+        triggeredKeywords: this.extractTriggeredKeywords(activatedEntries, keywordAnalysis),
+        totalTokens: this.estimateTokens(injectedContent),
+        performance: {
+          analysisTime,
+          injectionTime,
+          totalTime
+        }
+      }
+    } catch (error) {
+      logger.error('WorldInfo injection failed', { error, context })
+      throw new Error(`世界观注入失败: ${error.message}`)
+    }
+  }
+
+  /**
+   * AI驱动的上下文关键词检测和分析
+   */
+  async analyzeConversationContext(context: ConversationContext): Promise<KeywordAnalysisResult> {
+    const cacheKey = `analysis:${this.hashContext(context)}`
+
+    if (this.cache.has(cacheKey)) {
+      const cached = this.cache.get(cacheKey)
+      if (Date.now() - cached.timestamp < this.CACHE_TTL) {
+        return cached.data
+      }
+    }
+
+    try {
+      // 构建分析消息历史
+      const recentMessages = context.messages.slice(-5).map(m => m.content).join('\n')
+      const fullContext = `${recentMessages}\n当前消息: ${context.currentMessage}`
+
+      // AI分析提示词
+      const analysisPrompt = `请分析以下对话内容，提取关键信息：
+
+对话内容：
+${fullContext}
+
+请分析并返回JSON格式结果，包含：
+1. detectedKeywords: 检测到的关键词列表
+2. entities: 实体识别结果（人物、地点、组织、事件、物品、概念）
+3. sentiment: 情感分析（分数、强度、情绪）
+4. context: 上下文信息（主题、话题、相关概念）
+
+示例格式：
+{
+  "detectedKeywords": ["魔法", "学院", "法师"],
+  "entities": [
+    {"text": "霍格沃茨", "type": "LOCATION", "confidence": 0.9}
+  ],
+  "sentiment": {
+    "score": 0.2,
+    "magnitude": 0.5,
+    "emotion": "好奇"
+  },
+  "context": {
+    "theme": "魔法教育",
+    "topics": ["魔法学习", "学院生活"],
+    "relevantConcepts": ["魔法系统", "学校规则"]
+  }
+}`
+
+      // 调用AI分析
+      const response = await aiService.generateChatResponse({
+        model: 'grok-3',
+        messages: [
+          {
+            role: 'system',
+            content: '你是一个专业的文本分析AI，擅长提取关键词、实体识别和上下文分析。请直接返回JSON格式结果。'
+          },
+          {
+            role: 'user',
+            content: analysisPrompt
+          }
+        ],
+        temperature: 0.3,
+        maxTokens: 1000
+      })
+
+      let analysisResult: KeywordAnalysisResult
+      try {
+        analysisResult = JSON.parse(response.content)
+      } catch (parseError) {
+        // 降级处理：基于规则的关键词提取
+        logger.warn('AI analysis parsing failed, using fallback', { parseError })
+        analysisResult = this.fallbackKeywordAnalysis(fullContext)
+      }
+
+      // 缓存结果
+      this.cache.set(cacheKey, {
+        data: analysisResult,
+        timestamp: Date.now()
+      })
+
+      return analysisResult
+    } catch (error) {
+      logger.error('Context analysis failed', { error })
+      // 降级处理
+      return this.fallbackKeywordAnalysis(context.currentMessage)
+    }
+  }
+
+  /**
+   * 获取相关的世界观书籍
+   */
+  private async getRelevantWorldInfoBooks(context: ConversationContext): Promise<WorldInfoBook[]> {
+    try {
+      // 构建查询条件
+      const whereConditions: any = {
+        OR: [
+          { isGlobal: true },
+          { isPublic: true }
+        ]
+      }
+
+      // 如果有角色ID，包含角色特定的世界观
+      if (context.characterId) {
+        whereConditions.OR.push({
+          characterIds: {
+            contains: context.characterId
+          }
+        })
+      }
+
+      // 查询数据库（模拟查询，实际需要实现数据库表）
+      // const books = await prisma.worldInfoBook.findMany({
+      //   where: whereConditions,
+      //   include: {
+      //     entries: {
+      //       where: { isEnabled: true },
+      //       orderBy: { priority: 'desc' }
+      //     }
+      //   }
+      // })
+
+      // 临时返回模拟数据
+      return this.getMockWorldInfoBooks(context)
+    } catch (error) {
+      logger.error('Failed to get WorldInfo books', { error })
+      return []
+    }
+  }
+
+  /**
+   * 扫描并激活相关条目
+   */
+  private async scanAndActivateEntries(
+    books: WorldInfoBook[],
+    context: ConversationContext,
+    analysis: KeywordAnalysisResult
+  ): Promise<WorldInfoEntry[]> {
+    const activatedEntries: WorldInfoEntry[] = []
+    const scanText = `${context.messages.slice(-3).map(m => m.content).join(' ')} ${context.currentMessage}`
+
+    for (const book of books) {
+      const entries = await this.getBookEntries(book.id)
+
+      for (const entry of entries) {
+        if (!entry.isEnabled) continue
+
+        // 1. 关键词匹配检查
+        const keywordMatches = this.checkKeywordMatches(entry, scanText, analysis)
+
+        // 2. 语义相似度检查（如果启用AI分析）
+        const semanticScore = book.settings.enableAI
+          ? await this.calculateSemanticSimilarity(entry, scanText)
+          : 0
+
+        // 3. 上下文相关性检查
+        const contextRelevance = this.calculateContextRelevance(entry, analysis)
+
+        // 4. 概率检查
+        const shouldActivate = this.shouldActivateEntry(
+          entry,
+          keywordMatches,
+          semanticScore,
+          contextRelevance,
+          book.settings
+        )
+
+        if (shouldActivate) {
+          // 更新相关性分数
+          entry.relevanceScore = Math.max(
+            keywordMatches.score,
+            semanticScore,
+            contextRelevance
+          )
+          activatedEntries.push(entry)
+        }
+      }
+    }
+
+    // 按优先级和相关性排序
+    activatedEntries.sort((a, b) => {
+      const priorityDiff = b.priority - a.priority
+      if (priorityDiff !== 0) return priorityDiff
+      return (b.relevanceScore || 0) - (a.relevanceScore || 0)
+    })
+
+    // 限制最大条目数
+    const maxEntries = books.reduce((max, book) => Math.max(max, book.settings.maxEntries), 10)
+    return activatedEntries.slice(0, maxEntries)
+  }
+
+  /**
+   * 检查关键词匹配
+   */
+  private checkKeywordMatches(
+    entry: WorldInfoEntry,
+    text: string,
+    analysis: KeywordAnalysisResult
+  ): { matches: boolean; score: number; keywords: string[] } {
+    const textLower = text.toLowerCase()
+    const detectedKeywords = analysis.detectedKeywords.map(k => k.toLowerCase())
+
+    const primaryMatches = entry.keywords.filter(keyword =>
+      textLower.includes(keyword.toLowerCase()) ||
+      detectedKeywords.includes(keyword.toLowerCase())
+    )
+
+    const secondaryMatches = (entry.secondaryKeywords || []).filter(keyword =>
+      textLower.includes(keyword.toLowerCase()) ||
+      detectedKeywords.includes(keyword.toLowerCase())
+    )
+
+    let matches = false
+    let score = 0
+
+    switch (entry.keywordFilter) {
+      case 'AND':
+        matches = entry.keywords.every(keyword =>
+          textLower.includes(keyword.toLowerCase()) ||
+          detectedKeywords.includes(keyword.toLowerCase())
+        )
+        score = matches ? 1.0 : 0
+        break
+
+      case 'OR':
+        matches = primaryMatches.length > 0 || secondaryMatches.length > 0
+        score = (primaryMatches.length * 1.0 + secondaryMatches.length * 0.5) /
+                Math.max(entry.keywords.length + (entry.secondaryKeywords?.length || 0), 1)
+        break
+
+      case 'NOT':
+        matches = primaryMatches.length === 0
+        score = matches ? 1.0 : 0
+        break
+    }
+
+    return {
+      matches,
+      score: Math.min(score, 1.0),
+      keywords: [...primaryMatches, ...secondaryMatches]
+    }
+  }
+
+  /**
+   * 计算语义相似度（使用AI）
+   */
+  private async calculateSemanticSimilarity(entry: WorldInfoEntry, text: string): Promise<number> {
+    try {
+      // 如果有预计算的向量嵌入，使用向量相似度
+      if (entry.embedding) {
+        // TODO: 实现向量相似度计算
+        return 0.5
+      }
+
+      // 使用AI判断语义相似度
+      const prompt = `请判断以下两个文本的语义相关性（0-1分）：
+
+文本1（世界观条目）：
+标题：${entry.title}
+内容：${entry.content}
+
+文本2（对话内容）：
+${text}
+
+请只返回一个0到1之间的数字，表示相关性分数。`
+
+      const response = await aiService.generateChatResponse({
+        model: 'grok-3',
+        messages: [
+          {
+            role: 'system',
+            content: '你是语义相似度分析专家。请分析两个文本的语义相关性，返回0-1之间的分数。只返回数字。'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.1,
+        maxTokens: 10
+      })
+
+      const score = parseFloat(response.content.trim())
+      return isNaN(score) ? 0 : Math.max(0, Math.min(1, score))
+    } catch (error) {
+      logger.error('Semantic similarity calculation failed', { error })
+      return 0
+    }
+  }
+
+  /**
+   * 计算上下文相关性
+   */
+  private calculateContextRelevance(entry: WorldInfoEntry, analysis: KeywordAnalysisResult): number {
+    let relevance = 0
+
+    // 主题匹配
+    if (analysis.context.theme && entry.content.toLowerCase().includes(analysis.context.theme.toLowerCase())) {
+      relevance += 0.3
+    }
+
+    // 话题匹配
+    const topicMatches = analysis.context.topics.filter(topic =>
+      entry.content.toLowerCase().includes(topic.toLowerCase()) ||
+      entry.title.toLowerCase().includes(topic.toLowerCase())
+    )
+    relevance += (topicMatches.length / Math.max(analysis.context.topics.length, 1)) * 0.4
+
+    // 概念匹配
+    const conceptMatches = analysis.context.relevantConcepts.filter(concept =>
+      entry.content.toLowerCase().includes(concept.toLowerCase()) ||
+      entry.keywords.some(keyword => keyword.toLowerCase().includes(concept.toLowerCase()))
+    )
+    relevance += (conceptMatches.length / Math.max(analysis.context.relevantConcepts.length, 1)) * 0.3
+
+    return Math.min(relevance, 1.0)
+  }
+
+  /**
+   * 判断是否应该激活条目
+   */
+  private shouldActivateEntry(
+    entry: WorldInfoEntry,
+    keywordMatches: { matches: boolean; score: number; keywords: string[] },
+    semanticScore: number,
+    contextRelevance: number,
+    settings: WorldInfoBook['settings']
+  ): boolean {
+    // 常量条目始终激活
+    if (entry.constant) return true
+
+    // 检查最低语义阈值
+    const maxScore = Math.max(keywordMatches.score, semanticScore, contextRelevance)
+    if (maxScore < settings.semanticThreshold) return false
+
+    // 关键词匹配或语义相似度足够高
+    if (!keywordMatches.matches && semanticScore < 0.5 && contextRelevance < 0.5) {
+      return false
+    }
+
+    // 概率检查
+    const activationProbability = entry.probability / 100
+    return Math.random() < activationProbability
+  }
+
+  /**
+   * 生成注入内容
+   */
+  private async generateInjectionContent(
+    entries: WorldInfoEntry[],
+    context: ConversationContext,
+    analysis: KeywordAnalysisResult
+  ): Promise<string> {
+    if (entries.length === 0) return ''
+
+    // 按类别分组
+    const groupedEntries = this.groupEntriesByCategory(entries)
+
+    let injectedContent = ''
+    const categoryNames: Record<string, string> = {
+      location: '📍 地点信息',
+      character: '👤 人物背景',
+      item: '🎒 物品说明',
+      lore: '📜 传说知识',
+      event: '⚡ 事件背景',
+      general: '💡 相关信息',
+      custom: '🔖 补充内容'
+    }
+
+    // 智能格式化注入内容
+    for (const [category, categoryEntries] of Object.entries(groupedEntries)) {
+      if (categoryEntries.length === 0) continue
+
+      injectedContent += `\n【${categoryNames[category] || category}】\n`
+
+      for (const entry of categoryEntries) {
+        // 根据相关性调整内容长度
+        const relevance = entry.relevanceScore || 0
+        let content = entry.content
+
+        // 高相关性显示完整内容，低相关性显示摘要
+        if (relevance < 0.7 && content.length > entry.contextLength) {
+          content = await this.generateContentSummary(content, analysis, entry.contextLength)
+        }
+
+        injectedContent += `• ${entry.title}: ${content}\n`
+      }
+    }
+
+    return injectedContent.trim()
+  }
+
+  /**
+   * 生成内容摘要
+   */
+  private async generateContentSummary(
+    content: string,
+    analysis: KeywordAnalysisResult,
+    maxLength: number
+  ): Promise<string> {
+    if (content.length <= maxLength) return content
+
+    try {
+      const prompt = `请将以下内容压缩为不超过${maxLength}字符的摘要，保留与"${analysis.detectedKeywords.join('、')}"相关的关键信息：
+
+${content}
+
+摘要：`
+
+      const response = await aiService.generateChatResponse({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: '你是内容摘要专家，擅长提取关键信息并保持原意。'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+        maxTokens: Math.ceil(maxLength / 2)
+      })
+
+      return response.content.trim() || content.substring(0, maxLength) + '...'
+    } catch (error) {
+      logger.error('Content summary generation failed', { error })
+      return content.substring(0, maxLength) + '...'
+    }
+  }
+
+  /**
+   * 记录激活日志
+   */
+  private async logActivations(
+    entries: WorldInfoEntry[],
+    context: ConversationContext,
+    analysis: KeywordAnalysisResult
+  ): Promise<void> {
+    try {
+      for (const entry of entries) {
+        // TODO: 实现数据库日志记录
+        // await prisma.worldInfoActivation.create({
+        //   data: {
+        //     entryId: entry.id,
+        //     sessionId: context.sessionId,
+        //     userId: context.userId,
+        //     characterId: context.characterId,
+        //     roomId: context.roomId,
+        //     triggeredBy: 'ai_analysis',
+        //     keywords: JSON.stringify(analysis.detectedKeywords),
+        //     relevanceScore: entry.relevanceScore || 0,
+        //     contextText: context.currentMessage,
+        //     injectionPosition: entry.insertionPosition,
+        //     metadata: JSON.stringify({
+        //       analysis,
+        //       performance: Date.now()
+        //     })
+        //   }
+        // })
+
+        // 更新条目激活统计
+        entry.activationCount++
+        entry.lastActivated = new Date()
+      }
+    } catch (error) {
+      logger.error('Failed to log activations', { error })
+    }
+  }
+
+  /**
+   * 辅助方法
+   */
+  private hashContext(context: ConversationContext): string {
+    const key = `${context.userId}-${context.characterId}-${context.currentMessage.substring(0, 50)}`
+    return Buffer.from(key).toString('base64').substring(0, 32)
+  }
+
+  private fallbackKeywordAnalysis(text: string): KeywordAnalysisResult {
+    // 简单的基于规则的关键词提取
+    const commonKeywords = ['魔法', '学院', '冒险', '战斗', '友谊', '爱情', '家族', '王国', '法师', '骑士']
+    const detectedKeywords = commonKeywords.filter(keyword =>
+      text.toLowerCase().includes(keyword)
+    )
+
+    return {
+      detectedKeywords,
+      entities: [],
+      sentiment: {
+        score: 0,
+        magnitude: 0.5,
+        emotion: '中性'
+      },
+      context: {
+        theme: '对话',
+        topics: detectedKeywords,
+        relevantConcepts: detectedKeywords
+      }
+    }
+  }
+
+  private calculateRelevanceScores(entries: WorldInfoEntry[], analysis: KeywordAnalysisResult): Record<string, number> {
+    const scores: Record<string, number> = {}
+    entries.forEach(entry => {
+      scores[entry.id] = entry.relevanceScore || 0
+    })
+    return scores
+  }
+
+  private extractTriggeredKeywords(entries: WorldInfoEntry[], analysis: KeywordAnalysisResult): Record<string, string[]> {
+    const triggered: Record<string, string[]> = {}
+    entries.forEach(entry => {
+      triggered[entry.id] = entry.keywords.filter(keyword =>
+        analysis.detectedKeywords.some(detected =>
+          detected.toLowerCase().includes(keyword.toLowerCase())
+        )
+      )
+    })
+    return triggered
+  }
+
+  private estimateTokens(text: string): number {
+    // 简单的token估算：中文字符/1.5 + 英文字符/4
+    const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length
+    const englishChars = text.length - chineseChars
+    return Math.ceil(chineseChars / 1.5 + englishChars / 4)
+  }
+
+  private groupEntriesByCategory(entries: WorldInfoEntry[]): Record<string, WorldInfoEntry[]> {
+    const grouped: Record<string, WorldInfoEntry[]> = {}
+    entries.forEach(entry => {
+      const category = entry.category || 'general'
+      if (!grouped[category]) grouped[category] = []
+      grouped[category].push(entry)
+    })
+    return grouped
+  }
+
+  private async getBookEntries(bookId: string): Promise<WorldInfoEntry[]> {
+    // TODO: 实现数据库查询
+    // return await prisma.worldInfoEntry.findMany({
+    //   where: { bookId, isEnabled: true },
+    //   orderBy: { priority: 'desc' }
+    // })
+
+    // 临时返回模拟数据
+    return this.getMockWorldInfoEntries()
+  }
+
+  /**
+   * 模拟数据方法（开发测试用）
+   */
+  private getMockWorldInfoBooks(context: ConversationContext): WorldInfoBook[] {
+    return [
+      {
+        id: 'book_fantasy_world',
+        name: '幻想世界设定集',
+        description: '包含魔法系统、种族设定、地理信息等',
+        creatorId: 'system',
+        isPublic: true,
+        isGlobal: true,
+        characterIds: [],
+        settings: {
+          maxEntries: 10,
+          scanDepth: 5,
+          insertionStrategy: 'before',
+          budgetCap: 2000,
+          recursiveScanning: true,
+          semanticThreshold: 0.3,
+          enableAI: true
+        },
+        metadata: {},
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ]
+  }
+
+  private getMockWorldInfoEntries(): WorldInfoEntry[] {
+    return [
+      {
+        id: 'entry_magic_system',
+        bookId: 'book_fantasy_world',
+        title: '魔法系统',
+        content: '这个世界的魔法分为元素魔法、神圣魔法和禁忌魔法三大类。元素魔法包括火、水、土、风四种基本元素，每个法师通常只能掌握一到两种元素。',
+        keywords: ['魔法', '法术', '元素', '火魔法', '水魔法', '土魔法', '风魔法'],
+        secondaryKeywords: ['咒语', '法师', '魔力'],
+        keywordFilter: 'OR',
+        priority: 100,
+        orderIndex: 1,
+        isEnabled: true,
+        probability: 80,
+        insertionPosition: 'before',
+        insertionDepth: 3,
+        contextLength: 300,
+        preventRecursion: true,
+        selectiveLogic: '',
+        constant: false,
+        category: 'lore',
+        comment: '核心魔法系统设定',
+        relevanceScore: 0,
+        activationCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'entry_magic_academy',
+        bookId: 'book_fantasy_world',
+        title: '魔法学院',
+        content: '位于艾尔登大陆中心的古老魔法学院，是大陆上最权威的魔法教育机构。学院分为四个学院：炎火学院、碧水学院、厚土学院和疾风学院。',
+        keywords: ['学院', '魔法学院', '艾尔登', '炎火学院', '碧水学院', '厚土学院', '疾风学院'],
+        secondaryKeywords: ['学校', '教育', '学习'],
+        keywordFilter: 'OR',
+        priority: 90,
+        orderIndex: 2,
+        isEnabled: true,
+        probability: 70,
+        insertionPosition: 'before',
+        insertionDepth: 3,
+        contextLength: 250,
+        preventRecursion: true,
+        selectiveLogic: '',
+        constant: false,
+        category: 'location',
+        comment: '魔法学院设定',
+        relevanceScore: 0,
+        activationCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'entry_legendary_sword',
+        bookId: 'book_fantasy_world',
+        title: '传说圣剑',
+        content: '流光圣剑，传说中的神器之一。剑身由星辰陨铁锻造，剑柄镶嵌着古老的魔法水晶。只有真正的勇者才能挥舞这把圣剑。',
+        keywords: ['圣剑', '流光圣剑', '神器', '传说', '勇者'],
+        secondaryKeywords: ['武器', '剑', '传说武器'],
+        keywordFilter: 'OR',
+        priority: 80,
+        orderIndex: 3,
+        isEnabled: true,
+        probability: 60,
+        insertionPosition: 'before',
+        insertionDepth: 3,
+        contextLength: 200,
+        preventRecursion: true,
+        selectiveLogic: '',
+        constant: false,
+        category: 'item',
+        comment: '传说武器设定',
+        relevanceScore: 0,
+        activationCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ]
+  }
+}
+
+export const worldInfoInjectionService = new WorldInfoInjectionService()
+export default worldInfoInjectionService

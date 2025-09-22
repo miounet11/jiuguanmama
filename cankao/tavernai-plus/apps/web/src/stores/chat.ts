@@ -427,6 +427,130 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  // Quick Chat 专用功能
+
+  // 快速创建对话会话
+  const createQuickConversation = async (
+    characterId: string,
+    characterName: string,
+    characterAvatar?: string,
+    quickSettings?: ChatSettings
+  ) => {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      // 创建会话
+      const session = await createSession(characterId, characterName, characterAvatar)
+
+      if (session && quickSettings) {
+        // 应用快速设置
+        session.settings = { ...session.settings, ...quickSettings }
+
+        // 如果需要，可以立即保存设置到后端
+        try {
+          await api.put(`/chat/sessions/${session.id}`, {
+            settings: session.settings
+          })
+        } catch (settingsError) {
+          console.warn('保存快速设置失败:', settingsError)
+        }
+      }
+
+      return session
+    } catch (err: any) {
+      error.value = err.message || '创建快速对话失败'
+      console.error('Error creating quick conversation:', err)
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // 获取或创建会话（防重复创建）
+  const getOrCreateSession = async (
+    characterId: string,
+    characterName: string,
+    characterAvatar?: string
+  ) => {
+    // 先检查是否已有该角色的会话
+    const existingSession = sessions.value.find(s => s.characterId === characterId)
+
+    if (existingSession) {
+      // 如果有现有会话，询问用户是否继续或创建新会话
+      return {
+        session: existingSession,
+        isExisting: true
+      }
+    }
+
+    // 创建新会话
+    const session = await createSession(characterId, characterName, characterAvatar)
+    return {
+      session,
+      isExisting: false
+    }
+  }
+
+  // 快速发送第一条消息
+  const sendQuickFirstMessage = async (
+    sessionId: string,
+    message: string,
+    settings?: ChatSettings
+  ) => {
+    // 如果有设置，先应用设置
+    if (settings && currentSession.value) {
+      currentSession.value.settings = { ...currentSession.value.settings, ...settings }
+    }
+
+    // 发送消息
+    return await sendMessage(message)
+  }
+
+  // 智能生成开场白
+  const generateSmartOpener = (characterName: string, characterDescription?: string) => {
+    const openers = [
+      `你好，${characterName}！很高兴认识你。`,
+      `嗨 ${characterName}，我想和你聊聊。`,
+      `${characterName}，能告诉我更多关于你的事情吗？`,
+      `你好！我对你很好奇，${characterName}。`,
+      `${characterName}，今天过得怎么样？`
+    ]
+
+    // 如果有角色描述，可以基于描述生成更智能的开场白
+    if (characterDescription) {
+      if (characterDescription.includes('友善') || characterDescription.includes('友好')) {
+        openers.push(`你好 ${characterName}，听说你很友善，我想和你做朋友！`)
+      }
+      if (characterDescription.includes('专业') || characterDescription.includes('专家')) {
+        openers.push(`${characterName}，我想向你请教一些问题。`)
+      }
+      if (characterDescription.includes('有趣') || characterDescription.includes('幽默')) {
+        openers.push(`${characterName}，我听说你很有趣，能给我讲个笑话吗？`)
+      }
+    }
+
+    return openers[Math.floor(Math.random() * openers.length)]
+  }
+
+  // 预加载会话（性能优化）
+  const preloadSession = async (sessionId: string) => {
+    try {
+      // 在后台预加载会话数据，不显示loading
+      const response = await api.get(`/chat/sessions/${sessionId}`)
+
+      if (response.success) {
+        // 缓存会话数据，但不设置为当前会话
+        const sessionIndex = sessions.value.findIndex(s => s.id === sessionId)
+        if (sessionIndex !== -1) {
+          sessions.value[sessionIndex] = response.session
+        }
+      }
+    } catch (error) {
+      console.warn('预加载会话失败:', error)
+    }
+  }
+
   return {
     // 状态
     sessions,
@@ -456,6 +580,13 @@ export const useChatStore = defineStore('chat', () => {
     editMessage,
     regenerateReply,
     clearSession,
-    deleteSession
+    deleteSession,
+
+    // Quick Chat 专用方法
+    createQuickConversation,
+    getOrCreateSession,
+    sendQuickFirstMessage,
+    generateSmartOpener,
+    preloadSession
   }
 })

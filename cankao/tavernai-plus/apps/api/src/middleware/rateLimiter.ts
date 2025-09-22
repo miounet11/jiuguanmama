@@ -17,7 +17,7 @@ declare global {
 
 export const rateLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'), // 1分钟
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'), // 最多100个请求
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || (process.env.NODE_ENV === 'development' ? '1000' : '100')), // 开发环境1000个请求，生产环境100个
   message: 'Too many requests, please try again later',
   standardHeaders: true,
   legacyHeaders: false,

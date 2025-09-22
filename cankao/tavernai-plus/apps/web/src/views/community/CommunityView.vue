@@ -304,7 +304,6 @@ import {
   Picture,
   Refresh,
   Loading,
-  Document,
   EditPen,
   Avatar
 } from '@element-plus/icons-vue'

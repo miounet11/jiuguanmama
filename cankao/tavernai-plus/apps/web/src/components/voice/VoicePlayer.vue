@@ -192,7 +192,7 @@ import {
 } from 'element-plus'
 import {
   VideoPlay, VideoPause, Close, Microphone, Download, ArrowDown,
-  Mute, Mute, Microphone, Loading
+  Mute, Loading
 } from '@element-plus/icons-vue'
 import { useVoice, type AudioRecording } from '@/composables/useVoice'
 

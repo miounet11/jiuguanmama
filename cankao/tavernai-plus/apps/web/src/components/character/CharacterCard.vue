@@ -52,14 +52,28 @@
       <!-- 悬停遮罩 -->
       <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <div class="absolute bottom-4 left-4 right-4">
-          <el-button
-            @click.stop="startChat"
-            type="primary"
-            class="w-full"
-            size="large"
-          >
-            开始对话
-          </el-button>
+          <!-- 快速对话按钮组 -->
+          <div class="flex space-x-2">
+            <OneClickChatButton
+              @click.stop
+              :character="character"
+              type="primary"
+              size="small"
+              :quick-mode="true"
+              button-text="快速对话"
+              class="flex-1"
+              @chat-started="handleQuickChatStarted"
+            />
+            <el-button
+              @click.stop="openQuickChatFlow"
+              type="default"
+              size="small"
+              class="px-3"
+              title="自定义设置"
+            >
+              <el-icon><Setting /></el-icon>
+            </el-button>
+          </div>
         </div>
       </div>
     </div>
@@ -144,6 +158,10 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useCharacterStore } from '@/stores/character'
+import { ElMessage } from 'element-plus'
+import { Setting } from '@element-plus/icons-vue'
+import OneClickChatButton from '@/components/chat/OneClickChatButton.vue'
 
 interface Character {
   id: string
@@ -171,7 +189,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   click: [character: Character]
   favorite: [characterId: string]
+  'quick-chat-started': [characterId: string, sessionId: string]
 }>()
+
+const router = useRouter()
+const characterStore = useCharacterStore()
 
 // 格式化数字
 const formatNumber = (num: number): string => {
@@ -199,8 +221,27 @@ const handleCardClick = () => {
   emit('click', props.character)
 }
 
-// 开始聊天
-const router = useRouter()
+// 快速对话开始处理
+const handleQuickChatStarted = (sessionId: string) => {
+  // 缓存角色到最近使用
+  characterStore.cacheRecentCharacter(props.character)
+
+  // 触发事件给父组件
+  emit('quick-chat-started', props.character.id, sessionId)
+
+  // 显示成功消息
+  ElMessage.success({
+    message: `与 ${props.character.name} 的快速对话已开始`,
+    duration: 2000
+  })
+}
+
+// 打开快速对话流程页面
+const openQuickChatFlow = () => {
+  router.push(`/quick-chat/${props.character.id}`)
+}
+
+// 开始聊天（保留原有功能）
 const startChat = () => {
   router.push(`/chat/${props.character.id}`)
 }
@@ -212,5 +253,157 @@ const startChat = () => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* 快速对话按钮组优化 */
+.character-card:hover .absolute.bottom-4 {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* 设置按钮样式 */
+.character-card .el-button:last-child {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+  color: #374151;
+}
+
+.character-card .el-button:last-child:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: #e5e7eb;
+}
+
+/* 快速对话按钮动画 */
+.character-card .one-click-chat-button {
+  transform: translateY(10px);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.character-card:hover .one-click-chat-button {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* 移动端优化 */
+@media (max-width: 640px) {
+  .character-card {
+    /* 增加触控目标大小 */
+    min-height: 44px;
+
+    /* 触控反馈 */
+    &:active {
+      transform: scale(0.98);
+      transition: transform 0.1s ease;
+    }
+  }
+
+  .character-card .absolute.bottom-4 {
+    /* 移动端始终显示按钮 */
+    opacity: 1;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
+    padding-top: 20px;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+  }
+
+  .character-card .one-click-chat-button {
+    transform: translateY(0);
+    opacity: 1;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .character-card .flex.space-x-2 {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .character-card .flex.space-x-2 > * {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  /* 卡片内容间距优化 */
+  .character-card .p-4 {
+    padding: 12px;
+  }
+
+  /* 头像高度调整 */
+  .character-card .h-64 {
+    height: 200px;
+  }
+
+  /* 文字大小调整 */
+  .character-card .text-lg {
+    font-size: 16px;
+  }
+
+  .character-card .text-sm {
+    font-size: 12px;
+  }
+
+  /* 统计信息优化 */
+  .character-card .flex.items-center.gap-3 {
+    gap: 8px;
+  }
+
+  /* 按钮最小尺寸 */
+  .character-card .el-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* 平板端适配 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .character-card .h-64 {
+    height: 220px;
+  }
+}
+
+/* 触控设备专用优化 */
+@media (hover: none) and (pointer: coarse) {
+  .character-card {
+    /* 移动端始终显示操作按钮 */
+    .absolute.inset-0.bg-gradient-to-t {
+      opacity: 1;
+    }
+
+    /* 触控反馈增强 */
+    &:active {
+      transform: scale(0.98);
+      transition: transform 0.1s ease;
+    }
+
+    /* 确保所有可点击元素符合最小尺寸 */
+    .el-button,
+    .el-tag {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 8px 12px;
+    }
+  }
+}
+
+/* 可访问性优化 */
+.character-card .el-button:focus {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+.character-card .el-button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* 微交互优化 */
+.character-card .one-click-chat-button:active {
+  transform: scale(0.98);
+}
+
+.character-card .el-button:last-child:active {
+  transform: scale(0.95);
 }
 </style>

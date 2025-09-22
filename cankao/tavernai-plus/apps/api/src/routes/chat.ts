@@ -9,10 +9,240 @@ import { worldInfoService } from '../services/worldinfo'
 
 const router = Router()
 
-// 获取或创建与角色的聊天会话 (兼容前端的 /api/chats/{characterId} 调用)
-router.get('/:characterId', authenticate, async (req: AuthRequest, res, next) => {
+// 获取用户的聊天会话列表 (兼容前端的 /api/chats 调用) - 必须在具体路由之前
+router.get('/', authenticate, async (req: AuthRequest, res, next) => {
   try {
-    const { characterId } = req.params
+    const sessions = await prisma.chatSession.findMany({
+      where: {
+        userId: req.user!.id,
+        isArchived: false
+      },
+      select: {
+        id: true,
+        title: true,
+        characterId: true,
+        lastMessageAt: true,
+        messageCount: true,
+        updatedAt: true,
+        character: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true
+          }
+        }
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 20
+    })
+
+    res.json({
+      success: true,
+      sessions
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 获取用户的聊天会话列表 (保持向后兼容) - 必须在具体路由之前
+router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const sessions = await prisma.chatSession.findMany({
+      where: {
+        userId: req.user!.id,
+        isArchived: false
+      },
+      select: {
+        id: true,
+        title: true,
+        characterId: true,
+        lastMessageAt: true,
+        messageCount: true,
+        updatedAt: true,
+        character: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true
+          }
+        }
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 20
+    })
+
+    res.json({
+      success: true,
+      sessions
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 创建新的聊天会话 - 必须在具体路由之前
+router.post('/sessions', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { characterId, title } = req.body
+
+    const session = await prisma.chatSession.create({
+      data: {
+        userId: req.user!.id,
+        characterId,
+        title
+      },
+      include: {
+        character: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            firstMessage: true
+          }
+        }
+      }
+    })
+
+    res.status(201).json({
+      success: true,
+      session
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 获取指定会话的聊天数据 (兼容前端的 /api/chats/{sessionId} 调用)
+router.get('/session/:sessionId', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { sessionId } = req.params
+
+    // 查找会话
+    const session = await prisma.chatSession.findUnique({
+      where: {
+        id: sessionId,
+        userId: req.user!.id // 确保只能访问自己的会话
+      },
+      include: {
+        character: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            description: true,
+            firstMessage: true,
+            creator: {
+              select: {
+                username: true
+              }
+            }
+          }
+        }
+      }
+    })
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'Chat session not found'
+      })
+    }
+
+    // 获取消息
+    const messages = await prisma.message.findMany({
+      where: { sessionId },
+      orderBy: { createdAt: 'asc' },
+      take: 100
+    })
+
+    res.json({
+      success: true,
+      session: {
+        ...session,
+        character: {
+          ...session.character,
+          creator: session.character.creator.username
+        }
+      },
+      character: {
+        ...session.character,
+        creator: session.character.creator.username
+      },
+      messages
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 获取或创建与角色的聊天会话 (兼容前端的 /api/chats/{id} 调用)
+// 智能检测：如果ID是会话ID格式(UUID)，则作为会话处理；否则作为角色ID处理
+router.get('/:id', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { id } = req.params
+
+    // 检查ID格式，判断是会话ID还是角色ID
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+
+    if (isUUID) {
+      // 按会话ID处理
+      const session = await prisma.chatSession.findUnique({
+        where: {
+          id: id,
+          userId: req.user!.id
+        },
+        include: {
+          character: {
+            select: {
+              id: true,
+              name: true,
+              avatar: true,
+              description: true,
+              firstMessage: true,
+              creator: {
+                select: {
+                  username: true
+                }
+              }
+            }
+          }
+        }
+      })
+
+      if (!session) {
+        return res.status(404).json({
+          success: false,
+          message: 'Chat session not found'
+        })
+      }
+
+      // 获取消息
+      const messages = await prisma.message.findMany({
+        where: { sessionId: id },
+        orderBy: { createdAt: 'asc' },
+        take: 100
+      })
+
+      return res.json({
+        success: true,
+        session: {
+          ...session,
+          character: {
+            ...session.character,
+            creator: session.character.creator.username
+          }
+        },
+        character: {
+          ...session.character,
+          creator: session.character.creator.username
+        },
+        messages
+      })
+    }
+
+    // 按角色ID处理
+    const characterId = id
 
     // 验证角色是否存在
     const character = await prisma.character.findUnique({
@@ -129,42 +359,76 @@ router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res
     const { content, settings = {}, stream = false } = req.body
     const { characterId } = req.params
 
-    // 验证角色是否存在
-    const character = await prisma.character.findUnique({
-      where: { id: characterId },
-      include: { creator: true }
-    })
+    // 智能ID检测：判断是会话ID还是角色ID
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(characterId)
 
-    if (!character) {
-      return res.status(404).json({
-        success: false,
-        message: 'Character not found'
-      })
-    }
+    let character
+    let session
 
-    // 查找或创建会话
-    let session = await prisma.chatSession.findFirst({
-      where: {
-        characterId,
-        userId: req.user!.id
-      }
-    })
-
-    if (!session) {
-      session = await prisma.chatSession.create({
-        data: {
-          userId: req.user!.id,
-          characterId,
-          title: `与${character.name}的对话`,
-          metadata: JSON.stringify({
-            systemPrompt: character.firstMessage || `你好！我是${character.name}`,
-            temperature: settings.temperature || 0.7,
-            maxTokens: settings.maxTokens || 1000,
-            model: settings.model || 'grok-3'
-          })
+    if (isUUID) {
+      // 传入的是会话ID，先查找会话再获取角色
+      session = await prisma.chatSession.findUnique({
+        where: {
+          id: characterId,
+          userId: req.user!.id
+        },
+        include: {
+          character: {
+            include: { creator: true }
+          }
         }
       })
+
+      if (!session) {
+        return res.status(404).json({
+          success: false,
+          message: 'Chat session not found'
+        })
+      }
+
+      character = session.character
+    } else {
+      // 传入的是角色ID，验证角色是否存在
+      character = await prisma.character.findUnique({
+        where: { id: characterId },
+        include: { creator: true }
+      })
+
+      if (!character) {
+        return res.status(404).json({
+          success: false,
+          message: 'Character not found'
+        })
+      }
     }
+
+    // 查找或创建会话 (如果传入的不是会话ID)
+    if (!isUUID) {
+      // 只有当传入角色ID时才需要查找或创建会话
+      session = await prisma.chatSession.findFirst({
+        where: {
+          characterId: character.id,
+          userId: req.user!.id
+        }
+      })
+
+      if (!session) {
+        session = await prisma.chatSession.create({
+          data: {
+            userId: req.user!.id,
+            characterId: character.id,
+            title: `与${character.name}的对话`,
+            metadata: JSON.stringify({
+              systemPrompt: character.firstMessage || `你好！我是${character.name}`,
+              temperature: settings.temperature || 0.7,
+              maxTokens: settings.maxTokens || 1000,
+              model: settings.model || 'grok-3'
+            })
+          }
+        })
+      }
+    }
+    // 如果传入的是会话ID，session已经在上面获取到了
 
     // 创建用户消息
     const userMessage = await prisma.message.create({
@@ -371,140 +635,6 @@ router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res
   }
 })
 
-// 获取用户的聊天会话列表 (兼容前端的 /api/chats 调用)
-router.get('/', authenticate, async (req: AuthRequest, res, next) => {
-  try {
-    const sessions = await prisma.chatSession.findMany({
-      where: {
-        userId: req.user!.id,
-        isArchived: false
-      },
-      select: {
-        id: true,
-        title: true,
-        characterId: true,
-        lastMessageAt: true,
-        messageCount: true,
-        updatedAt: true,
-        character: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true
-          }
-        }
-      },
-      orderBy: { updatedAt: 'desc' },
-      take: 20
-    })
-
-    res.json({
-      success: true,
-      sessions
-    })
-  } catch (error) {
-    next(error)
-  }
-})
-
-// 创建新聊天会话 (兼容前端的 /api/chats POST 调用)
-router.post('/', authenticate, async (req: AuthRequest, res, next) => {
-  try {
-    const { characterId, title } = req.body
-
-    const session = await prisma.chatSession.create({
-      data: {
-        userId: req.user!.id,
-        characterId,
-        title: title || `与${characterId}的对话`
-      },
-      include: {
-        character: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true
-          }
-        }
-      }
-    })
-
-    res.status(201).json({
-      success: true,
-      session
-    })
-  } catch (error) {
-    next(error)
-  }
-})
-
-// 获取用户的聊天会话列表 (保持向后兼容)
-router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
-  try {
-    const sessions = await prisma.chatSession.findMany({
-      where: {
-        userId: req.user!.id,
-        isArchived: false
-      },
-      select: {
-        id: true,
-        title: true,
-        characterId: true,
-        lastMessageAt: true,
-        messageCount: true,
-        updatedAt: true,
-        character: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true
-          }
-        }
-      },
-      orderBy: { updatedAt: 'desc' },
-      take: 20
-    })
-
-    res.json({
-      success: true,
-      sessions
-    })
-  } catch (error) {
-    next(error)
-  }
-})
-
-// 创建新的聊天会话
-router.post('/sessions', authenticate, async (req: AuthRequest, res, next) => {
-  try {
-    const { characterId, title } = req.body
-
-    const session = await prisma.chatSession.create({
-      data: {
-        userId: req.user!.id,
-        characterId,
-        title
-      },
-      include: {
-        character: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-            firstMessage: true
-          }
-        }
-      }
-    })
-
-    res.status(201).json({
-      success: true,
-      session
-    })
-  } catch (error) {
-    next(error)
-  }
-})
 
 // 获取会话的消息历史
 router.get('/sessions/:sessionId/messages', authenticate, async (req: AuthRequest, res, next) => {

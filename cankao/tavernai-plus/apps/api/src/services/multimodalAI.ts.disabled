@@ -608,6 +608,519 @@ class MultimodalAIService {
     const stats = await fs.stat(filePath)
     return Math.round(stats.size / 1000) // 粗略估算：1KB约1秒
   }
+
+  /**
+   * AI驱动的关键词提取和实体识别
+   * 为动态世界观注入系统提供支持
+   */
+  async extractKeywordsAI(text: string, options: {
+    userId: string
+    language?: string
+    entityTypes?: string[]
+    maxKeywords?: number
+  }): Promise<{
+    keywords: string[]
+    entities: Array<{
+      text: string
+      type: 'PERSON' | 'LOCATION' | 'ORGANIZATION' | 'EVENT' | 'ITEM' | 'CONCEPT'
+      confidence: number
+      startOffset: number
+      endOffset: number
+    }>
+    themes: string[]
+    sentiment: {
+      score: number // -1 to 1
+      magnitude: number
+      emotion: string
+    }
+    cost: number
+  }> {
+    const startTime = Date.now()
+
+    try {
+      const prompt = `请分析以下文本，提取关键词和实体信息：
+
+文本内容：
+${text}
+
+请返回JSON格式结果，包含：
+1. keywords: 重要关键词列表（最多${options.maxKeywords || 15}个）
+2. entities: 实体识别结果，包含文本、类型、置信度、位置
+3. themes: 主要主题列表
+4. sentiment: 情感分析（分数-1到1、强度0到1、主要情绪）
+
+实体类型包括：PERSON（人物）、LOCATION（地点）、ORGANIZATION（组织）、EVENT（事件）、ITEM（物品）、CONCEPT（概念）
+
+示例格式：
+{
+  "keywords": ["魔法", "学院", "冒险", "友谊"],
+  "entities": [
+    {
+      "text": "霍格沃茨",
+      "type": "LOCATION",
+      "confidence": 0.95,
+      "startOffset": 10,
+      "endOffset": 14
+    }
+  ],
+  "themes": ["教育", "成长", "冒险"],
+  "sentiment": {
+    "score": 0.3,
+    "magnitude": 0.7,
+    "emotion": "兴奋"
+  }
+}`
+
+      const response = await this.openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: `你是专业的文本分析AI，擅长关键词提取、实体识别和情感分析。请分析${options.language || '中文'}文本并返回JSON格式结果。`
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 1000
+      })
+
+      const content = response.choices[0]?.message?.content || '{}'
+      const usage = response.usage!
+      const cost = this.calculateCost('text', usage.total_tokens)
+
+      let result
+      try {
+        result = JSON.parse(content)
+      } catch (parseError) {
+        // 降级处理：基于规则的关键词提取
+        result = this.fallbackKeywordExtraction(text, options)
+      }
+
+      // 记录AI请求
+      await this.logAIRequest({
+        userId: options.userId,
+        type: 'keyword_extraction',
+        provider: 'openai',
+        model: 'gpt-4',
+        inputTokens: usage.prompt_tokens,
+        outputTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens,
+        cost,
+        duration: Date.now() - startTime
+      })
+
+      return {
+        ...result,
+        cost
+      }
+    } catch (error) {
+      console.error('关键词提取失败:', error)
+      // 降级处理
+      const fallbackResult = this.fallbackKeywordExtraction(text, options)
+      return {
+        keywords: fallbackResult.keywords,
+        entities: fallbackResult.entities,
+        themes: fallbackResult.themes,
+        sentiment: fallbackResult.sentiment,
+        cost: 0
+      }
+    }
+  }
+
+  /**
+   * 生成世界观信息智能摘要
+   * 根据上下文和相关性生成合适长度的摘要
+   */
+  async generateWorldInfoSummary(
+    content: string,
+    context: {
+      keywords: string[]
+      themes: string[]
+      maxLength: number
+    },
+    options: {
+      userId: string
+      preserveStyle?: boolean
+    }
+  ): Promise<{
+    summary: string
+    keyPoints: string[]
+    relevanceScore: number
+    cost: number
+  }> {
+    const startTime = Date.now()
+
+    try {
+      const prompt = `请为以下世界观内容生成摘要，重点关注与上下文相关的信息：
+
+原始内容：
+${content}
+
+上下文关键词：${context.keywords.join('、')}
+相关主题：${context.themes.join('、')}
+摘要长度限制：${context.maxLength}字符
+
+请返回JSON格式结果：
+{
+  "summary": "压缩后的摘要内容",
+  "keyPoints": ["要点1", "要点2", "要点3"],
+  "relevanceScore": 0.85
+}
+
+要求：
+1. 摘要长度不超过${context.maxLength}字符
+2. 保留与关键词和主题最相关的信息
+3. ${options.preserveStyle ? '保持原文风格和语调' : '使用简洁明了的语言'}
+4. relevanceScore表示摘要与上下文的相关性(0-1)`
+
+      const response = await this.openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: '你是专业的内容摘要专家，擅长提取关键信息并保持内容相关性。'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: Math.ceil(context.maxLength / 2)
+      })
+
+      const responseContent = response.choices[0]?.message?.content || '{}'
+      const usage = response.usage!
+      const cost = this.calculateCost('text', usage.total_tokens)
+
+      let result
+      try {
+        result = JSON.parse(responseContent)
+      } catch (parseError) {
+        // 降级处理：简单截断
+        result = {
+          summary: content.substring(0, context.maxLength) + (content.length > context.maxLength ? '...' : ''),
+          keyPoints: context.keywords.slice(0, 3),
+          relevanceScore: 0.5
+        }
+      }
+
+      // 记录AI请求
+      await this.logAIRequest({
+        userId: options.userId,
+        type: 'content_summary',
+        provider: 'openai',
+        model: 'gpt-3.5-turbo',
+        inputTokens: usage.prompt_tokens,
+        outputTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens,
+        cost,
+        duration: Date.now() - startTime
+      })
+
+      return {
+        ...result,
+        cost
+      }
+    } catch (error) {
+      console.error('世界观摘要生成失败:', error)
+      // 降级处理
+      return {
+        summary: content.substring(0, context.maxLength) + (content.length > context.maxLength ? '...' : ''),
+        keyPoints: context.keywords.slice(0, 3),
+        relevanceScore: 0.5,
+        cost: 0
+      }
+    }
+  }
+
+  /**
+   * 检测对话的情感上下文和语调
+   * 用于优化世界观注入的时机和方式
+   */
+  async detectEmotionalContext(
+    messages: Array<{ role: string; content: string }>,
+    options: {
+      userId: string
+      characterId?: string
+      includeAdvice?: boolean
+    }
+  ): Promise<{
+    overallMood: string
+    emotionalIntensity: number // 0-1
+    appropriateForInjection: boolean
+    suggestedTiming: 'immediate' | 'delayed' | 'avoid'
+    contextAdvice?: string
+    cost: number
+  }> {
+    const startTime = Date.now()
+
+    try {
+      const conversationText = messages.slice(-5).map(m =>
+        `${m.role === 'user' ? '用户' : '角色'}: ${m.content}`
+      ).join('\n')
+
+      const prompt = `请分析以下对话的情感上下文，判断是否适合注入世界观信息：
+
+对话内容：
+${conversationText}
+
+请返回JSON格式分析结果：
+{
+  "overallMood": "对话整体情绪（如：轻松、紧张、浪漫、严肃、激动等）",
+  "emotionalIntensity": 0.75,
+  "appropriateForInjection": true,
+  "suggestedTiming": "immediate",
+  ${options.includeAdvice ? '"contextAdvice": "关于何时何种方式注入世界观的建议",' : ''}
+  "reasoning": "判断理由"
+}
+
+判断标准：
+- 轻松、好奇的对话适合注入
+- 紧张、激烈的对话建议延迟注入
+- 私密、情感化的对话避免注入
+- timing: immediate（立即）、delayed（延迟）、avoid（避免）`
+
+      const response = await this.openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: '你是对话情感分析专家，擅长判断对话氛围和适当的交互时机。'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 300
+      })
+
+      const content = response.choices[0]?.message?.content || '{}'
+      const usage = response.usage!
+      const cost = this.calculateCost('text', usage.total_tokens)
+
+      let result
+      try {
+        result = JSON.parse(content)
+      } catch (parseError) {
+        // 降级处理：保守策略
+        result = {
+          overallMood: '中性',
+          emotionalIntensity: 0.5,
+          appropriateForInjection: true,
+          suggestedTiming: 'delayed',
+          contextAdvice: '建议在对话间隙适当注入世界观信息'
+        }
+      }
+
+      // 记录AI请求
+      await this.logAIRequest({
+        userId: options.userId,
+        type: 'emotional_analysis',
+        provider: 'openai',
+        model: 'gpt-3.5-turbo',
+        inputTokens: usage.prompt_tokens,
+        outputTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens,
+        cost,
+        duration: Date.now() - startTime,
+        characterId: options.characterId
+      })
+
+      return {
+        ...result,
+        cost
+      }
+    } catch (error) {
+      console.error('情感上下文检测失败:', error)
+      // 降级处理：保守策略
+      return {
+        overallMood: '中性',
+        emotionalIntensity: 0.5,
+        appropriateForInjection: true,
+        suggestedTiming: 'delayed',
+        contextAdvice: '建议在对话间隙适当注入世界观信息',
+        cost: 0
+      }
+    }
+  }
+
+  /**
+   * 为角色语音优化世界观内容
+   * 调整内容以匹配特定角色的语言风格
+   */
+  async optimizeForCharacterVoice(
+    content: string,
+    character: {
+      name: string
+      personality?: string
+      speakingStyle?: string
+    },
+    options: {
+      userId: string
+      tone?: 'formal' | 'casual' | 'mysterious' | 'friendly'
+      length?: 'brief' | 'normal' | 'detailed'
+    }
+  ): Promise<{
+    optimizedContent: string
+    voiceMatching: number // 0-1, 与角色语音的匹配度
+    adjustments: string[]
+    cost: number
+  }> {
+    const startTime = Date.now()
+
+    try {
+      const prompt = `请将以下世界观内容调整为符合特定角色语言风格的表达方式：
+
+原始内容：
+${content}
+
+角色信息：
+- 名称：${character.name}
+- 性格：${character.personality || '未知'}
+- 说话风格：${character.speakingStyle || '未知'}
+
+调整要求：
+- 语调：${options.tone || 'friendly'}
+- 长度：${options.length || 'normal'}
+
+请返回JSON格式结果：
+{
+  "optimizedContent": "调整后的内容",
+  "voiceMatching": 0.9,
+  "adjustments": ["调整说明1", "调整说明2"],
+  "styleNotes": "风格调整要点"
+}
+
+要求：
+1. 保持信息准确性，只调整表达方式
+2. 符合角色的性格和说话习惯
+3. 自然融入对话，不显得突兀`
+
+      const response = await this.openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: '你是角色语音优化专家，擅长调整文本以匹配不同角色的说话风格和个性。'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 500
+      })
+
+      const responseContent = response.choices[0]?.message?.content || '{}'
+      const usage = response.usage!
+      const cost = this.calculateCost('text', usage.total_tokens)
+
+      let result
+      try {
+        result = JSON.parse(responseContent)
+      } catch (parseError) {
+        // 降级处理：返回原始内容
+        result = {
+          optimizedContent: content,
+          voiceMatching: 0.7,
+          adjustments: ['保持原始内容'],
+          styleNotes: '未进行风格调整'
+        }
+      }
+
+      // 记录AI请求
+      await this.logAIRequest({
+        userId: options.userId,
+        type: 'voice_optimization',
+        provider: 'openai',
+        model: 'gpt-3.5-turbo',
+        inputTokens: usage.prompt_tokens,
+        outputTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens,
+        cost,
+        duration: Date.now() - startTime
+      })
+
+      return {
+        ...result,
+        cost
+      }
+    } catch (error) {
+      console.error('角色语音优化失败:', error)
+      // 降级处理
+      return {
+        optimizedContent: content,
+        voiceMatching: 0.7,
+        adjustments: ['保持原始内容'],
+        cost: 0
+      }
+    }
+  }
+
+  /**
+   * 降级处理：基于规则的关键词提取
+   */
+  private fallbackKeywordExtraction(text: string, options: any) {
+    // 常见关键词列表
+    const commonKeywords = [
+      '魔法', '法术', '咒语', '法师', '巫师',
+      '学院', '学校', '教育', '学习', '知识',
+      '冒险', '探索', '旅行', '任务', '挑战',
+      '战斗', '战争', '胜利', '失败', '勇气',
+      '友谊', '爱情', '家族', '伙伴', '敌人',
+      '王国', '城市', '村庄', '森林', '山脉',
+      '剑', '盾', '武器', '装备', '宝物',
+      '传说', '神话', '历史', '秘密', '谜团'
+    ]
+
+    const detectedKeywords = commonKeywords.filter(keyword =>
+      text.toLowerCase().includes(keyword)
+    ).slice(0, options.maxKeywords || 15)
+
+    // 简单的实体识别（基于大写字母和特定模式）
+    const entities: Array<{
+      text: string;
+      type: 'PERSON' | 'LOCATION' | 'ORGANIZATION' | 'EVENT' | 'ITEM' | 'CONCEPT';
+      confidence: number;
+      startOffset: number;
+      endOffset: number;
+    }> = []
+    const entityPatterns = [
+      { regex: /[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g, type: 'PERSON' as const },
+      { regex: /(?:学院|城市|王国|森林|山脉)[^，。！？\s]*/g, type: 'LOCATION' as const }
+    ]
+
+    entityPatterns.forEach(pattern => {
+      const matches = text.match(pattern.regex) || []
+      matches.forEach(match => {
+        entities.push({
+          text: match,
+          type: pattern.type,
+          confidence: 0.6,
+          startOffset: text.indexOf(match),
+          endOffset: text.indexOf(match) + match.length
+        })
+      })
+    })
+
+    return {
+      keywords: detectedKeywords,
+      entities: entities.slice(0, 10),
+      themes: detectedKeywords.slice(0, 5),
+      sentiment: {
+        score: 0,
+        magnitude: 0.5,
+        emotion: '中性'
+      }
+    }
+  }
 }
 
 export default new MultimodalAIService()

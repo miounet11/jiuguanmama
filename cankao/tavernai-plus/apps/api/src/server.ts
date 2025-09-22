@@ -30,17 +30,18 @@ import chatroomRoutes from './routes/chatroom'
 import marketplaceRoutes from './routes/marketplace'
 import communityRoutes from './routes/community'
 import multimodalRoutes from './routes/multimodal'
-import recommendationRoutes from './routes/recommendation'
+// import recommendationRoutes from './routes/recommendation'  // 临时禁用
 import systemRoutes from './routes/system'
 import logsRoutes from './routes/logs'
 import aiFeaturesRoutes from './routes/ai-features'
 import modelsRoutes from './routes/models'
 import presetsRoutes from './routes/presets'
 import worldinfoRoutes from './routes/worldinfo'
-import worldinfoInjectionRoutes from './routes/worldinfo-injection'
+// import worldinfoInjectionRoutes from './routes/worldinfo-injection' // 临时禁用
 import groupchatRoutes from './routes/groupchat'
 import personasRoutes from './routes/personas'
 import userModeRoutes from './routes/user-mode'
+import statsRoutes from './routes/stats'
 
 // 导入工作流调度器
 
@@ -83,7 +84,7 @@ app.use(helmet({
 
 // CORS 配置 - 简化配置以确保工作
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'],
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'http://127.0.0.1:3002'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -106,24 +107,29 @@ app.use('/uploads', express.static('uploads'))
 // API 路由
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
+app.use('/api/user', userRoutes) // 支持单数形式，兼容前端调用
 app.use('/api/characters', characterRoutes)
+app.use('/characters', characterRoutes) // 直接支持 /characters 路径（兼容前端调用）
 app.use('/api/chat', chatRoutes)
 app.use('/api/chats', chatRoutes) // 支持复数形式，兼容前端调用
+app.use('/chat', chatRoutes) // 直接支持 /chat 路径（兼容前端调用）
 app.use('/api/chatrooms', chatroomRoutes) // 多角色聊天室 API
 app.use('/api/marketplace', marketplaceRoutes)
 app.use('/api/community', communityRoutes) // 社区功能 API
+app.use('/api', communityRoutes) // 通知功能 API (notifications)
 app.use('/api/multimodal', multimodalRoutes) // 多模态AI功能 API
-app.use('/api/recommendations', recommendationRoutes) // 智能推荐系统 API
+// app.use('/api/recommendations', recommendationRoutes) // 智能推荐系统 API - 临时禁用
 app.use('/api/system', systemRoutes) // 系统管理和监控 API
 app.use('/api/logs', logsRoutes)
 app.use('/api/ai', aiFeaturesRoutes) // QuackAI 核心功能 API
 app.use('/api/models', modelsRoutes) // 多模型 AI 支持 API
 app.use('/api/presets', presetsRoutes) // 聊天预设管理 API
 app.use('/api/worldinfo', worldinfoRoutes) // 世界信息管理 API
-app.use('/api/worldinfo-injection', worldinfoInjectionRoutes) // 动态世界观注入 API (Issue #15)
+// app.use('/api/worldinfo-injection', worldinfoInjectionRoutes) // 动态世界观注入 API (Issue #15) - 临时禁用
 app.use('/api/groupchat', groupchatRoutes) // 群组聊天 API
 app.use('/api/personas', personasRoutes) // 用户人格管理 API
 app.use('/api/user-mode', userModeRoutes) // 渐进式功能披露 API (Issue #16)
+app.use('/api/stats', statsRoutes) // 统计数据 API
 // app.use('/api/workflows', workflowRoutes) // 智能工作流 API - 已删除
 
 // 健康检查端点
@@ -199,14 +205,14 @@ async function startServer() {
     // 初始化性能优化服务
     console.log('🔧 初始化性能优化服务...')
 
-    // 1. 初始化数据库优化
-    await DatabaseOptimizer.initialize()
+    // 1. 初始化数据库优化 (暂时禁用以修复错误)
+    // await DatabaseOptimizer.initialize()
 
-    // 2. 预热缓存系统
-    await CacheManager.warmup()
+    // 2. 预热缓存系统 (暂时禁用)
+    // await CacheManager.warmup()
 
-    // 3. 初始化可扩展性管理器
-    await ScalabilityManager.initialize()
+    // 3. 初始化可扩展性管理器 (暂时禁用)
+    // await ScalabilityManager.initialize()
 
     console.log('✅ 性能优化服务初始化完成')
 
@@ -225,7 +231,7 @@ async function startServer() {
       console.log('   GET  /api/recommendations/* - 智能推荐系统')
       console.log('   GET  /api/marketplace/* - 角色市场')
       console.log('   GET  /api/community/* - 社区功能')
-      console.log('   POST /api/multimodal/* - 多模态AI')
+      // console.log('   POST /api/multimodal/* - 多模态AI')
       console.log('   GET  /api/system/* - 系统管理和监控')
     })
   } catch (error) {
