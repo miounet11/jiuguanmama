@@ -1,0 +1,222 @@
+// =====================================
+// 响应式断点系统
+// =====================================
+
+// 断点变量定义
+$breakpoints: (
+  xs: 475px,    // 超小屏手机 (iPhone SE)
+  sm: 640px,    // 小屏手机 (标准手机)
+  md: 768px,    // 平板竖屏 (iPad)
+  lg: 1024px,   // 平板横屏/小笔记本
+  xl: 1280px,   // 桌面端
+  2xl: 1536px,  // 大屏桌面
+);
+
+// 方向断点
+$orientation-portrait: "portrait";
+$orientation-landscape: "landscape";
+
+// 像素密度断点
+$retina: 2;
+$super-retina: 3;
+
+// =====================================
+// 响应式混合器 (Responsive Mixins)
+// =====================================
+
+// 最小宽度断点
+@mixin breakpoint-up($size) {
+  @if map-has-key($breakpoints, $size) {
+    @media (min-width: map-get($breakpoints, $size)) {
+      @content;
+    }
+  } @else {
+    @media (min-width: $size) {
+      @content;
+    }
+  }
+}
+
+// 最大宽度断点
+@mixin breakpoint-down($size) {
+  @if map-has-key($breakpoints, $size) {
+    @media (max-width: map-get($breakpoints, $size) - 1px) {
+      @content;
+    }
+  } @else {
+    @media (max-width: $size - 1px) {
+      @content;
+    }
+  }
+}
+
+// 范围断点
+@mixin breakpoint-between($lower, $upper) {
+  $lower-value: map-get($breakpoints, $lower);
+  $upper-value: map-get($breakpoints, $upper);
+
+  @if $lower-value and $upper-value {
+    @media (min-width: $lower-value) and (max-width: $upper-value - 1px) {
+      @content;
+    }
+  }
+}
+
+// 仅指定断点
+@mixin breakpoint-only($size) {
+  @if $size == xs {
+    @include breakpoint-down(sm) {
+      @content;
+    }
+  } @else if $size == sm {
+    @include breakpoint-between(sm, md) {
+      @content;
+    }
+  } @else if $size == md {
+    @include breakpoint-between(md, lg) {
+      @content;
+    }
+  } @else if $size == lg {
+    @include breakpoint-between(lg, xl) {
+      @content;
+    }
+  } @else if $size == xl {
+    @include breakpoint-between(xl, 2xl) {
+      @content;
+    }
+  } @else if $size == 2xl {
+    @include breakpoint-up(2xl) {
+      @content;
+    }
+  }
+}
+
+// =====================================
+// 设备特定混合器
+// =====================================
+
+// 手机端 (xs + sm)
+@mixin mobile {
+  @include breakpoint-down(md) {
+    @content;
+  }
+}
+
+// 平板端 (md + lg)
+@mixin tablet {
+  @include breakpoint-between(md, xl) {
+    @content;
+  }
+}
+
+// 桌面端 (xl+)
+@mixin desktop {
+  @include breakpoint-up(xl) {
+    @content;
+  }
+}
+
+// 触控设备
+@mixin touch {
+  @media (hover: none) and (pointer: coarse) {
+    @content;
+  }
+}
+
+// 鼠标设备
+@mixin mouse {
+  @media (hover: hover) and (pointer: fine) {
+    @content;
+  }
+}
+
+// =====================================
+// 方向混合器
+// =====================================
+
+@mixin portrait {
+  @media (orientation: portrait) {
+    @content;
+  }
+}
+
+@mixin landscape {
+  @media (orientation: landscape) {
+    @content;
+  }
+}
+
+// 移动端竖屏
+@mixin mobile-portrait {
+  @include mobile {
+    @include portrait {
+      @content;
+    }
+  }
+}
+
+// 移动端横屏
+@mixin mobile-landscape {
+  @include mobile {
+    @include landscape {
+      @content;
+    }
+  }
+}
+
+// =====================================
+// 像素密度混合器
+// =====================================
+
+@mixin retina {
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+    @content;
+  }
+}
+
+@mixin super-retina {
+  @media (-webkit-min-device-pixel-ratio: 3), (min-resolution: 3dppx) {
+    @content;
+  }
+}
+
+// =====================================
+// 容器查询混合器 (现代浏览器)
+// =====================================
+
+@mixin container-up($size) {
+  @container (min-width: $size) {
+    @content;
+  }
+}
+
+@mixin container-down($size) {
+  @container (max-width: $size - 1px) {
+    @content;
+  }
+}
+
+// =====================================
+// 实用工具函数
+// =====================================
+
+// 获取断点值
+@function breakpoint($size) {
+  @return map-get($breakpoints, $size);
+}
+
+// 计算流体字体大小
+@function fluid-font-size($min-size, $max-size, $min-screen: 320px, $max-screen: 1200px) {
+  $slope: ($max-size - $min-size) / ($max-screen - $min-screen);
+  $intercept: $min-size - $slope * $min-screen;
+
+  @return clamp(#{$min-size}, #{$intercept} + #{$slope * 100}vw, #{$max-size});
+}
+
+// 计算流体间距
+@function fluid-spacing($min-spacing, $max-spacing, $min-screen: 320px, $max-screen: 1200px) {
+  $slope: ($max-spacing - $min-spacing) / ($max-screen - $min-screen);
+  $intercept: $min-spacing - $slope * $min-screen;
+
+  @return clamp(#{$min-spacing}, #{$intercept} + #{$slope * 100}vw, #{$max-spacing});
+}

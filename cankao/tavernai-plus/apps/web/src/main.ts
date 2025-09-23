@@ -13,6 +13,9 @@ import router from './router'
 // 性能监控初始化
 import { initWebVitalsMonitoring } from './utils/performance/webVitals'
 
+// PWA 服务初始化
+import './services/pwa'
+
 const app = createApp(App)
 const pinia = createPinia()
 

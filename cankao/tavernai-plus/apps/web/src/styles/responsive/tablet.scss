@@ -1,0 +1,576 @@
+// =====================================
+// 平板端优化样式
+// =====================================
+
+@import './breakpoints.scss';
+
+// =====================================
+// 平板端布局优化
+// =====================================
+
+@include tablet {
+  // 容器宽度优化
+  .container {
+    max-width: 90%;
+    padding: 0 var(--space-6);
+  }
+
+  // 栅格系统优化
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-cols-4 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-cols-6 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  // 卡片网格优化
+  .character-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-4);
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-5);
+  }
+}
+
+// =====================================
+// 平板端导航优化
+// =====================================
+
+@include tablet {
+  // 顶部导航栏
+  .navbar {
+    padding: var(--space-3) var(--space-6);
+
+    .navbar-brand {
+      font-size: var(--text-xl);
+    }
+
+    .navbar-menu {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .navbar-item {
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      transition: background-color var(--duration-fast);
+
+      &:hover {
+        background-color: var(--surface-2);
+      }
+    }
+  }
+
+  // 侧边栏导航
+  .sidebar {
+    width: 250px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--surface-1);
+    border-right: 1px solid var(--border-primary);
+    padding: var(--space-4);
+    overflow-y: auto;
+    z-index: 100;
+
+    .sidebar-header {
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--border-secondary);
+      margin-bottom: var(--space-4);
+    }
+
+    .sidebar-nav {
+      .nav-item {
+        display: block;
+        padding: var(--space-3);
+        margin-bottom: var(--space-1);
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        color: var(--text-secondary);
+        transition: all var(--duration-fast);
+
+        &:hover, &.active {
+          background-color: var(--surface-2);
+          color: var(--text-primary);
+        }
+
+        .nav-icon {
+          margin-right: var(--space-2);
+        }
+      }
+    }
+  }
+
+  // 主内容区域调整
+  .main-content {
+    margin-left: 250px;
+    padding: var(--space-6);
+  }
+
+  // 可切换侧边栏
+  .layout-with-sidebar {
+    &.sidebar-collapsed {
+      .sidebar {
+        width: 60px;
+
+        .sidebar-text {
+          display: none;
+        }
+      }
+
+      .main-content {
+        margin-left: 60px;
+      }
+    }
+  }
+}
+
+// =====================================
+// 平板端表单优化
+// =====================================
+
+@include tablet {
+  // 表单布局
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+
+    .form-group-full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  // 输入框组合
+  .input-group {
+    display: flex;
+    align-items: center;
+
+    .input-group-text {
+      padding: var(--space-3);
+      background: var(--surface-2);
+      border: 1px solid var(--border-primary);
+      border-right: none;
+      border-radius: var(--radius-md) 0 0 var(--radius-md);
+    }
+
+    input {
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      border-left: none;
+    }
+  }
+
+  // 表单操作区
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-secondary);
+
+    .btn {
+      min-width: 120px;
+    }
+  }
+}
+
+// =====================================
+// 平板端模态框优化
+// =====================================
+
+@include tablet {
+  .modal {
+    .modal-content {
+      max-width: 600px;
+      margin: var(--space-12) auto;
+      border-radius: var(--radius-xl);
+    }
+
+    .modal-header {
+      padding: var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .modal-title {
+        font-size: var(--text-xl);
+        font-weight: var(--font-semibold);
+      }
+
+      .modal-close {
+        width: var(--space-8);
+        height: var(--space-8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+
+        &:hover {
+          background: var(--surface-2);
+          color: var(--text-primary);
+        }
+      }
+    }
+
+    .modal-body {
+      padding: 0 var(--space-6) var(--space-6);
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: var(--space-4) var(--space-6) var(--space-6);
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-3);
+    }
+  }
+
+  // 大型模态框
+  .modal-lg {
+    .modal-content {
+      max-width: 800px;
+    }
+  }
+
+  // 超大型模态框
+  .modal-xl {
+    .modal-content {
+      max-width: 1000px;
+    }
+  }
+}
+
+// =====================================
+// 平板端工具栏优化
+// =====================================
+
+@include tablet {
+  .toolbar {
+    padding: var(--space-3) var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface-1);
+    border-bottom: 1px solid var(--border-primary);
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .toolbar-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+      color: var(--text-primary);
+    }
+
+    .toolbar-item {
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      color: var(--text-secondary);
+      transition: all var(--duration-fast);
+
+      &:hover {
+        background: var(--surface-2);
+        color: var(--text-primary);
+      }
+
+      &.active {
+        background: var(--brand-primary-500);
+        color: white;
+      }
+    }
+  }
+
+  // 标签页工具栏
+  .tab-toolbar {
+    display: flex;
+    border-bottom: 1px solid var(--border-primary);
+    overflow-x: auto;
+
+    .tab-item {
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 2px solid transparent;
+      text-decoration: none;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      transition: all var(--duration-fast);
+
+      &:hover {
+        color: var(--text-primary);
+        border-bottom-color: var(--brand-primary-300);
+      }
+
+      &.active {
+        color: var(--brand-primary-500);
+        border-bottom-color: var(--brand-primary-500);
+      }
+    }
+  }
+}
+
+// =====================================
+// 平板端卡片优化
+// =====================================
+
+@include tablet {
+  .card {
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--duration-normal);
+
+    &:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-header {
+      padding: var(--space-5);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .card-title {
+        font-size: var(--text-lg);
+        font-weight: var(--font-semibold);
+      }
+
+      .card-actions {
+        display: flex;
+        gap: var(--space-2);
+      }
+    }
+
+    .card-body {
+      padding: 0 var(--space-5) var(--space-5);
+    }
+
+    .card-footer {
+      padding: var(--space-4) var(--space-5) var(--space-5);
+      border-top: 1px solid var(--border-secondary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+
+  // 角色卡片平板优化
+  .character-card {
+    .character-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+
+      .character-avatar {
+        width: var(--space-12);
+        height: var(--space-12);
+        border-radius: 50%;
+      }
+
+      .character-info {
+        flex: 1;
+
+        .character-name {
+          font-size: var(--text-lg);
+          font-weight: var(--font-semibold);
+          margin-bottom: var(--space-1);
+        }
+
+        .character-creator {
+          font-size: var(--text-sm);
+          color: var(--text-secondary);
+        }
+      }
+    }
+
+    .character-actions {
+      display: flex;
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+
+      .btn {
+        flex: 1;
+      }
+    }
+  }
+}
+
+// =====================================
+// 平板端表格优化
+// =====================================
+
+@include tablet {
+  .table-container {
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-primary);
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+
+      th, td {
+        padding: var(--space-3) var(--space-4);
+        text-align: left;
+        border-bottom: 1px solid var(--border-secondary);
+      }
+
+      th {
+        background: var(--surface-2);
+        font-weight: var(--font-semibold);
+        color: var(--text-primary);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      tr:hover {
+        background: var(--surface-1);
+      }
+    }
+  }
+
+  // 响应式表格
+  .table-responsive {
+    .table {
+      min-width: 600px;
+    }
+  }
+}
+
+// =====================================
+// 平板端面包屑导航
+// =====================================
+
+@include tablet {
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) 0;
+    font-size: var(--text-sm);
+
+    .breadcrumb-item {
+      display: flex;
+      align-items: center;
+      color: var(--text-secondary);
+
+      a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: color var(--duration-fast);
+
+        &:hover {
+          color: var(--brand-primary-500);
+        }
+      }
+
+      &.active {
+        color: var(--text-primary);
+        font-weight: var(--font-medium);
+      }
+
+      &:not(:last-child)::after {
+        content: '/';
+        margin-left: var(--space-2);
+        color: var(--text-tertiary);
+      }
+    }
+  }
+}
+
+// =====================================
+// 平板端横竖屏适配
+// =====================================
+
+// 平板竖屏
+@include tablet {
+  @include portrait {
+    .grid-landscape-only {
+      display: none;
+    }
+
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform var(--duration-normal);
+
+      &.show {
+        transform: translateX(0);
+      }
+    }
+
+    .main-content {
+      margin-left: 0;
+    }
+  }
+}
+
+// 平板横屏
+@include tablet {
+  @include landscape {
+    .grid-portrait-only {
+      display: none;
+    }
+
+    .character-grid {
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    // 双列布局优化
+    .two-column-layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: var(--space-6);
+    }
+  }
+}
+
+// =====================================
+// 平板端性能优化
+// =====================================
+
+@include tablet {
+  // 优化动画性能
+  .animation-optimized {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  // 优化图片加载
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+  }
+
+  // 懒加载优化
+  .lazy-load {
+    opacity: 0;
+    transition: opacity var(--duration-normal);
+
+    &.loaded {
+      opacity: 1;
+    }
+  }
+}

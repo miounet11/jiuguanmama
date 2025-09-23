@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'path'
 
 // 性能优化配置 - TavernAI Plus
@@ -13,6 +14,111 @@ export default defineConfig({
           hoistStatic: true,
           cacheHandlers: true,
         }
+      }
+    }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/api\.tavernai\.plus\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+              },
+              cacheKeyWillBeUsed: async ({ request }) => {
+                // 为API请求生成缓存键
+                return `${request.url}?v=${Date.now()}`
+              }
+            }
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              }
+            }
+          },
+          {
+            urlPattern: /\.(?:js|css)$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'assets-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+              }
+            }
+          }
+        ]
+      },
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      manifest: {
+        name: 'TavernAI Plus - AI角色扮演平台',
+        short_name: 'TavernAI Plus',
+        description: '下一代AI角色扮演对话平台，提供丰富的AI角色创建、对话交互和社区分享功能',
+        theme_color: '#a855f7',
+        background_color: '#0a0a0f',
+        display: 'standalone',
+        orientation: 'portrait-primary',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: 'icons/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'icons/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: 'icons/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ],
+        shortcuts: [
+          {
+            name: '快速聊天',
+            short_name: '聊天',
+            description: '快速开始与AI角色对话',
+            url: '/quick-chat',
+            icons: [
+              {
+                src: 'icons/shortcut-chat.png',
+                sizes: '96x96'
+              }
+            ]
+          },
+          {
+            name: '创建角色',
+            short_name: '创建',
+            description: '创建新的AI角色',
+            url: '/studio/character/create',
+            icons: [
+              {
+                src: 'icons/shortcut-create.png',
+                sizes: '96x96'
+              }
+            ]
+          }
+        ]
+      },
+      devOptions: {
+        enabled: true,
+        type: 'module'
       }
     })
   ],

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>离线模式 - TavernAI Plus</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+      background: linear-gradient(135deg, #0a0a0f, #111118);
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .offline-container {
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .offline-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      background: linear-gradient(135deg, #a855f7, #3b82f6);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+
+    .offline-icon svg {
+      width: 40px;
+      height: 40px;
+      fill: white;
+    }
+
+    .offline-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #a855f7, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .offline-message {
+      font-size: 1.125rem;
+      line-height: 1.6;
+      color: #9ca3af;
+      margin-bottom: 32px;
+    }
+
+    .offline-features {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .offline-features h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #f3f4f6;
+    }
+
+    .feature-list {
+      list-style: none;
+      text-align: left;
+    }
+
+    .feature-list li {
+      padding: 8px 0;
+      color: #d1d5db;
+      display: flex;
+      align-items: center;
+    }
+
+    .feature-list li::before {
+      content: '✓';
+      color: #10b981;
+      font-weight: bold;
+      margin-right: 12px;
+    }
+
+    .retry-button {
+      background: linear-gradient(135deg, #a855f7, #3b82f6);
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .retry-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(168, 85, 247, 0.3);
+    }
+
+    .retry-button:active {
+      transform: translateY(0);
+    }
+
+    .connection-status {
+      margin-top: 24px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .status-offline {
+      background: rgba(239, 68, 68, 0.1);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .status-online {
+      background: rgba(16, 185, 129, 0.1);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .offline-title {
+        font-size: 1.5rem;
+      }
+
+      .offline-message {
+        font-size: 1rem;
+      }
+
+      .offline-features {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-container">
+    <div class="offline-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+      </svg>
+    </div>
+
+    <h1 class="offline-title">离线模式</h1>
+
+    <p class="offline-message">
+      您当前处于离线状态，但可以继续使用已缓存的功能
+    </p>
+
+    <div class="offline-features">
+      <h3>离线可用功能</h3>
+      <ul class="feature-list">
+        <li>浏览已缓存的角色</li>
+        <li>查看历史对话记录</li>
+        <li>使用基础界面功能</li>
+        <li>编辑草稿内容</li>
+      </ul>
+    </div>
+
+    <button class="retry-button" onclick="checkConnection()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+      </svg>
+      检查网络连接
+    </button>
+
+    <div id="connectionStatus" class="connection-status status-offline">
+      网络连接已断开
+    </div>
+  </div>
+
+  <script>
+    // 检查网络连接状态
+    function updateConnectionStatus() {
+      const statusEl = document.getElementById('connectionStatus');
+
+      if (navigator.onLine) {
+        statusEl.textContent = '网络连接正常';
+        statusEl.className = 'connection-status status-online';
+      } else {
+        statusEl.textContent = '网络连接已断开';
+        statusEl.className = 'connection-status status-offline';
+      }
+    }
+
+    // 检查连接并尝试重新加载
+    function checkConnection() {
+      const button = document.querySelector('.retry-button');
+      const originalText = button.innerHTML;
+
+      button.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="0"><animate attributeName="r" begin="0s" dur="1.8s" values="0; 4; 0; 0" calcMode="linear" repeatCount="indefinite" /><animate attributeName="opacity" begin="0s" dur="1.8s" values="1; 0; 0; 0" calcMode="linear" repeatCount="indefinite" /></circle><circle cx="12" cy="12" r="0"><animate attributeName="r" begin="-0.45s" dur="1.8s" values="0; 4; 0; 0" calcMode="linear" repeatCount="indefinite" /><animate attributeName="opacity" begin="-0.45s" dur="1.8s" values="1; 0; 0; 0" calcMode="linear" repeatCount="indefinite" /></circle><circle cx="12" cy="12" r="0"><animate attributeName="r" begin="-0.9s" dur="1.8s" values="0; 4; 0; 0" calcMode="linear" repeatCount="indefinite" /><animate attributeName="opacity" begin="-0.9s" dur="1.8s" values="1; 0; 0; 0" calcMode="linear" repeatCount="indefinite" /></circle><circle cx="12" cy="12" r="0"><animate attributeName="r" begin="-1.35s" dur="1.8s" values="0; 4; 0; 0" calcMode="linear" repeatCount="indefinite" /><animate attributeName="opacity" begin="-1.35s" dur="1.8s" values="1; 0; 0; 0" calcMode="linear" repeatCount="indefinite" /></circle></svg>检查中...';
+      button.disabled = true;
+
+      // 尝试网络请求
+      fetch('/', {
+        method: 'HEAD',
+        cache: 'no-cache',
+        mode: 'no-cors'
+      }).then(() => {
+        // 网络连接恢复，重新加载页面
+        window.location.reload();
+      }).catch(() => {
+        // 仍然离线
+        updateConnectionStatus();
+        button.innerHTML = originalText;
+        button.disabled = false;
+      });
+    }
+
+    // 监听网络状态变化
+    window.addEventListener('online', () => {
+      updateConnectionStatus();
+      // 网络恢复时自动尝试重新加载
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    });
+
+    window.addEventListener('offline', updateConnectionStatus);
+
+    // 初始状态检查
+    updateConnectionStatus();
+
+    // 定期检查连接状态
+    setInterval(() => {
+      if (navigator.onLine) {
+        // 验证真实网络连接
+        fetch('/', {
+          method: 'HEAD',
+          cache: 'no-cache',
+          mode: 'no-cors'
+        }).then(() => {
+          // 网络真正可用，重新加载
+          window.location.reload();
+        }).catch(() => {
+          // navigator.onLine 不准确，仍然离线
+          updateConnectionStatus();
+        });
+      }
+    }, 30000); // 每30秒检查一次
+  </script>
+</body>
+</html>

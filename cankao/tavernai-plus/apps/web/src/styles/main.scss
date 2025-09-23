@@ -15,6 +15,12 @@
 @import './progressive-disclosure.scss';
 @import './mode-transitions.scss';
 
+// 导入响应式样式系统 (Issue #35)
+@import './responsive/breakpoints.scss';
+@import './responsive/mobile.scss';
+@import './responsive/tablet.scss';
+@import './responsive/touch.scss';
+
 // =====================================
 // Element Plus 主题集成 v2.0
 // 使用新的设计系统覆盖 Element Plus 默认主题

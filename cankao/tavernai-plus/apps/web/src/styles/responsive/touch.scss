@@ -1,0 +1,628 @@
+// =====================================
+// 触摸交互优化样式
+// =====================================
+
+@import './breakpoints.scss';
+
+// =====================================
+// 触摸设备检测与基础优化
+// =====================================
+
+@include touch {
+  // 全局触摸优化
+  * {
+    // 优化触摸响应
+    touch-action: manipulation;
+
+    // 移除系统默认的触摸高亮
+    -webkit-tap-highlight-color: transparent;
+
+    // 优化触摸延迟
+    -ms-touch-action: manipulation;
+
+    // 防止选择文本干扰触摸
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  // 允许特定元素文本选择
+  input, textarea, [contenteditable], .selectable {
+    -webkit-user-select: auto;
+    -khtml-user-select: auto;
+    -moz-user-select: auto;
+    -ms-user-select: auto;
+    user-select: auto;
+    -webkit-touch-callout: default;
+  }
+
+  // 优化滚动性能
+  body, html {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+  }
+}
+
+// =====================================
+// 触摸目标尺寸优化
+// =====================================
+
+@include touch {
+  // 按钮触摸优化
+  button, .btn, [role="button"] {
+    min-height: var(--space-11); // 44px - Apple推荐的最小触摸目标
+    min-width: var(--space-11);
+    padding: var(--space-2) var(--space-4);
+
+    // 增加触摸区域
+    &::before {
+      content: '';
+      position: absolute;
+      top: -4px;
+      left: -4px;
+      right: -4px;
+      bottom: -4px;
+    }
+
+    // 触摸反馈
+    &:active {
+      transform: scale(0.96);
+      transition: transform 100ms ease;
+    }
+  }
+
+  // 链接触摸优化
+  a {
+    min-height: var(--space-10); // 40px
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-2);
+    margin: calc(var(--space-1) * -1);
+    border-radius: var(--radius-sm);
+
+    // 触摸状态反馈
+    &:active {
+      background-color: var(--surface-2);
+      transform: scale(0.98);
+    }
+  }
+
+  // 图标按钮优化
+  .icon-button {
+    width: var(--space-12); // 48px
+    height: var(--space-12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    position: relative;
+
+    &:active {
+      background-color: var(--surface-2);
+    }
+  }
+
+  // 复选框和单选框优化
+  input[type="checkbox"], input[type="radio"] {
+    min-width: var(--space-6); // 24px
+    min-height: var(--space-6);
+    transform: scale(1.2);
+    margin: var(--space-2);
+  }
+
+  // 滑块优化
+  input[type="range"] {
+    height: var(--space-10);
+
+    &::-webkit-slider-thumb {
+      width: var(--space-6);
+      height: var(--space-6);
+      -webkit-appearance: none;
+      appearance: none;
+      background: var(--brand-primary-500);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    &::-moz-range-thumb {
+      width: var(--space-6);
+      height: var(--space-6);
+      background: var(--brand-primary-500);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+  }
+}
+
+// =====================================
+// 手势支持
+// =====================================
+
+@include touch {
+  // 滑动容器
+  .swipe-container {
+    touch-action: pan-x;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    display: flex;
+
+    .swipe-item {
+      scroll-snap-align: start;
+      flex-shrink: 0;
+    }
+  }
+
+  // 垂直滑动
+  .swipe-container-vertical {
+    touch-action: pan-y;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+
+    .swipe-item {
+      scroll-snap-align: start;
+    }
+  }
+
+  // 捏合缩放支持
+  .pinch-zoom {
+    touch-action: pinch-zoom;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: auto;
+      transition: transform 200ms ease;
+    }
+  }
+
+  // 拖拽元素
+  .draggable {
+    touch-action: none;
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  // 下拉刷新
+  .pull-to-refresh {
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
+
+    .refresh-indicator {
+      height: var(--space-16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateY(-100%);
+      transition: transform 200ms ease;
+
+      &.visible {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+// =====================================
+// 触摸反馈动画
+// =====================================
+
+@include touch {
+  // 波纹效果
+  .ripple {
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      transform: translate(-50%, -50%);
+      transition: width 300ms ease, height 300ms ease;
+    }
+
+    &:active::before {
+      width: 300px;
+      height: 300px;
+    }
+  }
+
+  // 按压效果
+  .press-effect {
+    &:active {
+      transform: scale(0.95);
+      opacity: 0.8;
+      transition: all 100ms ease;
+    }
+  }
+
+  // 弹性效果
+  .bounce-effect {
+    &:active {
+      animation: bouncePress 200ms ease;
+    }
+  }
+
+  @keyframes bouncePress {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+
+  // 振动反馈类
+  .haptic-feedback {
+    &:active {
+      // 通过JavaScript触发振动
+      // navigator.vibrate && navigator.vibrate(10);
+    }
+  }
+}
+
+// =====================================
+// 触摸滚动优化
+// =====================================
+
+@include touch {
+  // 平滑滚动
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  // 惯性滚动
+  .momentum-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow: auto;
+  }
+
+  // 滚动条隐藏（保持功能）
+  .hide-scrollbar {
+    scrollbar-width: none; // Firefox
+    -ms-overflow-style: none; // IE/Edge
+
+    &::-webkit-scrollbar {
+      display: none; // Chrome/Safari
+    }
+  }
+
+  // 自定义滚动条
+  .custom-scrollbar {
+    &::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--text-tertiary);
+      border-radius: 3px;
+
+      &:hover {
+        background: var(--text-secondary);
+      }
+    }
+  }
+
+  // 滚动吸附
+  .scroll-snap {
+    scroll-snap-type: x mandatory;
+
+    .snap-item {
+      scroll-snap-align: start;
+    }
+  }
+
+  .scroll-snap-y {
+    scroll-snap-type: y mandatory;
+
+    .snap-item {
+      scroll-snap-align: start;
+    }
+  }
+}
+
+// =====================================
+// 触摸表单优化
+// =====================================
+
+@include touch {
+  // 输入框触摸优化
+  input, textarea, select {
+    min-height: var(--space-12); // 48px
+    padding: var(--space-3);
+    font-size: 16px; // 防止iOS缩放
+    border-radius: var(--radius-lg);
+
+    // 焦点状态优化
+    &:focus {
+      outline: 2px solid var(--brand-primary-500);
+      outline-offset: 2px;
+      transform: scale(1.02);
+      transition: transform 150ms ease;
+    }
+  }
+
+  // 选择器优化
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: var(--space-10);
+  }
+
+  // 文件上传优化
+  input[type="file"] {
+    &::file-selector-button {
+      min-height: var(--space-10);
+      padding: var(--space-2) var(--space-4);
+      margin-right: var(--space-3);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-md);
+      background: var(--surface-2);
+      color: var(--text-primary);
+      cursor: pointer;
+
+      &:hover {
+        background: var(--surface-3);
+      }
+    }
+  }
+}
+
+// =====================================
+// 触摸导航优化
+// =====================================
+
+@include touch {
+  // 标签页导航
+  .tab-navigation {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+
+    .tab-item {
+      flex-shrink: 0;
+      min-width: var(--space-20);
+      padding: var(--space-3) var(--space-4);
+      text-align: center;
+      scroll-snap-align: start;
+
+      &:active {
+        background: var(--surface-2);
+      }
+    }
+  }
+
+  // 底部导航栏
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface-1);
+    border-top: 1px solid var(--border-primary);
+    padding: var(--space-2) 0 calc(var(--space-2) + env(safe-area-inset-bottom));
+    display: flex;
+    justify-content: space-around;
+    z-index: 1000;
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--space-2);
+      min-width: var(--space-16);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: var(--text-secondary);
+
+      &:active {
+        background: var(--surface-2);
+        transform: scale(0.95);
+      }
+
+      &.active {
+        color: var(--brand-primary-500);
+      }
+
+      .nav-icon {
+        font-size: var(--text-xl);
+        margin-bottom: var(--space-1);
+      }
+
+      .nav-label {
+        font-size: var(--text-2xs);
+        font-weight: var(--font-medium);
+      }
+    }
+  }
+
+  // 汉堡菜单
+  .hamburger-menu {
+    width: var(--space-12);
+    height: var(--space-12);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+
+    .hamburger-line {
+      width: var(--space-6);
+      height: 2px;
+      background: var(--text-primary);
+      margin: 2px 0;
+      transition: all 200ms ease;
+    }
+
+    &.active {
+      .hamburger-line:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+      }
+
+      .hamburger-line:nth-child(2) {
+        opacity: 0;
+      }
+
+      .hamburger-line:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -6px);
+      }
+    }
+
+    &:active {
+      transform: scale(0.9);
+    }
+  }
+}
+
+// =====================================
+// 触摸模态框优化
+// =====================================
+
+@include touch {
+  .modal {
+    .modal-backdrop {
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+    }
+
+    .modal-content {
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      max-height: 90vh;
+      overflow: hidden;
+
+      // 拖拽句柄
+      &::before {
+        content: '';
+        position: absolute;
+        top: var(--space-2);
+        left: 50%;
+        transform: translateX(-50%);
+        width: var(--space-10);
+        height: 4px;
+        background: var(--text-tertiary);
+        border-radius: 2px;
+      }
+    }
+
+    .modal-header {
+      padding-top: var(--space-6);
+      touch-action: none; // 支持拖拽关闭
+    }
+  }
+
+  // 全屏模态框
+  .modal-fullscreen {
+    .modal-content {
+      height: 100vh;
+      border-radius: 0;
+    }
+  }
+
+  // 底部抽屉
+  .bottom-sheet {
+    .modal-content {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      transform: translateY(100%);
+      transition: transform 300ms ease;
+
+      &.show {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+// =====================================
+// 性能优化
+// =====================================
+
+@include touch {
+  // GPU加速优化
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000;
+    will-change: transform;
+  }
+
+  // 减少重绘重排
+  .paint-optimized {
+    contain: layout style paint;
+  }
+
+  // 触摸事件优化
+  .touch-optimized {
+    pointer-events: auto;
+
+    // 延迟加载非关键交互
+    &.lazy-touch {
+      pointer-events: none;
+
+      &.loaded {
+        pointer-events: auto;
+      }
+    }
+  }
+}
+
+// =====================================
+// 可访问性优化
+// =====================================
+
+@include touch {
+  // 高对比度模式
+  @media (prefers-contrast: high) {
+    button, .btn {
+      border: 2px solid currentColor;
+    }
+
+    .ripple::before {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  // 减少动效
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    .ripple::before {
+      transition: none;
+    }
+  }
+
+  // 聚焦可见性
+  .focus-visible {
+    &:focus-visible {
+      outline: 3px solid var(--brand-primary-500);
+      outline-offset: 2px;
+    }
+  }
+}

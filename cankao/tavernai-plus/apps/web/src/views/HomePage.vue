@@ -1,442 +1,210 @@
 <template>
   <div class="home-page">
-    <div class="hero-section">
-      <div class="hero-content">
-        <h1 class="hero-title">
-          <span class="gradient-text">TavernAI Plus</span>
-        </h1>
-        <p class="hero-subtitle">
-          与AI角色自由对话，创造无限可能
-        </p>
-        <div class="hero-actions">
-          <el-button
-            type="primary"
-            size="large"
-            @click="openQuickStart"
-            class="hero-btn-primary"
-          >
-            <el-icon class="mr-2"><ChatDotRound /></el-icon>
-            立即开始聊天
-          </el-button>
-          <router-link to="/characters">
-            <el-button
-              type="default"
-              size="large"
-              plain
-              class="hero-btn-secondary"
-            >
-              <el-icon class="mr-2"><Compass /></el-icon>
-              探索角色
-            </el-button>
-          </router-link>
-        </div>
-      </div>
-      <div class="hero-image">
-        <div class="floating-cards">
-          <div class="character-card" v-for="i in 3" :key="i" :style="`animation-delay: ${i * 0.2}s`">
-            <div class="card-avatar"></div>
-            <div class="card-info">
-              <div class="card-name"></div>
-              <div class="card-desc"></div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- 页面加载进度条 -->
+    <div v-if="isLoading" class="page-loading">
+      <div class="loading-progress" :style="{ width: `${loadProgress}%` }" />
     </div>
 
-    <!-- 特性展示 -->
-    <section class="features-section">
-      <h2 class="section-title">为什么选择 TavernAI Plus？</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="fas fa-brain"></i>
-          </div>
-          <h3>智能对话</h3>
-          <p>支持多种AI模型，提供流畅自然的对话体验</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="fas fa-users"></i>
-          </div>
-          <h3>丰富角色</h3>
-          <p>海量角色库，从动漫到历史，满足各种兴趣</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="fas fa-palette"></i>
-          </div>
-          <h3>自由创作</h3>
-          <p>创建专属角色，定制性格、背景和对话风格</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="fas fa-shield-alt"></i>
-          </div>
-          <h3>隐私安全</h3>
-          <p>端到端加密，保护您的对话隐私</p>
-        </div>
-      </div>
-    </section>
+    <!-- 英雄区域 - 品牌主视觉 -->
+    <HeroSection />
 
-    <!-- 热门角色 -->
-    <section class="popular-section" v-if="popularCharacters.length">
-      <h2 class="section-title">热门角色</h2>
-      <div class="characters-carousel">
-        <div class="character-item" v-for="char in popularCharacters" :key="char.id">
-          <img :src="char.avatar || '/default-avatar.png'" :alt="char.name" class="character-avatar">
-          <h4>{{ char.name }}</h4>
-          <p>{{ char.description }}</p>
-          <router-link :to="`/chat/${char.id}`" class="btn btn-sm">
-            开始对话
-          </router-link>
-        </div>
-      </div>
-    </section>
+    <!-- 精选角色展示 -->
+    <FeaturedCharacters />
 
-    <!-- CTA区域 -->
-    <section class="cta-section">
-      <div class="cta-content">
-        <h2>准备开始您的AI冒险了吗？</h2>
-        <p>立即注册，获得100免费积分</p>
-        <router-link to="/register" class="btn btn-primary btn-lg">
-          免费注册
-        </router-link>
-      </div>
-    </section>
+    <!-- 功能亮点 -->
+    <FeatureHighlights />
+
+    <!-- 平台统计数据 -->
+    <StatsSection />
+
+    <!-- 行动号召 -->
+    <CTASection />
 
     <!-- 快速开始对话框 -->
     <QuickStartDialog v-model:visible="showQuickStart" />
 
     <!-- 快速开始浮动按钮 -->
-    <el-affix :offset="20" position="bottom">
+    <ElAffix :offset="20" position="bottom">
       <div class="fixed bottom-6 right-6 z-50">
-        <el-button
-          type="primary"
-          size="large"
-          circle
+        <TavernButton
+          variant="primary"
+          size="lg"
+          class="quick-start-fab"
+          icon-left="chat"
           @click="openQuickStart"
-          class="quick-start-fab shadow-lg hover:shadow-xl"
         >
-          <el-icon size="24"><ChatDotRound /></el-icon>
-        </el-button>
+          快速对话
+        </TavernButton>
       </div>
-    </el-affix>
+    </ElAffix>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { ChatDotRound, Compass } from '@element-plus/icons-vue'
+import { ElAffix } from 'element-plus'
+import HeroSection from './home/components/HeroSection.vue'
+import FeaturedCharacters from './home/components/FeaturedCharacters.vue'
+import FeatureHighlights from './home/components/FeatureHighlights.vue'
+import StatsSection from './home/components/StatsSection.vue'
+import CTASection from './home/components/CTASection.vue'
 import QuickStartDialog from '@/components/common/QuickStartDialog.vue'
-import { http } from '@/utils/axios';
+import { TavernButton } from '@/components/design-system'
+import { useScrollAnimations } from './home/composables/useScrollAnimations'
+import { usePerformanceOptimization } from './home/composables/usePerformanceOptimization'
 
 const router = useRouter()
-const popularCharacters = ref([])
 const showQuickStart = ref(false)
+
+// 使用组合式函数
+const { setupHomePageAnimations } = useScrollAnimations()
+const { setupHomePageOptimizations, isLoading, loadProgress } = usePerformanceOptimization()
 
 // 快速开始功能
 const openQuickStart = () => {
   showQuickStart.value = true
 }
 
-onMounted(async () => {
-  // 获取热门角色
-  try {
-    const response = await http.get('/characters/popular');
-    if (response && response.characters) {
-      popularCharacters.value = response.characters;
-    }
-  } catch (error) {
-    console.error('Failed to fetch popular characters:', error);
-    // 静默失败，不影响用户体验
-    popularCharacters.value = [];
+// SEO优化
+const setSEOData = () => {
+  // 设置页面标题
+  document.title = '九馆爸爸 - AI角色扮演对话平台 | 与AI角色深度交流'
+
+  // 设置meta描述
+  const metaDescription = document.querySelector('meta[name="description"]')
+  if (metaDescription) {
+    metaDescription.setAttribute('content', '九馆爸爸是专为宅男宅女打造的AI角色扮演平台。拥有3000+精选角色，支持深度对话，创作自由，隐私安全。立即注册获得100免费积分！')
   }
+
+  // 设置关键词
+  const metaKeywords = document.querySelector('meta[name="keywords"]')
+  if (metaKeywords) {
+    metaKeywords.setAttribute('content', 'AI角色扮演,AI对话,虚拟角色,人工智能聊天,角色创作,二次元,动漫角色,AI助手')
+  }
+}
+
+// 性能监控
+const trackPerformance = () => {
+  // 监控首屏加载时间
+  if ('performance' in window) {
+    window.addEventListener('load', () => {
+      const loadTime = performance.now()
+      console.log(`Homepage loaded in ${loadTime.toFixed(2)}ms`)
+
+      // 可以发送到分析服务
+      // analytics.track('homepage_load_time', { time: loadTime })
+    })
+  }
+}
+
+onMounted(async () => {
+  // 设置SEO数据
+  setSEOData()
+
+  // 开始性能监控
+  trackPerformance()
+
+  // 设置性能优化
+  await setupHomePageOptimizations()
+
+  // 设置滚动动画
+  nextTick(() => {
+    setupHomePageAnimations()
+  })
 });
 </script>
 
 <style scoped lang="scss">
 .home-page {
   min-height: 100vh;
-}
+  background: var(--surface-0);
 
-.hero-section {
-  display: flex;
-  align-items: center;
-  min-height: 80vh;
-  padding: 4rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-
-  .hero-content {
-    flex: 1;
-    max-width: 600px;
-
-    .hero-title {
-      font-size: 4rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
-
-      .gradient-text {
-        background: linear-gradient(90deg, #fff, #f0f0f0);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-    }
-
-    .hero-subtitle {
-      font-size: 1.5rem;
-      margin-bottom: 2rem;
-      opacity: 0.9;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 1rem;
-
-      .btn {
-        padding: 1rem 2rem;
-        font-size: 1.1rem;
-        border-radius: 8px;
-        text-decoration: none;
-        transition: transform 0.3s;
-
-        &:hover {
-          transform: translateY(-2px);
-        }
-
-        &.btn-primary {
-          background: white;
-          color: #667eea;
-        }
-
-        &.btn-secondary {
-          background: transparent;
-          color: white;
-          border: 2px solid white;
-        }
-      }
-    }
-  }
-
-  .hero-image {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-
-    .floating-cards {
-      position: relative;
-      width: 400px;
-      height: 400px;
-
-      .character-card {
-        position: absolute;
-        width: 200px;
-        height: 250px;
-        background: white;
-        border-radius: 12px;
-        padding: 1rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        animation: float 3s ease-in-out infinite;
-
-        &:nth-child(1) { top: 0; left: 50px; }
-        &:nth-child(2) { top: 50px; right: 50px; }
-        &:nth-child(3) { bottom: 0; left: 100px; }
-
-        .card-avatar {
-          width: 60px;
-          height: 60px;
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          border-radius: 50%;
-          margin-bottom: 1rem;
-        }
-
-        .card-name {
-          height: 20px;
-          background: #e0e0e0;
-          border-radius: 4px;
-          margin-bottom: 0.5rem;
-        }
-
-        .card-desc {
-          height: 40px;
-          background: #f0f0f0;
-          border-radius: 4px;
-        }
-      }
-    }
+  // 确保各个section之间的间距合理
+  > * + * {
+    margin-top: 0; // 重置margin，让各section自己管理spacing
   }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
-}
+// 页面加载进度条
+.page-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(168, 85, 247, 0.1);
+  z-index: var(--z-maximum);
 
-.features-section {
-  padding: 4rem 2rem;
-  background: #f8f9fa;
-
-  .section-title {
-    text-align: center;
-    font-size: 2.5rem;
-    margin-bottom: 3rem;
-    color: #333;
-  }
-
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-
-    .feature-card {
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      transition: transform 0.3s;
-
-      &:hover {
-        transform: translateY(-5px);
-      }
-
-      .feature-icon {
-        font-size: 3rem;
-        color: #667eea;
-        margin-bottom: 1rem;
-      }
-
-      h3 {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-        color: #333;
-      }
-
-      p {
-        color: #666;
-        line-height: 1.6;
-      }
-    }
+  .loading-progress {
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      var(--brand-primary-500),
+      var(--brand-accent-400)
+    );
+    transition: width var(--duration-normal) ease-out;
+    border-radius: 0 2px 2px 0;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
   }
 }
 
-.popular-section {
-  padding: 4rem 2rem;
+// 快速开始浮动按钮样式
+.quick-start-fab {
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(var(--space-2));
+  transition: var(--button-transition);
 
-  .section-title {
-    text-align: center;
-    font-size: 2.5rem;
-    margin-bottom: 3rem;
-    color: #333;
+  &:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: var(--shadow-2xl), var(--shadow-primary);
   }
 
-  .characters-carousel {
-    display: flex;
-    gap: 2rem;
-    overflow-x: auto;
-    padding: 1rem 0;
-
-    .character-item {
-      min-width: 200px;
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      text-align: center;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-
-      .character-avatar {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        margin-bottom: 1rem;
-        object-fit: cover;
-      }
-
-      h4 {
-        font-size: 1.2rem;
-        margin-bottom: 0.5rem;
-        color: #333;
-      }
-
-      p {
-        color: #666;
-        margin-bottom: 1rem;
-        font-size: 0.9rem;
-      }
-
-      .btn {
-        padding: 0.5rem 1rem;
-        background: #667eea;
-        color: white;
-        border-radius: 6px;
-        text-decoration: none;
-        display: inline-block;
-
-        &:hover {
-          background: #5a67d8;
-        }
-      }
-    }
+  &:active {
+    transform: translateY(0) scale(0.98);
   }
 }
 
-.cta-section {
-  padding: 4rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  text-align: center;
-
-  .cta-content {
-    max-width: 600px;
-    margin: 0 auto;
-
-    h2 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-    }
-
-    p {
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
-      opacity: 0.9;
-    }
-
-    .btn {
-      padding: 1rem 3rem;
-      font-size: 1.2rem;
-      background: white;
-      color: #667eea;
-      border-radius: 8px;
-      text-decoration: none;
-      display: inline-block;
-      font-weight: bold;
-
-      &:hover {
-        transform: scale(1.05);
-      }
-    }
-  }
-}
-
+// 响应式优化
 @media (max-width: 768px) {
-  .hero-section {
-    flex-direction: column;
-
-    .hero-title {
-      font-size: 2.5rem;
-    }
-
-    .hero-image {
-      display: none;
+  .quick-start-fab {
+    // 移动端稍微小一点
+    .tavern-button {
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--text-sm);
     }
   }
+}
 
-  .features-grid {
-    grid-template-columns: 1fr;
+// 针对低性能设备的优化
+@media (prefers-reduced-motion: reduce) {
+  .quick-start-fab {
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+// 暗色主题优化
+@media (prefers-color-scheme: dark) {
+  .home-page {
+    // 确保在系统暗色主题下的显示效果
+    background: var(--surface-0);
+  }
+}
+
+// 高对比度模式支持
+@media (prefers-contrast: high) {
+  .quick-start-fab {
+    border: 2px solid var(--text-primary);
+  }
+}
+
+// 大字体模式支持
+@media (prefers-font-size: large) {
+  .quick-start-fab {
+    font-size: 1.2em;
+    padding: var(--space-4) var(--space-6);
   }
 }
 </style>

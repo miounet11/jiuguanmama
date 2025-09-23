@@ -6,6 +6,14 @@ export default {
   ],
   darkMode: 'class',
   theme: {
+    screens: {
+      'xs': '475px',    // 超小屏手机 (iPhone SE)
+      'sm': '640px',    // 小屏手机 (标准手机)
+      'md': '768px',    // 平板竖屏 (iPad)
+      'lg': '1024px',   // 平板横屏/小笔记本
+      'xl': '1280px',   // 桌面端
+      '2xl': '1536px',  // 大屏桌面
+    },
     extend: {
       // 品牌色彩系统
       colors: {
