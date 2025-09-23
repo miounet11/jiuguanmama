@@ -1,57 +1,120 @@
-// TavernAI Plus 设计系统配置
-// 基于 Element Plus + Tailwind CSS 的统一设计语言
+// =====================================
+// TavernAI Plus 设计系统 - Design Tokens
+// Version 2.0 - 深色主题优先设计
+// 面向宅男宅女用户群体的现代化设计语言
+// =====================================
 
-// ==================== 颜色系统 ====================
+// ==================== 品牌核心色彩 ====================
 :root {
-  // Element Plus 主色调 (保持兼容)
-  --el-color-primary: #6366f1;
-  --el-color-primary-light-3: #9ca3ff;
-  --el-color-primary-light-5: #c7cdff;
-  --el-color-primary-light-7: #e0e3ff;
-  --el-color-primary-light-8: #eff1ff;
-  --el-color-primary-light-9: #f7f8ff;
-  --el-color-primary-dark-2: #4f46e5;
+  // 主品牌色系 - 神秘紫色 (灵感来源：夜空、魔法、神秘)
+  --brand-primary-50: #faf7ff;
+  --brand-primary-100: #f3ebff;
+  --brand-primary-200: #e9d5ff;
+  --brand-primary-300: #d8b4fe;
+  --brand-primary-400: #c084fc;
+  --brand-primary-500: #a855f7;  // 主紫色
+  --brand-primary-600: #9333ea;
+  --brand-primary-700: #7c2d12;
+  --brand-primary-800: #581c87;
+  --brand-primary-900: #4c1d95;
+  --brand-primary-950: #2e1065;
 
-  // TavernAI Plus 品牌色
-  --tavern-primary: #6366f1;
-  --tavern-primary-hover: #4f46e5;
-  --tavern-primary-active: #4338ca;
-  --tavern-secondary: #8b5cf6;
-  --tavern-accent: #06b6d4;
-  --tavern-success: #10b981;
-  --tavern-warning: #f59e0b;
-  --tavern-danger: #ef4444;
+  // 辅助品牌色系 - 赛博蓝 (科技感、未来感)
+  --brand-secondary-50: #eff6ff;
+  --brand-secondary-100: #dbeafe;
+  --brand-secondary-200: #bfdbfe;
+  --brand-secondary-300: #93c5fd;
+  --brand-secondary-400: #60a5fa;
+  --brand-secondary-500: #3b82f6;  // 主蓝色
+  --brand-secondary-600: #2563eb;
+  --brand-secondary-700: #1d4ed8;
+  --brand-secondary-800: #1e40af;
+  --brand-secondary-900: #1e3a8a;
+  --brand-secondary-950: #172554;
 
-  // 聊天专用色彩
-  --chat-user-bg: #6366f1;
+  // 强调色系 - 霓虹绿 (活力、互动、成功)
+  --brand-accent-50: #ecfdf5;
+  --brand-accent-100: #d1fae5;
+  --brand-accent-200: #a7f3d0;
+  --brand-accent-300: #6ee7b7;
+  --brand-accent-400: #34d399;
+  --brand-accent-500: #10b981;  // 主绿色
+  --brand-accent-600: #059669;
+  --brand-accent-700: #047857;
+  --brand-accent-800: #065f46;
+  --brand-accent-900: #064e3b;
+  --brand-accent-950: #022c22;
+
+  // Element Plus 兼容性映射
+  --el-color-primary: var(--brand-primary-500);
+  --el-color-primary-light-3: var(--brand-primary-400);
+  --el-color-primary-light-5: var(--brand-primary-300);
+  --el-color-primary-light-7: var(--brand-primary-200);
+  --el-color-primary-light-8: var(--brand-primary-100);
+  --el-color-primary-light-9: var(--brand-primary-50);
+  --el-color-primary-dark-2: var(--brand-primary-600);
+
+  // 语义化品牌色映射
+  --tavern-primary: var(--brand-primary-500);
+  --tavern-primary-hover: var(--brand-primary-400);
+  --tavern-primary-active: var(--brand-primary-600);
+  --tavern-secondary: var(--brand-secondary-500);
+  --tavern-accent: var(--brand-accent-500);
+  --tavern-success: var(--brand-accent-500);
+  --tavern-warning: #fbbf24;
+  --tavern-danger: #f87171;
+
+  // ==================== 中性色系 - 深空灰度 ====================
+  // 设计灵感：深空、宇宙、神秘氛围
+  --neutral-50: #fafafa;
+  --neutral-100: #f4f4f5;
+  --neutral-200: #e4e4e7;
+  --neutral-300: #d4d4d8;
+  --neutral-400: #a1a1aa;
+  --neutral-500: #71717a;
+  --neutral-600: #52525b;
+  --neutral-700: #3f3f46;
+  --neutral-800: #27272a;
+  --neutral-900: #18181b;
+  --neutral-950: #09090b;
+
+  // 深色主题背景层级系统
+  --surface-0: #0a0a0f;     // 最深背景 - 宇宙深空
+  --surface-1: #111118;     // 主要背景 - 深夜
+  --surface-2: #1a1a24;     // 次要背景 - 暮色
+  --surface-3: #242430;     // 卡片背景 - 黄昏
+  --surface-4: #2e2e3c;     // 悬浮元素 - 薄暮
+  --surface-overlay: rgba(10, 10, 15, 0.8); // 遮罩层
+
+  // 边框系统
+  --border-primary: var(--neutral-800);
+  --border-secondary: var(--neutral-700);
+  --border-tertiary: var(--neutral-600);
+  --border-accent: var(--brand-primary-600);
+  --border-interactive: var(--brand-primary-500);
+
+  // 文本色彩层级
+  --text-primary: #f8fafc;     // 主要文本 - 最高对比度
+  --text-secondary: #cbd5e1;   // 次要文本 - 高对比度
+  --text-tertiary: #94a3b8;    // 第三文本 - 中对比度
+  --text-quaternary: #64748b;  // 占位符文本 - 低对比度
+  --text-disabled: #475569;    // 禁用文本 - 最低对比度
+
+  // 功能色彩 - 深色主题优化
+  --success: var(--brand-accent-500);
+  --warning: #f59e0b;
+  --error: #f87171;
+  --info: var(--brand-secondary-500);
+
+  // 聊天界面专用色彩
+  --chat-user-bg: linear-gradient(135deg, var(--brand-primary-600), var(--brand-primary-500));
   --chat-user-text: #ffffff;
-  --chat-assistant-bg: #f8fafc;
-  --chat-assistant-text: #1e293b;
-  --chat-system-bg: #fef3c7;
-  --chat-system-text: #92400e;
-  --chat-thinking-bg: #e0f2fe;
-
-  // 中性色调
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
-
-  // 语义化颜色
-  --surface: #ffffff;
-  --surface-soft: #f8fafc;
-  --surface-muted: #f1f5f9;
-  --border-light: #e2e8f0;
-  --border-medium: #cbd5e1;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --chat-assistant-bg: var(--surface-3);
+  --chat-assistant-text: var(--text-primary);
+  --chat-system-bg: rgba(251, 191, 36, 0.1);
+  --chat-system-text: #fbbf24;
+  --chat-thinking-bg: rgba(59, 130, 246, 0.1);
+  --chat-thinking-text: var(--brand-secondary-400);
 }
 
 // 暗色主题
@@ -71,133 +134,295 @@
   --chat-assistant-text: #f1f5f9;
 }
 
-// ==================== 排版系统 ====================
+// ==================== Typography 排版系统 ====================
 :root {
-  // 字体家族
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-  --font-serif: Georgia, Cambria, 'Times New Roman', Times, serif;
-  --font-mono: 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', monospace;
+  // 字体家族 - 面向宅男宅女用户群体优化
+  --font-primary: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-secondary: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+  --font-display: 'Inter', 'SF Pro Display', system-ui, sans-serif;
+  --font-body: var(--font-primary);
 
-  // 字体大小 (基于 rem)
-  --text-xs: 0.75rem;    // 12px
-  --text-sm: 0.875rem;   // 14px
-  --text-base: 1rem;     // 16px
-  --text-lg: 1.125rem;   // 18px
-  --text-xl: 1.25rem;    // 20px
-  --text-2xl: 1.5rem;    // 24px
-  --text-3xl: 1.875rem;  // 30px
-  --text-4xl: 2.25rem;   // 36px
+  // 向后兼容
+  --font-sans: var(--font-primary);
+  --font-mono: var(--font-secondary);
+  --font-serif: 'Charter', 'Georgia', serif;
 
-  // 行高
+  // 排版比例系统 (基于1.25比例和16px基准)
+  --text-2xs: 0.625rem;   // 10px - 微小标签
+  --text-xs: 0.75rem;     // 12px - 小标签、辅助信息
+  --text-sm: 0.875rem;    // 14px - 次要文本、按钮
+  --text-base: 1rem;      // 16px - 正文基准
+  --text-lg: 1.125rem;    // 18px - 强调文本
+  --text-xl: 1.25rem;     // 20px - 小标题
+  --text-2xl: 1.5rem;     // 24px - 中标题
+  --text-3xl: 1.875rem;   // 30px - 大标题
+  --text-4xl: 2.25rem;    // 36px - 特大标题
+  --text-5xl: 3rem;       // 48px - 显示标题
+  --text-6xl: 3.75rem;    // 60px - 英雄标题
+  --text-7xl: 4.5rem;     // 72px - 超大标题
+
+  // 行高系统 - 基于黄金比例优化阅读体验
+  --leading-none: 1;
   --leading-tight: 1.25;
+  --leading-snug: 1.375;
   --leading-normal: 1.5;
   --leading-relaxed: 1.625;
+  --leading-loose: 2;
 
-  // 字重
+  // 字重系统 - 精细化层级
+  --font-thin: 100;
+  --font-extralight: 200;
   --font-light: 300;
   --font-normal: 400;
   --font-medium: 500;
   --font-semibold: 600;
   --font-bold: 700;
+  --font-extrabold: 800;
+  --font-black: 900;
+
+  // 字间距系统
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
 }
 
 // ==================== 间距系统 ====================
+// 基于8px网格系统 - 确保像素完美的设计
 :root {
-  // 基于 8px 基准的间距
-  --space-0: 0;
-  --space-1: 0.25rem;  // 4px
-  --space-2: 0.5rem;   // 8px
-  --space-3: 0.75rem;  // 12px
-  --space-4: 1rem;     // 16px
-  --space-5: 1.25rem;  // 20px
-  --space-6: 1.5rem;   // 24px
-  --space-8: 2rem;     // 32px
-  --space-10: 2.5rem;  // 40px
-  --space-12: 3rem;    // 48px
-  --space-16: 4rem;    // 64px
-  --space-20: 5rem;    // 80px
+  // 基础间距单位 (8px网格)
+  --space-0: 0;          // 0px
+  --space-px: 1px;       // 1px - 分割线
+  --space-0-5: 0.125rem; // 2px - 微细间距
+  --space-1: 0.25rem;    // 4px - 最小间距
+  --space-1-5: 0.375rem; // 6px - 细微调整
+  --space-2: 0.5rem;     // 8px - 基础间距
+  --space-2-5: 0.625rem; // 10px - 精细调整
+  --space-3: 0.75rem;    // 12px - 小间距
+  --space-3-5: 0.875rem; // 14px - 文本间距
+  --space-4: 1rem;       // 16px - 标准间距
+  --space-5: 1.25rem;    // 20px - 中等间距
+  --space-6: 1.5rem;     // 24px - 大间距
+  --space-7: 1.75rem;    // 28px - 更大间距
+  --space-8: 2rem;       // 32px - 段落间距
+  --space-9: 2.25rem;    // 36px - 章节间距
+  --space-10: 2.5rem;    // 40px - 组件间距
+  --space-11: 2.75rem;   // 44px - 大组件间距
+  --space-12: 3rem;      // 48px - 区域间距
+  --space-14: 3.5rem;    // 56px - 大区域间距
+  --space-16: 4rem;      // 64px - 页面间距
+  --space-20: 5rem;      // 80px - 页面大间距
+  --space-24: 6rem;      // 96px - 页面超大间距
+  --space-28: 7rem;      // 112px - 特大间距
+  --space-32: 8rem;      // 128px - 巨大间距
 
-  // 组件特定间距
-  --card-padding: var(--space-6);
-  --section-padding: var(--space-8);
-  --container-padding: var(--space-4);
-  --message-gap: var(--space-4);
+  // 语义化间距 - 业务场景优化
+  --spacing-micro: var(--space-1);      // 微间距 - 图标与文字
+  --spacing-tight: var(--space-2);      // 紧凑间距 - 相关元素
+  --spacing-normal: var(--space-4);     // 标准间距 - 默认间距
+  --spacing-comfortable: var(--space-6); // 舒适间距 - 阅读优化
+  --spacing-loose: var(--space-8);      // 宽松间距 - 分组间隔
+  --spacing-relaxed: var(--space-12);   // 放松间距 - 区域分割
+
+  // 组件专用间距
+  --component-padding-sm: var(--space-2) var(--space-3);     // 小按钮
+  --component-padding-md: var(--space-3) var(--space-4);     // 标准按钮
+  --component-padding-lg: var(--space-4) var(--space-6);     // 大按钮
+  --component-padding-xl: var(--space-6) var(--space-8);     // 超大按钮
+
+  --card-padding-sm: var(--space-4);     // 小卡片内边距
+  --card-padding-md: var(--space-6);     // 标准卡片内边距
+  --card-padding-lg: var(--space-8);     // 大卡片内边距
+  --card-gap: var(--space-4);            // 卡片间间隙
+
+  --section-padding-y: var(--space-12);  // 区域垂直间距
+  --section-padding-x: var(--space-6);   // 区域水平间距
+  --container-padding: var(--space-4);   // 容器内边距
+  --message-gap: var(--space-3);         // 消息间隙
+  --list-gap: var(--space-2);            // 列表项间隙
 }
 
 // ==================== 圆角系统 ====================
+// 现代化圆角系统 - 平衡功能性与美观性
 :root {
+  // 基础圆角
   --radius-none: 0;
-  --radius-sm: 0.25rem;   // 4px
-  --radius-md: 0.375rem;  // 6px
-  --radius-lg: 0.5rem;    // 8px
-  --radius-xl: 0.75rem;   // 12px
-  --radius-2xl: 1rem;     // 16px
-  --radius-full: 9999px;
+  --radius-sm: 0.25rem;    // 4px  - 微小圆角 (标签、徽章)
+  --radius-base: 0.375rem; // 6px  - 基础圆角 (按钮、输入框)
+  --radius-md: 0.5rem;     // 8px  - 中等圆角 (卡片、模态框)
+  --radius-lg: 0.75rem;    // 12px - 大圆角 (面板、容器)
+  --radius-xl: 1rem;       // 16px - 超大圆角 (主要卡片)
+  --radius-2xl: 1.25rem;   // 20px - 特大圆角 (英雄组件)
+  --radius-3xl: 1.5rem;    // 24px - 巨大圆角 (特殊容器)
+  --radius-full: 9999px;   // 完全圆角 (头像、徽章)
 
-  // 组件圆角
-  --card-radius: var(--radius-xl);
-  --button-radius: var(--radius-md);
-  --input-radius: var(--radius-md);
-  --avatar-radius: var(--radius-full);
-  --message-radius: var(--radius-lg);
+  // 语义化圆角
+  --radius-interactive: var(--radius-base);  // 交互元素
+  --radius-content: var(--radius-md);        // 内容容器
+  --radius-decorative: var(--radius-lg);     // 装饰性元素
+
+  // 组件专用圆角
+  --button-radius: var(--radius-base);       // 按钮圆角
+  --input-radius: var(--radius-base);        // 输入框圆角
+  --card-radius: var(--radius-lg);           // 卡片圆角
+  --modal-radius: var(--radius-xl);          // 模态框圆角
+  --avatar-radius: var(--radius-full);       // 头像圆角
+  --badge-radius: var(--radius-full);        // 徽章圆角
+  --message-radius: var(--radius-md);        // 消息气泡圆角
+  --tooltip-radius: var(--radius-base);      // 提示框圆角
+  --dropdown-radius: var(--radius-md);       // 下拉菜单圆角
 }
 
 // ==================== 阴影系统 ====================
+// 深色主题优化阴影 - 增强层次感和深度
 :root {
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  // 基础阴影 (深色主题优化)
+  --shadow-none: none;
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-base: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 25px 25px -12px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 50px 100px -20px rgba(0, 0, 0, 0.7), 0 30px 60px -30px rgba(0, 0, 0, 0.5);
 
-  // 组件阴影
-  --card-shadow: var(--shadow-md);
+  // 内阴影
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+  --shadow-inner-lg: inset 0 4px 8px 0 rgba(0, 0, 0, 0.4);
+
+  // 彩色阴影 - 品牌色增强
+  --shadow-primary: 0 8px 25px -8px rgba(168, 85, 247, 0.4);
+  --shadow-secondary: 0 8px 25px -8px rgba(59, 130, 246, 0.4);
+  --shadow-accent: 0 8px 25px -8px rgba(16, 185, 129, 0.4);
+  --shadow-glow: 0 0 20px rgba(168, 85, 247, 0.3);
+
+  // 组件专用阴影
+  --card-shadow: var(--shadow-base);
   --card-shadow-hover: var(--shadow-lg);
+  --card-shadow-focus: var(--shadow-primary);
+  --button-shadow: var(--shadow-sm);
+  --button-shadow-hover: var(--shadow-base);
   --dropdown-shadow: var(--shadow-xl);
+  --modal-shadow: var(--shadow-2xl);
+  --tooltip-shadow: var(--shadow-md);
 }
 
 // ==================== 动画系统 ====================
+// 现代化动画系统 - 流畅且高性能
 :root {
-  // 缓动函数
+  // 缓动函数 - 精心调校的贝塞尔曲线
   --ease-linear: linear;
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-back: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-elastic: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-  // 动画时长
-  --duration-fast: 150ms;
-  --duration-normal: 300ms;
-  --duration-slow: 500ms;
+  // 动画时长 - 基于用户感知优化
+  --duration-instant: 50ms;    // 即时反馈 (按钮按下)
+  --duration-fast: 150ms;      // 快速动画 (颜色变化)
+  --duration-normal: 250ms;    // 标准动画 (位移变化)
+  --duration-moderate: 350ms;  // 中等动画 (面板展开)
+  --duration-slow: 500ms;      // 慢速动画 (页面转场)
+  --duration-slower: 700ms;    // 更慢动画 (复杂转场)
 
-  // 组件动画
+  // 交互动画延迟
+  --delay-none: 0ms;
+  --delay-short: 75ms;
+  --delay-medium: 150ms;
+  --delay-long: 300ms;
+
+  // 预设过渡动画
   --transition-colors: color var(--duration-fast) var(--ease-out),
-                      background-color var(--duration-fast) var(--ease-out),
-                      border-color var(--duration-fast) var(--ease-out);
+                       background-color var(--duration-fast) var(--ease-out),
+                       border-color var(--duration-fast) var(--ease-out),
+                       fill var(--duration-fast) var(--ease-out),
+                       stroke var(--duration-fast) var(--ease-out);
+
+  --transition-opacity: opacity var(--duration-normal) var(--ease-out);
+
   --transition-transform: transform var(--duration-normal) var(--ease-out);
+
+  --transition-size: width var(--duration-normal) var(--ease-out),
+                     height var(--duration-normal) var(--ease-out);
+
+  --transition-spacing: margin var(--duration-normal) var(--ease-out),
+                        padding var(--duration-normal) var(--ease-out);
+
+  --transition-shadow: box-shadow var(--duration-normal) var(--ease-out);
+
   --transition-all: all var(--duration-normal) var(--ease-out);
+
+  // 组件专用动画
+  --button-transition: var(--transition-colors), var(--transition-shadow);
+  --card-transition: var(--transition-transform), var(--transition-shadow);
+  --modal-transition: var(--transition-opacity), var(--transition-transform);
+  --tooltip-transition: var(--transition-opacity);
 }
 
 // ==================== 断点系统 ====================
+// 移动端优先的响应式断点 - 覆盖主流设备
 :root {
-  --breakpoint-xs: 0px;
-  --breakpoint-sm: 640px;
-  --breakpoint-md: 768px;
-  --breakpoint-lg: 1024px;
-  --breakpoint-xl: 1280px;
-  --breakpoint-2xl: 1536px;
+  // 基础断点
+  --breakpoint-xs: 475px;    // 超小屏手机 (iPhone SE)
+  --breakpoint-sm: 640px;    // 小屏手机 (标准手机)
+  --breakpoint-md: 768px;    // 平板竖屏 (iPad)
+  --breakpoint-lg: 1024px;   // 平板横屏/小笔记本
+  --breakpoint-xl: 1280px;   // 桌面端
+  --breakpoint-2xl: 1536px;  // 大屏桌面
+  --breakpoint-3xl: 1920px;  // 超大屏
+
+  // 容器最大宽度
+  --container-xs: 100%;
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1400px;   // 内容最大宽度
+
+  // 内容区域宽度
+  --content-narrow: 640px;    // 窄内容 (文章阅读)
+  --content-normal: 768px;    // 标准内容 (表单页面)
+  --content-wide: 1024px;     // 宽内容 (仪表板)
+  --content-full: 100%;       // 全宽内容
 }
 
-// ==================== Z-index 层级 ====================
+// ==================== Z-index 层级系统 ====================
+// 统一管理层级避免冲突 - 清晰的层级结构
 :root {
-  --z-base: 0;
-  --z-docked: 10;
-  --z-dropdown: 1000;
-  --z-sticky: 1020;
-  --z-fixed: 1030;
-  --z-modal-backdrop: 1040;
-  --z-modal: 1050;
-  --z-popover: 1060;
-  --z-tooltip: 1070;
-  --z-toast: 1080;
+  // 基础层级
+  --z-base: 0;           // 基础内容层
+  --z-below: -1;         // 背景层 (伪元素背景)
+
+  // 内容层级
+  --z-content: 1;        // 普通内容
+  --z-raised: 10;        // 突出内容 (卡片悬浮)
+  --z-floating: 100;     // 浮动元素 (按钮悬浮)
+
+  // 导航层级
+  --z-header: 1000;      // 页面头部
+  --z-sidebar: 1010;     // 侧边栏
+  --z-navigation: 1020;  // 导航菜单
+
+  // 交互层级
+  --z-dropdown: 2000;    // 下拉菜单
+  --z-popover: 2010;     // 弹出框
+  --z-tooltip: 2020;     // 工具提示
+  --z-sticky: 2030;      // 粘性元素
+
+  // 覆盖层级
+  --z-overlay: 3000;     // 覆盖层背景
+  --z-modal: 3010;       // 模态框
+  --z-drawer: 3020;      // 抽屉组件
+  --z-fullscreen: 3030;  // 全屏组件
+
+  // 系统层级
+  --z-toast: 4000;       // 消息提示
+  --z-notification: 4010; // 通知组件
+  --z-loading: 4020;     // 加载遮罩
+  --z-maximum: 9999;     // 最高层级 (紧急使用)
 }
 
 // ==================== 实用类 ====================

@@ -1,86 +1,190 @@
-// 导入变量和混合
+// =====================================
+// TavernAI Plus 主样式文件 v2.0
+// 基于现代化设计系统的全局样式
+// =====================================
+
+// 导入设计token系统 (新版本优先)
+@import './design-tokens.scss';
+
+// 导入变量和混合 (向后兼容)
 @import './variables.scss';
 @import './mixins.scss';
 @import './utilities.scss';
-
-// 导入设计token系统
-@import './design-tokens.scss';
 
 // 导入渐进式披露样式系统 (Issue #16)
 @import './progressive-disclosure.scss';
 @import './mode-transitions.scss';
 
-// Element Plus 主题覆盖
+// =====================================
+// Element Plus 主题集成 v2.0
+// 使用新的设计系统覆盖 Element Plus 默认主题
+// =====================================
 :root {
-  --el-color-primary: #{$primary-color};
-  --el-color-primary-light-3: #{$primary-light};
-  --el-color-primary-dark-2: #{$primary-dark};
+  // 主色系映射
+  --el-color-primary: var(--brand-primary-500);
+  --el-color-primary-light-3: var(--brand-primary-400);
+  --el-color-primary-light-5: var(--brand-primary-300);
+  --el-color-primary-light-7: var(--brand-primary-200);
+  --el-color-primary-light-8: var(--brand-primary-100);
+  --el-color-primary-light-9: var(--brand-primary-50);
+  --el-color-primary-dark-2: var(--brand-primary-600);
 
-  --el-bg-color: #{$bg-primary};
-  --el-bg-color-page: #{$bg-primary};
-  --el-bg-color-overlay: #{$bg-secondary};
+  // 成功、警告、危险色映射
+  --el-color-success: var(--brand-accent-500);
+  --el-color-warning: #fbbf24;
+  --el-color-danger: #f87171;
+  --el-color-info: var(--brand-secondary-500);
 
-  --el-text-color-primary: #{$text-primary};
-  --el-text-color-regular: #{$text-secondary};
-  --el-text-color-secondary: #{$text-tertiary};
-  --el-text-color-placeholder: #{$text-muted};
+  // 背景色系映射
+  --el-bg-color: var(--surface-1);
+  --el-bg-color-page: var(--surface-0);
+  --el-bg-color-overlay: var(--surface-2);
 
-  --el-border-color: #{$bg-tertiary};
-  --el-border-color-light: #{$bg-secondary};
-  --el-border-color-lighter: #{$bg-card};
+  // 文本色系映射
+  --el-text-color-primary: var(--text-primary);
+  --el-text-color-regular: var(--text-secondary);
+  --el-text-color-secondary: var(--text-tertiary);
+  --el-text-color-placeholder: var(--text-quaternary);
+  --el-text-color-disabled: var(--text-disabled);
 
-  --el-fill-color: #{$bg-card};
-  --el-fill-color-light: #{$bg-tertiary};
-  --el-fill-color-lighter: #{$bg-secondary};
-  --el-fill-color-blank: #{$bg-primary};
+  // 边框色系映射
+  --el-border-color: var(--border-primary);
+  --el-border-color-light: var(--border-secondary);
+  --el-border-color-lighter: var(--border-tertiary);
+  --el-border-color-extra-light: var(--border-tertiary);
+
+  // 填充色系映射
+  --el-fill-color: var(--surface-3);
+  --el-fill-color-light: var(--surface-2);
+  --el-fill-color-lighter: var(--surface-1);
+  --el-fill-color-extra-light: var(--surface-0);
+  --el-fill-color-blank: transparent;
+
+  // 遮罩层
+  --el-mask-color: var(--surface-overlay);
+  --el-mask-color-extra-light: rgba(10, 10, 15, 0.3);
+
+  // 圆角系统映射
+  --el-border-radius-base: var(--radius-base);
+  --el-border-radius-small: var(--radius-sm);
+  --el-border-radius-round: var(--radius-full);
+
+  // 阴影系统映射
+  --el-box-shadow: var(--shadow-base);
+  --el-box-shadow-light: var(--shadow-sm);
+  --el-box-shadow-dark: var(--shadow-lg);
 }
 
-// 全局重置
+// =====================================
+// 全局重置和基础样式 v2.0
+// =====================================
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html {
   font-size: 16px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+
+  // 支持用户偏好
+  @media (prefers-reduced-motion: reduce) {
+    scroll-behavior: auto;
+  }
 }
 
 body {
-  font-family: $font-family-base;
-  font-size: $font-size-base;
-  line-height: $line-height-normal;
-  color: $text-primary;
-  background: $bg-primary;
+  font-family: var(--font-primary);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--surface-0);
   overflow-x: hidden;
+  min-height: 100vh;
+
+  // 防止橡皮筋效果 (iOS Safari)
+  overscroll-behavior: none;
+
+  // 优化渲染性能
+  -webkit-font-feature-settings: "liga" on, "calt" on;
+  -webkit-font-variant-ligatures: common-ligatures;
+  font-feature-settings: "liga" on, "calt" on;
+  font-variant-ligatures: common-ligatures;
 }
+
+// =====================================
+// 基础元素样式 v2.0
+// =====================================
 
 // 链接样式
 a {
-  color: $primary-color;
+  color: var(--brand-primary-500);
   text-decoration: none;
-  transition: color $transition-fast;
+  transition: var(--transition-colors);
 
   &:hover {
-    color: $primary-light;
+    color: var(--brand-primary-400);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-primary-500);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
   }
 
   &:active {
-    color: $primary-dark;
+    color: var(--brand-primary-600);
   }
 }
 
-// 选择文字样式
+// 文本选择样式
 ::selection {
-  background: rgba($primary-color, 0.3);
-  color: $text-primary;
+  background-color: rgba(168, 85, 247, 0.3);
+  color: var(--text-primary);
 }
 
-// 自定义滚动条
+::-moz-selection {
+  background-color: rgba(168, 85, 247, 0.3);
+  color: var(--text-primary);
+}
+
+// 自定义滚动条 v2.0
 html {
-  @include custom-scrollbar;
+  scrollbar-width: thin;
+  scrollbar-color: var(--neutral-600) transparent;
+}
+
+html::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background-color: var(--neutral-600);
+  border-radius: var(--radius-full);
+  transition: var(--transition-colors);
+
+  &:hover {
+    background-color: var(--neutral-500);
+  }
+}
+
+html::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 // 基础工具类（utilities.scss中包含更全面的工具类）
