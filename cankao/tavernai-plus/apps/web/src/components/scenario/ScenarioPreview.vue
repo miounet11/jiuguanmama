@@ -646,7 +646,7 @@ code {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .grid.grid-cols-2.md\\:grid-cols-4 {
-    @apply grid-cols-2;
+    
   }
 
   .stat-item {

@@ -509,7 +509,7 @@ watch(() => localKeywords.value, (newKeywords) => {
 }
 
 .border-dashed {
-  @apply border-dashed border-gray-300;
+  border: 2px dashed rgb(209, 213, 219);
 }
 
 .border-dashed:hover {

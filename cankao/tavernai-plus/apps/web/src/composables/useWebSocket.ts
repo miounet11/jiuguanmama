@@ -1,6 +1,6 @@
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
 import { io, Socket } from 'socket.io-client'
-import { useAuthStore } from '@/stores/auth'
+import { useUserStore } from "@/stores/user"
 import { ElMessage, ElNotification } from 'element-plus'
 
 // WebSocket连接状态
@@ -93,7 +93,7 @@ export interface VoiceCallEvent {
 
 // WebSocket连接管理
 export function useWebSocket() {
-  const authStore = useAuthStore()
+  const authStore = useUserStore()
 
   // 连接状态
   const connectionStatus = ref<ConnectionStatus>('disconnected')

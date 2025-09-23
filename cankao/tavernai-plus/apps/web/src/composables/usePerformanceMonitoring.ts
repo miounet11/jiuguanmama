@@ -1,207 +1,187 @@
-/**
- * 性能监控组合式函数
- * 用于在 Vue 组件中集成 Web Vitals 监控
- */
-
+// 性能监控组合函数 - Issue #36
 import { ref, onMounted, onUnmounted } from 'vue'
-import {
-  getWebVitalsReport,
-  sendPerformanceData,
-  type PerformanceReport,
-  type WebVitalsMetric
-} from '@/utils/performance/webVitals'
 
-export interface PerformanceState {
-  isLoading: boolean
-  report: PerformanceReport | null
-  error: string | null
-  score: number
+interface PerformanceMetric {
+  name: string
+  value: number
+  timestamp: number
+  url?: string
 }
 
-export function usePerformanceMonitoring() {
-  const state = ref<PerformanceState>({
-    isLoading: false,
-    report: null,
-    error: null,
-    score: 0
-  })
+interface MemoryInfo {
+  used: number
+  total: number
+  limit: number
+}
 
-  /**
-   * 计算性能得分
-   */
-  function calculatePerformanceScore(report: PerformanceReport): number {
-    let score = 0
-    let count = 0
+export const usePerformanceMonitoring = () => {
+  const metrics = ref<PerformanceMetric[]>([])
+  const memoryUsage = ref<MemoryInfo | null>(null)
+  const isMonitoring = ref(false)
+  
+  let memoryInterval: number | null = null
 
-    // LCP 权重: 25%
-    if (report.LCP) {
-      count++
-      if (report.LCP.rating === 'good') score += 25
-      else if (report.LCP.rating === 'needs-improvement') score += 15
-      else score += 5
+  // Web Vitals监控
+  const reportWebVitals = (metric: any) => {
+    const perfMetric: PerformanceMetric = {
+      name: metric.name,
+      value: metric.value,
+      timestamp: Date.now(),
+      url: window.location.pathname
     }
-
-    // FID 权重: 25%
-    if (report.FID) {
-      count++
-      if (report.FID.rating === 'good') score += 25
-      else if (report.FID.rating === 'needs-improvement') score += 15
-      else score += 5
+    
+    metrics.value.push(perfMetric)
+    
+    // 警告阈值检查
+    const thresholds = {
+      CLS: 0.1,
+      FID: 100,
+      LCP: 2500,
+      FCP: 1800,
+      TTFB: 600
     }
-
-    // CLS 权重: 25%
-    if (report.CLS) {
-      count++
-      if (report.CLS.rating === 'good') score += 25
-      else if (report.CLS.rating === 'needs-improvement') score += 15
-      else score += 5
+    
+    if (thresholds[metric.name as keyof typeof thresholds] && 
+        metric.value > thresholds[metric.name as keyof typeof thresholds]) {
+      console.warn(`性能指标超标: ${metric.name} = ${metric.value}`)
     }
-
-    // FCP 权重: 15%
-    if (report.FCP) {
-      count++
-      if (report.FCP.rating === 'good') score += 15
-      else if (report.FCP.rating === 'needs-improvement') score += 10
-      else score += 3
-    }
-
-    // TTFB 权重: 10%
-    if (report.TTFB) {
-      count++
-      if (report.TTFB.rating === 'good') score += 10
-      else if (report.TTFB.rating === 'needs-improvement') score += 6
-      else score += 2
-    }
-
-    return count > 0 ? Math.round(score / count * 4) : 0 // 转换为 0-100 分
+    
+    // 存储到localStorage（最近100条）
+    const stored = JSON.parse(localStorage.getItem('perfMetrics') || '[]')
+    stored.push(perfMetric)
+    localStorage.setItem('perfMetrics', JSON.stringify(stored.slice(-100)))
   }
 
-  /**
-   * 收集性能指标
-   */
-  async function collectMetrics() {
-    state.value.isLoading = true
-    state.value.error = null
-
-    try {
-      const report = await getWebVitalsReport()
-      state.value.report = report
-      state.value.score = calculatePerformanceScore(report)
-
-      // 发送到服务器
-      await sendPerformanceData(report)
-    } catch (error) {
-      state.value.error = error instanceof Error ? error.message : '未知错误'
-      console.error('性能监控失败:', error)
-    } finally {
-      state.value.isLoading = false
-    }
-  }
-
-  /**
-   * 获取性能建议
-   */
-  function getPerformanceAdvice(): string[] {
-    const advice: string[] = []
-    if (!state.value.report) return advice
-
-    const { LCP, FID, CLS, FCP, TTFB } = state.value.report
-
-    if (LCP?.rating === 'poor') {
-      advice.push('🎯 LCP 过慢：考虑优化图片加载、减少渲染阻塞资源')
-    }
-
-    if (FID?.rating === 'poor') {
-      advice.push('⚡ FID 过高：减少 JavaScript 执行时间，优化事件处理')
-    }
-
-    if (CLS?.rating === 'poor') {
-      advice.push('📐 CLS 过高：为图片和广告位预留空间，避免布局突变')
-    }
-
-    if (FCP?.rating === 'poor') {
-      advice.push('🚀 FCP 过慢：优化关键渲染路径，减少阻塞资源')
-    }
-
-    if (TTFB?.rating === 'poor') {
-      advice.push('🌐 TTFB 过高：优化服务器响应时间，考虑使用 CDN')
-    }
-
-    if (advice.length === 0) {
-      advice.push('✅ 性能表现良好！继续保持。')
-    }
-
-    return advice
-  }
-
-  /**
-   * 格式化性能指标显示
-   */
-  function formatMetric(metric: WebVitalsMetric): string {
-    switch (metric.name) {
-      case 'LCP':
-      case 'FCP':
-      case 'FID':
-      case 'TTFB':
-        return metric.value.toFixed(0) + 'ms'
-      case 'CLS':
-        return metric.value.toFixed(3)
-      default:
-        return metric.value.toString()
-    }
-  }
-
-  /**
-   * 获取性能等级颜色
-   */
-  function getRatingColor(rating: string): string {
-    switch (rating) {
-      case 'good':
-        return '#52c41a' // 绿色
-      case 'needs-improvement':
-        return '#faad14' // 橙色
-      case 'poor':
-        return '#f5222d' // 红色
-      default:
-        return '#d9d9d9' // 灰色
-    }
-  }
-
-  // 页面可见性变化监听
-  let visibilityChangeHandler: (() => void) | null = null
-
-  onMounted(() => {
-    // 页面加载完成后收集指标
-    if (document.readyState === 'complete') {
-      setTimeout(collectMetrics, 1000)
-    } else {
-      window.addEventListener('load', () => {
-        setTimeout(collectMetrics, 1000)
-      })
-    }
-
-    // 监听页面可见性变化
-    visibilityChangeHandler = () => {
-      if (document.visibilityState === 'hidden') {
-        // 页面隐藏时最后一次收集指标
-        collectMetrics()
+  // 内存监控
+  const monitorMemory = () => {
+    if ('memory' in performance) {
+      const memory = (performance as any).memory
+      memoryUsage.value = {
+        used: Math.round(memory.usedJSHeapSize / 1048576), // MB
+        total: Math.round(memory.totalJSHeapSize / 1048576),
+        limit: Math.round(memory.jsHeapSizeLimit / 1048576)
+      }
+      
+      // 内存使用率过高警告
+      if (memoryUsage.value.used > memoryUsage.value.total * 0.9) {
+        console.warn('内存使用率过高:', memoryUsage.value)
       }
     }
-    document.addEventListener('visibilitychange', visibilityChangeHandler)
+  }
+
+  // 开始监控
+  const startMonitoring = async () => {
+    if (isMonitoring.value) return
+    
+    isMonitoring.value = true
+    
+    try {
+      // 动态导入web-vitals
+      const { getCLS, getFID, getFCP, getLCP, getTTFB } = await import('web-vitals')
+      
+      getCLS(reportWebVitals)
+      getFID(reportWebVitals)
+      getFCP(reportWebVitals)
+      getLCP(reportWebVitals)
+      getTTFB(reportWebVitals)
+      
+      // 内存监控（每30秒）
+      memoryInterval = setInterval(monitorMemory, 30000)
+      monitorMemory() // 立即执行一次
+      
+      console.log('性能监控已启动')
+    } catch (error) {
+      console.error('启动性能监控失败:', error)
+    }
+  }
+
+  // 停止监控
+  const stopMonitoring = () => {
+    isMonitoring.value = false
+    
+    if (memoryInterval) {
+      clearInterval(memoryInterval)
+      memoryInterval = null
+    }
+    
+    console.log('性能监控已停止')
+  }
+
+  // 获取性能报告
+  const getPerformanceReport = () => {
+    const stored = JSON.parse(localStorage.getItem('perfMetrics') || '[]')
+    
+    const report = {
+      currentSession: metrics.value,
+      historical: stored,
+      memoryUsage: memoryUsage.value,
+      summary: {
+        avgLCP: calculateAverage(stored.filter(m => m.name === 'LCP')),
+        avgFID: calculateAverage(stored.filter(m => m.name === 'FID')),
+        avgCLS: calculateAverage(stored.filter(m => m.name === 'CLS')),
+        avgFCP: calculateAverage(stored.filter(m => m.name === 'FCP')),
+        avgTTFB: calculateAverage(stored.filter(m => m.name === 'TTFB'))
+      }
+    }
+    
+    return report
+  }
+
+  // 计算平均值
+  const calculateAverage = (metrics: PerformanceMetric[]) => {
+    if (metrics.length === 0) return 0
+    const sum = metrics.reduce((acc, metric) => acc + metric.value, 0)
+    return Math.round(sum / metrics.length)
+  }
+
+  // 清除历史数据
+  const clearMetrics = () => {
+    metrics.value = []
+    localStorage.removeItem('perfMetrics')
+  }
+
+  // 生命周期钩子
+  onMounted(() => {
+    // 如果在生产环境且用户同意，自动启动监控
+    if (import.meta.env.PROD && 
+        localStorage.getItem('perfMonitoringEnabled') !== 'false') {
+      startMonitoring()
+    }
   })
 
   onUnmounted(() => {
-    if (visibilityChangeHandler) {
-      document.removeEventListener('visibilitychange', visibilityChangeHandler)
-    }
+    stopMonitoring()
   })
 
   return {
-    state: state.value,
-    collectMetrics,
-    getPerformanceAdvice,
-    formatMetric,
-    getRatingColor,
-    calculatePerformanceScore
+    metrics: readonly(metrics),
+    memoryUsage: readonly(memoryUsage),
+    isMonitoring: readonly(isMonitoring),
+    startMonitoring,
+    stopMonitoring,
+    getPerformanceReport,
+    clearMetrics
   }
+}
+
+// 性能预算检查
+export const usePerformanceBudget = () => {
+  const budgets = {
+    bundleSize: 8 * 1024 * 1024, // 8MB
+    loadTime: 2000, // 2秒
+    lcp: 2500, // 2.5秒
+    fid: 100, // 100ms
+    cls: 0.1 // 0.1
+  }
+
+  const checkBudget = (metric: string, value: number) => {
+    const budget = budgets[metric as keyof typeof budgets]
+    if (budget && value > budget) {
+      console.warn(`性能预算超标: ${metric} = ${value}, 预算: ${budget}`)
+      return false
+    }
+    return true
+  }
+
+  return { budgets, checkBudget }
 }
