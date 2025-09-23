@@ -1,0 +1,500 @@
+import { prisma } from '../lib/prisma'
+
+export interface InheritanceStrategy {
+  type: 'character_first' | 'uniform_sort' | 'layered_injection'
+  globalScenariosEnabled: boolean
+  maxActiveScenarios: number
+}
+
+export interface ScenarioInheritanceConfig {
+  strategy: InheritanceStrategy
+  priority?: number
+  customSettings?: Record<string, any>
+}
+
+export interface ResolvedScenario {
+  id: string
+  name: string
+  content?: string
+  worldInfos: Array<{
+    id: string
+    title: string
+    content: string
+    keywords: string[]
+    priority: number
+    insertDepth: number
+    probability: number
+    matchType: string
+    caseSensitive: boolean
+    isActive: boolean
+    triggerOnce: boolean
+    excludeRecursion: boolean
+    category: string
+    group?: string
+    position: string
+  }>
+  priority: number
+  source: 'character' | 'global' | 'session'
+  customSettings?: Record<string, any>
+}
+
+class CharacterScenarioService {
+  /**
+   * 解析角色的活跃剧本（支持继承策略）
+   */
+  async resolveActiveScenarios(
+    characterId: string,
+    chatId?: string,
+    strategy: InheritanceStrategy = {
+      type: 'character_first',
+      globalScenariosEnabled: true,
+      maxActiveScenarios: 10
+    }
+  ): Promise<ResolvedScenario[]> {
+    const resolvedScenarios: ResolvedScenario[] = []
+
+    // 1. 获取角色关联的剧本
+    const characterScenarios = await this.getCharacterScenarios(characterId)
+
+    // 2. 获取全局剧本（如果启用）
+    const globalScenarios = strategy.globalScenariosEnabled
+      ? await this.getGlobalScenarios()
+      : []
+
+    // 3. 获取会话特定剧本（如果有）
+    const sessionScenarios = chatId
+      ? await this.getSessionScenarios(chatId)
+      : []
+
+    // 4. 根据继承策略合并和排序剧本
+    switch (strategy.type) {
+      case 'character_first':
+        resolvedScenarios.push(
+          ...characterScenarios,
+          ...globalScenarios,
+          ...sessionScenarios
+        )
+        break
+
+      case 'uniform_sort':
+        // 按优先级统一排序
+        const allScenarios = [
+          ...characterScenarios,
+          ...globalScenarios,
+          ...sessionScenarios
+        ]
+        allScenarios.sort((a, b) => b.priority - a.priority)
+        resolvedScenarios.push(...allScenarios)
+        break
+
+      case 'layered_injection':
+        // 分层注入：高优先级角色剧本 > 全局剧本 > 低优先级角色剧本 > 会话剧本
+        const highPriorityCharacter = characterScenarios.filter(s => s.priority >= 70)
+        const lowPriorityCharacter = characterScenarios.filter(s => s.priority < 70)
+
+        resolvedScenarios.push(
+          ...highPriorityCharacter.sort((a, b) => b.priority - a.priority),
+          ...globalScenarios.sort((a, b) => b.priority - a.priority),
+          ...lowPriorityCharacter.sort((a, b) => b.priority - a.priority),
+          ...sessionScenarios.sort((a, b) => b.priority - a.priority)
+        )
+        break
+    }
+
+    // 5. 限制最大数量
+    return resolvedScenarios.slice(0, strategy.maxActiveScenarios)
+  }
+
+  /**
+   * 获取角色关联的剧本
+   */
+  private async getCharacterScenarios(characterId: string): Promise<ResolvedScenario[]> {
+    const characterScenarios = await prisma.characterScenario.findMany({
+      where: {
+        characterId,
+        isActive: true
+      },
+      include: {
+        scenario: {
+          include: {
+            worldInfos: {
+              where: { isActive: true },
+              orderBy: { priority: 'desc' }
+            }
+          }
+        }
+      },
+      orderBy: [
+        { isDefault: 'desc' },
+        { createdAt: 'asc' }
+      ]
+    })
+
+    return characterScenarios.map(cs => ({
+      id: cs.scenario.id,
+      name: cs.scenario.name,
+      content: cs.scenario.content || undefined,
+      worldInfos: cs.scenario.worldInfos.map(wi => ({
+        id: wi.id,
+        title: wi.title,
+        content: wi.content,
+        keywords: typeof wi.keywords === 'string' ? JSON.parse(wi.keywords) : wi.keywords || [],
+        priority: wi.priority,
+        insertDepth: wi.insertDepth,
+        probability: wi.probability,
+        matchType: wi.matchType,
+        caseSensitive: wi.caseSensitive,
+        isActive: wi.isActive,
+        triggerOnce: wi.triggerOnce,
+        excludeRecursion: wi.excludeRecursion,
+        category: wi.category,
+        group: wi.group || undefined,
+        position: wi.position
+      })),
+      priority: cs.isDefault ? 100 : 50, // 默认剧本优先级最高
+      source: 'character' as const,
+      customSettings: cs.customSettings ? JSON.parse(cs.customSettings) : undefined
+    }))
+  }
+
+  /**
+   * 获取全局剧本（所有对话可用的通用世界信息）
+   */
+  private async getGlobalScenarios(): Promise<ResolvedScenario[]> {
+    // 获取标记为全局的剧本
+    const globalScenarios = await prisma.scenario.findMany({
+      where: {
+        isPublic: true,
+        isActive: true,
+        category: '全局' // 假设有一个全局分类
+      },
+      include: {
+        worldInfos: {
+          where: { isActive: true },
+          orderBy: { priority: 'desc' }
+        }
+      },
+      orderBy: { useCount: 'desc' },
+      take: 5 // 限制全局剧本数量
+    })
+
+    return globalScenarios.map(scenario => ({
+      id: scenario.id,
+      name: scenario.name,
+      content: scenario.content || undefined,
+      worldInfos: scenario.worldInfos.map(wi => ({
+        id: wi.id,
+        title: wi.title,
+        content: wi.content,
+        keywords: typeof wi.keywords === 'string' ? JSON.parse(wi.keywords) : wi.keywords || [],
+        priority: wi.priority,
+        insertDepth: wi.insertDepth,
+        probability: wi.probability,
+        matchType: wi.matchType,
+        caseSensitive: wi.caseSensitive,
+        isActive: wi.isActive,
+        triggerOnce: wi.triggerOnce,
+        excludeRecursion: wi.excludeRecursion,
+        category: wi.category,
+        group: wi.group || undefined,
+        position: wi.position
+      })),
+      priority: 30, // 全局剧本中等优先级
+      source: 'global' as const
+    }))
+  }
+
+  /**
+   * 获取会话特定剧本
+   */
+  private async getSessionScenarios(chatId: string): Promise<ResolvedScenario[]> {
+    // 从会话元数据中获取特定剧本配置
+    const session = await prisma.chatSession.findUnique({
+      where: { id: chatId },
+      select: { metadata: true }
+    })
+
+    if (!session?.metadata) {
+      return []
+    }
+
+    const metadata = typeof session.metadata === 'string'
+      ? JSON.parse(session.metadata)
+      : session.metadata
+
+    const sessionScenarioIds = metadata.activeScenarios || []
+
+    if (sessionScenarioIds.length === 0) {
+      return []
+    }
+
+    const sessionScenarios = await prisma.scenario.findMany({
+      where: {
+        id: { in: sessionScenarioIds },
+        isActive: true
+      },
+      include: {
+        worldInfos: {
+          where: { isActive: true },
+          orderBy: { priority: 'desc' }
+        }
+      }
+    })
+
+    return sessionScenarios.map(scenario => ({
+      id: scenario.id,
+      name: scenario.name,
+      content: scenario.content || undefined,
+      worldInfos: scenario.worldInfos.map(wi => ({
+        id: wi.id,
+        title: wi.title,
+        content: wi.content,
+        keywords: typeof wi.keywords === 'string' ? JSON.parse(wi.keywords) : wi.keywords || [],
+        priority: wi.priority,
+        insertDepth: wi.insertDepth,
+        probability: wi.probability,
+        matchType: wi.matchType,
+        caseSensitive: wi.caseSensitive,
+        isActive: wi.isActive,
+        triggerOnce: wi.triggerOnce,
+        excludeRecursion: wi.excludeRecursion,
+        category: wi.category,
+        group: wi.group || undefined,
+        position: wi.position
+      })),
+      priority: 20, // 会话剧本最低优先级
+      source: 'session' as const
+    }))
+  }
+
+  /**
+   * 激活和触发世界信息条目
+   */
+  async activateWorldInfoEntries(
+    scenarios: ResolvedScenario[],
+    messages: Array<{ role: string; content: string }>,
+    maxEntries: number = 20
+  ): Promise<Array<ResolvedScenario['worldInfos'][0]>> {
+    const allWorldInfos = scenarios.flatMap(s => s.worldInfos)
+    const activatedEntries: Array<ResolvedScenario['worldInfos'][0]> = []
+
+    // 获取最近的消息内容进行扫描
+    const scanDepth = 10
+    const messagesToScan = messages.slice(-scanDepth)
+    const scanText = messagesToScan.map(m => m.content).join(' ').toLowerCase()
+
+    // 1. 关键词匹配激活
+    for (const entry of allWorldInfos) {
+      if (activatedEntries.length >= maxEntries) break
+
+      // 检查是否已经激活过（针对triggerOnce的条目）
+      if (entry.triggerOnce && this.hasTriggeredBefore(entry.id, messages)) {
+        continue
+      }
+
+      // 检查触发条件
+      const shouldTrigger = this.checkTriggerConditions(entry, scanText)
+
+      if (shouldTrigger) {
+        // 检查概率
+        if (Math.random() < entry.probability) {
+          activatedEntries.push(entry)
+        }
+      }
+    }
+
+    // 2. 递归扫描（如果启用）
+    const recursiveEntries = this.performRecursiveScan(
+      activatedEntries,
+      allWorldInfos.filter(wi => !activatedEntries.includes(wi)),
+      new Set(activatedEntries.map(e => e.id))
+    )
+
+    activatedEntries.push(...recursiveEntries.slice(0, maxEntries - activatedEntries.length))
+
+    // 3. 按优先级排序
+    activatedEntries.sort((a, b) => b.priority - a.priority)
+
+    return activatedEntries.slice(0, maxEntries)
+  }
+
+  /**
+   * 检查触发条件
+   */
+  private checkTriggerConditions(
+    entry: ResolvedScenario['worldInfos'][0],
+    scanText: string
+  ): boolean {
+    const { keywords, matchType, caseSensitive } = entry
+    const searchText = caseSensitive ? scanText : scanText.toLowerCase()
+
+    return keywords.some(keyword => {
+      const searchKeyword = caseSensitive ? keyword : keyword.toLowerCase()
+
+      switch (matchType) {
+        case 'exact':
+          return searchText === searchKeyword
+        case 'starts_with':
+          return searchText.startsWith(searchKeyword)
+        case 'ends_with':
+          return searchText.endsWith(searchKeyword)
+        case 'regex':
+          try {
+            const regex = new RegExp(searchKeyword, caseSensitive ? 'g' : 'gi')
+            return regex.test(searchText)
+          } catch {
+            return false
+          }
+        case 'contains':
+        default:
+          return searchText.includes(searchKeyword)
+      }
+    })
+  }
+
+  /**
+   * 检查条目是否已经触发过
+   */
+  private hasTriggeredBefore(
+    entryId: string,
+    messages: Array<{ role: string; content: string }>
+  ): boolean {
+    // 简单实现：检查消息历史中是否包含此条目的标记
+    // 实际实现可能需要在数据库中记录触发历史
+    return messages.some(msg =>
+      msg.content.includes(`[WorldInfo:${entryId}]`)
+    )
+  }
+
+  /**
+   * 递归扫描
+   */
+  private performRecursiveScan(
+    activatedEntries: Array<ResolvedScenario['worldInfos'][0]>,
+    remainingEntries: Array<ResolvedScenario['worldInfos'][0]>,
+    processedIds: Set<string>
+  ): Array<ResolvedScenario['worldInfos'][0]> {
+    const additionalEntries: Array<ResolvedScenario['worldInfos'][0]> = []
+    const activatedText = activatedEntries.map(e => e.content).join(' ').toLowerCase()
+
+    for (const entry of remainingEntries) {
+      if (processedIds.has(entry.id) || entry.excludeRecursion) continue
+
+      const shouldTrigger = this.checkTriggerConditions(entry, activatedText)
+      if (shouldTrigger && Math.random() < entry.probability) {
+        additionalEntries.push(entry)
+        processedIds.add(entry.id)
+      }
+    }
+
+    // 继续递归，直到没有新的激活
+    if (additionalEntries.length > 0) {
+      const moreEntries = this.performRecursiveScan(
+        additionalEntries,
+        remainingEntries.filter(e => !processedIds.has(e.id)),
+        processedIds
+      )
+      additionalEntries.push(...moreEntries)
+    }
+
+    return additionalEntries
+  }
+
+  /**
+   * 获取可用剧本列表（供角色编辑界面使用）
+   */
+  async getAvailableScenarios(userId: string): Promise<Array<{
+    id: string
+    name: string
+    description: string
+    category: string
+    isPublic: boolean
+    rating: number
+    useCount: number
+    creator: {
+      id: string
+      username: string
+    }
+  }>> {
+    return prisma.scenario.findMany({
+      where: {
+        OR: [
+          { isPublic: true },
+          { userId: userId }
+        ],
+        isActive: true
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        category: true,
+        isPublic: true,
+        rating: true,
+        useCount: true,
+        user: {
+          select: {
+            id: true,
+            username: true
+          }
+        }
+      },
+      orderBy: [
+        { rating: 'desc' },
+        { useCount: 'desc' },
+        { name: 'asc' }
+      ]
+    }).then(scenarios =>
+      scenarios.map(s => ({
+        ...s,
+        creator: s.user
+      }))
+    )
+  }
+
+  /**
+   * 实现剧本加载缓存
+   */
+  private scenarioCache = new Map<string, { data: ResolvedScenario[]; timestamp: number }>()
+  private readonly CACHE_TTL = 5 * 60 * 1000 // 5分钟缓存
+
+  async getCachedScenarios(
+    characterId: string,
+    chatId?: string,
+    strategy?: InheritanceStrategy
+  ): Promise<ResolvedScenario[]> {
+    const cacheKey = `${characterId}-${chatId || 'no-chat'}-${JSON.stringify(strategy)}`
+    const cached = this.scenarioCache.get(cacheKey)
+
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      return cached.data
+    }
+
+    const scenarios = await this.resolveActiveScenarios(characterId, chatId, strategy)
+    this.scenarioCache.set(cacheKey, {
+      data: scenarios,
+      timestamp: Date.now()
+    })
+
+    return scenarios
+  }
+
+  /**
+   * 清除缓存
+   */
+  clearCache(characterId?: string): void {
+    if (characterId) {
+      // 清除特定角色的缓存
+      for (const key of this.scenarioCache.keys()) {
+        if (key.startsWith(characterId)) {
+          this.scenarioCache.delete(key)
+        }
+      }
+    } else {
+      // 清除所有缓存
+      this.scenarioCache.clear()
+    }
+  }
+}
+
+export const characterScenarioService = new CharacterScenarioService()
