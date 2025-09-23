@@ -278,6 +278,14 @@ const routes: RouteRecordRaw[] = [
 
   // 测试页面 (仅开发环境)
   ...(import.meta.env.DEV ? [{
+    path: '/test/design-system',
+    name: 'DesignSystemTest',
+    component: () => import(/* webpackChunkName: "test" */ '@/views/test/DesignSystemTest.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Design System 测试 - TavernAI Plus'
+    }
+  }, {
     path: '/test/quick-chat',
     name: 'QuickChatTest',
     component: () => import(/* webpackChunkName: "test" */ '@/views/test/QuickChatTestPage.vue'),
