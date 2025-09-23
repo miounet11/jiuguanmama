@@ -85,6 +85,11 @@ model User {
   featureUsageLogs  FeatureUsageLog[]
   featureUnlocks    FeatureUnlock[]
   modeTransitions   ModeTransition[]
+
+  // 情景剧本系统
+  scenarios          Scenario[]
+  scenarioFavorites  ScenarioFavorite[]
+  scenarioRatings    ScenarioRating[]
 }
 
 // 角色模型
@@ -132,6 +137,9 @@ model Character {
 
   // 社交功能关系
   posts Post[]
+
+  // 情景剧本系统关系
+  scenarios CharacterScenario[]
 
   @@unique([name, creatorId])
   @@index([creatorId])
@@ -1034,4 +1042,180 @@ model ModeTransition {
   @@index([userId])
   @@index([transitionedAt])
   @@index([toMode])
+}
+
+// 情景剧本系统
+
+// 情景剧本模型
+model Scenario {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  name        String
+  description String?
+  content     String?  // 剧本详细内容
+  isPublic    Boolean  @default(true) @map("is_public")
+  isActive    Boolean  @default(true) @map("is_active")
+  tags        String   @default("[]") // JSON字符串存储标签数组
+  category    String   @default("通用") // 剧本分类
+  language    String   @default("zh-CN") // 语言设置
+
+  // 统计信息
+  viewCount     Int @default(0) @map("view_count")
+  useCount      Int @default(0) @map("use_count")
+  favoriteCount Int @default(0) @map("favorite_count")
+  rating        Float @default(0.0)
+  ratingCount   Int @default(0) @map("rating_count")
+
+  // 版本控制
+  version     Int    @default(1)
+  parentId    String? @map("parent_id") // 父剧本ID，用于版本分支
+
+  // 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent     Scenario?        @relation("ScenarioVersions", fields: [parentId], references: [id], onDelete: SetNull)
+  versions   Scenario[]       @relation("ScenarioVersions")
+  worldInfos WorldInfoEntry[]
+
+  // 多对多关系：角色可以使用多个剧本，剧本可以被多个角色使用
+  characters CharacterScenario[]
+
+  // 收藏和评分关系
+  favorites ScenarioFavorite[]
+  ratings   ScenarioRating[]
+
+  // 索引
+  @@index([userId])
+  @@index([isPublic])
+  @@index([isActive])
+  @@index([category])
+  @@index([rating])
+  @@index([viewCount])
+  @@index([useCount])
+  @@index([favoriteCount])
+  @@index([createdAt])
+  @@index([parentId])
+  @@index([userId, isPublic])
+  @@index([category, rating])
+  @@index([isPublic, rating])
+}
+
+// 世界信息条目模型
+model WorldInfoEntry {
+  id          String  @id @default(uuid())
+  scenarioId  String  @map("scenario_id")
+  title       String
+  content     String
+  keywords    String  @default("[]") // JSON数组存储关键词
+
+  // 触发和优先级设置
+  priority      Int     @default(0) // 优先级，数字越大优先级越高
+  insertDepth   Int     @default(4) @map("insert_depth") // 插入深度
+  probability   Float   @default(1.0) // 触发概率 0.0-1.0
+  matchType     String  @default("contains") @map("match_type") // 匹配类型: contains, exact, regex, starts_with, ends_with
+  caseSensitive Boolean @default(false) @map("case_sensitive") // 是否区分大小写
+
+  // 条件设置
+  isActive        Boolean @default(true) @map("is_active")
+  triggerOnce     Boolean @default(false) @map("trigger_once") // 是否只触发一次
+  excludeRecursion Boolean @default(true) @map("exclude_recursion") // 是否排除递归触发
+
+  // 分组和分类
+  category String  @default("通用") // 世界信息分类
+  group    String? // 分组标识
+
+  // 显示位置设置
+  position String @default("before") // before, after, replace
+
+  // 统计信息
+  triggerCount Int @default(0) @map("trigger_count") // 触发次数
+
+  // 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  // 索引
+  @@index([scenarioId])
+  @@index([priority])
+  @@index([isActive])
+  @@index([category])
+  @@index([matchType])
+  @@index([triggerCount])
+  @@index([createdAt])
+  @@index([scenarioId, priority]) // 复合索引用于优化查询性能
+  @@index([scenarioId, isActive])
+  @@index([isActive, priority])
+}
+
+// 角色剧本关联表（多对多）
+model CharacterScenario {
+  id          String @id @default(uuid())
+  characterId String @map("character_id")
+  scenarioId  String @map("scenario_id")
+
+  // 关联配置
+  isDefault Boolean @default(false) @map("is_default") // 是否为角色的默认剧本
+  isActive  Boolean @default(true) @map("is_active")
+
+  // 个性化设置
+  customSettings String? @map("custom_settings") // JSON字符串存储个性化配置
+
+  // 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  scenario  Scenario  @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  // 约束
+  @@unique([characterId, scenarioId])
+  @@index([characterId])
+  @@index([scenarioId])
+  @@index([isDefault])
+  @@index([isActive])
+}
+
+// 剧本收藏表
+model ScenarioFavorite {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  scenarioId String   @map("scenario_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // 关系
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  // 约束
+  @@unique([userId, scenarioId])
+  @@index([userId])
+  @@index([scenarioId])
+}
+
+// 剧本评分表
+model ScenarioRating {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  scenarioId String   @map("scenario_id")
+  rating     Float
+  comment    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  // 约束
+  @@unique([userId, scenarioId])
+  @@index([userId])
+  @@index([scenarioId])
+  @@index([rating])
 }
