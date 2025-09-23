@@ -100,13 +100,13 @@
       </h3>
 
       <!-- 创建者信息 -->
-      <div class="flex items-center gap-2 mb-3">
+      <div v-if="scenario.creator" class="flex items-center gap-2 mb-3">
         <el-avatar
           :size="20"
           :src="scenario.creator.avatar"
           class="bg-gray-300"
         >
-          {{ scenario.creator.username.charAt(0).toUpperCase() }}
+          {{ scenario.creator.username?.charAt(0).toUpperCase() }}
         </el-avatar>
         <span class="text-sm text-gray-600">
           {{ scenario.creator.username }}

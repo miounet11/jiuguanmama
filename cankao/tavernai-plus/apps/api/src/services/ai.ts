@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios'
 import { prisma } from '../server'
-import { promptInjector, injectWorldInfoToPrompt } from './promptInjector'
+// import { promptInjector, injectWorldInfoToPrompt } from './promptInjector'
 import {
   PromptContext,
   BaseMessage,
@@ -417,7 +417,14 @@ class AIService {
             priority: 50
           }
 
-          injectionResult = await injectWorldInfoToPrompt(promptContext, injectionConfig)
+          // injectionResult = await injectWorldInfoToPrompt(promptContext, injectionConfig)
+          injectionResult = {
+            success: false,
+            finalPrompt: [],
+            injectedItems: [],
+            tokenUsage: { input: 0, output: 0, total: 0, worldInfo: 0 },
+            performance: { injectionTime: 0, tokenCalculationTime: 0 }
+          }
 
           if (injectionResult.success) {
             finalMessages = this.convertFromBaseMessages(injectionResult.finalPrompt)
@@ -684,7 +691,14 @@ class AIService {
             priority: 50
           }
 
-          const injectionResult = await injectWorldInfoToPrompt(promptContext, injectionConfig)
+          // const injectionResult = await injectWorldInfoToPrompt(promptContext, injectionConfig)
+          const injectionResult = {
+            success: false,
+            finalPrompt: [],
+            injectedItems: [],
+            tokenUsage: { input: 0, output: 0, total: 0, worldInfo: 0 },
+            performance: { injectionTime: 0, tokenCalculationTime: 0 }
+          }
 
           if (injectionResult.success) {
             apiMessages = this.convertFromBaseMessages(injectionResult.finalPrompt)

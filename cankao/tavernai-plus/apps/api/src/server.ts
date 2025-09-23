@@ -42,6 +42,8 @@ import groupchatRoutes from './routes/groupchat'
 import personasRoutes from './routes/personas'
 import userModeRoutes from './routes/user-mode'
 import statsRoutes from './routes/stats'
+import scenariosRoutes from './routes/scenarios'
+// import importRoutes from './routes/import' // 临时禁用
 
 // 导入工作流调度器
 
@@ -130,6 +132,8 @@ app.use('/api/groupchat', groupchatRoutes) // 群组聊天 API
 app.use('/api/personas', personasRoutes) // 用户人格管理 API
 app.use('/api/user-mode', userModeRoutes) // 渐进式功能披露 API (Issue #16)
 app.use('/api/stats', statsRoutes) // 统计数据 API
+app.use('/api/scenarios', scenariosRoutes) // 情景剧本系统 API (Issue #22)
+// app.use('/api/import', importRoutes) // 导入导出功能 API (Issue #26) - 临时禁用
 // app.use('/api/workflows', workflowRoutes) // 智能工作流 API - 已删除
 
 // 健康检查端点
@@ -226,7 +230,7 @@ async function startServer() {
       console.log('   GET  /health - 健康检查')
       console.log('   POST /api/auth/* - 认证服务')
       console.log('   GET  /api/characters/* - 角色管理')
-      console.log('   POST /api/chat/* - 对话服务')
+      // console.log('   POST /api/chat/* - 对话服务') // 临时禁用
       console.log('   GET  /api/ai/* - AI 功能')
       console.log('   GET  /api/recommendations/* - 智能推荐系统')
       console.log('   GET  /api/marketplace/* - 角色市场')

@@ -25,7 +25,7 @@ export const scenarioApi = {
     const response = await api.get<{
       success: boolean
       data: ScenarioPaginationResponse
-    }>('/scenarios', params)
+    }>('/api/scenarios', params)
 
     if (!response.success) {
       throw new Error('获取剧本列表失败')
@@ -41,7 +41,7 @@ export const scenarioApi = {
     const response = await api.get<{
       success: boolean
       data: Scenario
-    }>(`/scenarios/${id}`)
+    }>(`/api/scenarios/${id}`)
 
     if (!response.success) {
       throw new Error('获取剧本详情失败')
@@ -58,7 +58,7 @@ export const scenarioApi = {
       success: boolean
       data: Scenario
       message: string
-    }>('/scenarios', data)
+    }>('/api/scenarios', data)
 
     if (!response.success) {
       throw new Error('创建剧本失败')
@@ -75,7 +75,7 @@ export const scenarioApi = {
       success: boolean
       data: Scenario
       message: string
-    }>(`/scenarios/${id}`, data)
+    }>(`/api/scenarios/${id}`, data)
 
     if (!response.success) {
       throw new Error('更新剧本失败')
@@ -91,7 +91,7 @@ export const scenarioApi = {
     const response = await api.delete<{
       success: boolean
       message: string
-    }>(`/scenarios/${id}`)
+    }>(`/api/scenarios/${id}`)
 
     if (!response.success) {
       throw new Error('删除剧本失败')
@@ -253,7 +253,7 @@ export const scenarioApi = {
     const response = await api.get<{
       success: boolean
       data: string[]
-    }>('/scenarios/categories')
+    }>('/api/scenarios/categories')
 
     if (!response.success) {
       throw new Error('获取分类失败')
@@ -269,7 +269,7 @@ export const scenarioApi = {
     const response = await api.get<{
       success: boolean
       data: string[]
-    }>('/scenarios/tags')
+    }>('/api/scenarios/tags')
 
     if (!response.success) {
       throw new Error('获取标签失败')

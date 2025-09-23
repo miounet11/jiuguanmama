@@ -133,7 +133,7 @@ const routes: RouteRecordRaw[] = [
     path: '/studio',
     name: 'Studio',
     component: () => import(/* webpackChunkName: "studio" */ '@/views/studio/StudioPage.vue'),
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: '创作工坊 - TavernAI Plus'
     }
@@ -142,7 +142,7 @@ const routes: RouteRecordRaw[] = [
     path: '/studio/character/create',
     name: 'CreateCharacter',
     component: () => import(/* webpackChunkName: "studio" */ '@/views/studio/CreateCharacter.vue'),
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: '创建角色 - TavernAI Plus'
     }
@@ -151,9 +151,38 @@ const routes: RouteRecordRaw[] = [
     path: '/studio/character/edit/:id',
     name: 'EditCharacter',
     component: () => import(/* webpackChunkName: "studio" */ '@/views/studio/EditCharacter.vue'),
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: '编辑角色 - TavernAI Plus'
+    }
+  },
+
+  // 剧本管理 - 独立块
+  {
+    path: '/scenarios',
+    name: 'Scenarios',
+    component: () => import(/* webpackChunkName: "scenarios" */ '@/views/scenarios/ScenarioManagement.vue'),
+    meta: {
+      requiresAuth: true,
+      title: '剧本管理 - TavernAI Plus'
+    }
+  },
+  {
+    path: '/scenarios/:id',
+    name: 'ScenarioDetail',
+    component: () => import(/* webpackChunkName: "scenarios" */ '@/views/scenarios/ScenarioDetail.vue'),
+    meta: {
+      requiresAuth: true,
+      title: '剧本详情 - TavernAI Plus'
+    }
+  },
+  {
+    path: '/scenarios/:id/edit',
+    name: 'ScenarioEdit',
+    component: () => import(/* webpackChunkName: "scenarios" */ '@/views/scenarios/ScenarioEdit.vue'),
+    meta: {
+      requiresAuth: true,
+      title: '编辑剧本 - TavernAI Plus'
     }
   },
 

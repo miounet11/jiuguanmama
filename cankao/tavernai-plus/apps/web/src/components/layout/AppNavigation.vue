@@ -237,7 +237,8 @@ import {
   SwitchButton,
   Search,
   Menu,
-  Close
+  Close,
+  Document
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { debounce } from 'lodash-es'
@@ -270,6 +271,7 @@ const showSearch = computed(() => {
 const navigationItems = computed(() => [
   { path: '/', label: '首页', icon: House },
   { path: '/characters', label: '角色', icon: Avatar },
+  { path: '/scenarios', label: '剧本管理', icon: Document, requiresAuth: true },
   { path: '/marketplace', label: '市场', icon: Compass },
   { path: '/community', label: '社区', icon: ChatDotRound, badge: unreadCount.value > 0 ? unreadCount.value : undefined },
   { path: '/chat', label: '聊天', icon: ChatDotRound, requiresAuth: true }

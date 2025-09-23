@@ -416,3 +416,195 @@ export interface SystemNotificationEvent extends WebSocketMessage {
     title?: string
   }
 }
+
+// 情景剧本系统 API 类型
+
+export interface ApiScenario {
+  id: string
+  name: string
+  description?: string
+  content?: string
+  category: string
+  tags: string[]
+  language: string
+  isPublic: boolean
+  isActive: boolean
+
+  // 统计信息
+  viewCount: number
+  useCount: number
+  favoriteCount: number
+  rating: number
+  ratingCount: number
+
+  // 版本控制
+  version: number
+  parentId?: string
+
+  // 时间戳
+  createdAt: Date
+  updatedAt: Date
+
+  // 创建者信息
+  user: {
+    id: string
+    username: string
+    avatar: string | null
+  }
+
+  // 计数信息
+  _count?: {
+    worldInfos: number
+    favorites: number
+    ratings: number
+    characters?: number
+  }
+
+  // 权限标记
+  canEdit?: boolean
+  isFavorited?: boolean
+}
+
+export interface ApiScenarioDetail extends ApiScenario {
+  worldInfos: ApiWorldInfoEntry[]
+}
+
+export interface ApiWorldInfoEntry {
+  id: string
+  scenarioId: string
+  title: string
+  content: string
+  keywords: string[]
+
+  // 触发和优先级设置
+  priority: number
+  insertDepth: number
+  probability: number
+  matchType: 'exact' | 'contains' | 'regex' | 'starts_with' | 'ends_with' | 'wildcard'
+  caseSensitive: boolean
+
+  // 条件设置
+  isActive: boolean
+  triggerOnce: boolean
+  excludeRecursion: boolean
+
+  // 分组和分类
+  category: string
+  group?: string
+
+  // 显示位置设置
+  position: 'before' | 'after' | 'replace'
+
+  // 统计信息
+  triggerCount: number
+
+  // 时间戳
+  createdAt: Date
+  updatedAt: Date
+}
+
+// 剧本创建/更新请求类型
+export interface CreateScenarioRequest {
+  name: string
+  description?: string
+  content?: string
+  isPublic?: boolean
+  tags?: string[]
+  category?: string
+  language?: string
+}
+
+export interface UpdateScenarioRequest extends Partial<CreateScenarioRequest> {}
+
+// 世界信息条目创建/更新请求类型
+export interface CreateWorldInfoEntryRequest {
+  title: string
+  content: string
+  keywords: string[]
+  priority?: number
+  insertDepth?: number
+  probability?: number
+  matchType?: 'exact' | 'contains' | 'regex' | 'starts_with' | 'ends_with' | 'wildcard'
+  caseSensitive?: boolean
+  isActive?: boolean
+  triggerOnce?: boolean
+  excludeRecursion?: boolean
+  category?: string
+  group?: string
+  position?: 'before' | 'after' | 'replace'
+}
+
+export interface UpdateWorldInfoEntryRequest extends Partial<CreateWorldInfoEntryRequest> {}
+
+// 剧本查询参数类型
+export interface ScenarioListQuery {
+  page?: number
+  limit?: number
+  sort?: 'created' | 'updated' | 'rating' | 'popular' | 'name'
+  search?: string
+  category?: string
+  isPublic?: boolean
+  tags?: string[]
+}
+
+// 关键词匹配测试类型
+export interface TestMatchingRequest {
+  testText: string
+  depth?: number
+}
+
+export interface MatchResult {
+  entry: {
+    id: string
+    title: string
+    content: string
+    keywords: string[]
+    priority: number
+    matchType: string
+    category: string
+  }
+  matches: string[]
+  confidence: number
+  priority: number
+  insertPosition: number
+}
+
+export interface TestMatchingResponse {
+  testText: string
+  depth: number
+  matchResults: MatchResult[]
+  statistics: {
+    totalEntries: number
+    matchingTime: number
+    averageConfidence: number
+  }
+  performanceMetrics: {
+    totalMatchTime: number
+    averageMatchTime: number
+    cacheHitRate: number
+    memoryUsage: number
+    activeEntryCount: number
+    recursiveCallCount: number
+  }
+}
+
+// 剧本统计信息类型
+export interface ScenarioStats {
+  totalScenarios: number
+  publicScenarios: number
+  privateScenarios: number
+  totalWorldInfoEntries: number
+  averageRating: number
+  totalViews: number
+  totalUses: number
+  topCategories: Array<{
+    category: string
+    count: number
+  }>
+  popularScenarios: Array<{
+    id: string
+    name: string
+    useCount: number
+    rating: number
+  }>
+}

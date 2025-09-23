@@ -36,7 +36,11 @@
   },
   "packageManager": "npm@9.8.1",
   "dependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/multer": "^2.0.0",
     "colors": "^1.4.0",
-    "date-fns": "^4.1.0"
+    "date-fns": "^4.1.0",
+    "js-yaml": "^4.1.0",
+    "multer": "^2.0.2"
   }
 }

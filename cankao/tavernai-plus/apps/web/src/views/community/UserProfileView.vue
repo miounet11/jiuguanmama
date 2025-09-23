@@ -298,7 +298,6 @@ import {
   Document,
   Avatar,
   Clock,
-  Document,
   ChatLineRound,
   Star
 } from '@element-plus/icons-vue'

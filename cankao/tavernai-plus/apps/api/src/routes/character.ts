@@ -829,6 +829,307 @@ router.post('/import', authenticate, async (req: AuthRequest, res, next) => {
   }
 })
 
+// 获取角色关联的剧本列表
+router.get('/:id/scenarios', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const characterId = req.params.id
+
+    // 验证角色存在且用户有权限访问
+    const character = await prisma.character.findUnique({
+      where: { id: characterId }
+    })
+
+    if (!character) {
+      return res.status(404).json({
+        success: false,
+        message: 'Character not found'
+      })
+    }
+
+    // 检查权限：只有角色创建者可以查看私有角色的剧本关联
+    if (!character.isPublic && character.creatorId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      })
+    }
+
+    // 获取角色关联的剧本
+    const characterScenarios = await prisma.characterScenario.findMany({
+      where: { characterId },
+      include: {
+        scenario: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            category: true,
+            isPublic: true,
+            isActive: true,
+            rating: true,
+            useCount: true,
+            creator: {
+              select: {
+                id: true,
+                username: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: [
+        { isDefault: 'desc' },
+        { createdAt: 'asc' }
+      ]
+    })
+
+    res.json({
+      success: true,
+      scenarios: characterScenarios.map((cs: any) => ({
+        id: cs.id,
+        scenarioId: cs.scenarioId,
+        isDefault: cs.isDefault,
+        isActive: cs.isActive,
+        customSettings: cs.customSettings ? JSON.parse(cs.customSettings) : null,
+        createdAt: cs.createdAt,
+        scenario: cs.scenario
+      }))
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 关联剧本到角色
+router.post('/:id/scenarios', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const characterId = req.params.id
+    const { scenarioId, isDefault = false, customSettings } = req.body
+
+    // 验证角色存在且用户是创建者
+    const character = await prisma.character.findUnique({
+      where: { id: characterId }
+    })
+
+    if (!character || character.creatorId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      })
+    }
+
+    // 验证剧本存在且用户有权限访问
+    const scenario = await prisma.scenario.findUnique({
+      where: { id: scenarioId }
+    })
+
+    if (!scenario) {
+      return res.status(404).json({
+        success: false,
+        message: 'Scenario not found'
+      })
+    }
+
+    // 检查剧本访问权限
+    if (!scenario.isPublic && scenario.userId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Scenario access denied'
+      })
+    }
+
+    // 检查是否已经关联
+    const existingAssociation = await prisma.characterScenario.findUnique({
+      where: {
+        characterId_scenarioId: {
+          characterId,
+          scenarioId
+        }
+      }
+    })
+
+    if (existingAssociation) {
+      return res.status(409).json({
+        success: false,
+        message: 'Scenario already associated with this character'
+      })
+    }
+
+    // 如果设置为默认剧本，先取消其他默认剧本
+    if (isDefault) {
+      await prisma.characterScenario.updateMany({
+        where: { characterId, isDefault: true },
+        data: { isDefault: false }
+      })
+    }
+
+    // 创建关联
+    const association = await prisma.characterScenario.create({
+      data: {
+        characterId,
+        scenarioId,
+        isDefault,
+        customSettings: customSettings ? JSON.stringify(customSettings) : null
+      },
+      include: {
+        scenario: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            category: true
+          }
+        }
+      }
+    })
+
+    res.status(201).json({
+      success: true,
+      association: {
+        ...association,
+        customSettings: association.customSettings ? JSON.parse(association.customSettings) : null
+      }
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 更新角色剧本关联配置
+router.put('/:id/scenarios/:scenarioId', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { id: characterId, scenarioId } = req.params
+    const { isDefault, isActive, customSettings } = req.body
+
+    // 验证角色存在且用户是创建者
+    const character = await prisma.character.findUnique({
+      where: { id: characterId }
+    })
+
+    if (!character || character.creatorId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      })
+    }
+
+    // 验证关联存在
+    const existingAssociation = await prisma.characterScenario.findUnique({
+      where: {
+        characterId_scenarioId: {
+          characterId,
+          scenarioId
+        }
+      }
+    })
+
+    if (!existingAssociation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Association not found'
+      })
+    }
+
+    // 如果设置为默认剧本，先取消其他默认剧本
+    if (isDefault) {
+      await prisma.characterScenario.updateMany({
+        where: { characterId, isDefault: true },
+        data: { isDefault: false }
+      })
+    }
+
+    // 更新关联配置
+    const updatedAssociation = await prisma.characterScenario.update({
+      where: {
+        characterId_scenarioId: {
+          characterId,
+          scenarioId
+        }
+      },
+      data: {
+        ...(isDefault !== undefined && { isDefault }),
+        ...(isActive !== undefined && { isActive }),
+        ...(customSettings !== undefined && {
+          customSettings: customSettings ? JSON.stringify(customSettings) : null
+        })
+      },
+      include: {
+        scenario: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            category: true
+          }
+        }
+      }
+    })
+
+    res.json({
+      success: true,
+      association: {
+        ...updatedAssociation,
+        customSettings: updatedAssociation.customSettings ? JSON.parse(updatedAssociation.customSettings) : null
+      }
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 移除角色剧本关联
+router.delete('/:id/scenarios/:scenarioId', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { id: characterId, scenarioId } = req.params
+
+    // 验证角色存在且用户是创建者
+    const character = await prisma.character.findUnique({
+      where: { id: characterId }
+    })
+
+    if (!character || character.creatorId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      })
+    }
+
+    // 验证关联存在
+    const existingAssociation = await prisma.characterScenario.findUnique({
+      where: {
+        characterId_scenarioId: {
+          characterId,
+          scenarioId
+        }
+      }
+    })
+
+    if (!existingAssociation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Association not found'
+      })
+    }
+
+    // 删除关联
+    await prisma.characterScenario.delete({
+      where: {
+        characterId_scenarioId: {
+          characterId,
+          scenarioId
+        }
+      }
+    })
+
+    res.json({
+      success: true,
+      message: 'Scenario association removed'
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // 获取相关角色
 router.get('/:id/related', async (req, res, next) => {
   try {

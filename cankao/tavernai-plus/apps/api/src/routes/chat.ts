@@ -6,6 +6,15 @@ import { aiService } from '../services/ai'
 import { guidanceService } from '../services/guidance'
 import { summonService } from '../services/summon'
 import { worldInfoService } from '../services/worldinfo'
+// import { characterScenarioService } from '../services/characterScenarioService' // 临时禁用
+
+// 临时 mock characterScenarioService
+const characterScenarioService = {
+  resolveActiveScenarios: async () => [],
+  activateWorldInfoEntries: async () => [],
+  getCachedScenarios: async () => [],
+  clearCache: () => {}
+}
 
 const router = Router()
 
@@ -280,6 +289,24 @@ router.get('/:id', authenticate, async (req: AuthRequest, res, next) => {
 
     // 如果没有现有会话，创建新的
     if (!session) {
+      // 获取角色关联的剧本
+      const activeScenarios = await characterScenarioService.resolveActiveScenarios(
+        characterId,
+        undefined, // 新会话还没有chatId
+        {
+          type: 'character_first',
+          globalScenariosEnabled: true,
+          maxActiveScenarios: 10
+        }
+      )
+
+      // 提取活跃的世界信息
+      const worldInfoEntries = await characterScenarioService.activateWorldInfoEntries(
+        activeScenarios,
+        [], // 新会话没有消息历史
+        20
+      )
+
       session = await prisma.chatSession.create({
         data: {
           userId: req.user!.id,
@@ -289,7 +316,14 @@ router.get('/:id', authenticate, async (req: AuthRequest, res, next) => {
             systemPrompt: character.firstMessage || `你好！我是${character.name}`,
             temperature: 0.7,
             maxTokens: 1000,
-            model: 'grok-3'
+            model: 'grok-3',
+            activeScenarios: activeScenarios.map(s => s.id),
+            worldInfoEntries: worldInfoEntries.map(wi => wi.id),
+            inheritanceStrategy: {
+              type: 'character_first',
+              globalScenariosEnabled: true,
+              maxActiveScenarios: 10
+            }
           })
         }
       })
@@ -413,6 +447,24 @@ router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res
       })
 
       if (!session) {
+        // 获取角色关联的剧本
+        const activeScenarios = await characterScenarioService.resolveActiveScenarios(
+          character.id,
+          undefined, // 新会话还没有chatId
+          {
+            type: 'character_first',
+            globalScenariosEnabled: true,
+            maxActiveScenarios: 10
+          }
+        )
+
+        // 提取活跃的世界信息
+        const worldInfoEntries = await characterScenarioService.activateWorldInfoEntries(
+          activeScenarios,
+          [], // 新会话没有消息历史
+          20
+        )
+
         session = await prisma.chatSession.create({
           data: {
             userId: req.user!.id,
@@ -422,7 +474,14 @@ router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res
               systemPrompt: character.firstMessage || `你好！我是${character.name}`,
               temperature: settings.temperature || 0.7,
               maxTokens: settings.maxTokens || 1000,
-              model: settings.model || 'grok-3'
+              model: settings.model || 'grok-3',
+              activeScenarios: activeScenarios.map(s => s.id),
+              worldInfoEntries: worldInfoEntries.map(wi => wi.id),
+              inheritanceStrategy: {
+                type: 'character_first',
+                globalScenariosEnabled: true,
+                maxActiveScenarios: 10
+              }
             })
           }
         })
@@ -1193,6 +1252,150 @@ router.put('/sessions/:sessionId/settings', authenticate, async (req: AuthReques
     res.json({
       success: true,
       message: 'Settings updated'
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 获取对话的活跃世界信息
+router.get('/:sessionId/world-info', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { sessionId } = req.params
+
+    // 验证会话属于当前用户
+    const session = await prisma.chatSession.findFirst({
+      where: {
+        id: sessionId,
+        userId: req.user!.id
+      },
+      include: {
+        character: true
+      }
+    })
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'Chat session not found'
+      })
+    }
+
+    // 获取消息历史用于世界信息激活
+    const messages = await prisma.message.findMany({
+      where: { sessionId },
+      orderBy: { createdAt: 'asc' },
+      select: { role: true, content: true }
+    })
+
+    // 获取当前活跃的剧本和世界信息
+    const activeScenarios = await characterScenarioService.getCachedScenarios(
+      session.characterId,
+      sessionId,
+      {
+        type: 'character_first',
+        globalScenariosEnabled: true,
+        maxActiveScenarios: 10
+      }
+    )
+
+    const worldInfoEntries = await characterScenarioService.activateWorldInfoEntries(
+      activeScenarios,
+      messages,
+      20
+    )
+
+    res.json({
+      success: true,
+      worldInfo: {
+        scenarios: activeScenarios.map(s => ({
+          id: s.id,
+          name: s.name,
+          source: s.source,
+          priority: s.priority,
+          worldInfoCount: s.worldInfos.length
+        })),
+        activeEntries: worldInfoEntries,
+        totalScenarios: activeScenarios.length,
+        totalEntries: worldInfoEntries.length
+      }
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 动态启用/禁用剧本
+router.post('/:sessionId/world-info/toggle', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { sessionId } = req.params
+    const { scenarioId, enabled } = req.body
+
+    // 验证会话属于当前用户
+    const session = await prisma.chatSession.findFirst({
+      where: {
+        id: sessionId,
+        userId: req.user!.id
+      }
+    })
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'Chat session not found'
+      })
+    }
+
+    // 获取当前会话元数据
+    const metadata = typeof session.metadata === 'string'
+      ? JSON.parse(session.metadata)
+      : session.metadata || {}
+
+    const activeScenarios = metadata.activeScenarios || []
+    const disabledScenarios = metadata.disabledScenarios || []
+
+    if (enabled) {
+      // 启用剧本
+      if (!activeScenarios.includes(scenarioId)) {
+        activeScenarios.push(scenarioId)
+      }
+      const disabledIndex = disabledScenarios.indexOf(scenarioId)
+      if (disabledIndex > -1) {
+        disabledScenarios.splice(disabledIndex, 1)
+      }
+    } else {
+      // 禁用剧本
+      const activeIndex = activeScenarios.indexOf(scenarioId)
+      if (activeIndex > -1) {
+        activeScenarios.splice(activeIndex, 1)
+      }
+      if (!disabledScenarios.includes(scenarioId)) {
+        disabledScenarios.push(scenarioId)
+      }
+    }
+
+    // 更新会话元数据
+    const updatedMetadata = {
+      ...metadata,
+      activeScenarios,
+      disabledScenarios
+    }
+
+    await prisma.chatSession.update({
+      where: { id: sessionId },
+      data: {
+        metadata: JSON.stringify(updatedMetadata)
+      }
+    })
+
+    // 清除缓存以便重新计算
+    characterScenarioService.clearCache(session.characterId)
+
+    res.json({
+      success: true,
+      message: `Scenario ${enabled ? 'enabled' : 'disabled'} successfully`,
+      activeScenarios,
+      disabledScenarios
     })
   } catch (error) {
     next(error)
