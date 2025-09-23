@@ -1,5 +1,12 @@
 import axios, { AxiosInstance, AxiosError } from 'axios'
 import { prisma } from '../server'
+import { promptInjector, injectWorldInfoToPrompt } from './promptInjector'
+import {
+  PromptContext,
+  BaseMessage,
+  AIModel,
+  InjectionConfig
+} from '../types/prompt'
 
 // 多模型 LLM 配置 - 从环境变量获取
 const NEWAPI_BASE_URL = process.env.NEWAPI_BASE_URL || 'https://ttkk.inping.com/v1'
@@ -244,6 +251,7 @@ export interface GenerateOptions {
   sessionId: string
   userId: string
   characterId?: string
+  scenarioId?: string
   messages: Array<{
     role: 'system' | 'user' | 'assistant'
     content: string
@@ -252,6 +260,7 @@ export interface GenerateOptions {
   temperature?: number
   maxTokens?: number
   stream?: boolean
+  enableWorldInfo?: boolean
 }
 
 export interface StreamChunk {
@@ -371,16 +380,58 @@ class AIService {
   // 生成聊天回复
   async generateChatResponse(options: any) {
     const {
+      sessionId,
+      userId,
+      characterId,
+      scenarioId,
       model = DEFAULT_MODEL,
       messages,
       maxTokens = DEFAULT_MAX_TOKENS,
-      temperature = DEFAULT_TEMPERATURE
+      temperature = DEFAULT_TEMPERATURE,
+      enableWorldInfo = true
     } = options
 
     return await withRetry(async () => {
+      let finalMessages = messages
+      let injectionResult = null
+
+      // 如果启用世界信息注入
+      if (enableWorldInfo && scenarioId) {
+        try {
+          const promptContext: PromptContext = {
+            userId,
+            sessionId,
+            characterId,
+            scenarioId,
+            messages: this.convertToBaseMessages(messages),
+            settings: {
+              model: this.mapToAIModel(model),
+              temperature,
+              maxTokens
+            }
+          }
+
+          const injectionConfig: Partial<InjectionConfig> = {
+            position: 'after_character',
+            maxTokens: Math.floor(maxTokens * 0.3), // 30%的token用于世界信息
+            priority: 50
+          }
+
+          injectionResult = await injectWorldInfoToPrompt(promptContext, injectionConfig)
+
+          if (injectionResult.success) {
+            finalMessages = this.convertFromBaseMessages(injectionResult.finalPrompt)
+            console.log(`✅ 世界信息注入成功：注入了${injectionResult.injectedItems.length}个条目，使用${injectionResult.tokenUsage.worldInfo}个tokens`)
+          }
+        } catch (error) {
+          console.warn('⚠️ 世界信息注入失败，使用原始prompt:', error)
+          // 继续使用原始messages，不影响正常对话
+        }
+      }
+
       const response = await aiClient.post('/chat/completions', {
         model,
-        messages,
+        messages: finalMessages,
         max_tokens: maxTokens,
         temperature
       })
@@ -388,11 +439,23 @@ class AIService {
       const content = response.data.choices[0]?.message?.content || ''
       const tokensUsed = response.data.usage?.total_tokens || 0
 
-      return {
+      const result = {
         content,
         tokensUsed,
         model: response.data.model
       }
+
+      // 如果有注入结果，添加到响应中
+      if (injectionResult) {
+        (result as any).worldInfoInjection = {
+          success: injectionResult.success,
+          injectedItems: injectionResult.injectedItems.length,
+          tokenUsage: injectionResult.tokenUsage,
+          performance: injectionResult.performance
+        }
+      }
+
+      return result
     }, `聊天生成 (${model})`)
   }
 
@@ -510,6 +573,33 @@ class AIService {
     return Math.ceil(chineseChars / 1.5 + englishChars / 4)
   }
 
+  // 转换为BaseMessage格式
+  private convertToBaseMessages(messages: any[]): BaseMessage[] {
+    return messages.map(msg => ({
+      role: msg.role as 'system' | 'user' | 'assistant',
+      content: msg.content,
+      metadata: msg.metadata
+    }))
+  }
+
+  // 从BaseMessage格式转换回来
+  private convertFromBaseMessages(messages: BaseMessage[]): any[] {
+    return messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }))
+  }
+
+  // 映射模型名称到AIModel类型
+  private mapToAIModel(model: string): AIModel {
+    if (model.includes('gpt') || model.includes('openai')) return 'openai'
+    if (model.includes('claude')) return 'claude'
+    if (model.includes('gemini')) return 'gemini'
+    if (model.includes('grok')) return 'grok'
+    if (model.includes('deepseek')) return 'deepseek'
+    return 'grok' // 默认
+  }
+
   // 构建角色提示词
   private buildCharacterPrompt(character: any): string {
     let prompt = `你是${character.name}。`
@@ -544,10 +634,12 @@ class AIService {
       sessionId,
       userId,
       characterId,
+      scenarioId,
       messages,
       model = DEFAULT_MODEL,
       temperature = DEFAULT_TEMPERATURE,
-      maxTokens = DEFAULT_MAX_TOKENS
+      maxTokens = DEFAULT_MAX_TOKENS,
+      enableWorldInfo = true
     } = options
 
     try {
@@ -564,11 +656,45 @@ class AIService {
         }
       }
 
-      // 构建消息列表
-      const apiMessages = [
+      // 构建基础消息列表
+      let apiMessages = [
         { role: 'system' as const, content: systemPrompt },
         ...messages
       ]
+
+      // 如果启用世界信息注入
+      if (enableWorldInfo && scenarioId) {
+        try {
+          const promptContext: PromptContext = {
+            userId,
+            sessionId,
+            characterId,
+            scenarioId,
+            messages: this.convertToBaseMessages(apiMessages),
+            settings: {
+              model: this.mapToAIModel(model),
+              temperature,
+              maxTokens
+            }
+          }
+
+          const injectionConfig: Partial<InjectionConfig> = {
+            position: 'after_character',
+            maxTokens: Math.floor(maxTokens * 0.25), // 25%的token用于世界信息
+            priority: 50
+          }
+
+          const injectionResult = await injectWorldInfoToPrompt(promptContext, injectionConfig)
+
+          if (injectionResult.success) {
+            apiMessages = this.convertFromBaseMessages(injectionResult.finalPrompt)
+            console.log(`✅ 流式对话世界信息注入成功：注入了${injectionResult.injectedItems.length}个条目`)
+          }
+        } catch (error) {
+          console.warn('⚠️ 流式对话世界信息注入失败，使用原始prompt:', error)
+          // 继续使用原始apiMessages，不影响正常对话
+        }
+      }
 
       // 调用 NewAPI 流式接口
       const response = await aiClient.post('/chat/completions', {

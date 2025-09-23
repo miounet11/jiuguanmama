@@ -356,7 +356,7 @@ router.get('/:id', authenticate, async (req: AuthRequest, res, next) => {
 // 发送消息到指定角色会话 (兼容前端的 /api/chats/{characterId}/messages 调用)
 router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res, next) => {
   try {
-    const { content, settings = {}, stream = false } = req.body
+    const { content, settings = {}, stream = false, scenarioId } = req.body
     const { characterId } = req.params
 
     // 智能ID检测：判断是会话ID还是角色ID
@@ -512,6 +512,7 @@ router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res
           sessionId: session.id,
           userId: req.user!.id,
           characterId: character.id,
+          scenarioId: scenarioId || session.scenarioId, // 支持通过请求体或会话中的scenarioId
           messages: messageHistory,
           model: settings.model || session.model || 'grok-3',
           temperature: settings.temperature || 0.7,
@@ -579,6 +580,7 @@ router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res
           sessionId: session.id,
           userId: req.user!.id,
           characterId: character.id,
+          scenarioId: scenarioId || session.scenarioId, // 支持通过请求体或会话中的scenarioId
           messages: messageHistory,
           model: settings.model || session.model || 'grok-3',
           temperature: settings.temperature || 0.7,
@@ -776,6 +778,7 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
           sessionId: req.params.sessionId,
           userId: req.user!.id,
           characterId: character?.id,
+          scenarioId: session.scenarioId, // 从会话中获取scenarioId
           messages: messageHistory,
           model: session.model || 'grok-3',
           temperature: 0.7,
