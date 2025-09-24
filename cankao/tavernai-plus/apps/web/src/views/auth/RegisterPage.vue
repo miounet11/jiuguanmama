@@ -1,161 +1,127 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          创建新账户
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-          或者
-          <router-link to="/login" class="font-medium text-indigo-600 hover:text-indigo-500">
-            使用已有账户登录
-          </router-link>
-        </p>
-      </div>
-      <form class="mt-8 space-y-6" @submit.prevent="handleRegister">
-        <div class="space-y-4">
-          <div>
-            <label for="username" class="block text-sm font-medium text-gray-700">
-              用户名
-            </label>
-            <input
-              id="username"
-              v-model="formData.username"
-              name="username"
-              type="text"
-              autocomplete="username"
-              required
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="选择一个用户名"
-            />
-          </div>
+  <div class="register-page">
+    <div class="register-container">
+      <TavernCard variant="glass" class="register-card">
+        <div class="register-header">
+          <h2 class="gradient-title">创建新账户</h2>
+          <p class="subtitle">
+            或者
+            <router-link to="/login" class="login-link">
+              使用已有账户登录
+            </router-link>
+          </p>
+        </div>
 
-          <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">
-              邮箱地址
-            </label>
-            <input
-              id="email"
-              v-model="formData.email"
-              name="email"
-              type="email"
-              autocomplete="email"
-              required
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="your@email.com"
-            />
-          </div>
+        <form class="register-form" @submit.prevent="handleRegister">
+          <div class="form-fields">
+            <div class="field-group">
+              <label for="username" class="field-label">用户名</label>
+              <TavernInput
+                id="username"
+                v-model="formData.username"
+                type="text"
+                placeholder="选择一个用户名"
+                required
+                class="register-input"
+              />
+            </div>
 
-          <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">
-              密码
-            </label>
-            <input
-              id="password"
-              v-model="formData.password"
-              name="password"
-              type="password"
-              autocomplete="new-password"
-              required
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="至少8个字符"
-              @input="checkPasswordStrength"
-            />
-            <div v-if="formData.password" class="mt-2">
-              <div class="flex items-center">
-                <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2">
-                  <div
-                    :class="passwordStrengthClass"
-                    :style="{ width: passwordStrengthPercent + '%' }"
-                    class="h-2 rounded-full transition-all"
-                  ></div>
+            <div class="field-group">
+              <label for="email" class="field-label">邮箱地址</label>
+              <TavernInput
+                id="email"
+                v-model="formData.email"
+                type="email"
+                placeholder="your@email.com"
+                required
+                class="register-input"
+              />
+            </div>
+
+            <div class="field-group">
+              <label for="password" class="field-label">密码</label>
+              <TavernInput
+                id="password"
+                v-model="formData.password"
+                type="password"
+                placeholder="至少8个字符"
+                required
+                class="register-input"
+                @input="checkPasswordStrength"
+              />
+              <div v-if="formData.password" class="password-strength">
+                <div class="strength-bar">
+                  <div class="strength-progress" :class="passwordStrengthClass" :style="{ width: passwordStrengthPercent + '%' }"></div>
                 </div>
-                <span :class="passwordStrengthTextClass" class="text-xs">
+                <span :class="passwordStrengthTextClass" class="strength-text">
                   {{ passwordStrengthText }}
                 </span>
               </div>
             </div>
+
+            <div class="field-group">
+              <label for="confirmPassword" class="field-label">确认密码</label>
+              <TavernInput
+                id="confirmPassword"
+                v-model="formData.confirmPassword"
+                type="password"
+                placeholder="再次输入密码"
+                required
+                class="register-input"
+              />
+              <p v-if="formData.confirmPassword && formData.password !== formData.confirmPassword" class="password-mismatch">
+                密码不匹配
+              </p>
+            </div>
           </div>
 
-          <div>
-            <label for="confirmPassword" class="block text-sm font-medium text-gray-700">
-              确认密码
-            </label>
+          <div class="terms-agreement">
             <input
-              id="confirmPassword"
-              v-model="formData.confirmPassword"
-              name="confirmPassword"
-              type="password"
-              autocomplete="new-password"
+              id="agree-terms"
+              v-model="agreeToTerms"
+              type="checkbox"
               required
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="再次输入密码"
+              class="terms-checkbox"
             />
-            <p v-if="formData.confirmPassword && formData.password !== formData.confirmPassword" class="mt-1 text-sm text-red-600">
-              密码不匹配
-            </p>
+            <label for="agree-terms" class="terms-label">
+              我同意
+              <a href="#" class="terms-link">服务条款</a>
+              和
+              <a href="#" class="terms-link">隐私政策</a>
+            </label>
           </div>
-        </div>
 
-        <div class="flex items-center">
-          <input
-            id="agree-terms"
-            v-model="agreeToTerms"
-            name="agree-terms"
-            type="checkbox"
-            required
-            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-          />
-          <label for="agree-terms" class="ml-2 block text-sm text-gray-900">
-            我同意
-            <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">服务条款</a>
-            和
-            <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">隐私政策</a>
-          </label>
-        </div>
-
-        <div v-if="errorMessage" class="rounded-md bg-red-50 p-4">
-          <div class="flex">
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-red-800">
-                注册失败
-              </h3>
-              <div class="mt-2 text-sm text-red-700">
-                <p>{{ errorMessage }}</p>
-              </div>
+          <div v-if="errorMessage" class="error-message">
+            <TavernIcon name="exclamation-triangle" class="error-icon" />
+            <div class="error-content">
+              <h3 class="error-title">注册失败</h3>
+              <p class="error-text">{{ errorMessage }}</p>
             </div>
           </div>
-        </div>
 
-        <div v-if="successMessage" class="rounded-md bg-green-50 p-4">
-          <div class="flex">
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-green-800">
-                注册成功
-              </h3>
-              <div class="mt-2 text-sm text-green-700">
-                <p>{{ successMessage }}</p>
-              </div>
+          <div v-if="successMessage" class="success-message">
+            <TavernIcon name="check-circle" class="success-icon" />
+            <div class="success-content">
+              <h3 class="success-title">注册成功</h3>
+              <p class="success-text">{{ successMessage }}</p>
             </div>
           </div>
-        </div>
 
-        <div>
-          <button
-            type="submit"
-            :disabled="isLoading || !isFormValid"
-            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span v-if="isLoading" class="absolute left-0 inset-y-0 flex items-center pl-3">
-              <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            </span>
-            {{ isLoading ? '注册中...' : '创建账户' }}
-          </button>
-        </div>
-      </form>
+          <div class="submit-section">
+            <TavernButton
+              type="submit"
+              variant="primary"
+              size="lg"
+              :loading="isLoading"
+              :disabled="isLoading || !isFormValid"
+              class="register-button"
+            >
+              <TavernIcon v-if="isLoading" name="arrow-path" class="animate-spin mr-2" />
+              {{ isLoading ? '注册中...' : '创建账户' }}
+            </TavernButton>
+          </div>
+        </form>
+      </TavernCard>
     </div>
   </div>
 </template>
@@ -199,10 +165,10 @@ const passwordStrengthPercent = computed(() => {
 
 const passwordStrengthClass = computed(() => {
   const strength = passwordStrength.value
-  if (strength <= 1) return 'bg-red-500'
-  if (strength <= 2) return 'bg-yellow-500'
-  if (strength <= 3) return 'bg-blue-500'
-  return 'bg-green-500'
+  if (strength <= 1) return 'strength-weak'
+  if (strength <= 2) return 'strength-fair'
+  if (strength <= 3) return 'strength-good'
+  return 'strength-strong'
 })
 
 const passwordStrengthText = computed(() => {
@@ -215,10 +181,10 @@ const passwordStrengthText = computed(() => {
 
 const passwordStrengthTextClass = computed(() => {
   const strength = passwordStrength.value
-  if (strength <= 1) return 'text-red-600'
-  if (strength <= 2) return 'text-yellow-600'
-  if (strength <= 3) return 'text-blue-600'
-  return 'text-green-600'
+  if (strength <= 1) return 'text-weak'
+  if (strength <= 2) return 'text-fair'
+  if (strength <= 3) return 'text-good'
+  return 'text-strong'
 })
 
 const checkPasswordStrength = () => {
@@ -260,3 +226,293 @@ const handleRegister = async () => {
   }
 }
 </script>
+
+<style scoped lang="scss">
+@import '@/styles/design-tokens.scss';
+
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg,
+    var(--dt-color-background-primary) 0%,
+    var(--dt-color-background-secondary) 50%,
+    var(--dt-color-background-tertiary) 100%);
+  padding: var(--dt-spacing-lg);
+}
+
+.register-container {
+  width: 100%;
+  max-width: 520px;
+}
+
+.register-card {
+  padding: var(--dt-spacing-3xl);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: var(--dt-spacing-2xl);
+
+  .gradient-title {
+    font-size: var(--dt-font-size-3xl);
+    font-weight: var(--dt-font-weight-bold);
+    background: var(--dt-gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--dt-spacing-md);
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  .subtitle {
+    font-size: var(--dt-font-size-md);
+    color: var(--dt-color-text-secondary);
+    opacity: 0.8;
+
+    .login-link {
+      color: var(--dt-color-primary);
+      text-decoration: none;
+      font-weight: var(--dt-font-weight-medium);
+      transition: all 0.3s ease;
+
+      &:hover {
+        color: var(--dt-color-primary-light);
+        text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+      }
+    }
+  }
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dt-spacing-lg);
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dt-spacing-lg);
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dt-spacing-sm);
+
+  .field-label {
+    font-size: var(--dt-font-size-sm);
+    font-weight: var(--dt-font-weight-medium);
+    color: var(--dt-color-text-primary);
+    opacity: 0.9;
+  }
+
+  .register-input {
+    width: 100%;
+  }
+}
+
+.password-strength {
+  display: flex;
+  align-items: center;
+  gap: var(--dt-spacing-md);
+  margin-top: var(--dt-spacing-sm);
+
+  .strength-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--dt-radius-full);
+    overflow: hidden;
+
+    .strength-progress {
+      height: 100%;
+      border-radius: var(--dt-radius-full);
+      transition: all 0.3s ease;
+
+      &.strength-weak {
+        background: linear-gradient(90deg, #ef4444, #fca5a5);
+      }
+      &.strength-fair {
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+      }
+      &.strength-good {
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      }
+      &.strength-strong {
+        background: linear-gradient(90deg, #10b981, #34d399);
+      }
+    }
+  }
+
+  .strength-text {
+    font-size: var(--dt-font-size-xs);
+    font-weight: var(--dt-font-weight-medium);
+    min-width: 40px;
+
+    &.text-weak { color: #ef4444; }
+    &.text-fair { color: #f59e0b; }
+    &.text-good { color: #3b82f6; }
+    &.text-strong { color: #10b981; }
+  }
+}
+
+.password-mismatch {
+  font-size: var(--dt-font-size-sm);
+  color: #ef4444;
+  margin: var(--dt-spacing-xs) 0 0;
+}
+
+.terms-agreement {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--dt-spacing-sm);
+  margin: var(--dt-spacing-md) 0;
+
+  .terms-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--dt-color-primary);
+    border-radius: var(--dt-radius-sm);
+    margin-top: 2px;
+  }
+
+  .terms-label {
+    font-size: var(--dt-font-size-sm);
+    color: var(--dt-color-text-primary);
+    opacity: 0.8;
+    line-height: 1.5;
+    cursor: pointer;
+
+    .terms-link {
+      color: var(--dt-color-primary);
+      text-decoration: none;
+      font-weight: var(--dt-font-weight-medium);
+      transition: all 0.3s ease;
+
+      &:hover {
+        color: var(--dt-color-primary-light);
+        text-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
+      }
+    }
+  }
+}
+
+.error-message {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--dt-spacing-md);
+  padding: var(--dt-spacing-lg);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--dt-radius-lg);
+  margin: var(--dt-spacing-md) 0;
+
+  .error-icon {
+    color: #ef4444;
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .error-content {
+    flex: 1;
+
+    .error-title {
+      font-size: var(--dt-font-size-sm);
+      font-weight: var(--dt-font-weight-semibold);
+      color: #ef4444;
+      margin-bottom: var(--dt-spacing-xs);
+    }
+
+    .error-text {
+      font-size: var(--dt-font-size-sm);
+      color: #fca5a5;
+      margin: 0;
+    }
+  }
+}
+
+.success-message {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--dt-spacing-md);
+  padding: var(--dt-spacing-lg);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--dt-radius-lg);
+  margin: var(--dt-spacing-md) 0;
+
+  .success-icon {
+    color: #10b981;
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .success-content {
+    flex: 1;
+
+    .success-title {
+      font-size: var(--dt-font-size-sm);
+      font-weight: var(--dt-font-weight-semibold);
+      color: #10b981;
+      margin-bottom: var(--dt-spacing-xs);
+    }
+
+    .success-text {
+      font-size: var(--dt-font-size-sm);
+      color: #6ee7b7;
+      margin: 0;
+    }
+  }
+}
+
+.submit-section {
+  margin: var(--dt-spacing-lg) 0;
+
+  .register-button {
+    width: 100%;
+    height: 52px;
+    font-size: var(--dt-font-size-md);
+    font-weight: var(--dt-font-weight-semibold);
+  }
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+  }
+  to {
+    text-shadow: 0 0 30px rgba(168, 85, 247, 0.8);
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .register-page {
+    padding: var(--dt-spacing-md);
+  }
+
+  .register-card {
+    padding: var(--dt-spacing-2xl);
+  }
+
+  .register-header {
+    .gradient-title {
+      font-size: var(--dt-font-size-2xl);
+    }
+  }
+
+  .terms-agreement {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--dt-spacing-sm);
+  }
+}
+</style>

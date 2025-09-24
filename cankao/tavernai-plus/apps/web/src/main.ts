@@ -60,6 +60,9 @@ import '@/styles/main.scss'
 // 图片懒加载指令
 import { vLazy } from '@/composables/useImageOptimization'
 
+// 设计系统组件
+import { installDesignSystem } from '@/components/design-system'
+
 // 性能监控初始化
 const initPerformanceMonitoring = () => {
   // 启动性能监控
@@ -124,6 +127,9 @@ components.forEach(component => {
 // 注册全局指令
 app.directive('lazy', vLazy)
 
+// 安装设计系统组件
+app.use(installDesignSystem)
+
 // 全局属性
 app.config.globalProperties.$message = ElMessage
 app.config.globalProperties.$notify = ElNotification
@@ -169,15 +175,15 @@ if (import.meta.env.DEV) {
   ;(window as any).__PERFORMANCE_BUDGET__ = performanceBudget
 }
 
-// Service Worker注册（生产环境）
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-    .then(registration => {
-      console.log('SW注册成功:', registration)
-    })
-    .catch(error => {
-      console.log('SW注册失败:', error)
-    })
-}
+// Service Worker注册（生产环境）- 临时禁用，等PWA配置完成后重新启用
+// if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+//   navigator.serviceWorker.register('/sw.js')
+//     .then(registration => {
+//       console.log('SW注册成功:', registration)
+//     })
+//     .catch(error => {
+//       console.log('SW注册失败:', error)
+//     })
+// }
 
 export default app

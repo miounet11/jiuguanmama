@@ -341,8 +341,8 @@ export function usePerformanceOptimization() {
         'https://cdn.jsdelivr.net'
       ],
       prefetches: [
-        '/api/characters/featured',
-        '/api/stats/homepage'
+        '/characters/featured',
+        '/stats/homepage'
       ],
       images: [
         '/images/hero-background.webp',

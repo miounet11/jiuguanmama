@@ -19,7 +19,7 @@
       class="tavern-button__icon tavern-button__icon--left"
     />
 
-    <span v-if="$slots.default" class="tavern-button__content">
+    <span v-if="slots.default" class="tavern-button__content">
       <slot />
     </span>
 
@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type Component } from 'vue'
+import { computed, useSlots, type Component } from 'vue'
 
 // Types
 export interface TavernButtonProps {
@@ -66,6 +66,9 @@ const emit = defineEmits<{
   click: [event: MouseEvent]
 }>()
 
+// Slots
+const slots = useSlots()
+
 // Computed
 const tag = computed((): string | Component => {
   if (props.href) {
@@ -82,7 +85,7 @@ const buttonClasses = computed(() => [
     'tavern-button--loading': props.loading,
     'tavern-button--disabled': props.disabled,
     'tavern-button--full-width': props.fullWidth,
-    'tavern-button--icon-only': !$slots.default && (props.iconLeft || props.iconRight)
+    'tavern-button--icon-only': !slots.default && (props.iconLeft || props.iconRight)
   }
 ])
 

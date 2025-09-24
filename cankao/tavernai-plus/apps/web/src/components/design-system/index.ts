@@ -9,7 +9,14 @@
  * @since 2025-09-23
  */
 
-// 基础组件
+// 基础组件导入
+import TavernButton from './TavernButton.vue'
+import TavernInput from './TavernInput.vue'
+import TavernCard from './TavernCard.vue'
+import TavernBadge from './TavernBadge.vue'
+import TavernIcon from './TavernIcon.vue'
+
+// 基础组件导出
 export { default as TavernButton } from './TavernButton.vue'
 export { default as TavernInput } from './TavernInput.vue'
 export { default as TavernCard } from './TavernCard.vue'

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+// import { ElMessage } from 'element-plus'
 import { scenarioApi } from '@/services/scenarioApi'
 import type {
   Scenario,
@@ -85,8 +85,8 @@ export const useScenarioStore = defineStore('scenario', () => {
   })
 
   const currentScenarioEntries = computed(() => {
-    if (!currentScenario.value) return []
-    return currentScenario.value.worldInfoEntries || []
+    if (!currentScenario.value || !currentScenario.value.worldInfoEntries) return []
+    return currentScenario.value.worldInfoEntries
   })
 
   const selectedEntries = computed(() => {
@@ -124,7 +124,7 @@ export const useScenarioStore = defineStore('scenario', () => {
 
     } catch (err: any) {
       error.value = err.message || '获取剧本列表失败'
-      ElMessage.error(error.value)
+      console.error(error.value)
       console.error('Error fetching scenarios:', err)
     } finally {
       isLoading.value = false
@@ -148,7 +148,7 @@ export const useScenarioStore = defineStore('scenario', () => {
       return scenario
     } catch (err: any) {
       error.value = err.message || '获取剧本详情失败'
-      ElMessage.error(error.value)
+      console.error(error.value)
       console.error('Error fetching scenario:', err)
       return null
     } finally {
@@ -170,11 +170,11 @@ export const useScenarioStore = defineStore('scenario', () => {
       scenarios.value.unshift(scenario)
       totalItems.value++
 
-      ElMessage.success('剧本创建成功')
+      console.log('剧本创建成功')
       return scenario
     } catch (err: any) {
       error.value = err.message || '创建剧本失败'
-      ElMessage.error(error.value)
+      console.error(error.value)
       console.error('Error creating scenario:', err)
       throw err
     } finally {
@@ -203,11 +203,11 @@ export const useScenarioStore = defineStore('scenario', () => {
         currentScenario.value = scenario
       }
 
-      ElMessage.success('剧本更新成功')
+      console.log('剧本更新成功')
       return scenario
     } catch (err: any) {
       error.value = err.message || '更新剧本失败'
-      ElMessage.error(error.value)
+      console.error(error.value)
       console.error('Error updating scenario:', err)
       throw err
     } finally {
@@ -234,10 +234,10 @@ export const useScenarioStore = defineStore('scenario', () => {
         currentScenario.value = null
       }
 
-      ElMessage.success('剧本删除成功')
+      console.log('剧本删除成功')
     } catch (err: any) {
       error.value = err.message || '删除剧本失败'
-      ElMessage.error(error.value)
+      console.error(error.value)
       console.error('Error deleting scenario:', err)
       throw err
     } finally {
@@ -259,16 +259,19 @@ export const useScenarioStore = defineStore('scenario', () => {
 
       // 添加到当前剧本
       if (currentScenario.value?.id === scenarioId) {
+        if (!currentScenario.value.worldInfoEntries) {
+          currentScenario.value.worldInfoEntries = []
+        }
         currentScenario.value.worldInfoEntries.push(entry)
         currentScenario.value.entriesCount = (currentScenario.value.entriesCount || 0) + 1
         updateEntryGroups()
       }
 
-      ElMessage.success('世界信息条目添加成功')
+      console.log('世界信息条目添加成功')
       return entry
     } catch (err: any) {
       error.value = err.message || '添加世界信息条目失败'
-      ElMessage.error(error.value)
+      console.error(error.value)
       console.error('Error creating world info entry:', err)
       throw err
     } finally {
@@ -291,7 +294,7 @@ export const useScenarioStore = defineStore('scenario', () => {
       const entry = await scenarioApi.updateWorldInfoEntry(scenarioId, entryId, data)
 
       // 更新当前剧本中的条目
-      if (currentScenario.value?.id === scenarioId) {
+      if (currentScenario.value?.id === scenarioId && currentScenario.value.worldInfoEntries) {
         const index = currentScenario.value.worldInfoEntries.findIndex(e => e.id === entryId)
         if (index !== -1) {
           currentScenario.value.worldInfoEntries[index] = entry
@@ -299,11 +302,11 @@ export const useScenarioStore = defineStore('scenario', () => {
         }
       }
 
-      ElMessage.success('世界信息条目更新成功')
+      console.log('世界信息条目更新成功')
       return entry
     } catch (err: any) {
       error.value = err.message || '更新世界信息条目失败'
-      ElMessage.error(error.value)
+      console.error(error.value)
       console.error('Error updating world info entry:', err)
       throw err
     } finally {
@@ -322,7 +325,7 @@ export const useScenarioStore = defineStore('scenario', () => {
       await scenarioApi.deleteWorldInfoEntry(scenarioId, entryId)
 
       // 从当前剧本中移除
-      if (currentScenario.value?.id === scenarioId) {
+      if (currentScenario.value?.id === scenarioId && currentScenario.value.worldInfoEntries) {
         currentScenario.value.worldInfoEntries = currentScenario.value.worldInfoEntries.filter(
           e => e.id !== entryId
         )
@@ -333,10 +336,10 @@ export const useScenarioStore = defineStore('scenario', () => {
       // 从选中列表中移除
       selectedEntryIds.value = selectedEntryIds.value.filter(id => id !== entryId)
 
-      ElMessage.success('世界信息条目删除成功')
+      console.log('世界信息条目删除成功')
     } catch (err: any) {
       error.value = err.message || '删除世界信息条目失败'
-      ElMessage.error(error.value)
+      console.error(error.value)
       console.error('Error deleting world info entry:', err)
       throw err
     } finally {
@@ -359,7 +362,7 @@ export const useScenarioStore = defineStore('scenario', () => {
       return result
     } catch (err: any) {
       error.value = err.message || '测试关键词匹配失败'
-      ElMessage.error(error.value)
+      console.error(error.value)
       console.error('Error testing matching:', err)
       throw err
     } finally {
@@ -375,19 +378,19 @@ export const useScenarioStore = defineStore('scenario', () => {
       await scenarioApi.reorderEntries(scenarioId, entryIds)
 
       // 更新本地顺序
-      if (currentScenario.value?.id === scenarioId) {
+      if (currentScenario.value?.id === scenarioId && currentScenario.value.worldInfoEntries) {
         const orderedEntries = entryIds.map(id =>
-          currentScenario.value!.worldInfoEntries.find(e => e.id === id)!
+          currentScenario.value!.worldInfoEntries!.find(e => e.id === id)!
         ).filter(Boolean)
 
         currentScenario.value.worldInfoEntries = orderedEntries
         updateEntryGroups()
       }
 
-      ElMessage.success('条目顺序已更新')
+      console.log('条目顺序已更新')
     } catch (err: any) {
       error.value = err.message || '更新条目顺序失败'
-      ElMessage.error(error.value)
+      console.error(error.value)
       console.error('Error reordering entries:', err)
       throw err
     }
@@ -399,7 +402,7 @@ export const useScenarioStore = defineStore('scenario', () => {
    * 初始化条目分组
    */
   const initializeEntryGroups = () => {
-    if (!currentScenario.value) return
+    if (!currentScenario.value || !currentScenario.value.worldInfoEntries) return
 
     const groupMap = new Map<string, WorldInfoEntry[]>()
 

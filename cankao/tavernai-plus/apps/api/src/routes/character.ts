@@ -97,6 +97,167 @@ router.get('/', optionalAuth, async (req: AuthRequest, res, next) => {
   }
 })
 
+// 获取精选角色
+router.get('/featured', optionalAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const {
+      category,
+      sortBy = 'popular',
+      limit = 20
+    } = req.query
+
+    let orderBy
+    switch (sortBy) {
+      case 'newest':
+        orderBy = { createdAt: 'desc' as const }
+        break
+      case 'rating':
+        orderBy = { rating: 'desc' as const }
+        break
+      case 'chatCount':
+        orderBy = { chatCount: 'desc' as const }
+        break
+      case 'popular':
+      default:
+        orderBy = [
+          { chatCount: 'desc' as const },
+          { favoriteCount: 'desc' as const },
+          { rating: 'desc' as const }
+        ]
+        break
+    }
+
+    const where: any = {
+      isPublic: true,
+      isFeatured: true
+    }
+
+    if (category && category !== 'all') {
+      where.category = category
+    }
+
+    const characters = await prisma.character.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        avatar: true,
+        tags: true,
+        category: true,
+        rating: true,
+        ratingCount: true,
+        chatCount: true,
+        favoriteCount: true,
+        isNSFW: true,
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true
+          }
+        },
+        createdAt: true,
+        _count: {
+          select: {
+            favorites: {
+              where: {
+                userId: req.user?.id
+              }
+            }
+          }
+        }
+      },
+      orderBy,
+      take: Number(limit)
+    })
+
+    // 添加是否收藏标记和是否为新角色标记
+    const charactersWithExtra = characters.map((char: any) => ({
+      ...char,
+      isFavorited: char._count.favorites > 0,
+      isNew: new Date(char.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000,
+      isPremium: char.rating >= 4.5 && char.chatCount >= 100
+    }))
+
+    res.json({
+      success: true,
+      characters: charactersWithExtra
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 获取角色分类
+router.get('/categories', async (req, res, next) => {
+  try {
+    // 获取所有分类的统计数据
+    const categoryStats = await prisma.character.groupBy({
+      by: ['category'],
+      where: {
+        isPublic: true
+      },
+      _count: {
+        id: true
+      }
+    })
+
+    // 预定义的分类信息
+    const categoryInfo = {
+      'anime': { name: '动漫', icon: 'star', description: '来自动漫作品的角色' },
+      'game': { name: '游戏', icon: 'gamepad', description: '游戏角色和原创设定' },
+      'fantasy': { name: '奇幻', icon: 'magic', description: '魔法世界的奇幻角色' },
+      'sci-fi': { name: '科幻', icon: 'rocket', description: '未来科技背景角色' },
+      'historical': { name: '历史', icon: 'crown', description: '历史人物和背景' },
+      'slice-of-life': { name: '日常', icon: 'home', description: '日常生活场景角色' },
+      'school': { name: '校园', icon: 'book', description: '学校和校园背景' },
+      'original': { name: '原创', icon: 'palette', description: '用户原创角色' },
+      'romance': { name: '浪漫', icon: 'heart', description: '浪漫爱情角色' },
+      'adventure': { name: '冒险', icon: 'map', description: '冒险题材角色' }
+    }
+
+    // 构建分类列表
+    const categories = [
+      { id: 'all', name: '全部', icon: 'grid', count: categoryStats.reduce((sum, cat) => sum + cat._count.id, 0), description: '所有公开角色' }
+    ]
+
+    // 添加有数据的分类
+    categoryStats.forEach(stat => {
+      const info = categoryInfo[stat.category as keyof typeof categoryInfo]
+      if (info) {
+        categories.push({
+          id: stat.category,
+          name: info.name,
+          icon: info.icon,
+          count: stat._count.id,
+          description: info.description
+        })
+      }
+    })
+
+    // 添加没有角色但需要显示的基础分类
+    Object.entries(categoryInfo).forEach(([key, info]) => {
+      if (!categoryStats.find(stat => stat.category === key)) {
+        categories.push({
+          id: key,
+          name: info.name,
+          icon: info.icon,
+          count: 0,
+          description: info.description
+        })
+      }
+    })
+
+    res.json({
+      success: true,
+      categories
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // 获取热门角色
 router.get('/popular', optionalAuth, async (req: AuthRequest, res, next) => {
   try {

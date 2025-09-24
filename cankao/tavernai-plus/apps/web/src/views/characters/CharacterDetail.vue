@@ -1,220 +1,274 @@
 <template>
-  <div class="min-h-screen bg-gray-900">
-    <div class="max-w-7xl mx-auto flex">
+  <div class="character-detail-page">
+    <!-- 加载状态 -->
+    <div v-if="isLoading" class="loading-container">
+      <TavernCard class="loading-card">
+        <div class="loading-content">
+          <TavernIcon name="loading" class="animate-spin w-8 h-8 text-purple-500" />
+          <p class="text-gray-600 mt-4">加载角色信息中...</p>
+        </div>
+      </TavernCard>
+    </div>
+
+    <!-- 错误状态 -->
+    <div v-else-if="isError" class="error-container">
+      <TavernCard class="error-card">
+        <div class="error-content">
+          <TavernIcon name="warning" class="w-12 h-12 text-red-500" />
+          <h2 class="text-xl font-semibold text-gray-900 mt-4">加载失败</h2>
+          <p class="text-gray-600 mt-2">无法获取角色信息，请检查网络连接或稍后重试。</p>
+          <TavernButton
+            variant="primary"
+            @click="fetchCharacterDetail"
+            class="mt-4"
+          >
+            重新加载
+          </TavernButton>
+        </div>
+      </TavernCard>
+    </div>
+
+    <!-- 正常内容 -->
+    <div v-else class="character-detail-container">
       <!-- 左侧：角色头像 -->
-      <div class="w-2/5 p-8 flex flex-col items-center justify-start">
-        <div class="w-full max-w-md">
+      <div class="character-avatar-section">
+        <TavernCard variant="glass" class="character-avatar-card">
           <!-- 角色头像 -->
-          <div class="relative mb-6">
-            <div class="w-full aspect-square rounded-2xl overflow-hidden bg-gray-800">
+          <div class="character-avatar-wrapper">
+            <div class="character-avatar">
               <img
                 v-if="character?.avatar"
                 :src="character.avatar"
                 :alt="character.name"
-                class="w-full h-full object-cover"
+                class="avatar-image"
               />
-              <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-400 to-pink-400">
-                <span class="text-8xl font-bold text-white">{{ character?.name?.charAt(0) }}</span>
+              <div v-else class="avatar-placeholder">
+                <span class="avatar-initial">{{ character?.name?.charAt(0) }}</span>
               </div>
             </div>
           </div>
-        </div>
+        </TavernCard>
       </div>
 
       <!-- 右侧：角色信息 -->
-      <div class="w-3/5 bg-gray-800/50 min-h-screen">
-        <!-- 顶部操作栏 -->
-        <div class="flex justify-between items-center p-6 border-b border-gray-700">
-          <div class="flex items-center space-x-4">
-            <button class="text-gray-400 hover:text-white">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-              </svg>
-            </button>
-          </div>
-          <div class="flex items-center space-x-3">
-            <!-- 关注按钮 -->
-            <button
-              @click="toggleLike"
-              :class="[
-                'flex items-center px-4 py-2 rounded-lg font-medium transition',
-                isLiked
-                  ? 'bg-orange-500 text-white hover:bg-orange-600'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
-              ]"
-            >
-              <span class="text-sm">{{ isLiked ? '已关注' : '关注' }}</span>
-            </button>
-            <!-- 更多操作 -->
-            <button class="p-2 text-gray-400 hover:text-white">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- 角色信息内容 -->
-        <div class="p-6">
-          <!-- 顶部标签页 -->
-          <div class="flex space-x-8 mb-8 border-b border-gray-700">
-            <button
-              :class="[
-                'pb-4 text-sm font-medium transition',
-                activeTab === 'info'
-                  ? 'text-white border-b-2 border-orange-500'
-                  : 'text-gray-400 hover:text-gray-300'
-              ]"
-              @click="activeTab = 'info'"
-            >
-              角色
-            </button>
-            <button
-              :class="[
-                'pb-4 text-sm font-medium transition',
-                activeTab === 'intro'
-                  ? 'text-white border-b-2 border-orange-500'
-                  : 'text-gray-400 hover:text-gray-300'
-              ]"
-              @click="activeTab = 'intro'"
-            >
-              开场白
-            </button>
-            <button
-              :class="[
-                'pb-4 text-sm font-medium transition',
-                activeTab === 'comments'
-                  ? 'text-white border-b-2 border-orange-500'
-                  : 'text-gray-400 hover:text-gray-300'
-              ]"
-              @click="activeTab = 'comments'"
-            >
-              评论 ({{ reviews?.length || 0 }})
-            </button>
+      <div class="character-info-section">
+        <TavernCard variant="glass" class="character-info-card">
+          <!-- 顶部操作栏 -->
+          <div class="character-actions-header">
+            <div class="back-button-group">
+              <TavernButton
+                variant="secondary"
+                size="sm"
+                @click="$router.back()"
+                class="back-button"
+              >
+                <TavernIcon name="arrow-left" class="action-icon" />
+                返回
+              </TavernButton>
+            </div>
+            <div class="action-buttons">
+              <!-- 关注按钮 -->
+              <TavernButton
+                :variant="isLiked ? 'primary' : 'secondary'"
+                size="md"
+                @click="toggleLike"
+                class="favorite-button"
+              >
+                <TavernIcon :name="isLiked ? 'heart-solid' : 'heart'" class="action-icon" />
+                {{ isLiked ? '已关注' : '关注' }}
+              </TavernButton>
+              <!-- 更多操作 -->
+              <TavernButton
+                variant="secondary"
+                size="md"
+                @click="shareCharacter"
+                class="more-actions-button"
+              >
+                <TavernIcon name="ellipsis-horizontal" class="action-icon" />
+              </TavernButton>
+            </div>
           </div>
 
-          <!-- 标签页内容 -->
-          <div v-if="activeTab === 'info'">
-            <!-- 角色名称和介绍 -->
-            <div class="mb-8">
-              <h1 class="text-3xl font-bold text-white mb-2">司夜的介绍</h1>
-              <p class="text-lg text-gray-300 leading-relaxed">
-                【粉毛】【全性向】<br/>
-                姓名：司夜<br/>
-                性别：男<br/>
-                中法混血，母亲是一个温柔的法国美女，父亲是著名上市公司老板，从小出生在法国，16岁才回到中国，年少有为的设计师，还是个艺术家，私下里很喜欢时喜欢摄影<br/>
-                (自己经买断了，不要害怕)开场白和其他的会慢慢加的)
-              </p>
+          <!-- 角色信息内容 -->
+          <div class="character-content">
+            <!-- 顶部标签页 -->
+            <div class="character-tabs">
+              <TavernButton
+                :variant="activeTab === 'info' ? 'primary' : 'secondary'"
+                size="sm"
+                @click="activeTab = 'info'"
+                :class="['tab-button', { 'tab-active': activeTab === 'info' }]"
+              >
+                角色信息
+              </TavernButton>
+              <TavernButton
+                :variant="activeTab === 'intro' ? 'primary' : 'secondary'"
+                size="sm"
+                @click="activeTab = 'intro'"
+                :class="['tab-button', { 'tab-active': activeTab === 'intro' }]"
+              >
+                开场白
+              </TavernButton>
+              <TavernButton
+                :variant="activeTab === 'comments' ? 'primary' : 'secondary'"
+                size="sm"
+                @click="activeTab = 'comments'"
+                :class="['tab-button', { 'tab-active': activeTab === 'comments' }]"
+              >
+                <TavernIcon name="chat-bubble-left" class="tab-icon" />
+                评论 ({{ reviews?.length || 0 }})
+              </TavernButton>
             </div>
 
-            <!-- 角色属性表格 -->
-            <div class="grid grid-cols-3 gap-6 mb-8">
-              <div>
-                <h3 class="text-gray-400 text-sm mb-2">性别</h3>
-                <p class="text-white">男</p>
-              </div>
-              <div>
-                <h3 class="text-gray-400 text-sm mb-2">年龄</h3>
-                <p class="text-white">19岁</p>
-              </div>
-              <div>
-                <h3 class="text-gray-400 text-sm mb-2">肤色</h3>
-                <p class="text-white">白皙</p>
-              </div>
-              <div>
-                <h3 class="text-gray-400 text-sm mb-2">职业</h3>
-                <p class="text-white">艺术家,设计师</p>
-              </div>
-              <div>
-                <h3 class="text-gray-400 text-sm mb-2">瞳色</h3>
-                <p class="text-white">粉色</p>
-              </div>
-              <div>
-                <h3 class="text-gray-400 text-sm mb-2">发型</h3>
-                <p class="text-white">长发,粉发</p>
-              </div>
-            </div>
-
-            <!-- 更多介绍 -->
-            <div class="mb-8">
-              <h3 class="text-white text-lg font-medium mb-4">更多介绍</h3>
-              <div class="space-y-4">
-                <div>
-                  <h4 class="text-gray-400 text-sm mb-2">身体</h4>
-                  <p class="text-gray-300">修长,匀称</p>
-                </div>
-                <div>
-                  <h4 class="text-gray-400 text-sm mb-2">喜欢</h4>
-                  <p class="text-gray-300">花,绘画,摄影</p>
-                </div>
-                <div>
-                  <h4 class="text-gray-400 text-sm mb-2">讨厌</h4>
-                  <p class="text-gray-300">不礼貌,歧视</p>
-                </div>
-                <div>
-                  <h4 class="text-gray-400 text-sm mb-2">性格特征</h4>
-                  <p class="text-gray-300">感性,乐观,细心</p>
+            <!-- 标签页内容 -->
+            <div v-if="activeTab === 'info'" class="tab-content">
+              <!-- 角色名称和介绍 -->
+              <div class="character-intro-section">
+                <h1 class="character-name">{{ character?.name || '加载中...' }}</h1>
+                <div class="character-description">
+                  <p class="description-text">
+                    {{ character?.description || '加载中...' }}
+                  </p>
+                  <p v-if="character?.fullDescription" class="description-text mt-4">
+                    {{ character.fullDescription }}
+                  </p>
                 </div>
               </div>
-            </div>
 
-            <!-- 说话风格 -->
-            <div class="mb-8">
-              <h3 class="text-white text-lg font-medium mb-4">说话风格</h3>
-              <div class="flex space-x-4 mb-4">
-                <button class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm">1个角色</button>
-                <button class="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg text-sm">1个开场白</button>
-                <button class="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg text-sm">评论 (8)</button>
+              <!-- 角色属性表格 -->
+              <div v-if="character" class="character-attributes">
+                <TavernCard variant="default" class="attribute-card">
+                  <div class="attributes-grid">
+                    <div class="attribute-item">
+                      <h3 class="attribute-label">类别</h3>
+                      <p class="attribute-value">{{ character.category || '未分类' }}</p>
+                    </div>
+                    <div class="attribute-item">
+                      <h3 class="attribute-label">语言</h3>
+                      <p class="attribute-value">{{ character.language || 'zh-CN' }}</p>
+                    </div>
+                    <div class="attribute-item">
+                      <h3 class="attribute-label">模型</h3>
+                      <p class="attribute-value">{{ character.model || 'gpt-3.5-turbo' }}</p>
+                    </div>
+                    <div class="attribute-item">
+                      <h3 class="attribute-label">评分</h3>
+                      <p class="attribute-value">{{ character.rating ? character.rating.toFixed(1) : 'N/A' }} ⭐</p>
+                    </div>
+                    <div class="attribute-item">
+                      <h3 class="attribute-label">对话数</h3>
+                      <p class="attribute-value">{{ character.chatCount || 0 }}</p>
+                    </div>
+                    <div class="attribute-item">
+                      <h3 class="attribute-label">收藏数</h3>
+                      <p class="attribute-value">{{ character.favoriteCount || 0 }}</p>
+                    </div>
+                  </div>
+                </TavernCard>
               </div>
-            </div>
+
+              <!-- 更多介绍 -->
+              <div v-if="character" class="character-details-section">
+                <h3 class="section-title">更多介绍</h3>
+                <TavernCard variant="default" class="details-card">
+                  <div class="details-list">
+                    <div v-if="character.personality" class="detail-item">
+                      <h4 class="detail-label">性格特征</h4>
+                      <p class="detail-value">{{ character.personality }}</p>
+                    </div>
+                    <div v-if="character.backstory" class="detail-item">
+                      <h4 class="detail-label">背景故事</h4>
+                      <p class="detail-value">{{ character.backstory }}</p>
+                    </div>
+                    <div v-if="character.scenario" class="detail-item">
+                      <h4 class="detail-label">场景设定</h4>
+                      <p class="detail-value">{{ character.scenario }}</p>
+                    </div>
+                    <div v-if="character.speakingStyle" class="detail-item">
+                      <h4 class="detail-label">说话风格</h4>
+                      <p class="detail-value">{{ character.speakingStyle }}</p>
+                    </div>
+                  </div>
+                </TavernCard>
+              </div>
+
+              <!-- 标签和统计 -->
+              <div v-if="character" class="character-tags-section">
+                <h3 class="section-title">角色标签</h3>
+                <div class="tags-container">
+                  <TavernBadge
+                    v-for="tag in (character.tags ? JSON.parse(character.tags) : [])"
+                    :key="tag"
+                    variant="primary"
+                    class="character-badge"
+                  >
+                    {{ tag }}
+                  </TavernBadge>
+                  <TavernBadge v-if="character.firstMessage" variant="secondary" class="character-badge">
+                    有开场白
+                  </TavernBadge>
+                  <TavernBadge variant="secondary" class="character-badge">
+                    <TavernIcon name="star" class="badge-icon" />
+                    评分 {{ character.rating ? character.rating.toFixed(1) : 'N/A' }}
+                  </TavernBadge>
+                </div>
+              </div>
           </div>
 
-          <div v-else-if="activeTab === 'intro'">
-            <!-- 开场白内容 -->
-            <div class="bg-gray-700/50 rounded-lg p-6">
-              <h3 class="text-white text-lg font-medium mb-4">开场白</h3>
-              <p class="text-gray-300 italic">{{ character?.firstMessage || '暂无开场白' }}</p>
+            <div v-else-if="activeTab === 'intro'" class="tab-content">
+              <!-- 开场白内容 -->
+              <TavernCard variant="default" class="intro-card">
+                <h3 class="section-title">开场白</h3>
+                <div class="intro-content">
+                  <p class="intro-text">{{ character?.firstMessage || '暂无开场白' }}</p>
+                </div>
+              </TavernCard>
             </div>
-          </div>
 
-          <div v-else-if="activeTab === 'comments'">
-            <!-- 评论内容 -->
-            <div class="space-y-4">
-              <div v-for="review in reviews" :key="review.id" class="bg-gray-700/50 rounded-lg p-4">
-                <div class="flex items-start justify-between mb-2">
-                  <div class="flex items-center">
-                    <img :src="review.userAvatar || '/default-avatar.png'" class="w-8 h-8 rounded-full mr-3" />
-                    <div>
-                      <div class="text-white text-sm font-medium">{{ review.username }}</div>
-                      <div class="flex items-center">
-                        <div class="flex mr-2">
-                          <svg v-for="i in 5" :key="i"
-                            :class="i <= review.rating ? 'text-yellow-400' : 'text-gray-600'"
-                            class="w-3 h-3 fill-current" viewBox="0 0 20 20">
-                            <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                          </svg>
+            <div v-else-if="activeTab === 'comments'" class="tab-content">
+              <!-- 评论内容 -->
+              <div class="comments-section">
+                <TavernCard v-for="review in reviews" :key="review.id" variant="default" class="comment-card">
+                  <div class="comment-header">
+                    <div class="comment-user">
+                      <img :src="review.userAvatar || '/default-avatar.png'" class="user-avatar" />
+                      <div class="user-info">
+                        <div class="username">{{ review.username }}</div>
+                        <div class="rating-date">
+                          <div class="rating-stars">
+                            <TavernIcon
+                              v-for="i in 5"
+                              :key="i"
+                              :name="i <= review.rating ? 'star-solid' : 'star'"
+                              :class="['star-icon', i <= review.rating ? 'star-filled' : 'star-empty']"
+                            />
+                          </div>
+                          <span class="comment-date">{{ review.date }}</span>
                         </div>
-                        <span class="text-xs text-gray-400">{{ review.date }}</span>
                       </div>
                     </div>
                   </div>
-                </div>
-                <p class="text-gray-300 text-sm">{{ review.comment }}</p>
+                  <p class="comment-text">{{ review.comment }}</p>
+                </TavernCard>
               </div>
             </div>
-          </div>
 
-          <!-- 底部聊天按钮 -->
-          <div class="fixed bottom-6 right-6">
-            <button
-              @click="startChat"
-              class="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-full font-medium text-lg shadow-lg transition transform hover:scale-105"
-            >
-              聊天
-            </button>
           </div>
-        </div>
+        </TavernCard>
       </div>
+    </div>
+
+    <!-- 底部聊天按钮 -->
+    <div class="chat-action-fixed">
+      <TavernButton
+        variant="primary"
+        size="lg"
+        @click="startChat"
+        class="chat-button"
+      >
+        <TavernIcon name="chat-bubble-oval-left" class="chat-icon" />
+        开始聊天
+      </TavernButton>
     </div>
   </div>
 </template>
@@ -231,6 +285,8 @@ const userStore = useUserStore()
 
 const character = ref<any>(null)
 const isLiked = ref(false)
+const isLoading = ref(true)
+const isError = ref(false)
 const reviews = ref<any[]>([])
 const relatedCharacters = ref<any[]>([])
 const otherWorks = ref<any[]>([])
@@ -243,6 +299,9 @@ const activeTab = ref('info')
 
 const fetchCharacterDetail = async () => {
   const characterId = route.params.id
+  isLoading.value = true
+  isError.value = false
+
   try {
     const response = await http.get(`/characters/${characterId}`)
     character.value = response.character
@@ -251,21 +310,11 @@ const fetchCharacterDetail = async () => {
     await fetchOtherWorks()
   } catch (error) {
     console.error('Failed to fetch character:', error)
-    // 使用模拟数据
-    character.value = {
-      id: characterId,
-      name: '司夜',
-      avatar: '',
-      description: '【粉毛】【全性向】中法混血，母亲是一个温柔的法国美女，父亲是著名上市公司老板，从小出生在法国，16岁才回到中国，年少有为的设计师，还是个艺术家，私下里很喜欢时喜欢摄影',
-      creator: '冷薄',
-      chats: 15234,
-      likes: 3421,
-      rating: 4.5,
-      personality: ['感性', '乐观', '细心'],
-      scenario: '现代都市背景，一位才华横溢的艺术家设计师',
-      firstMessage: '你好！很高兴见到你。我正在画画，要不要一起来看看？',
-      tags: ['现代', '艺术', '设计', '摄影', '粉毛']
-    }
+    // 设置错误状态，不使用硬编码数据
+    isError.value = true
+    character.value = null
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -274,25 +323,9 @@ const fetchReviews = async () => {
     const response = await http.get(`/characters/${route.params.id}/reviews`)
     reviews.value = response.data
   } catch (error) {
-    // 模拟数据
-    reviews.value = [
-      {
-        id: 1,
-        username: '用户A',
-        userAvatar: '',
-        rating: 5,
-        comment: '非常棒的角色！对话自然流畅，个性鲜明。',
-        date: '2024-01-15'
-      },
-      {
-        id: 2,
-        username: '用户B',
-        userAvatar: '',
-        rating: 4,
-        comment: '很有趣的设定，期待更多互动选项。',
-        date: '2024-01-14'
-      }
-    ]
+    console.error('Failed to fetch reviews:', error)
+    // 不使用硬编码数据，设置空列表
+    reviews.value = []
   }
 }
 
@@ -301,21 +334,16 @@ const fetchRelatedCharacters = async () => {
     const response = await http.get(`/characters/${route.params.id}/related`)
     relatedCharacters.value = response.data
   } catch (error) {
-    // 模拟数据
-    relatedCharacters.value = [
-      { id: 'r1', name: '相关角色1', avatar: '', chats: 8234 },
-      { id: 'r2', name: '相关角色2', avatar: '', chats: 5421 }
-    ]
+    console.error('Failed to fetch related characters:', error)
+    // 不使用硬编码数据，设置空列表
+    relatedCharacters.value = []
   }
 }
 
 const fetchOtherWorks = async () => {
   if (!character.value?.creatorId) {
-    // 如果没有creatorId，使用模拟数据
-    otherWorks.value = [
-      { id: 'o1', name: '其他作品1', avatar: '', rating: 4.3 },
-      { id: 'o2', name: '其他作品2', avatar: '', rating: 4.7 }
-    ]
+    // 如果没有creatorId，设置空列表
+    otherWorks.value = []
     return
   }
 
@@ -323,11 +351,9 @@ const fetchOtherWorks = async () => {
     const response = await http.get(`/users/${character.value.creatorId}/characters`)
     otherWorks.value = response.data.filter((c: any) => c.id !== route.params.id)
   } catch (error) {
-    // 模拟数据
-    otherWorks.value = [
-      { id: 'o1', name: '其他作品1', avatar: '', rating: 4.3 },
-      { id: 'o2', name: '其他作品2', avatar: '', rating: 4.7 }
-    ]
+    console.error('Failed to fetch other works:', error)
+    // 不使用硬编码数据，设置空列表
+    otherWorks.value = []
   }
 }
 
@@ -413,3 +439,552 @@ onMounted(() => {
   fetchRelatedCharacters()
 })
 </script>
+
+<style scoped lang="scss">
+@import '@/styles/design-tokens.scss';
+
+.character-detail-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg,
+    var(--dt-color-background-primary) 0%,
+    var(--dt-color-background-secondary) 50%,
+    var(--dt-color-background-tertiary) 100%);
+  padding: var(--dt-spacing-lg);
+}
+
+.character-detail-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: var(--dt-spacing-2xl);
+  align-items: start;
+  min-height: calc(100vh - 2 * var(--dt-spacing-lg));
+}
+
+// 左侧角色头像区域
+.character-avatar-section {
+  position: sticky;
+  top: var(--dt-spacing-lg);
+  align-self: start;
+}
+
+.character-avatar-card {
+  width: 100%;
+  padding: var(--dt-spacing-2xl);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 30px 60px rgba(168, 85, 247, 0.3);
+  }
+}
+
+.character-avatar-wrapper {
+  position: relative;
+  margin-bottom: var(--dt-spacing-lg);
+}
+
+.character-avatar {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--dt-radius-2xl);
+  overflow: hidden;
+  background: var(--dt-color-background-card);
+  box-shadow: 0 10px 30px rgba(168, 85, 247, 0.3);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(45deg,
+      rgba(168, 85, 247, 0.2) 0%,
+      rgba(59, 130, 246, 0.2) 50%,
+      rgba(236, 72, 153, 0.2) 100%);
+    z-index: 1;
+  }
+
+  .avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: relative;
+    z-index: 2;
+  }
+
+  .avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--dt-gradient-primary);
+    position: relative;
+    z-index: 2;
+
+    .avatar-initial {
+      font-size: 5rem;
+      font-weight: var(--dt-font-weight-bold);
+      color: var(--dt-color-text-primary);
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+  }
+}
+
+// 右侧信息区域
+.character-info-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.character-info-card {
+  width: 100%;
+  padding: var(--dt-spacing-2xl);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  min-height: fit-content;
+}
+
+// 操作栏
+.character-actions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--dt-spacing-lg);
+  border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+  margin-bottom: var(--dt-spacing-xl);
+}
+
+.back-button-group {
+  display: flex;
+  align-items: center;
+}
+
+.back-button {
+  .action-icon {
+    margin-right: var(--dt-spacing-sm);
+  }
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--dt-spacing-md);
+}
+
+.favorite-button,
+.more-actions-button {
+  .action-icon {
+    margin-right: var(--dt-spacing-sm);
+  }
+}
+
+// 标签页
+.character-tabs {
+  display: flex;
+  gap: var(--dt-spacing-md);
+  margin-bottom: var(--dt-spacing-2xl);
+  padding-bottom: var(--dt-spacing-lg);
+  border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.tab-button {
+  border-radius: var(--dt-radius-lg);
+  transition: all 0.3s ease;
+
+  &.tab-active {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+  }
+
+  .tab-icon {
+    margin-right: var(--dt-spacing-sm);
+  }
+}
+
+// 内容区域
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dt-spacing-xl);
+}
+
+// 角色介绍
+.character-intro-section {
+  margin-bottom: var(--dt-spacing-xl);
+}
+
+.character-name {
+  font-size: var(--dt-font-size-3xl);
+  font-weight: var(--dt-font-weight-bold);
+  background: var(--dt-gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--dt-spacing-lg);
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+.character-description {
+  .description-text {
+    font-size: var(--dt-font-size-md);
+    color: var(--dt-color-text-secondary);
+    line-height: 1.6;
+    opacity: 0.9;
+  }
+}
+
+// 属性表格
+.character-attributes {
+  margin-bottom: var(--dt-spacing-xl);
+}
+
+.attribute-card {
+  padding: var(--dt-spacing-xl);
+  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.1);
+}
+
+.attributes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--dt-spacing-lg);
+}
+
+.attribute-item {
+  .attribute-label {
+    font-size: var(--dt-font-size-sm);
+    font-weight: var(--dt-font-weight-medium);
+    color: var(--dt-color-text-tertiary);
+    margin-bottom: var(--dt-spacing-xs);
+    opacity: 0.8;
+  }
+
+  .attribute-value {
+    font-size: var(--dt-font-size-md);
+    color: var(--dt-color-text-primary);
+    font-weight: var(--dt-font-weight-medium);
+  }
+}
+
+// 详细信息
+.character-details-section {
+  margin-bottom: var(--dt-spacing-xl);
+}
+
+.section-title {
+  font-size: var(--dt-font-size-lg);
+  font-weight: var(--dt-font-weight-semibold);
+  color: var(--dt-color-text-primary);
+  margin-bottom: var(--dt-spacing-lg);
+}
+
+.details-card {
+  padding: var(--dt-spacing-xl);
+  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.1);
+}
+
+.details-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dt-spacing-lg);
+}
+
+.detail-item {
+  .detail-label {
+    font-size: var(--dt-font-size-sm);
+    font-weight: var(--dt-font-weight-medium);
+    color: var(--dt-color-text-tertiary);
+    margin-bottom: var(--dt-spacing-xs);
+    opacity: 0.8;
+  }
+
+  .detail-value {
+    font-size: var(--dt-font-size-md);
+    color: var(--dt-color-text-secondary);
+    line-height: 1.5;
+  }
+}
+
+// 标签统计
+.character-tags-section {
+  margin-bottom: var(--dt-spacing-xl);
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dt-spacing-md);
+}
+
+.character-badge {
+  .badge-icon {
+    margin-right: var(--dt-spacing-xs);
+  }
+}
+
+// 开场白
+.intro-card {
+  padding: var(--dt-spacing-xl);
+  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.1);
+}
+
+.intro-content {
+  .intro-text {
+    font-size: var(--dt-font-size-md);
+    color: var(--dt-color-text-secondary);
+    font-style: italic;
+    line-height: 1.6;
+    opacity: 0.9;
+  }
+}
+
+// 评论区域
+.comments-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dt-spacing-lg);
+}
+
+.comment-card {
+  padding: var(--dt-spacing-lg);
+  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(168, 85, 247, 0.2);
+  }
+}
+
+.comment-header {
+  margin-bottom: var(--dt-spacing-md);
+}
+
+.comment-user {
+  display: flex;
+  align-items: center;
+  gap: var(--dt-spacing-md);
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--dt-radius-full);
+  border: 2px solid rgba(168, 85, 247, 0.3);
+}
+
+.user-info {
+  .username {
+    font-size: var(--dt-font-size-sm);
+    font-weight: var(--dt-font-weight-semibold);
+    color: var(--dt-color-text-primary);
+    margin-bottom: var(--dt-spacing-xs);
+  }
+}
+
+.rating-date {
+  display: flex;
+  align-items: center;
+  gap: var(--dt-spacing-sm);
+}
+
+.rating-stars {
+  display: flex;
+  gap: 2px;
+
+  .star-icon {
+    width: 12px;
+    height: 12px;
+
+    &.star-filled {
+      color: #fbbf24;
+    }
+
+    &.star-empty {
+      color: rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+.comment-date {
+  font-size: var(--dt-font-size-xs);
+  color: var(--dt-color-text-tertiary);
+  opacity: 0.7;
+}
+
+.comment-text {
+  font-size: var(--dt-font-size-sm);
+  color: var(--dt-color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+// 固定聊天按钮
+.chat-action-fixed {
+  position: fixed;
+  bottom: var(--dt-spacing-2xl);
+  right: var(--dt-spacing-2xl);
+  z-index: 100;
+}
+
+.chat-button {
+  padding: var(--dt-spacing-lg) var(--dt-spacing-2xl);
+  font-size: var(--dt-font-size-lg);
+  font-weight: var(--dt-font-weight-semibold);
+  box-shadow: 0 15px 40px rgba(168, 85, 247, 0.4);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 20px 50px rgba(168, 85, 247, 0.6);
+  }
+
+  .chat-icon {
+    margin-right: var(--dt-spacing-sm);
+  }
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+  }
+  to {
+    text-shadow: 0 0 30px rgba(168, 85, 247, 0.8);
+  }
+}
+
+// 响应式设计
+@media (max-width: 1200px) {
+  .character-detail-container {
+    grid-template-columns: 350px 1fr;
+    gap: var(--dt-spacing-xl);
+  }
+}
+
+@media (max-width: 1024px) {
+  .character-detail-container {
+    grid-template-columns: 1fr;
+    gap: var(--dt-spacing-xl);
+  }
+
+  .character-avatar-section {
+    position: static;
+    order: 1;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .character-info-section {
+    order: 2;
+  }
+
+  .attributes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .character-detail-page {
+    padding: var(--dt-spacing-md);
+  }
+
+  .character-detail-container {
+    gap: var(--dt-spacing-lg);
+  }
+
+  .character-avatar-card,
+  .character-info-card {
+    padding: var(--dt-spacing-lg);
+  }
+
+  .character-actions-header {
+    flex-direction: column;
+    gap: var(--dt-spacing-md);
+    align-items: stretch;
+  }
+
+  .action-buttons {
+    justify-content: center;
+  }
+
+  .character-tabs {
+    flex-wrap: wrap;
+    gap: var(--dt-spacing-sm);
+  }
+
+  .tab-button {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .attributes-grid {
+    grid-template-columns: 1fr;
+    gap: var(--dt-spacing-md);
+  }
+
+  .character-name {
+    font-size: var(--dt-font-size-2xl);
+  }
+
+  .chat-action-fixed {
+    bottom: var(--dt-spacing-lg);
+    right: var(--dt-spacing-lg);
+    left: var(--dt-spacing-lg);
+  }
+
+  .chat-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .comments-section {
+    gap: var(--dt-spacing-md);
+  }
+
+  .comment-card {
+    padding: var(--dt-spacing-md);
+  }
+}
+
+/* 加载和错误状态样式 */
+.loading-container,
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  padding: var(--dt-spacing-xl);
+}
+
+.loading-card,
+.error-card {
+  max-width: 400px;
+  text-align: center;
+}
+
+.loading-content,
+.error-content {
+  padding: var(--dt-spacing-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loading-content p,
+.error-content p {
+  margin: 0;
+}
+
+.error-content h2 {
+  margin: 0;
+}
+</style>

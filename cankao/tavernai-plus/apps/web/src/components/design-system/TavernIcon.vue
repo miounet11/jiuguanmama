@@ -25,6 +25,8 @@ import {
   ArrowLeftIcon,
   ArrowUpIcon,
   ArrowDownIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
 
   // Status
   CheckIcon,
@@ -40,7 +42,7 @@ import {
   PencilIcon,
   TrashIcon,
   ShareIcon,
-  DownloadIcon,
+  ArrowDownTrayIcon as DownloadIcon,
 
   // System
   Cog6ToothIcon,
@@ -101,6 +103,8 @@ const iconRegistry: Record<string, Component> = {
   'arrow-left': ArrowLeftIcon,
   'arrow-up': ArrowUpIcon,
   'arrow-down': ArrowDownIcon,
+  'chevron-up': ChevronUpIcon,
+  'chevron-down': ChevronDownIcon,
 
   // Status
   check: CheckIcon,
@@ -144,7 +148,9 @@ const iconRegistry: Record<string, Component> = {
   gift: GiftIcon,
 
   // Loading
-  spinner: ArrowPathIcon
+  spinner: ArrowPathIcon,
+  'arrow-path': ArrowPathIcon,
+  loading: ArrowPathIcon
 }
 
 // Computed

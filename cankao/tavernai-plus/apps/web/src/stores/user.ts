@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authService } from '@/services/auth'
-import { ElMessage } from 'element-plus'
 
 export interface User {
   id: string
@@ -44,11 +43,11 @@ export const useUserStore = defineStore('user', () => {
       // 保存用户信息
       user.value = response.user
       
-      ElMessage.success('登录成功')
+      console.log('登录成功')
       return true
     } catch (error: any) {
-      ElMessage.error(error.message || '登录失败')
-      return false
+      console.error('登录失败:', error.message || error)
+      throw error
     } finally {
       loading.value = false
     }
@@ -71,11 +70,11 @@ export const useUserStore = defineStore('user', () => {
       
       user.value = response.user
       
-      ElMessage.success('注册成功')
+      console.log('注册成功')
       return true
     } catch (error: any) {
-      ElMessage.error(error.message || '注册失败')
-      return false
+      console.error('注册失败:', error.message || error)
+      throw error
     } finally {
       loading.value = false
     }
@@ -94,7 +93,7 @@ export const useUserStore = defineStore('user', () => {
       localStorage.removeItem('token')
       localStorage.removeItem('refreshToken')
       
-      ElMessage.success('已退出登录')
+      console.log('已退出登录')
     }
   }
 

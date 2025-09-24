@@ -72,7 +72,7 @@ export function useHomeStats() {
       loading.value = true
       error.value = null
 
-      const response = await http.get('/api/stats/homepage')
+      const response = await http.get('/stats/homepage')
 
       if (response?.data) {
         // 更新统计数据

@@ -1,29 +1,33 @@
 <template>
   <div class="scenario-management">
     <!-- 页面头部 -->
-    <PageHeader
-      title="剧本管理"
-      subtitle="创建和管理您的世界信息剧本"
-      :breadcrumb="breadcrumbItems"
-    >
-      <template #actions>
-        <el-button
-          type="primary"
-          @click="createNewScenario"
-          :icon="'Plus'"
-          size="large"
-        >
-          创建剧本
-        </el-button>
-      </template>
-    </PageHeader>
+    <div class="page-header">
+      <div class="header-content">
+        <div class="title-section">
+          <h1 class="gradient-title">剧本管理</h1>
+          <p class="subtitle">创建和管理您的世界信息剧本</p>
+        </div>
+        <div class="actions-section">
+          <TavernButton
+            variant="primary"
+            size="lg"
+            @click="createNewScenario"
+          >
+            <TavernIcon name="plus" />
+            创建剧本
+          </TavernButton>
+        </div>
+      </div>
+    </div>
 
     <!-- 主内容区域 -->
     <div class="management-content">
-      <ScenarioList
-        @scenario-created="handleScenarioCreated"
-        @scenario-selected="handleScenarioSelected"
-      />
+      <TavernCard variant="glass" class="scenario-container">
+        <ScenarioList
+          @scenario-created="handleScenarioCreated"
+          @scenario-selected="handleScenarioSelected"
+        />
+      </TavernCard>
     </div>
   </div>
 </template>
@@ -74,19 +78,87 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/variables.scss';
+
 .scenario-management {
-  @apply min-h-screen bg-gray-50;
+  min-height: 100vh;
+  background: linear-gradient(135deg,
+    var(--dt-color-background-primary) 0%,
+    var(--dt-color-background-secondary) 50%,
+    var(--dt-color-background-tertiary) 100%);
+  padding: var(--dt-spacing-lg);
+}
+
+.page-header {
+  margin-bottom: var(--dt-spacing-2xl);
+
+  .header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: var(--dt-spacing-lg);
+
+    .title-section {
+      .gradient-title {
+        font-size: var(--dt-font-size-4xl);
+        font-weight: var(--dt-font-weight-bold);
+        background: var(--dt-gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: var(--dt-spacing-sm);
+      }
+
+      .subtitle {
+        font-size: var(--dt-font-size-lg);
+        color: var(--dt-color-text-secondary);
+        margin: 0;
+      }
+    }
+
+    .actions-section {
+      flex-shrink: 0;
+    }
+  }
 }
 
 .management-content {
-  @apply container mx-auto px-4 py-6;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .scenario-container {
+    min-height: 400px;
+    padding: var(--dt-spacing-xl);
+  }
 }
 
-/* 响应式设计 */
+// 响应式设计
 @media (max-width: 768px) {
+  .scenario-management {
+    padding: var(--dt-spacing-md);
+  }
+
+  .page-header {
+    .header-content {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--dt-spacing-md);
+
+      .title-section {
+        .gradient-title {
+          font-size: var(--dt-font-size-2xl);
+        }
+      }
+    }
+  }
+
   .management-content {
-    @apply px-2 py-4;
+    .scenario-container {
+      padding: var(--dt-spacing-lg);
+    }
   }
 }
 </style>

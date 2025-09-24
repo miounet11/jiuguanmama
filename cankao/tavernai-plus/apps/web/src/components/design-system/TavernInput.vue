@@ -17,9 +17,9 @@
       <component
         :is="inputComponent"
         ref="inputRef"
-        v-model="modelValue"
+        :value="modelValue"
         :class="inputClasses"
-        :type="type"
+        :type="actualType"
         :placeholder="placeholder"
         :disabled="disabled"
         :readonly="readonly"
@@ -29,7 +29,7 @@
         :autocomplete="autocomplete"
         @blur="handleBlur"
         @focus="handleFocus"
-        @input="handleInput"
+        @input="handleInputChange"
         @keydown="handleKeydown"
       />
 
@@ -236,6 +236,12 @@ const handleInput = (event: Event) => {
   emit('input', event)
 }
 
+const handleInputChange = (event: Event) => {
+  const target = event.target as HTMLInputElement | HTMLTextAreaElement
+  emit('update:modelValue', target.value)
+  handleInput(event)
+}
+
 const handleKeydown = (event: KeyboardEvent) => {
   emit('keydown', event)
 }
@@ -245,7 +251,7 @@ const togglePasswordVisibility = () => {
 }
 
 const clearInput = () => {
-  modelValue.value = ''
+  emit('update:modelValue', '')
   emit('clear')
   inputRef.value?.focus()
 }

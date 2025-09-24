@@ -1,262 +1,305 @@
 <template>
-  <el-dialog
-    v-model="dialogVisible"
-    title="剧本匹配测试"
-    width="800px"
-    :close-on-click-modal="false"
+  <!-- 模态框遮罩 -->
+  <div
+    v-if="dialogVisible"
+    class="fixed inset-0 z-50 flex items-center justify-center"
+    @click="handleMaskClick"
   >
-    <div class="test-dialog">
-      <!-- 测试输入区域 -->
-      <div class="test-input-section mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-          <div class="md:col-span-3">
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              测试文本
-            </label>
-            <el-input
-              v-model="testText"
-              type="textarea"
-              :rows="4"
-              placeholder="输入要测试的文本，查看会触发哪些世界信息条目..."
-            />
-          </div>
+    <!-- 遮罩背景 -->
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              测试设置
-            </label>
-            <div class="space-y-3">
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">测试深度</label>
-                <el-input-number
-                  v-model="testDepth"
-                  :min="1"
-                  :max="5"
-                  size="small"
-                  class="w-full"
+    <!-- 对话框内容 -->
+    <div
+      class="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden"
+      @click.stop
+    >
+      <!-- 对话框头部 -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">
+          剧本匹配测试
+        </h2>
+        <TavernButton
+          variant="ghost"
+          size="sm"
+          @click="handleClose"
+          class="text-gray-400 hover:text-gray-600"
+        >
+          <TavernIcon name="x" />
+        </TavernButton>
+      </div>
+
+      <!-- 对话框主体 -->
+      <div class="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+        <div class="test-dialog space-y-6">
+          <!-- 测试输入区域 -->
+          <div class="test-input-section">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div class="md:col-span-3">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  测试文本
+                </label>
+                <TavernInput
+                  v-model="testText"
+                  type="textarea"
+                  :rows="4"
+                  placeholder="输入要测试的文本，查看会触发哪些世界信息条目..."
                 />
               </div>
 
-              <el-button
-                type="primary"
-                size="small"
-                @click="performTest"
-                :loading="isTestLoading"
-                :disabled="!testText.trim()"
-                class="w-full"
-              >
-                执行测试
-              </el-button>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  测试设置
+                </label>
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs text-gray-500 mb-1">测试深度</label>
+                    <TavernInput
+                      v-model="testDepth"
+                      type="number"
+                      :min="1"
+                      :max="5"
+                      size="sm"
+                      class="w-full"
+                    />
+                  </div>
 
-              <el-button
-                size="small"
-                @click="clearTest"
-                class="w-full"
-              >
-                清空
-              </el-button>
-            </div>
-          </div>
-        </div>
+                  <TavernButton
+                    variant="primary"
+                    size="sm"
+                    @click="performTest"
+                    :disabled="isTestLoading || !testText.trim()"
+                    class="w-full"
+                  >
+                    <TavernIcon v-if="isTestLoading" name="loading" class="animate-spin mr-2" />
+                    {{ isTestLoading ? '测试中...' : '执行测试' }}
+                  </TavernButton>
 
-        <!-- 快速测试示例 -->
-        <div class="quick-examples">
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            快速测试示例
-          </label>
-          <div class="flex flex-wrap gap-2">
-            <el-tag
-              v-for="example in testExamples"
-              :key="example"
-              size="small"
-              effect="plain"
-              class="cursor-pointer"
-              @click="useExample(example)"
-            >
-              {{ example }}
-            </el-tag>
-          </div>
-        </div>
-      </div>
-
-      <!-- 测试结果区域 -->
-      <div v-if="testResults" class="test-results">
-        <div class="results-header flex items-center justify-between mb-4">
-          <h4 class="text-lg font-semibold text-gray-900">
-            测试结果
-          </h4>
-          <div class="flex items-center gap-4 text-sm text-gray-500">
-            <span>{{ testResults.totalMatches }} 个匹配</span>
-            <span>执行时间: {{ testResults.executionTime }}ms</span>
-          </div>
-        </div>
-
-        <!-- 无匹配结果 -->
-        <div v-if="testResults.matchedEntries.length === 0" class="no-results">
-          <el-empty
-            description="没有找到匹配的世界信息条目"
-            :image-size="80"
-          >
-            <div class="text-sm text-gray-500">
-              尝试调整关键词或匹配方式
-            </div>
-          </el-empty>
-        </div>
-
-        <!-- 匹配结果列表 -->
-        <div v-else class="results-list space-y-4">
-          <div
-            v-for="(match, index) in testResults.matchedEntries"
-            :key="index"
-            class="match-item bg-blue-50 border border-blue-200 rounded-lg p-4"
-          >
-            <!-- 匹配条目信息 -->
-            <div class="match-header flex items-start justify-between mb-3">
-              <div class="flex-1">
-                <h5 class="font-medium text-blue-900 mb-1">
-                  {{ match.entry.title }}
-                </h5>
-                <div class="flex items-center gap-4 text-sm text-blue-700">
-                  <span>匹配关键词: {{ match.matchedKeywords.join(', ') }}</span>
-                  <span>位置: {{ match.matchPosition }}</span>
+                  <TavernButton
+                    variant="outline"
+                    size="sm"
+                    @click="clearTest"
+                    class="w-full"
+                  >
+                    清空
+                  </TavernButton>
                 </div>
               </div>
+            </div>
 
-              <div class="flex items-center gap-2">
-                <el-tag
-                  type="primary"
-                  size="small"
-                  effect="dark"
+            <!-- 快速测试示例 -->
+            <div class="quick-examples">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                快速测试示例
+              </label>
+              <div class="flex flex-wrap gap-2">
+                <TavernBadge
+                  v-for="example in testExamples"
+                  :key="example"
+                  variant="outline"
+                  class="cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                  @click="useExample(example)"
                 >
-                  优先级 {{ match.entry.priority }}
-                </el-tag>
-                <el-tag
-                  :type="match.entry.isActive ? 'success' : 'info'"
-                  size="small"
-                  effect="plain"
-                >
-                  {{ match.entry.isActive ? '活跃' : '禁用' }}
-                </el-tag>
+                  {{ example }}
+                </TavernBadge>
+              </div>
+            </div>
+          </div>
+
+          <!-- 测试结果区域 -->
+          <div v-if="testResults" class="test-results">
+            <div class="results-header flex items-center justify-between mb-4">
+              <h4 class="text-lg font-semibold text-gray-900">
+                测试结果
+              </h4>
+              <div class="flex items-center gap-4 text-sm text-gray-500">
+                <span>{{ testResults.totalMatches }} 个匹配</span>
+                <span>执行时间: {{ testResults.executionTime }}ms</span>
               </div>
             </div>
 
-            <!-- 插入的内容 -->
-            <div class="insert-content bg-white border border-blue-100 rounded p-3 mb-3">
-              <div class="text-sm font-medium text-gray-700 mb-1">
-                将插入的内容:
+            <!-- 无匹配结果 -->
+            <div v-if="testResults.matchedEntries.length === 0" class="no-results py-8 text-center">
+              <div class="text-gray-400 mb-2">
+                <TavernIcon name="search" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
               </div>
-              <div class="text-sm text-gray-800">
-                {{ match.insertText }}
-              </div>
-            </div>
-
-            <!-- 条目详细信息 -->
-            <div class="entry-details text-xs text-blue-600 space-y-1">
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <span>插入深度: {{ match.entry.insertDepth }}</span>
-                <span>触发概率: {{ (match.entry.probability * 100).toFixed(0) }}%</span>
-                <span>匹配方式: {{ getMatchTypeLabel(match.entry.matchType) }}</span>
-                <span>插入位置: {{ getPositionLabel(match.entry.position) }}</span>
+              <div class="text-gray-600 mb-2">没有找到匹配的世界信息条目</div>
+              <div class="text-sm text-gray-500">
+                尝试调整关键词或匹配方式
               </div>
             </div>
 
-            <!-- 展开查看完整条目 -->
-            <el-collapse class="mt-3">
-              <el-collapse-item title="查看完整条目内容" :name="index">
-                <div class="full-entry bg-gray-50 rounded p-3">
-                  <div class="space-y-2 text-sm">
-                    <div>
-                      <span class="font-medium text-gray-700">完整内容:</span>
-                      <div class="mt-1 text-gray-600">{{ match.entry.content }}</div>
-                    </div>
-                    <div>
-                      <span class="font-medium text-gray-700">所有关键词:</span>
-                      <div class="mt-1">
-                        <el-tag
-                          v-for="keyword in match.entry.keywords"
-                          :key="keyword"
-                          size="small"
-                          :type="match.matchedKeywords.includes(keyword) ? 'primary' : 'info'"
-                          effect="plain"
-                          class="mr-1 mb-1"
-                        >
-                          {{ keyword }}
-                        </el-tag>
-                      </div>
+            <!-- 匹配结果列表 -->
+            <div v-else class="results-list space-y-4">
+              <TavernCard
+                v-for="(match, index) in testResults.matchedEntries"
+                :key="index"
+                class="match-item bg-blue-50 border-blue-200"
+              >
+                <!-- 匹配条目信息 -->
+                <div class="match-header flex items-start justify-between mb-3">
+                  <div class="flex-1">
+                    <h5 class="font-medium text-blue-900 mb-1">
+                      {{ match.entry.title }}
+                    </h5>
+                    <div class="flex items-center gap-4 text-sm text-blue-700">
+                      <span>匹配关键词: {{ match.matchedKeywords.join(', ') }}</span>
+                      <span>位置: {{ match.matchPosition }}</span>
                     </div>
                   </div>
+
+                  <div class="flex items-center gap-2">
+                    <TavernBadge variant="primary" size="sm">
+                      优先级 {{ match.entry.priority }}
+                    </TavernBadge>
+                    <TavernBadge
+                      :variant="match.entry.isActive ? 'success' : 'secondary'"
+                      size="sm"
+                    >
+                      {{ match.entry.isActive ? '活跃' : '禁用' }}
+                    </TavernBadge>
+                  </div>
                 </div>
-              </el-collapse-item>
-            </el-collapse>
-          </div>
-        </div>
 
-        <!-- 处理后的文本预览 -->
-        <div v-if="testResults.processedText !== testText" class="processed-text mt-6">
-          <h5 class="font-semibold text-gray-900 mb-3">处理后的文本预览:</h5>
-          <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <div
-              v-html="highlightProcessedText(testResults.processedText)"
-              class="text-sm leading-relaxed whitespace-pre-wrap"
-            />
-          </div>
-        </div>
-      </div>
+                <!-- 插入的内容 -->
+                <TavernCard class="bg-white border-blue-100 mb-3">
+                  <div class="text-sm font-medium text-gray-700 mb-1">
+                    将插入的内容:
+                  </div>
+                  <div class="text-sm text-gray-800">
+                    {{ match.insertText }}
+                  </div>
+                </TavernCard>
 
-      <!-- 测试历史 -->
-      <div v-if="testHistory.length > 0" class="test-history mt-6">
-        <el-collapse>
-          <el-collapse-item title="测试历史" name="history">
-            <div class="space-y-2 max-h-40 overflow-y-auto">
+                <!-- 条目详细信息 -->
+                <div class="entry-details text-xs text-blue-600 space-y-1">
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <span>插入深度: {{ match.entry.insertDepth }}</span>
+                    <span>触发概率: {{ (match.entry.probability * 100).toFixed(0) }}%</span>
+                    <span>匹配方式: {{ getMatchTypeLabel(match.entry.matchType) }}</span>
+                    <span>插入位置: {{ getPositionLabel(match.entry.position) }}</span>
+                  </div>
+                </div>
+
+                <!-- 展开查看完整条目 -->
+                <div class="mt-3">
+                  <TavernButton
+                    variant="ghost"
+                    size="sm"
+                    @click="toggleExpanded(index)"
+                    class="w-full justify-between"
+                  >
+                    <span>查看完整条目内容</span>
+                    <TavernIcon
+                      :name="expandedItems.has(index) ? 'chevron-up' : 'chevron-down'"
+                    />
+                  </TavernButton>
+
+                  <div v-if="expandedItems.has(index)" class="mt-3">
+                    <TavernCard class="bg-gray-50">
+                      <div class="space-y-2 text-sm">
+                        <div>
+                          <span class="font-medium text-gray-700">完整内容:</span>
+                          <div class="mt-1 text-gray-600">{{ match.entry.content }}</div>
+                        </div>
+                        <div>
+                          <span class="font-medium text-gray-700">所有关键词:</span>
+                          <div class="mt-1 flex flex-wrap gap-1">
+                            <TavernBadge
+                              v-for="keyword in match.entry.keywords"
+                              :key="keyword"
+                              size="sm"
+                              :variant="match.matchedKeywords.includes(keyword) ? 'primary' : 'secondary'"
+                            >
+                              {{ keyword }}
+                            </TavernBadge>
+                          </div>
+                        </div>
+                      </div>
+                    </TavernCard>
+                  </div>
+                </div>
+              </TavernCard>
+            </div>
+
+            <!-- 处理后的文本预览 -->
+            <div v-if="testResults.processedText !== testText" class="processed-text mt-6">
+              <h5 class="font-semibold text-gray-900 mb-3">处理后的文本预览:</h5>
+              <TavernCard class="bg-gray-50 border-gray-200">
+                <div
+                  v-html="highlightProcessedText(testResults.processedText)"
+                  class="text-sm leading-relaxed whitespace-pre-wrap"
+                />
+              </TavernCard>
+            </div>
+          </div>
+
+          <!-- 测试历史 -->
+          <div v-if="testHistory.length > 0" class="test-history mt-6">
+            <TavernButton
+              variant="ghost"
+              @click="toggleHistory"
+              class="w-full justify-between mb-3"
+            >
+              <span>测试历史</span>
+              <TavernIcon :name="showHistory ? 'chevron-up' : 'chevron-down'" />
+            </TavernButton>
+
+            <div v-if="showHistory" class="space-y-2 max-h-40 overflow-y-auto">
               <div
                 v-for="(history, index) in testHistory"
                 :key="index"
-                class="history-item flex items-center justify-between p-2 bg-gray-50 rounded text-sm"
+                class="history-item flex items-center justify-between p-2 bg-gray-50 rounded text-sm hover:bg-gray-100 transition-colors"
               >
                 <span class="truncate flex-1 mr-2">{{ history.text }}</span>
                 <div class="flex items-center gap-2 text-xs text-gray-500">
                   <span>{{ history.matches }} 个匹配</span>
-                  <el-button
-                    size="small"
-                    text
+                  <TavernButton
+                    variant="ghost"
+                    size="xs"
                     @click="useHistoryText(history.text)"
                   >
                     重用
-                  </el-button>
+                  </TavernButton>
                 </div>
               </div>
             </div>
-          </el-collapse-item>
-        </el-collapse>
+          </div>
+        </div>
+      </div>
+
+      <!-- 对话框底部 -->
+      <div class="flex justify-between items-center p-6 border-t border-gray-200">
+        <div>
+          <TavernButton
+            v-if="testResults"
+            variant="outline"
+            size="sm"
+            @click="exportTestResults"
+          >
+            <TavernIcon name="download" class="mr-2" />
+            导出结果
+          </TavernButton>
+        </div>
+        <div class="flex gap-3">
+          <TavernButton
+            variant="outline"
+            @click="handleClose"
+          >
+            关闭
+          </TavernButton>
+        </div>
       </div>
     </div>
-
-    <template #footer>
-      <div class="flex justify-between">
-        <div>
-          <el-button
-            v-if="testResults"
-            @click="exportTestResults"
-            size="small"
-            :icon="'Download'"
-          >
-            导出结果
-          </el-button>
-        </div>
-        <div>
-          <el-button @click="handleClose">
-            关闭
-          </el-button>
-        </div>
-      </div>
-    </template>
-  </el-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Download } from '@element-plus/icons-vue'
+import TavernButton from '@/components/design-system/TavernButton.vue'
+import TavernCard from '@/components/design-system/TavernCard.vue'
+import TavernIcon from '@/components/design-system/TavernIcon.vue'
+import TavernInput from '@/components/design-system/TavernInput.vue'
+import TavernBadge from '@/components/design-system/TavernBadge.vue'
 import { useScenarioStore } from '@/stores/scenario'
 import type {
   Scenario,
@@ -292,6 +335,8 @@ const testDepth = ref(1)
 const isTestLoading = ref(false)
 const testResults = ref<TestMatchingResult | null>(null)
 const testHistory = reactive<TestHistory[]>([])
+const expandedItems = ref(new Set<number>())
+const showHistory = ref(false)
 
 // 测试示例
 const testExamples = [
@@ -325,10 +370,9 @@ const performTest = async () => {
     // 添加到测试历史
     addToHistory(testText.value, result.totalMatches)
 
-    ElMessage.success(`测试完成，找到 ${result.totalMatches} 个匹配`)
+    console.log(`测试完成，找到 ${result.totalMatches} 个匹配`)
   } catch (error) {
     console.error('测试失败:', error)
-    ElMessage.error('测试失败')
   } finally {
     isTestLoading.value = false
   }
@@ -337,6 +381,7 @@ const performTest = async () => {
 const clearTest = () => {
   testText.value = ''
   testResults.value = null
+  expandedItems.value.clear()
 }
 
 const useExample = (example: string) => {
@@ -346,6 +391,18 @@ const useExample = (example: string) => {
 
 const useHistoryText = (text: string) => {
   testText.value = text
+}
+
+const toggleExpanded = (index: number) => {
+  if (expandedItems.value.has(index)) {
+    expandedItems.value.delete(index)
+  } else {
+    expandedItems.value.add(index)
+  }
+}
+
+const toggleHistory = () => {
+  showHistory.value = !showHistory.value
 }
 
 const addToHistory = (text: string, matches: number) => {
@@ -414,15 +471,21 @@ const exportTestResults = () => {
   a.click()
 
   URL.revokeObjectURL(url)
-  ElMessage.success('测试结果已导出')
+  console.log('测试结果已导出')
 }
 
 const handleClose = () => {
   emit('update:modelValue', false)
 }
+
+const handleMaskClick = () => {
+  // 点击遮罩关闭对话框
+  handleClose()
+}
 </script>
 
 <style scoped>
+/* 基础样式 */
 .test-dialog {
   @apply space-y-6;
 }
@@ -450,35 +513,13 @@ const handleClose = () => {
 }
 
 @media (min-width: 768px) {
-  .md\\:grid-cols-4 {
+  .md\:grid-cols-4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .md\\:col-span-3 {
+  .md\:col-span-3 {
     grid-column: span 3 / span 3;
   }
-}
-
-/* 折叠面板样式 */
-:deep(.el-collapse) {
-  @apply border-none;
-}
-
-:deep(.el-collapse-item__header) {
-  @apply bg-gray-100 border border-gray-200 rounded px-3 py-2 text-sm font-medium;
-}
-
-:deep(.el-collapse-item__content) {
-  @apply bg-white border border-gray-200 border-t-0 rounded-b p-3;
-}
-
-/* 标签样式 */
-:deep(.el-tag) {
-  @apply transition-all duration-200;
-}
-
-.cursor-pointer:hover {
-  @apply transform -translate-y-0.5 shadow-sm;
 }
 
 /* 高亮样式 */
@@ -487,15 +528,15 @@ const handleClose = () => {
 }
 
 /* 滚动条样式 */
-.test-history .overflow-y-auto::-webkit-scrollbar {
+.overflow-y-auto::-webkit-scrollbar {
   @apply w-1;
 }
 
-.test-history .overflow-y-auto::-webkit-scrollbar-track {
+.overflow-y-auto::-webkit-scrollbar-track {
   @apply bg-gray-100;
 }
 
-.test-history .overflow-y-auto::-webkit-scrollbar-thumb {
+.overflow-y-auto::-webkit-scrollbar-thumb {
   @apply bg-gray-300 rounded;
 }
 
@@ -504,17 +545,13 @@ const handleClose = () => {
   @apply transition-all duration-200;
 }
 
-.history-item:hover {
-  @apply bg-gray-100;
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .grid.md\\:grid-cols-4 {
+  .grid.md\:grid-cols-4 {
     @apply grid-cols-1;
   }
 
-  .md\\:col-span-3 {
+  .md\:col-span-3 {
     @apply col-span-1;
   }
 
@@ -536,10 +573,6 @@ const handleClose = () => {
   @apply py-8;
 }
 
-:deep(.el-empty) {
-  @apply py-4;
-}
-
 /* 动画效果 */
 .match-item {
   animation: slideIn 0.3s ease;
@@ -553,6 +586,31 @@ const handleClose = () => {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* 模态框动画 */
+.fixed.inset-0 {
+  animation: fadeIn 0.2s ease;
+}
+
+.relative.bg-white {
+  animation: slideInScale 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 </style>

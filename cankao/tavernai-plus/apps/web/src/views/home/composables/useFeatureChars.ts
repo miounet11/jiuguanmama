@@ -65,7 +65,7 @@ export function useFeatureChars() {
       // 合并过滤选项
       const filterOptions = { ...currentFilter.value, ...options }
 
-      const response = await http.get('/api/characters/featured', {
+      const response = await http.get('/characters/featured', {
         params: filterOptions
       })
 
@@ -88,7 +88,7 @@ export function useFeatureChars() {
   // 获取角色分类
   const fetchCategories = async () => {
     try {
-      const response = await http.get('/api/characters/categories')
+      const response = await http.get('/characters/categories')
 
       if (response?.data?.categories) {
         categories.value = response.data.categories

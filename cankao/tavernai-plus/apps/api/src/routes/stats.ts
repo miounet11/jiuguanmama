@@ -7,6 +7,38 @@ router.get('/test', (req: Request, res: Response) => {
   res.json({ message: 'Stats route working!', timestamp: new Date().toISOString() })
 })
 
+// 获取首页统计数据
+router.get('/homepage', (req: Request, res: Response) => {
+  console.log('首页统计端点被调用')
+
+  const stats = {
+    totalUsers: 15420,
+    totalCharacters: 3280,
+    totalChats: 89540,
+    totalFavorites: 42160,
+    newUsersToday: 127,
+    newCharactersToday: 23,
+    newChatsToday: 584,
+    averageRating: 4.8,
+    topCategories: [
+      { name: '动漫', count: 1240, growth: 12.5 },
+      { name: '游戏', count: 987, growth: 8.3 },
+      { name: '小说', count: 756, growth: 15.2 },
+      { name: '历史', count: 234, growth: -2.1 },
+      { name: '原创', count: 523, growth: 22.8 }
+    ],
+    activeUsersNow: 892,
+    responseTime: 0.3,
+    satisfaction: 96.8,
+    lastUpdated: new Date().toISOString()
+  }
+
+  res.json({
+    success: true,
+    data: stats
+  })
+})
+
 // 获取社区统计数据 - 完全静态实现
 router.get('/community', (req: Request, res: Response) => {
   console.log('社区统计端点被调用')

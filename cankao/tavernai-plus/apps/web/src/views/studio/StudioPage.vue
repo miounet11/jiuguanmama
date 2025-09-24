@@ -1,92 +1,88 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">创作工作室</h1>
-        <p class="mt-2 text-gray-600">管理您创建的角色和内容</p>
+  <div class="studio-page">
+    <div class="page-container">
+      <!-- 页面头部 -->
+      <div class="page-header">
+        <div class="header-content">
+          <div class="title-section">
+            <h1 class="gradient-title">创作工作室</h1>
+            <p class="subtitle">管理您创建的角色和内容</p>
+          </div>
+        </div>
       </div>
 
       <!-- 统计卡片 -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-indigo-500 rounded-lg p-3">
-              <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-              </svg>
+      <div class="stats-grid">
+        <TavernCard variant="glass" class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon icon-characters">
+              <TavernIcon name="users" />
             </div>
-            <div class="ml-5">
-              <p class="text-gray-500 text-sm">总角色数</p>
-              <p class="text-2xl font-semibold text-gray-900">{{ stats.totalCharacters }}</p>
+            <div class="stat-info">
+              <p class="stat-label">总角色数</p>
+              <p class="stat-value">{{ stats.totalCharacters }}</p>
             </div>
           </div>
-        </div>
+        </TavernCard>
 
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-green-500 rounded-lg p-3">
-              <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-              </svg>
+        <TavernCard variant="glass" class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon icon-chats">
+              <TavernIcon name="chat-bubble-oval-left" />
             </div>
-            <div class="ml-5">
-              <p class="text-gray-500 text-sm">总对话数</p>
-              <p class="text-2xl font-semibold text-gray-900">{{ formatNumber(stats.totalChats) }}</p>
+            <div class="stat-info">
+              <p class="stat-label">总对话数</p>
+              <p class="stat-value">{{ formatNumber(stats.totalChats) }}</p>
             </div>
           </div>
-        </div>
+        </TavernCard>
 
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-yellow-500 rounded-lg p-3">
-              <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-              </svg>
+        <TavernCard variant="glass" class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon icon-rating">
+              <TavernIcon name="star" />
             </div>
-            <div class="ml-5">
-              <p class="text-gray-500 text-sm">平均评分</p>
-              <p class="text-2xl font-semibold text-gray-900">{{ stats.avgRating.toFixed(1) }}</p>
+            <div class="stat-info">
+              <p class="stat-label">平均评分</p>
+              <p class="stat-value">{{ stats.avgRating.toFixed(1) }}</p>
             </div>
           </div>
-        </div>
+        </TavernCard>
 
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-red-500 rounded-lg p-3">
-              <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-              </svg>
+        <TavernCard variant="glass" class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon icon-likes">
+              <TavernIcon name="heart" />
             </div>
-            <div class="ml-5">
-              <p class="text-gray-500 text-sm">总收藏数</p>
-              <p class="text-2xl font-semibold text-gray-900">{{ formatNumber(stats.totalLikes) }}</p>
+            <div class="stat-info">
+              <p class="stat-label">总收藏数</p>
+              <p class="stat-value">{{ formatNumber(stats.totalLikes) }}</p>
             </div>
           </div>
-        </div>
+        </TavernCard>
       </div>
 
-      <!-- 操作按钮 -->
-      <div class="flex justify-between items-center mb-6">
-        <div class="flex space-x-4">
-          <button
+      <!-- 操作栏 -->
+      <div class="action-bar">
+        <div class="action-left">
+          <TavernButton
+            variant="primary"
+            size="lg"
             @click="goToCreateCharacter"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center"
           >
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
+            <TavernIcon name="plus" class="mr-2" />
             创建新角色
-          </button>
+          </TavernButton>
         </div>
 
-        <div class="flex space-x-2">
-          <select v-model="filterStatus" class="px-4 py-2 border rounded-lg">
+        <div class="action-right">
+          <select v-model="filterStatus" class="filter-select">
             <option value="all">全部状态</option>
             <option value="published">已发布</option>
             <option value="draft">草稿</option>
             <option value="archived">已归档</option>
           </select>
-          <select v-model="sortBy" class="px-4 py-2 border rounded-lg">
+          <select v-model="sortBy" class="filter-select">
             <option value="updated">最近更新</option>
             <option value="created">创建时间</option>
             <option value="chats">对话数量</option>
@@ -96,146 +92,112 @@
       </div>
 
       <!-- 角色列表 -->
-      <div class="bg-white rounded-lg shadow overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+      <TavernCard variant="glass" class="character-table-container">
+        <table class="character-table">
+          <thead class="table-header">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                角色
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                状态
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                统计
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                评分
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                更新时间
-              </th>
-              <th class="relative px-6 py-3">
-                <span class="sr-only">操作</span>
-              </th>
+              <th class="table-th">角色</th>
+              <th class="table-th">状态</th>
+              <th class="table-th">统计</th>
+              <th class="table-th">评分</th>
+              <th class="table-th">更新时间</th>
+              <th class="table-th table-actions">操作</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="character in characters" :key="character.id">
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0 h-10 w-10">
+          <tbody class="table-body">
+            <tr v-for="character in characters" :key="character.id" class="table-row">
+              <td class="table-td">
+                <div class="character-info">
+                  <div class="character-avatar">
                     <img
                       :src="character.avatar || '/default-avatar.png'"
                       :alt="character.name"
-                      class="h-10 w-10 rounded-full"
+                      class="avatar-image"
                     />
                   </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">
-                      {{ character.name }}
-                    </div>
-                    <div class="text-sm text-gray-500">
-                      {{ character.category }}
-                    </div>
+                  <div class="character-details">
+                    <div class="character-name">{{ character.name }}</div>
+                    <div class="character-category">{{ character.category }}</div>
                   </div>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="[
-                  'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
-                  character.status === 'published'
-                    ? 'bg-green-100 text-green-800'
-                    : character.status === 'draft'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-gray-100 text-gray-800'
-                ]">
+              <td class="table-td">
+                <TavernBadge
+                  :variant="character.status === 'published' ? 'success' : character.status === 'draft' ? 'warning' : 'secondary'"
+                  size="sm"
+                >
                   {{ statusText[character.status] }}
-                </span>
+                </TavernBadge>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <div class="flex items-center space-x-4">
-                  <span class="flex items-center">
-                    <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                    </svg>
+              <td class="table-td">
+                <div class="stats-info">
+                  <span class="stat-item">
+                    <TavernIcon name="chat-bubble-oval-left" class="stat-icon" />
                     {{ formatNumber(character.chats) }}
                   </span>
-                  <span class="flex items-center">
-                    <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                    </svg>
+                  <span class="stat-item">
+                    <TavernIcon name="heart" class="stat-icon" />
                     {{ formatNumber(character.likes) }}
                   </span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                  </svg>
-                  <span class="ml-1 text-sm text-gray-900">{{ character.rating.toFixed(1) }}</span>
+              <td class="table-td">
+                <div class="rating-info">
+                  <TavernIcon name="star" class="rating-icon" />
+                  <span class="rating-value">{{ character.rating.toFixed(1) }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ formatDate(character.updatedAt) }}
+              <td class="table-td">
+                <span class="date-text">{{ formatDate(character.updatedAt) }}</span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex justify-end space-x-2">
+              <td class="table-td">
+                <div class="action-buttons">
                   <button
                     @click="viewCharacter(character.id)"
-                    class="text-gray-600 hover:text-gray-900"
+                    class="action-btn view-btn"
                     title="查看"
                   >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                    </svg>
+                    <TavernIcon name="eye" />
                   </button>
                   <button
                     @click="editCharacter(character.id)"
-                    class="text-indigo-600 hover:text-indigo-900"
+                    class="action-btn edit-btn"
                     title="编辑"
                   >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
+                    <TavernIcon name="pencil" />
                   </button>
                   <button
                     @click="deleteCharacter(character.id)"
-                    class="text-red-600 hover:text-red-900"
+                    class="action-btn delete-btn"
                     title="删除"
                   >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
+                    <TavernIcon name="trash" />
                   </button>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
-      </div>
+      </TavernCard>
 
       <!-- 空状态 -->
-      <div v-if="characters.length === 0" class="text-center py-12 bg-white rounded-lg">
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-        </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">还没有创建角色</h3>
-        <p class="mt-1 text-sm text-gray-500">开始创建您的第一个角色吧</p>
-        <div class="mt-6">
-          <button
-            @click="goToCreateCharacter"
-            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            创建新角色
-          </button>
+      <TavernCard v-if="characters.length === 0" variant="glass" class="empty-state">
+        <div class="empty-content">
+          <TavernIcon name="folder" class="empty-icon" />
+          <h3 class="empty-title">还没有创建角色</h3>
+          <p class="empty-subtitle">开始创建您的第一个角色吧</p>
+          <div class="empty-action">
+            <TavernButton
+              variant="primary"
+              size="lg"
+              @click="goToCreateCharacter"
+            >
+              <TavernIcon name="plus" class="mr-2" />
+              创建新角色
+            </TavernButton>
+          </div>
         </div>
-      </div>
+      </TavernCard>
     </div>
   </div>
 </template>
@@ -408,3 +370,420 @@ onMounted(() => {
   fetchCharacters()
 })
 </script>
+
+<style scoped lang="scss">
+@import '@/styles/design-tokens.scss';
+
+.studio-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg,
+    var(--dt-color-background-primary) 0%,
+    var(--dt-color-background-secondary) 50%,
+    var(--dt-color-background-tertiary) 100%);
+  padding: var(--dt-spacing-lg);
+}
+
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: var(--dt-spacing-2xl);
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: var(--dt-spacing-lg);
+
+    .title-section {
+      .gradient-title {
+        font-size: var(--dt-font-size-4xl);
+        font-weight: var(--dt-font-weight-bold);
+        background: var(--dt-gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: var(--dt-spacing-sm);
+        animation: glow 2s ease-in-out infinite alternate;
+      }
+
+      .subtitle {
+        font-size: var(--dt-font-size-lg);
+        color: var(--dt-color-text-secondary);
+        margin: 0;
+        opacity: 0.8;
+      }
+    }
+  }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--dt-spacing-lg);
+  margin-bottom: var(--dt-spacing-2xl);
+
+  .stat-card {
+    padding: var(--dt-spacing-xl);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(168, 85, 247, 0.2);
+    }
+
+    .stat-content {
+      display: flex;
+      align-items: center;
+      gap: var(--dt-spacing-lg);
+
+      .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: var(--dt-radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+
+        &.icon-characters {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        &.icon-chats {
+          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        &.icon-rating {
+          background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+          color: #8b5cf6;
+        }
+        &.icon-likes {
+          background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+          color: #ec4899;
+        }
+      }
+
+      .stat-info {
+        flex: 1;
+
+        .stat-label {
+          font-size: var(--dt-font-size-sm);
+          color: var(--dt-color-text-secondary);
+          margin: 0 0 var(--dt-spacing-xs) 0;
+          opacity: 0.8;
+        }
+
+        .stat-value {
+          font-size: var(--dt-font-size-2xl);
+          font-weight: var(--dt-font-weight-bold);
+          color: var(--dt-color-text-primary);
+          margin: 0;
+          background: var(--dt-gradient-primary);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+      }
+    }
+  }
+}
+
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--dt-spacing-xl);
+  padding: var(--dt-spacing-lg);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: var(--dt-radius-lg);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+
+  .action-left {
+    display: flex;
+    gap: var(--dt-spacing-md);
+  }
+
+  .action-right {
+    display: flex;
+    gap: var(--dt-spacing-md);
+
+    .filter-select {
+      padding: var(--dt-spacing-md) var(--dt-spacing-lg);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: var(--dt-radius-md);
+      color: var(--dt-color-text-primary);
+      font-size: var(--dt-font-size-sm);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+
+      &:focus {
+        outline: none;
+        border-color: var(--dt-color-primary);
+        box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+      }
+
+      option {
+        background: var(--dt-color-background-secondary);
+        color: var(--dt-color-text-primary);
+      }
+    }
+  }
+}
+
+.character-table-container {
+  overflow: hidden;
+
+  .character-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+
+    .table-header {
+      .table-th {
+        padding: var(--dt-spacing-lg);
+        text-align: left;
+        font-size: var(--dt-font-size-xs);
+        font-weight: var(--dt-font-weight-semibold);
+        color: var(--dt-color-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        background: rgba(168, 85, 247, 0.1);
+        border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+
+        &.table-actions {
+          text-align: center;
+        }
+      }
+    }
+
+    .table-body {
+      .table-row {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+        &:hover {
+          background: rgba(168, 85, 247, 0.05);
+          transform: scale(1.002);
+        }
+
+        .table-td {
+          padding: var(--dt-spacing-lg);
+          vertical-align: middle;
+
+          .character-info {
+            display: flex;
+            align-items: center;
+            gap: var(--dt-spacing-md);
+
+            .character-avatar {
+              .avatar-image {
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid rgba(168, 85, 247, 0.3);
+              }
+            }
+
+            .character-details {
+              .character-name {
+                font-size: var(--dt-font-size-md);
+                font-weight: var(--dt-font-weight-semibold);
+                color: var(--dt-color-text-primary);
+                margin-bottom: var(--dt-spacing-xs);
+              }
+
+              .character-category {
+                font-size: var(--dt-font-size-sm);
+                color: var(--dt-color-text-secondary);
+                opacity: 0.8;
+              }
+            }
+          }
+
+          .stats-info {
+            display: flex;
+            gap: var(--dt-spacing-lg);
+
+            .stat-item {
+              display: flex;
+              align-items: center;
+              gap: var(--dt-spacing-xs);
+              font-size: var(--dt-font-size-sm);
+              color: var(--dt-color-text-secondary);
+
+              .stat-icon {
+                font-size: 16px;
+                opacity: 0.7;
+              }
+            }
+          }
+
+          .rating-info {
+            display: flex;
+            align-items: center;
+            gap: var(--dt-spacing-xs);
+
+            .rating-icon {
+              color: #fbbf24;
+              font-size: 16px;
+            }
+
+            .rating-value {
+              font-size: var(--dt-font-size-sm);
+              font-weight: var(--dt-font-weight-semibold);
+              color: var(--dt-color-text-primary);
+            }
+          }
+
+          .date-text {
+            font-size: var(--dt-font-size-sm);
+            color: var(--dt-color-text-secondary);
+            opacity: 0.8;
+          }
+
+          .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: var(--dt-spacing-sm);
+
+            .action-btn {
+              width: 36px;
+              height: 36px;
+              border-radius: var(--dt-radius-md);
+              border: none;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              font-size: 16px;
+
+              &.view-btn {
+                background: rgba(59, 130, 246, 0.2);
+                color: #3b82f6;
+
+                &:hover {
+                  background: rgba(59, 130, 246, 0.3);
+                  transform: scale(1.1);
+                }
+              }
+
+              &.edit-btn {
+                background: rgba(168, 85, 247, 0.2);
+                color: #a855f7;
+
+                &:hover {
+                  background: rgba(168, 85, 247, 0.3);
+                  transform: scale(1.1);
+                }
+              }
+
+              &.delete-btn {
+                background: rgba(239, 68, 68, 0.2);
+                color: #ef4444;
+
+                &:hover {
+                  background: rgba(239, 68, 68, 0.3);
+                  transform: scale(1.1);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.empty-state {
+  padding: var(--dt-spacing-3xl);
+
+  .empty-content {
+    text-align: center;
+
+    .empty-icon {
+      font-size: 80px;
+      color: var(--dt-color-text-secondary);
+      opacity: 0.5;
+      margin-bottom: var(--dt-spacing-lg);
+    }
+
+    .empty-title {
+      font-size: var(--dt-font-size-xl);
+      font-weight: var(--dt-font-weight-semibold);
+      color: var(--dt-color-text-primary);
+      margin-bottom: var(--dt-spacing-md);
+    }
+
+    .empty-subtitle {
+      font-size: var(--dt-font-size-md);
+      color: var(--dt-color-text-secondary);
+      opacity: 0.8;
+      margin-bottom: var(--dt-spacing-xl);
+    }
+
+    .empty-action {
+      display: flex;
+      justify-content: center;
+    }
+  }
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+  }
+  to {
+    text-shadow: 0 0 30px rgba(168, 85, 247, 0.8);
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .studio-page {
+    padding: var(--dt-spacing-md);
+  }
+
+  .page-header {
+    .header-content {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--dt-spacing-md);
+
+      .title-section {
+        .gradient-title {
+          font-size: var(--dt-font-size-2xl);
+        }
+      }
+    }
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: var(--dt-spacing-md);
+  }
+
+  .action-bar {
+    flex-direction: column;
+    gap: var(--dt-spacing-md);
+    align-items: stretch;
+
+    .action-right {
+      justify-content: space-between;
+    }
+  }
+
+  .character-table-container {
+    overflow-x: auto;
+
+    .character-table {
+      min-width: 600px;
+    }
+  }
+}
+</style>

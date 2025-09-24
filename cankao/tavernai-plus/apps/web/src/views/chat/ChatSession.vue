@@ -10,15 +10,15 @@
     <!-- 侧边栏 -->
     <div class="sidebar" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
       <!-- 折叠按钮 -->
-      <button
+      <TavernButton
         @click="toggleSidebar"
+        variant="ghost"
+        size="sm"
         class="sidebar-toggle"
         :class="{ 'sidebar-toggle-collapsed': sidebarCollapsed }"
       >
-        <el-icon>
-          <component :is="sidebarCollapsed ? 'Expand' : 'Fold'" />
-        </el-icon>
-      </button>
+        <TavernIcon :name="sidebarCollapsed ? 'chevron-right' : 'chevron-left'" />
+      </TavernButton>
 
       <!-- 角色信息 -->
       <div class="character-info" v-if="!sidebarCollapsed">
@@ -36,11 +36,11 @@
             <p class="character-creator">{{ character?.creator || '系统' }}</p>
             <div class="character-stats">
               <span class="stat-item">
-                <el-icon><ChatDotRound /></el-icon>
+                <TavernIcon name="chat-bubble-left-right" />
                 {{ formatCount(character?.chatCount || 0) }}
               </span>
               <span class="stat-item">
-                <el-icon><Star /></el-icon>
+                <TavernIcon name="star" />
                 {{ character?.rating?.toFixed(1) || '0.0' }}
               </span>
             </div>
@@ -50,35 +50,39 @@
 
       <!-- 会话快速操作 -->
       <div class="quick-actions" v-if="!sidebarCollapsed">
-        <button
+        <TavernButton
           @click="regenerateLastMessage"
           :disabled="!canRegenerate"
-          class="quick-action-btn"
+          variant="ghost"
+          size="sm"
           title="重新生成"
         >
-          <el-icon><Refresh /></el-icon>
-        </button>
-        <button
+          <TavernIcon name="arrow-path" />
+        </TavernButton>
+        <TavernButton
           @click="toggleSettings"
-          class="quick-action-btn"
+          variant="ghost"
+          size="sm"
           title="设置"
         >
-          <el-icon><Setting /></el-icon>
-        </button>
-        <button
+          <TavernIcon name="cog-6-tooth" />
+        </TavernButton>
+        <TavernButton
           @click="exportChat"
-          class="quick-action-btn"
+          variant="ghost"
+          size="sm"
           title="导出"
         >
-          <el-icon><Download /></el-icon>
-        </button>
-        <button
+          <TavernIcon name="arrow-down-tray" />
+        </TavernButton>
+        <TavernButton
           @click="clearChatWithConfirm"
-          class="quick-action-btn danger"
+          variant="danger"
+          size="sm"
           title="清空"
         >
-          <el-icon><Delete /></el-icon>
-        </button>
+          <TavernIcon name="trash" />
+        </TavernButton>
       </div>
 
       <!-- SillyTavern 高级控制 -->
@@ -100,32 +104,48 @@
 
         <div class="setting-group">
           <label>创造性 ({{ settings.temperature }})</label>
-          <el-slider
+          <input
             v-model="settings.temperature"
-            :min="0"
-            :max="2"
-            :step="0.1"
-            size="small"
+            type="range"
+            min="0"
+            max="2"
+            step="0.1"
+            class="tavern-slider"
           />
         </div>
 
         <div class="setting-group">
           <label>最大长度 ({{ settings.maxTokens }})</label>
-          <el-slider
+          <input
             v-model="settings.maxTokens"
-            :min="100"
-            :max="4000"
-            :step="100"
-            size="small"
+            type="range"
+            min="100"
+            max="4000"
+            step="100"
+            class="tavern-slider"
           />
         </div>
 
         <div class="setting-group">
-          <el-checkbox v-model="settings.enableStream">启用流式响应</el-checkbox>
+          <label class="checkbox-label">
+            <input
+              v-model="settings.enableStream"
+              type="checkbox"
+              class="tavern-checkbox"
+            />
+            <span>启用流式响应</span>
+          </label>
         </div>
 
         <div class="setting-group">
-          <el-checkbox v-model="settings.enableTyping">显示输入指示器</el-checkbox>
+          <label class="checkbox-label">
+            <input
+              v-model="settings.enableTyping"
+              type="checkbox"
+              class="tavern-checkbox"
+            />
+            <span>显示输入指示器</span>
+          </label>
         </div>
       </div>
     </div>
@@ -139,18 +159,22 @@
           <span class="message-count">{{ messages.length }} 条消息</span>
         </div>
         <div class="chat-header-actions">
-          <el-button
-            size="small"
-            :icon="soundEnabled ? 'VideoPlay' : 'VideoPause'"
+          <TavernButton
+            variant="ghost"
+            size="sm"
             @click="toggleSound"
-            title="消息提示音"
-          />
-          <el-button
-            size="small"
-            :icon="fullscreen ? 'Rank' : 'FullScreen'"
+            :title="soundEnabled ? '关闭消息提示音' : '开启消息提示音'"
+          >
+            <TavernIcon :name="soundEnabled ? 'speaker-wave' : 'speaker-x-mark'" />
+          </TavernButton>
+          <TavernButton
+            variant="ghost"
+            size="sm"
             @click="toggleFullscreen"
-            title="全屏模式"
-          />
+            :title="fullscreen ? '退出全屏' : '全屏模式'"
+          >
+            <TavernIcon :name="fullscreen ? 'arrows-pointing-in' : 'arrows-pointing-out'" />
+          </TavernButton>
         </div>
       </div>
 
@@ -159,19 +183,21 @@
         <!-- 空状态 -->
         <div v-if="messages.length === 0" class="empty-state">
           <div class="empty-icon">
-            <el-icon><ChatDotRound /></el-icon>
+            <TavernIcon name="chat-bubble-left-right" class="large-icon" />
           </div>
           <h3>开始你的对话</h3>
           <p>向 {{ character?.name || 'AI' }} 说点什么吧</p>
           <div class="suggested-messages" v-if="suggestedMessages.length > 0">
-            <button
+            <TavernButton
               v-for="suggestion in suggestedMessages"
               :key="suggestion"
               @click="sendSuggestedMessage(suggestion)"
+              variant="ghost"
+              size="sm"
               class="suggestion-btn"
             >
               {{ suggestion }}
-            </button>
+            </TavernButton>
           </div>
         </div>
 
@@ -196,7 +222,7 @@
                   :alt="character?.name"
                 />
                 <div v-else class="user-avatar">
-                  <el-icon><User /></el-icon>
+                  <TavernIcon name="user" />
                 </div>
               </div>
 
@@ -231,7 +257,7 @@
                     title="复制"
                     class="action-btn"
                   >
-                    <el-icon><DocumentCopy /></el-icon>
+                    <TavernIcon name="document-duplicate" />
                   </button>
                   <button
                     @click="regenerateMessage(message.originalIndex)"
@@ -239,14 +265,14 @@
                     class="action-btn"
                     :disabled="isLoading"
                   >
-                    <el-icon><Refresh /></el-icon>
+                    <TavernIcon name="arrow-path" />
                   </button>
                   <button
                     @click="rateMessage(message)"
                     title="评价"
                     class="action-btn"
                   >
-                    <el-icon><Star /></el-icon>
+                    <TavernIcon name="star" />
                   </button>
                 </div>
               </div>
@@ -280,10 +306,16 @@
         </div>
 
         <!-- 滚动到底部按钮 -->
-        <div v-if="showScrollToBottom" class="scroll-to-bottom" @click="scrollToBottom">
-          <el-icon><ArrowDown /></el-icon>
+        <TavernButton
+          v-if="showScrollToBottom"
+          @click="scrollToBottom"
+          variant="primary"
+          size="sm"
+          class="scroll-to-bottom"
+        >
+          <TavernIcon name="arrow-down" />
           <span>新消息</span>
-        </div>
+        </TavernButton>
       </div>
 
       <!-- 输入区域 -->
@@ -291,32 +323,33 @@
         <div class="input-container">
           <!-- 快捷操作 -->
           <div class="input-actions">
-            <el-button
-              size="small"
+            <TavernButton
+              size="sm"
+              variant="ghost"
               @click="showEmojiPicker = !showEmojiPicker"
               title="表情"
             >
               😊
-            </el-button>
-            <el-button
-              size="small"
-              :icon="Upload"
+            </TavernButton>
+            <TavernButton
+              size="sm"
+              variant="ghost"
               @click="handleFileUpload"
               title="上传文件"
               :disabled="isLoading"
-            />
+            >
+              <TavernIcon name="arrow-up-tray" />
+            </TavernButton>
             <!-- 语音输入按钮 -->
-            <el-button
-              size="small"
+            <TavernButton
+              size="sm"
               @click="startVoiceInput"
-              :type="isVoiceRecording ? 'danger' : 'primary'"
+              :variant="isVoiceRecording ? 'danger' : 'primary'"
               :title="isVoiceRecording ? '停止录音' : '语音输入'"
               :disabled="isLoading"
             >
-              <el-icon>
-                <component :is="isVoiceRecording ? 'VideoPlay' : 'Microphone'" />
-              </el-icon>
-            </el-button>
+              <TavernIcon :name="isVoiceRecording ? 'stop' : 'microphone'" />
+            </TavernButton>
             <!-- 图像功能 -->
             <ChatImageFeatures
               :current-character="character"
@@ -347,23 +380,25 @@
 
           <!-- 发送按钮 -->
           <div class="send-actions">
-            <el-button
+            <TavernButton
               v-if="isLoading"
               @click="stopGeneration"
-              type="danger"
-              :icon="Close"
-              size="large"
+              variant="danger"
+              size="lg"
               title="停止生成"
-            />
-            <el-button
+            >
+              <TavernIcon name="x-mark" />
+            </TavernButton>
+            <TavernButton
               v-else
               @click="sendMessage"
-              type="primary"
-              :icon="Position"
-              size="large"
+              variant="primary"
+              size="lg"
               :disabled="!canSend"
               title="发送消息"
-            />
+            >
+              <TavernIcon name="paper-airplane" />
+            </TavernButton>
           </div>
         </div>
 
@@ -395,57 +430,56 @@
     />
 
     <!-- 语音输入对话框 -->
-    <el-dialog
-      v-model="showVoiceDialog"
-      title="语音输入"
-      width="500px"
-      :close-on-click-modal="false"
-    >
-      <VoiceInput
-        :auto-transcribe="true"
-        :show-advanced="false"
-        compact
-        @text-ready="handleVoiceTextReady"
-        @recording-start="handleVoiceRecordingStart"
-        @recording-stop="handleVoiceRecordingStop"
-        @error="handleVoiceError"
-      />
-
-      <template #footer>
-        <el-button @click="showVoiceDialog = false">关闭</el-button>
-      </template>
-    </el-dialog>
+    <div v-if="showVoiceDialog" class="modal-overlay" @click="showVoiceDialog = false">
+      <TavernCard variant="glass" class="voice-dialog" @click.stop>
+        <div class="modal-header">
+          <h3>语音输入</h3>
+          <TavernButton variant="ghost" size="sm" @click="showVoiceDialog = false">
+            <TavernIcon name="x-mark" />
+          </TavernButton>
+        </div>
+        <div class="modal-content">
+          <VoiceInput
+            :auto-transcribe="true"
+            :show-advanced="false"
+            compact
+            @text-ready="handleVoiceTextReady"
+            @recording-start="handleVoiceRecordingStart"
+            @recording-stop="handleVoiceRecordingStop"
+            @error="handleVoiceError"
+          />
+        </div>
+      </TavernCard>
+    </div>
 
     <!-- 图像预览对话框 -->
-    <el-dialog
-      v-model="showImagePreview"
-      title="图像预览"
-      width="80%"
-      :close-on-click-modal="true"
-    >
-      <div v-if="previewImageData" class="image-preview-container">
-        <img
-          :src="previewImageData.url"
-          :alt="previewImageData.prompt || '聊天图像'"
-          class="preview-chat-image"
-        />
-        <div v-if="previewImageData.prompt" class="preview-image-info">
-          <h4>生成提示词</h4>
-          <p>{{ previewImageData.prompt }}</p>
+    <div v-if="showImagePreview" class="modal-overlay" @click="showImagePreview = false">
+      <TavernCard variant="glass" class="image-preview-dialog" @click.stop>
+        <div class="modal-header">
+          <h3>图像预览</h3>
+          <TavernButton variant="ghost" size="sm" @click="showImagePreview = false">
+            <TavernIcon name="x-mark" />
+          </TavernButton>
         </div>
-      </div>
-    </el-dialog>
+        <div v-if="previewImageData" class="image-preview-container">
+          <img
+            :src="previewImageData.url"
+            :alt="previewImageData.prompt || '聊天图像'"
+            class="preview-chat-image"
+          />
+          <div v-if="previewImageData.prompt" class="preview-image-info">
+            <h4>生成提示词</h4>
+            <p>{{ previewImageData.prompt }}</p>
+          </div>
+        </div>
+      </TavernCard>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  ChatDotRound, Star, User, Refresh, Setting, Download, Delete,
-  DocumentCopy, ArrowDown, Upload, Close, Position, Microphone, VideoPlay
-} from '@element-plus/icons-vue'
 import { http } from '@/utils/axios'
 import ModelSelector from '@/components/common/ModelSelector.vue'
 import SillyTavernControls from '@/components/advanced/SillyTavernControls.vue'
@@ -629,7 +663,8 @@ const onModelChange = (model: any) => {
 
 const toggleSound = () => {
   soundEnabled.value = !soundEnabled.value
-  ElMessage.success(soundEnabled.value ? '已开启消息提示音' : '已关闭消息提示音')
+  // TODO: 使用设计系统的消息组件替换 ElMessage
+  console.log(soundEnabled.value ? '已开启消息提示音' : '已关闭消息提示音')
 }
 
 const toggleFullscreen = () => {
@@ -690,10 +725,11 @@ const addEmoji = (emoji: string) => {
 const copyMessage = async (content: string) => {
   try {
     await navigator.clipboard.writeText(content)
-    ElMessage.success('已复制到剪贴板')
+    // TODO: 使用设计系统的消息组件替换 ElMessage
+    console.log('已复制到剪贴板')
   } catch (error) {
     console.error('复制失败:', error)
-    ElMessage.error('复制失败')
+    console.log('复制失败')
   }
 }
 
@@ -723,7 +759,8 @@ const regenerateLastMessage = async () => {
 
 
 const handleFileUpload = () => {
-  ElMessage.info('文件上传功能暂未实现')
+  // TODO: 使用设计系统的消息组件替换 ElMessage
+  console.log('文件上传功能暂未实现')
 }
 
 // 语音功能方法
@@ -754,7 +791,8 @@ const handleVoiceRecordingStop = () => {
 }
 
 const handleVoiceError = (error: string) => {
-  ElMessage.error(`语音功能错误: ${error}`)
+  // TODO: 使用设计系统的消息组件替换 ElMessage
+  console.error(`语音功能错误: ${error}`)
   isVoiceRecording.value = false
 }
 
@@ -771,10 +809,11 @@ const handleVoiceMessageStop = () => {
 const handleAutoVoiceToggle = (enabled: boolean) => {
   // 处理自动语音回复开关
   console.log('Auto voice reply:', enabled)
+  // TODO: 使用设计系统的消息组件替换 ElMessage
   if (enabled) {
-    ElMessage.success('已开启自动语音回复')
+    console.log('已开启自动语音回复')
   } else {
-    ElMessage.info('已关闭自动语音回复')
+    console.log('已关闭自动语音回复')
   }
 }
 
@@ -782,7 +821,8 @@ const handleAutoVoiceToggle = (enabled: boolean) => {
 const handleImageGenerated = (image: any) => {
   // 处理生成的图像
   console.log('图像生成完成:', image)
-  ElMessage.success('图像生成完成')
+  // TODO: 使用设计系统的消息组件替换 ElMessage
+  console.log('图像生成完成')
 }
 
 const handleImageMessage = (imageMessage: any) => {
@@ -805,7 +845,8 @@ const handleImageMessage = (imageMessage: any) => {
   messages.value.push(message)
   scrollToBottom()
 
-  ElMessage.success('图像消息已发送')
+  // TODO: 使用设计系统的消息组件替换 ElMessage
+  console.log('图像消息已发送')
 }
 
 // 图像预览方法
@@ -957,7 +998,8 @@ const sendStreamingMessage = async (messageContent: string) => {
                 if (streamingMessage.value) {
                   streamingMessage.value.content = data.message || '抱歉，发生了错误。'
                 }
-                ElMessage.error('AI回复出现错误')
+                // TODO: 使用设计系统的消息组件替换 ElMessage
+                console.error('AI回复出现错误')
               }
             } catch (parseError) {
               console.error('Failed to parse SSE data:', parseError, 'Data:', dataStr)
@@ -973,7 +1015,8 @@ const sendStreamingMessage = async (messageContent: string) => {
   } catch (error: any) {
     if (error.name === 'AbortError') {
       console.log('Streaming aborted by user')
-      ElMessage.info('已停止生成')
+      // TODO: 使用设计系统的消息组件替换 ElMessage
+      console.log('已停止生成')
     } else {
       console.error('Streaming error:', error)
       throw error
@@ -1062,28 +1105,19 @@ const exportChat = () => {
 }
 
 const clearChatWithConfirm = async () => {
-  try {
-    await ElMessageBox.confirm(
-      '确定要清空所有对话记录吗？此操作无法撤销。',
-      '清空对话',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-
+  // TODO: 使用设计系统的确认对话框替换 ElMessageBox
+  if (confirm('确定要清空所有对话记录吗？此操作无法撤销。')) {
     messages.value = []
-    ElMessage.success('对话已清空')
-  } catch {
-    // 用户取消
+    // TODO: 使用设计系统的消息组件替换 ElMessage
+    console.log('对话已清空')
   }
 }
 
 
 
 const rateMessage = (message: any) => {
-  ElMessage.info('消息评价功能暂未实现')
+  // TODO: 使用设计系统的消息组件替换 ElMessage
+  console.log('消息评价功能暂未实现')
 }
 
 const fetchChatData = async () => {
@@ -1093,7 +1127,8 @@ const fetchChatData = async () => {
     messages.value = response.messages || []
   } catch (error) {
     console.error('Failed to fetch chat data:', error)
-    ElMessage.error('加载对话数据失败')
+    // TODO: 使用设计系统的消息组件替换 ElMessage
+    console.log('加载对话数据失败')
     // 设置默认角色信息
     character.value = {
       id: route.params.characterId as string,
@@ -1472,6 +1507,53 @@ const initializeContainer = () => {
         font-size: $font-size-sm;
         color: $text-secondary;
         font-weight: $font-weight-medium;
+      }
+
+      .tavern-slider {
+        width: 100%;
+        height: 8px;
+        border-radius: 4px;
+        background: rgba($gray-700, 0.5);
+        outline: none;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+
+        &:hover {
+          opacity: 1;
+        }
+
+        &::-webkit-slider-thumb {
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: $primary-500;
+          cursor: pointer;
+          border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        &::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: $primary-500;
+          cursor: pointer;
+          border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+      }
+
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: $space-2;
+        cursor: pointer;
+
+        .tavern-checkbox {
+          width: 18px;
+          height: 18px;
+          accent-color: $primary-500;
+          border-radius: 4px;
+        }
       }
 
       .el-select {
@@ -2310,6 +2392,99 @@ const initializeContainer = () => {
           }
         }
       }
+    }
+  }
+}
+
+/* 模态框样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--dt-spacing-lg);
+}
+
+.voice-dialog {
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--dt-spacing-lg);
+
+    h3 {
+      margin: 0;
+      color: var(--dt-color-text-primary);
+      font-size: var(--dt-font-size-xl);
+      font-weight: var(--dt-font-weight-semibold);
+    }
+  }
+
+  .modal-content {
+    padding: var(--dt-spacing-md) 0;
+  }
+}
+
+.image-preview-dialog {
+  max-width: 80vw;
+  max-height: 90vh;
+  overflow: hidden;
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--dt-spacing-lg);
+
+    h3 {
+      margin: 0;
+      color: var(--dt-color-text-primary);
+      font-size: var(--dt-font-size-xl);
+      font-weight: var(--dt-font-weight-semibold);
+    }
+  }
+
+  .image-preview-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dt-spacing-lg);
+    align-items: center;
+  }
+
+  .preview-chat-image {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: var(--dt-radius-lg);
+  }
+
+  .preview-image-info {
+    width: 100%;
+    text-align: left;
+
+    h4 {
+      margin: 0 0 var(--dt-spacing-sm) 0;
+      color: var(--dt-color-text-primary);
+      font-size: var(--dt-font-size-lg);
+      font-weight: var(--dt-font-weight-medium);
+    }
+
+    p {
+      margin: 0;
+      color: var(--dt-color-text-secondary);
+      line-height: var(--dt-line-height-relaxed);
     }
   }
 }

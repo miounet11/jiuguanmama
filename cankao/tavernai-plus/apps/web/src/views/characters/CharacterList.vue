@@ -1,170 +1,207 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <!-- 使用 Design Tokens v2.0 深空主题的角色列表页面 -->
+  <div class="character-list-page">
+    <div class="container">
       <!-- 页面标题和搜索栏 -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-4">探索角色</h1>
+      <div class="page-header">
+        <h1 class="page-title">
+          <TavernIcon name="star" class="title-icon" />
+          探索角色宇宙
+        </h1>
+        <p class="page-subtitle">发现无限可能的AI角色，开启专属对话体验</p>
 
-        <!-- 搜索和筛选 -->
-        <div class="flex flex-col sm:flex-row gap-4">
-          <div class="flex-1">
-            <div class="relative">
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="搜索角色..."
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                @input="handleSearch"
-              />
-              <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-            </div>
+        <!-- 搜索和筛选工具栏 -->
+        <div class="search-toolbar">
+          <div class="search-section">
+            <TavernInput
+              v-model="searchQuery"
+              type="search"
+              placeholder="搜索你心仪的角色..."
+              icon-left="search"
+              size="lg"
+              @input="handleSearch"
+            />
           </div>
 
-          <!-- 分类筛选 -->
-          <select
-            v-model="selectedCategory"
-            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-            @change="filterByCategory"
-          >
-            <option value="">所有分类</option>
-            <option value="anime">动漫</option>
-            <option value="game">游戏</option>
-            <option value="movie">电影</option>
-            <option value="book">书籍</option>
-            <option value="original">原创</option>
-            <option value="historical">历史</option>
-            <option value="vtuber">VTuber</option>
-          </select>
+          <div class="filter-section">
+            <!-- 分类筛选 -->
+            <select
+              v-model="selectedCategory"
+              class="filter-select"
+              @change="filterByCategory"
+            >
+              <option value="">所有分类</option>
+              <option value="anime">🎌 动漫</option>
+              <option value="game">🎮 游戏</option>
+              <option value="fantasy">✨ 奇幻</option>
+              <option value="sci-fi">🚀 科幻</option>
+              <option value="historical">👑 历史</option>
+              <option value="slice-of-life">🏠 日常</option>
+              <option value="school">📚 校园</option>
+              <option value="original">🎨 原创</option>
+            </select>
 
-          <!-- 排序 -->
-          <select
-            v-model="sortBy"
-            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-            @change="sortCharacters"
-          >
-            <option value="popular">最受欢迎</option>
-            <option value="newest">最新添加</option>
-            <option value="rating">评分最高</option>
-            <option value="chats">对话最多</option>
-          </select>
+            <!-- 排序 -->
+            <select
+              v-model="sortBy"
+              class="filter-select"
+              @change="sortCharacters"
+            >
+              <option value="popular">🔥 最受欢迎</option>
+              <option value="newest">🆕 最新添加</option>
+              <option value="rating">⭐ 评分最高</option>
+              <option value="chats">💬 对话最多</option>
+            </select>
+          </div>
         </div>
       </div>
 
       <!-- 加载状态 -->
-      <div v-if="isLoading" class="flex justify-center items-center h-64">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div v-if="isLoading" class="loading-container">
+        <div class="loading-spinner">
+          <TavernIcon name="spinner" class="loading-icon" />
+        </div>
+        <p class="loading-text">正在加载精彩角色...</p>
       </div>
 
       <!-- 角色列表 -->
-      <div v-else-if="characters.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <div
+      <div v-else-if="characters.length > 0" class="character-grid">
+        <TavernCard
           v-for="character in characters"
           :key="character.id"
-          class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer overflow-hidden"
+          :title="character.name"
+          :subtitle="character.creator"
+          hoverable
+          clickable
+          class="character-card"
           @click="goToCharacterDetail(character.id)"
         >
-          <!-- 角色图片 -->
-          <div class="relative h-64 bg-gradient-to-br from-purple-400 to-pink-400">
-            <img
-              v-if="character.avatar"
-              :src="character.avatar"
-              :alt="character.name"
-              class="w-full h-full object-cover"
-            />
-            <div v-else class="w-full h-full flex items-center justify-center">
-              <span class="text-white text-4xl font-bold">{{ character.name.charAt(0) }}</span>
-            </div>
-
-            <!-- 标签 -->
-            <div v-if="character.isNew" class="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-xs">
-              新
-            </div>
-            <div v-if="character.isPremium" class="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded text-xs">
-              高级
-            </div>
-          </div>
-
-          <!-- 角色信息 -->
-          <div class="p-4">
-            <h3 class="font-semibold text-lg mb-1 truncate">{{ character.name }}</h3>
-            <p class="text-gray-600 text-sm mb-2">创建者: {{ character.creator }}</p>
-            <p class="text-gray-500 text-sm line-clamp-2 mb-3">{{ character.description }}</p>
-
-            <!-- 统计信息 -->
-            <div class="flex items-center justify-between text-sm text-gray-500">
-              <div class="flex items-center space-x-4">
-                <span class="flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                  </svg>
-                  {{ formatNumber(character.chats) }}
-                </span>
-                <span class="flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                  </svg>
-                  {{ formatNumber(character.likes) }}
-                </span>
+          <!-- 角色头像和状态标签 -->
+          <template #media>
+            <div class="character-avatar">
+              <img
+                v-if="character.avatar"
+                :src="character.avatar"
+                :alt="character.name"
+                class="avatar-image"
+              />
+              <div v-else class="avatar-placeholder">
+                <TavernIcon name="user" class="placeholder-icon" />
+                <span class="placeholder-text">{{ character.name.charAt(0) }}</span>
               </div>
-              <div class="flex items-center">
-                <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                  <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                </svg>
-                <span class="ml-1">{{ character.rating.toFixed(1) }}</span>
+
+              <!-- 状态标签 -->
+              <div class="status-badges">
+                <TavernBadge
+                  v-if="character.isNew"
+                  variant="success"
+                  size="sm"
+                  class="status-badge"
+                >
+                  <TavernIcon name="star" size="xs" />
+                  新
+                </TavernBadge>
+                <TavernBadge
+                  v-if="character.isPremium"
+                  variant="warning"
+                  size="sm"
+                  class="status-badge"
+                >
+                  <TavernIcon name="crown" size="xs" />
+                  高级
+                </TavernBadge>
               </div>
             </div>
+          </template>
+
+          <!-- 角色描述 -->
+          <div class="character-description">
+            {{ character.description }}
           </div>
-        </div>
+
+          <!-- 统计信息 -->
+          <template #footer>
+            <div class="character-stats">
+              <div class="stats-group">
+                <div class="stat-item">
+                  <TavernIcon name="message-circle" class="stat-icon" />
+                  <span class="stat-value">{{ formatNumber(character.chats) }}</span>
+                </div>
+                <div class="stat-item">
+                  <TavernIcon name="heart" class="stat-icon" />
+                  <span class="stat-value">{{ formatNumber(character.likes) }}</span>
+                </div>
+              </div>
+
+              <div class="rating-section">
+                <TavernIcon name="star" class="rating-icon" />
+                <span class="rating-value">{{ character.rating.toFixed(1) }}</span>
+              </div>
+            </div>
+          </template>
+        </TavernCard>
       </div>
 
       <!-- 空状态 -->
-      <div v-else class="text-center py-12">
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-        </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">没有找到角色</h3>
-        <p class="mt-1 text-sm text-gray-500">试试调整筛选条件或搜索其他内容</p>
+      <div v-else class="empty-state">
+        <div class="empty-icon">
+          <TavernIcon name="search" class="empty-search-icon" />
+        </div>
+        <h3 class="empty-title">暂未发现匹配的角色</h3>
+        <p class="empty-description">
+          试试调整搜索关键词或筛选条件，<br>
+          也许你心仪的角色就在下一次探索中
+        </p>
+        <TavernButton
+          variant="ghost"
+          @click="clearFilters"
+        >
+          <TavernIcon name="refresh" />
+          重置筛选条件
+        </TavernButton>
       </div>
 
-      <!-- 分页 -->
-      <div v-if="totalPages > 1" class="mt-8 flex justify-center">
-        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-          <button
+      <!-- 分页导航 -->
+      <div v-if="totalPages > 1" class="pagination-container">
+        <div class="pagination-nav">
+          <TavernButton
             :disabled="currentPage === 1"
-            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+            variant="ghost"
+            size="sm"
             @click="goToPage(currentPage - 1)"
           >
-            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
-            </svg>
-          </button>
+            <TavernIcon name="chevron-left" />
+            上一页
+          </TavernButton>
 
-          <button
-            v-for="page in visiblePages"
-            :key="page"
-            :class="[
-              page === currentPage
-                ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
-                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
-              'relative inline-flex items-center px-4 py-2 border text-sm font-medium'
-            ]"
-            @click="goToPage(page)"
-          >
-            {{ page }}
-          </button>
+          <div class="page-numbers">
+            <TavernButton
+              v-for="page in visiblePages"
+              :key="page"
+              :variant="page === currentPage ? 'primary' : 'ghost'"
+              size="sm"
+              class="page-button"
+              @click="goToPage(page)"
+            >
+              {{ page }}
+            </TavernButton>
+          </div>
 
-          <button
+          <TavernButton
             :disabled="currentPage === totalPages"
-            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+            variant="ghost"
+            size="sm"
             @click="goToPage(currentPage + 1)"
           >
-            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-            </svg>
-          </button>
-        </nav>
+            下一页
+            <TavernIcon name="chevron-right" />
+          </TavernButton>
+        </div>
+
+        <div class="pagination-info">
+          第 {{ currentPage }} 页，共 {{ totalPages }} 页，
+          总计 {{ totalItems }} 个角色
+        </div>
       </div>
     </div>
   </div>
@@ -174,6 +211,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
+import { TavernCard, TavernButton, TavernInput, TavernIcon, TavernBadge } from '@/components/design-system'
 
 const router = useRouter()
 
@@ -336,16 +374,396 @@ const goToCharacterDetail = (id: string) => {
   router.push(`/characters/${id}`)
 }
 
+const clearFilters = () => {
+  searchQuery.value = ''
+  selectedCategory.value = ''
+  sortBy.value = 'popular'
+  currentPage.value = 1
+  fetchCharacters()
+}
+
 onMounted(() => {
   fetchCharacters()
 })
 </script>
 
-<style scoped>
-.line-clamp-2 {
+<style lang="scss" scoped>
+/* Design Tokens v2.0 - 深空主题角色列表页面 */
+
+.character-list-page {
+  min-height: 100vh;
+  background: var(--background-primary);
+  color: var(--text-primary);
+  padding: var(--space-8) 0;
+}
+
+.container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+
+  @media (min-width: 640px) {
+    padding: 0 var(--space-6);
+  }
+
+  @media (min-width: 1024px) {
+    padding: 0 var(--space-8);
+  }
+}
+
+/* 页面头部 */
+.page-header {
+  margin-bottom: var(--space-12);
+  text-align: center;
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+
+  background: linear-gradient(135deg, var(--tavern-primary), var(--tavern-secondary));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.title-icon {
+  color: var(--tavern-primary);
+  font-size: var(--space-8);
+}
+
+.page-subtitle {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-8);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 搜索工具栏 */
+.search-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 1000px;
+  margin: 0 auto;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: end;
+  }
+}
+
+.search-section {
+  flex: 1;
+}
+
+.filter-section {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+
+  @media (min-width: 768px) {
+    flex-wrap: nowrap;
+  }
+}
+
+.filter-select {
+  padding: var(--space-2) var(--space-4);
+  border: var(--space-px) solid var(--border-secondary);
+  border-radius: var(--input-radius);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  transition: var(--input-transition);
+
+  &:focus {
+    outline: none;
+    border-color: var(--tavern-primary);
+    box-shadow: 0 0 0 var(--space-px-2) var(--focus-ring);
+  }
+
+  &:hover {
+    border-color: var(--border-primary);
+  }
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: var(--space-4);
+}
+
+.loading-spinner {
+  position: relative;
+}
+
+.loading-icon {
+  font-size: var(--space-12);
+  color: var(--tavern-primary);
+  animation: spin var(--duration-slow) linear infinite;
+}
+
+.loading-text {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  animation: pulse var(--duration-normal) ease-in-out infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 角色网格 */
+.character-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-6);
+  margin-bottom: var(--space-12);
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+.character-card {
+  height: 100%;
+  transition: transform var(--duration-fast) ease;
+
+  &:hover {
+    transform: translateY(calc(-1 * var(--space-1)));
+  }
+}
+
+/* 角色头像 */
+.character-avatar {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  border-radius: var(--card-radius) var(--card-radius) 0 0;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-normal) ease;
+
+  .character-card:hover & {
+    transform: scale(1.05);
+  }
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--tavern-primary), var(--tavern-secondary));
+  color: white;
+}
+
+.placeholder-icon {
+  font-size: var(--space-12);
+  margin-bottom: var(--space-2);
+  opacity: 0.7;
+}
+
+.placeholder-text {
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+}
+
+/* 状态标签 */
+.status-badges {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.status-badge {
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* 角色描述 */
+.character-description {
+  padding: var(--space-4);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* 统计信息 */
+.character-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-top: var(--space-px) solid var(--border-tertiary);
+}
+
+.stats-group {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.stat-icon {
+  font-size: var(--space-4);
+}
+
+.stat-value {
+  font-weight: var(--font-medium);
+}
+
+.rating-section {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.rating-icon {
+  color: var(--warning);
+  font-size: var(--space-4);
+}
+
+.rating-value {
+  color: var(--text-primary);
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: var(--space-16) var(--space-4);
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon {
+  margin-bottom: var(--space-6);
+}
+
+.empty-search-icon {
+  font-size: var(--space-16);
+  color: var(--text-tertiary);
+  opacity: 0.5;
+}
+
+.empty-title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-3);
+}
+
+.empty-description {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-6);
+  max-width: 400px;
+}
+
+/* 分页 */
+.pagination-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-12);
+}
+
+.pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.page-numbers {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.page-button {
+  min-width: var(--space-10);
+}
+
+.pagination-info {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+  .search-toolbar {
+    .filter-section {
+      .filter-select {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+  }
+
+  .character-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .pagination-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .page-numbers {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: center;
+    margin-top: var(--space-2);
+  }
 }
 </style>

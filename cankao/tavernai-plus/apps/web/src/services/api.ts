@@ -1,5 +1,4 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
-import { ElMessage } from 'element-plus'
 import router from '@/router'
 
 // API 基础配置
@@ -51,7 +50,7 @@ apiClient.interceptors.response.use(
 
     if (!response) {
       // 网络错误
-      ElMessage.error('网络连接失败，请检查网络')
+      console.error('网络连接失败，请检查网络')
       return Promise.reject(error)
     }
 
@@ -83,22 +82,22 @@ apiClient.interceptors.response.use(
               localStorage.removeItem('token')
               localStorage.removeItem('refreshToken')
               router.push('/login')
-              ElMessage.error('登录已过期，请重新登录')
+              console.error('登录已过期，请重新登录')
             }
           } else {
             // 没有刷新令牌，直接跳转登录
             router.push('/login')
-            ElMessage.error('请先登录')
+            console.error('请先登录')
           }
         }
         break
 
       case 403:
-        ElMessage.error('没有权限访问')
+        console.error('没有权限访问')
         break
 
       case 404:
-        ElMessage.error('请求的资源不存在')
+        console.error('请求的资源不存在')
         break
 
       case 422:
@@ -106,21 +105,21 @@ apiClient.interceptors.response.use(
         const errorMessage = data.errors
           ? Object.values(data.errors).flat().join('，')
           : data.message || '请求参数错误'
-        ElMessage.error(errorMessage)
+        console.error('422验证错误:', errorMessage)
         break
 
       case 429:
-        ElMessage.error('请求过于频繁，请稍后再试')
+        console.error('请求过于频繁，请稍后再试')
         break
 
       case 500:
       case 502:
       case 503:
-        ElMessage.error('服务器错误，请稍后再试')
+        console.error('服务器错误，请稍后再试')
         break
 
       default:
-        ElMessage.error(data.message || '请求失败')
+        console.error(data.message || '请求失败')
     }
 
     return Promise.reject(error)

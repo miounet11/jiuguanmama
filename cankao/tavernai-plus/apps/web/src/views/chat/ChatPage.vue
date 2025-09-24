@@ -5,47 +5,56 @@
       <!-- 左侧会话列表 -->
       <div class="chat-sidebar">
         <div class="sidebar-header">
-          <h2>对话列表</h2>
-          <button @click="createNewChat" class="btn-new-chat">
-            <i class="fas fa-plus"></i>
+          <h2 class="gradient-text">对话列表</h2>
+          <TavernButton
+            @click="createNewChat"
+            variant="primary"
+            size="sm"
+            class="btn-new-chat"
+          >
+            <TavernIcon name="plus" size="sm" />
             新对话
-          </button>
+          </TavernButton>
         </div>
 
         <!-- 对话列表 -->
         <div class="chat-list">
           <!-- 现有对话 -->
-          <div
+          <TavernCard
             v-for="chat in chatList"
             :key="chat.id"
             @click="openChat(chat.id)"
             class="chat-item"
             :class="{ active: selectedChatId === chat.id }"
+            variant="glass"
+            hoverable
           >
-            <img
-              :src="chat.character?.avatar || '/default-avatar.png'"
-              :alt="chat.character?.name || '角色'"
-              class="chat-avatar"
-            />
-            <div class="chat-info">
-              <div class="chat-name">{{ chat.character?.name || '未知角色' }}</div>
-              <div class="chat-preview">{{ chat.lastMessage || '暂无消息' }}</div>
+            <div class="chat-item-content">
+              <img
+                :src="chat.character?.avatar || '/default-avatar.png'"
+                :alt="chat.character?.name || '角色'"
+                class="chat-avatar"
+              />
+              <div class="chat-info">
+                <div class="chat-name">{{ chat.character?.name || '未知角色' }}</div>
+                <div class="chat-preview">{{ chat.lastMessage || '暂无消息' }}</div>
+              </div>
+              <div class="chat-meta">
+                <span class="chat-time">{{ formatTime(chat.lastMessageAt) }}</span>
+                <TavernBadge v-if="chat.unreadCount > 0" variant="danger" size="sm">
+                  {{ chat.unreadCount }}
+                </TavernBadge>
+              </div>
             </div>
-            <div class="chat-meta">
-              <span class="chat-time">{{ formatTime(chat.lastMessageAt) }}</span>
-              <span v-if="chat.unreadCount > 0" class="unread-badge">
-                {{ chat.unreadCount }}
-              </span>
-            </div>
-          </div>
+          </TavernCard>
 
           <!-- 空状态 -->
           <div v-if="!chatList || chatList.length === 0" class="empty-state">
-            <i class="fas fa-comments"></i>
+            <TavernIcon name="chat-bubble-left-right" size="4xl" class="empty-icon" />
             <p>还没有对话</p>
-            <button @click="createNewChat" class="btn-primary">
+            <TavernButton @click="createNewChat" variant="primary">
               开始新对话
-            </button>
+            </TavernButton>
           </div>
         </div>
       </div>
@@ -55,28 +64,34 @@
         <router-view v-if="selectedChatId" />
         <div v-else class="welcome-screen">
           <div class="welcome-content">
-            <img src="/miaoda-ai.svg" alt="MIAODA AI" class="welcome-logo" />
-            <h1>欢迎使用 TavernAI Plus</h1>
+            <div class="welcome-logo-container">
+              <img src="/miaoda-ai.svg" alt="MIAODA AI" class="welcome-logo" />
+            </div>
+            <h1 class="gradient-title">欢迎使用 TavernAI Plus</h1>
             <p>选择一个对话或创建新对话开始</p>
-            <button @click="createNewChat" class="btn-primary btn-lg">
-              <i class="fas fa-plus"></i>
+            <TavernButton @click="createNewChat" variant="primary" size="lg" class="create-chat-btn">
+              <TavernIcon name="plus" />
               创建新对话
-            </button>
+            </TavernButton>
           </div>
 
           <!-- 快速开始卡片 -->
           <div class="quick-start">
-            <h3>热门角色</h3>
+            <h3 class="gradient-text">热门角色</h3>
             <div class="character-grid">
-              <div
+              <TavernCard
                 v-for="char in popularCharacters"
                 :key="char.id"
                 @click="quickStart(char)"
-                class="character-card"
+                class="character-quick-card"
+                variant="glass"
+                hoverable
               >
-                <img :src="char.avatar || '/default-avatar.png'" :alt="char.name" />
-                <span>{{ char.name }}</span>
-              </div>
+                <div class="character-card-content">
+                  <img :src="char.avatar || '/default-avatar.png'" :alt="char.name" class="character-avatar" />
+                  <span class="character-name">{{ char.name }}</span>
+                </div>
+              </TavernCard>
             </div>
           </div>
         </div>
@@ -89,37 +104,48 @@
       title="选择角色"
       width="800px"
       :close-on-click-modal="false"
+      class="character-selector-dialog"
     >
       <div class="character-selector">
-        <el-input
+        <TavernInput
           v-model="characterSearchQuery"
           placeholder="搜索角色..."
-          prefix-icon="Search"
           class="mb-4"
           clearable
-        />
+        >
+          <template #prefix>
+            <TavernIcon name="magnifying-glass" size="sm" />
+          </template>
+        </TavernInput>
 
         <div class="character-grid-modal">
-          <div
+          <TavernCard
             v-for="character in filteredCharacters"
             :key="character.id"
             @click="selectCharacter(character)"
             class="character-option"
+            variant="glass"
+            hoverable
           >
-            <img
-              :src="character.avatar || '/default-avatar.png'"
-              :alt="character.name"
-            />
-            <div class="character-info">
-              <div class="character-name">{{ character.name }}</div>
-              <div class="character-desc">{{ character.description }}</div>
+            <div class="character-option-content">
+              <img
+                :src="character.avatar || '/default-avatar.png'"
+                :alt="character.name"
+                class="character-option-avatar"
+              />
+              <div class="character-info">
+                <div class="character-name">{{ character.name }}</div>
+                <div class="character-desc">{{ character.description }}</div>
+              </div>
             </div>
-          </div>
+          </TavernCard>
         </div>
       </div>
 
       <template #footer>
-        <el-button @click="showCharacterSelector = false">取消</el-button>
+        <TavernButton @click="showCharacterSelector = false" variant="secondary">
+          取消
+        </TavernButton>
       </template>
     </el-dialog>
   </div>
@@ -301,102 +327,108 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+@import '@/styles/variables.scss';
+
 .chat-page {
-  height: 100vh;
-  background: #f5f5f7;
+  min-height: 100vh;
+  background: linear-gradient(135deg,
+    var(--dt-color-background-primary) 0%,
+    var(--dt-color-background-secondary) 50%,
+    var(--dt-color-background-tertiary) 100%);
+  padding: var(--dt-spacing-md);
 }
 
 .chat-container {
   display: flex;
-  height: 100%;
+  height: calc(100vh - 2rem);
   max-width: 1600px;
   margin: 0 auto;
-  background: white;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.05);
+  background: var(--dt-color-surface-primary);
+  border-radius: var(--dt-border-radius-lg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--dt-color-border-primary);
+  box-shadow: var(--dt-shadow-xl);
+  overflow: hidden;
 }
 
 // 左侧边栏
 .chat-sidebar {
   width: 320px;
-  border-right: 1px solid #e5e5e7;
+  border-right: 1px solid var(--dt-color-border-secondary);
   display: flex;
   flex-direction: column;
-  background: #fbfbfd;
+  background: var(--dt-color-surface-secondary);
+  backdrop-filter: blur(10px);
 
   .sidebar-header {
-    padding: 20px;
-    border-bottom: 1px solid #e5e5e7;
+    padding: var(--dt-spacing-lg);
+    border-bottom: 1px solid var(--dt-color-border-tertiary);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: white;
+    background: var(--dt-color-surface-primary);
+    backdrop-filter: blur(15px);
 
     h2 {
-      font-size: 18px;
-      font-weight: 600;
-      color: #1a1a1a;
+      font-size: var(--dt-font-size-lg);
+      font-weight: var(--dt-font-weight-semibold);
       margin: 0;
+
+      &.gradient-text {
+        background: var(--dt-gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
     }
 
     .btn-new-chat {
-      padding: 8px 16px;
-      background: #6366f1;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
-      transition: all 0.3s;
-
-      &:hover {
-        background: #5558e3;
-        transform: translateY(-1px);
-      }
-
-      i {
-        font-size: 12px;
-      }
+      gap: var(--dt-spacing-xs);
     }
   }
 
   .chat-list {
     flex: 1;
     overflow-y: auto;
-    padding: 8px;
+    padding: var(--dt-spacing-sm);
 
     .chat-item {
-      display: flex;
-      align-items: center;
-      padding: 12px;
-      border-radius: 12px;
+      margin-bottom: var(--dt-spacing-xs);
       cursor: pointer;
-      transition: all 0.3s;
-      margin-bottom: 4px;
-      background: white;
-
-      &:hover {
-        background: #f0f0f5;
-      }
+      transition: all var(--dt-transition-normal);
+      border-radius: var(--dt-border-radius-lg);
 
       &.active {
-        background: #6366f1;
-        color: white;
+        background: var(--dt-gradient-primary) !important;
+        border-color: var(--dt-color-primary-500) !important;
+        transform: translateY(-2px);
+        box-shadow: var(--dt-shadow-lg);
 
-        .chat-preview,
-        .chat-time {
-          color: rgba(255, 255, 255, 0.8);
+        .chat-item-content {
+          color: var(--dt-color-text-inverse);
+
+          .chat-preview,
+          .chat-time {
+            color: var(--dt-color-text-inverse-secondary);
+          }
         }
+      }
+
+      .chat-item-content {
+        display: flex;
+        align-items: center;
+        padding: var(--dt-spacing-md);
+        width: 100%;
       }
 
       .chat-avatar {
         width: 48px;
         height: 48px;
         border-radius: 50%;
-        margin-right: 12px;
+        margin-right: var(--dt-spacing-md);
         object-fit: cover;
+        border: 2px solid var(--dt-color-border-primary);
+        transition: all var(--dt-transition-normal);
       }
 
       .chat-info {
@@ -404,14 +436,15 @@ onMounted(async () => {
         min-width: 0;
 
         .chat-name {
-          font-weight: 600;
-          margin-bottom: 4px;
-          font-size: 14px;
+          font-weight: var(--dt-font-weight-semibold);
+          margin-bottom: var(--dt-spacing-xs);
+          font-size: var(--dt-font-size-sm);
+          color: var(--dt-color-text-primary);
         }
 
         .chat-preview {
-          font-size: 13px;
-          color: #666;
+          font-size: var(--dt-font-size-xs);
+          color: var(--dt-color-text-secondary);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -422,39 +455,30 @@ onMounted(async () => {
         display: flex;
         flex-direction: column;
         align-items: flex-end;
-        gap: 4px;
+        gap: var(--dt-spacing-xs);
 
         .chat-time {
-          font-size: 11px;
-          color: #999;
-        }
-
-        .unread-badge {
-          background: #ff4757;
-          color: white;
-          font-size: 11px;
-          padding: 2px 6px;
-          border-radius: 10px;
-          min-width: 18px;
-          text-align: center;
+          font-size: var(--dt-font-size-xs);
+          color: var(--dt-color-text-tertiary);
         }
       }
     }
 
     .empty-state {
       text-align: center;
-      padding: 60px 20px;
-      color: #999;
+      padding: var(--dt-spacing-4xl) var(--dt-spacing-lg);
+      color: var(--dt-color-text-secondary);
 
-      i {
-        font-size: 48px;
-        margin-bottom: 16px;
-        color: #ddd;
+      .empty-icon {
+        margin-bottom: var(--dt-spacing-lg);
+        color: var(--dt-color-text-tertiary);
+        opacity: 0.6;
       }
 
       p {
-        margin-bottom: 20px;
-        font-size: 14px;
+        margin-bottom: var(--dt-spacing-lg);
+        font-size: var(--dt-font-size-sm);
+        color: var(--dt-color-text-secondary);
       }
     }
   }
@@ -465,7 +489,8 @@ onMounted(async () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--dt-color-surface-primary);
+  backdrop-filter: blur(10px);
 
   .welcome-screen {
     flex: 1;
@@ -473,104 +498,120 @@ onMounted(async () => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+    padding: var(--dt-spacing-4xl);
+    position: relative;
 
     .welcome-content {
       text-align: center;
-      margin-bottom: 60px;
+      margin-bottom: var(--dt-spacing-4xl);
+      z-index: 2;
 
-      .welcome-logo {
-        width: 120px;
-        height: 120px;
-        margin-bottom: 24px;
-        opacity: 0.9;
+      .welcome-logo-container {
+        position: relative;
+        margin-bottom: var(--dt-spacing-2xl);
+
+        .welcome-logo {
+          width: 120px;
+          height: 120px;
+          opacity: 0.9;
+          filter: drop-shadow(0 0 20px var(--dt-color-primary-400));
+          animation: float 3s ease-in-out infinite;
+        }
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 200px;
+          height: 200px;
+          background: radial-gradient(circle, var(--dt-color-primary-500) 0%, transparent 70%);
+          opacity: 0.1;
+          transform: translate(-50%, -50%);
+          border-radius: 50%;
+          animation: pulse 2s ease-in-out infinite;
+        }
       }
 
       h1 {
-        font-size: 32px;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin-bottom: 8px;
+        font-size: var(--dt-font-size-4xl);
+        font-weight: var(--dt-font-weight-bold);
+        margin-bottom: var(--dt-spacing-sm);
+
+        &.gradient-title {
+          background: var(--dt-gradient-primary);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
       }
 
       p {
-        font-size: 16px;
-        color: #666;
-        margin-bottom: 24px;
+        font-size: var(--dt-font-size-lg);
+        color: var(--dt-color-text-secondary);
+        margin-bottom: var(--dt-spacing-xl);
       }
 
-      .btn-primary {
-        padding: 12px 32px;
-        background: #6366f1;
-        color: white;
-        border: none;
-        border-radius: 10px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: all 0.3s;
-
-        &:hover {
-          background: #5558e3;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
-        }
-
-        i {
-          margin-right: 8px;
-        }
+      .create-chat-btn {
+        gap: var(--dt-spacing-sm);
       }
     }
 
     .quick-start {
       width: 100%;
       max-width: 800px;
+      z-index: 2;
 
       h3 {
-        font-size: 18px;
-        font-weight: 600;
-        margin-bottom: 20px;
-        color: #333;
+        font-size: var(--dt-font-size-xl);
+        font-weight: var(--dt-font-weight-semibold);
+        margin-bottom: var(--dt-spacing-lg);
+        text-align: center;
+
+        &.gradient-text {
+          background: var(--dt-gradient-primary);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
       }
 
       .character-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 16px;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: var(--dt-spacing-lg);
 
-        .character-card {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 16px;
-          background: #f8f8fa;
-          border-radius: 12px;
+        .character-quick-card {
           cursor: pointer;
-          transition: all 0.3s;
+          transition: all var(--dt-transition-normal);
 
           &:hover {
-            background: #6366f1;
-            color: white;
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-
-            img {
-              border-color: white;
-            }
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: var(--dt-shadow-2xl);
           }
 
-          img {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            margin-bottom: 8px;
-            border: 3px solid #e5e5e7;
-            object-fit: cover;
-          }
-
-          span {
-            font-size: 13px;
-            font-weight: 500;
+          .character-card-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--dt-spacing-lg);
             text-align: center;
+
+            .character-avatar {
+              width: 64px;
+              height: 64px;
+              border-radius: 50%;
+              margin-bottom: var(--dt-spacing-sm);
+              border: 3px solid var(--dt-color-border-primary);
+              object-fit: cover;
+              transition: all var(--dt-transition-normal);
+            }
+
+            .character-name {
+              font-size: var(--dt-font-size-sm);
+              font-weight: var(--dt-font-weight-medium);
+              color: var(--dt-color-text-primary);
+            }
           }
         }
       }
@@ -579,62 +620,97 @@ onMounted(async () => {
 }
 
 // 角色选择对话框
+.character-selector-dialog {
+  :deep(.el-dialog) {
+    background: var(--dt-color-surface-primary);
+    border: 1px solid var(--dt-color-border-primary);
+    backdrop-filter: blur(20px);
+  }
+
+  :deep(.el-dialog__title) {
+    color: var(--dt-color-text-primary);
+    font-weight: var(--dt-font-weight-semibold);
+  }
+}
+
 .character-selector {
+  .mb-4 {
+    margin-bottom: var(--dt-spacing-lg);
+  }
+
   .character-grid-modal {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--dt-spacing-md);
     max-height: 400px;
     overflow-y: auto;
-    padding: 4px;
+    padding: var(--dt-spacing-xs);
 
     .character-option {
-      display: flex;
-      align-items: center;
-      padding: 12px;
-      background: #f8f8fa;
-      border-radius: 10px;
       cursor: pointer;
-      transition: all 0.3s;
-      border: 2px solid transparent;
+      transition: all var(--dt-transition-normal);
 
       &:hover {
-        background: #6366f1;
-        color: white;
-        border-color: #6366f1;
-
-        .character-desc {
-          color: rgba(255, 255, 255, 0.9);
-        }
+        transform: translateY(-4px);
+        box-shadow: var(--dt-shadow-lg);
       }
 
-      img {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        margin-right: 12px;
-        object-fit: cover;
-      }
+      .character-option-content {
+        display: flex;
+        align-items: center;
+        padding: var(--dt-spacing-md);
 
-      .character-info {
-        flex: 1;
-        min-width: 0;
-
-        .character-name {
-          font-weight: 600;
-          margin-bottom: 4px;
-          font-size: 14px;
+        .character-option-avatar {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          margin-right: var(--dt-spacing-md);
+          object-fit: cover;
+          border: 2px solid var(--dt-color-border-primary);
         }
 
-        .character-desc {
-          font-size: 12px;
-          color: #666;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+        .character-info {
+          flex: 1;
+          min-width: 0;
+
+          .character-name {
+            font-weight: var(--dt-font-weight-semibold);
+            margin-bottom: var(--dt-spacing-xs);
+            font-size: var(--dt-font-size-sm);
+            color: var(--dt-color-text-primary);
+          }
+
+          .character-desc {
+            font-size: var(--dt-font-size-xs);
+            color: var(--dt-color-text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
       }
     }
+  }
+}
+
+// 动画效果
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: translate(-50%, -50%) scale(1.1);
   }
 }
 
@@ -643,42 +719,67 @@ onMounted(async () => {
   .chat-sidebar {
     width: 280px;
   }
+
+  .chat-page {
+    padding: var(--dt-spacing-sm);
+  }
 }
 
 @media (max-width: 768px) {
+  .chat-page {
+    padding: var(--dt-spacing-xs);
+  }
+
   .chat-container {
     flex-direction: column;
+    height: calc(100vh - 1rem);
   }
 
   .chat-sidebar {
     width: 100%;
     height: 40vh;
     border-right: none;
-    border-bottom: 1px solid #e5e5e7;
+    border-bottom: 1px solid var(--dt-color-border-secondary);
   }
 
   .chat-main {
     height: 60vh;
+
+    .welcome-content {
+      .welcome-logo-container .welcome-logo {
+        width: 80px;
+        height: 80px;
+      }
+
+      h1 {
+        font-size: var(--dt-font-size-2xl);
+      }
+    }
+  }
+
+  .character-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
   }
 }
 
 // 滚动条美化
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
+  background: var(--dt-color-surface-secondary);
+  border-radius: var(--dt-border-radius-sm);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: var(--dt-color-border-primary);
+  border-radius: var(--dt-border-radius-sm);
+  border: 2px solid var(--dt-color-surface-secondary);
 
   &:hover {
-    background: #a8a8a8;
+    background: var(--dt-color-primary-400);
   }
 }
 </style>
