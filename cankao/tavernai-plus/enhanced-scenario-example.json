@@ -1,0 +1,1238 @@
+{
+  "scenario": {
+    "id": "dcc74a90-781d-462f-b9e3-6fa088618857",
+    "name": "阿卡迪亚魔法学院传奇：失落的元素之心",
+    "description": "在浮空之城阿卡迪亚上的千年魔法学院中，一场关于古代元素之心的冒险即将展开。学院分为四大学院，每个学院都有自己的特色和传统。随着神秘的魔法波动在学院中蔓延，学生们发现自己被卷入了一场涉及古老预言和被遗忘力量的史诗冒险中。",
+    "content": "# 阿卡迪亚魔法学院传奇：失落的元素之心\n\n## 世界背景\n\n在艾瑟拉大陆的上空，有一座被永恒魔法维持在云端的浮空城市——阿卡迪亚。这座城市的中心坐落着大陆上最古老、最神秘的魔法学府：阿卡迪亚魔法学院。\n\n学院建立于三千年前，由四位传奇大魔法师共同创建，他们分别掌握着火、水、风、土四种基本元素的极致力量。如今，学院依然按照这四种元素划分为四大学院，每个学院都有独特的教学理念和传统文化。\n\n最近，学院中开始出现奇怪的魔法波动，古老的预言石板重新闪烁着光芒，而传说中的\"元素之心\"——维持学院和浮空城稳定的核心魔法装置，似乎正在失去力量...",
+    "category": "奇幻冒险",
+    "tags": ["魔法", "学院", "奇幻", "冒险", "青春", "友谊", "成长"],
+    "genreTags": ["高奇幻", "校园", "冒险", "成长"],
+    "complexityLevel": 4,
+    "playerCount": "3-6人",
+    "estimatedDuration": "长期（数月）",
+    "contentRating": "teen",
+    "worldScope": "city",
+    "technologyLevel": "medieval",
+    "magicLevel": "integral",
+    "isPublic": true,
+    "isActive": true,
+    "completionStatus": "complete",
+    "creationMethod": "manual",
+    "sourceMaterial": "原创世界观",
+    "licenseType": "cc_by_sa"
+  },
+
+  "locations": [
+    {
+      "id": "loc_001",
+      "name": "烈焰学院",
+      "description": "以红色和金色为主色调的宏伟建筑群，建筑风格热情奔放，到处都有永不熄灭的魔法火焰装饰。",
+      "locationType": "building",
+      "coordinates": {
+        "x": 100,
+        "y": 200,
+        "description": "位于学院东部，朝向日出方向"
+      },
+      "isPublic": true,
+      "isAccessible": true,
+      "displayOrder": 1,
+      "climate": "温暖干燥",
+      "population": "约800名学生和100名教职员工",
+      "government": "院长制，由烈焰大魔法师统领",
+      "notableFeatures": [
+        "永燃图书馆 - 藏有大量火系魔法典籍",
+        "熔炉实验室 - 进行高温魔法实验的地方",
+        "凤凰塔 - 烈焰学院的标志性建筑",
+        "试炼之火 - 学生进行毕业考试的神圣场所"
+      ],
+      "dangers": [
+        "不受控制的火元素可能造成烧伤",
+        "某些区域温度过高，需要防护装备",
+        "古老的火焰陷阱仍在运作"
+      ],
+      "resources": [
+        "丰富的火元素魔力",
+        "稀有的火系魔法材料",
+        "古代炼金设备"
+      ],
+      "secrets": [
+        "凤凰塔顶层隐藏着初代烈焰大魔法师的密室",
+        "永燃图书馆地下室存放着被禁的毁灭性火系法术",
+        "试炼之火的核心连接着元素之心的火焰部分"
+      ],
+      "metadata": {
+        "foundingYear": "魔法历元年",
+        "architecturalStyle": "火焰哥特式",
+        "mascot": "不死鸟",
+        "colors": ["深红", "金黄"],
+        "motto": "燃烧的意志，永恒的热情"
+      }
+    },
+    {
+      "id": "loc_002",
+      "name": "碧波学院",
+      "description": "建在人工湖中央的水上建筑群，由蓝白色大理石建造，到处都有清澈的水流和美丽的喷泉。",
+      "locationType": "building",
+      "coordinates": {
+        "x": -100,
+        "y": 200,
+        "description": "位于学院西部，环绕着宁静湖泊"
+      },
+      "isPublic": true,
+      "isAccessible": true,
+      "displayOrder": 2,
+      "climate": "湿润温和",
+      "population": "约750名学生和95名教职员工",
+      "government": "长老会制，由水系贤者团体统领",
+      "notableFeatures": [
+        "镜湖图书馆 - 建在湖心，藏书以水系魔法为主",
+        "潮汐实验室 - 研究水的各种形态变化",
+        "海螺塔 - 碧波学院的通讯中心",
+        "净化圣池 - 具有治疗和净化能力的神圣水池"
+      ],
+      "dangers": [
+        "某些水域隐藏着强大的水元素",
+        "湖底的古老封印可能松动",
+        "迷雾区域容易让人迷失方向"
+      ],
+      "resources": [
+        "纯净的水元素能量",
+        "治疗用的圣水",
+        "稀有的水生魔法植物"
+      ],
+      "secrets": [
+        "镜湖底部隐藏着通往古代遗迹的入口",
+        "净化圣池连接着元素之心的水之部分",
+        "海螺塔能够与远方的海洋生物沟通"
+      ],
+      "metadata": {
+        "foundingYear": "魔法历二年",
+        "architecturalStyle": "流水建筑风格",
+        "mascot": "海豚",
+        "colors": ["海蓝", "珍珠白"],
+        "motto": "如水般包容，如潮般坚韧"
+      }
+    },
+    {
+      "id": "loc_003",
+      "name": "疾风学院",
+      "description": "建在最高处的轻盈建筑群，大量使用玻璃和轻质材料，建筑间有空中桥梁连接。",
+      "locationType": "building",
+      "coordinates": {
+        "x": 0,
+        "y": 300,
+        "description": "位于学院北部的最高点，直面天空"
+      },
+      "isPublic": true,
+      "isAccessible": true,
+      "displayOrder": 3,
+      "climate": "凉爽多风",
+      "population": "约700名学生和90名教职员工",
+      "government": "自由联盟制，注重个人能力和创新",
+      "notableFeatures": [
+        "云端图书馆 - 漂浮在空中的奇妙图书馆",
+        "风暴实验室 - 研究气象和飞行魔法",
+        "观星台 - 疾风学院的天文观测中心",
+        "飞翔试练场 - 训练飞行和空中战斗技能"
+      ],
+      "dangers": [
+        "强烈的高空风暴可能突然出现",
+        "某些区域的重力魔法不稳定",
+        "空中建筑的结构承载限制"
+      ],
+      "resources": [
+        "纯净的风元素气流",
+        "罕见的天空中的魔法矿物",
+        "各种飞行魔法道具"
+      ],
+      "secrets": [
+        "观星台隐藏着预知未来的古老法阵",
+        "云端图书馆的最高层连接着元素之心的风之部分",
+        "某些教室能够完全脱离重力束缚"
+      ],
+      "metadata": {
+        "foundingYear": "魔法历三年",
+        "architecturalStyle": "轻盈悬浮式",
+        "mascot": "雷鹰",
+        "colors": ["天蓝", "银白"],
+        "motto": "自由如风，智慧如云"
+      }
+    },
+    {
+      "id": "loc_004",
+      "name": "大地学院",
+      "description": "最为厚重稳固的石质建筑群，建筑风格朴实庄重，与大地融为一体。",
+      "locationType": "building",
+      "coordinates": {
+        "x": 0,
+        "y": -200,
+        "description": "位于学院南部，部分建筑深入地下"
+      },
+      "isPublic": true,
+      "isAccessible": true,
+      "displayOrder": 4,
+      "climate": "稳定温和",
+      "population": "约850名学生和110名教职员工",
+      "government": "长老院制，重视传统和经验",
+      "notableFeatures": [
+        "根石图书馆 - 建在地下的巨大图书馆",
+        "晶洞实验室 - 研究矿物和土系魔法",
+        "守护之塔 - 大地学院的防御中心",
+        "生命花园 - 培育魔法植物的神秘花园"
+      ],
+      "dangers": [
+        "地下迷宫中可能迷失方向",
+        "某些区域的土元素过于活跃",
+        "古老的石像守卫仍在运行"
+      ],
+      "resources": [
+        "丰富的土元素能量",
+        "各种稀有矿物和宝石",
+        "神奇的魔法植物种子"
+      ],
+      "secrets": [
+        "根石图书馆最深处藏着创世的秘密",
+        "生命花园的核心连接着元素之心的土之部分",
+        "守护之塔下方有通往大地深处的秘密通道"
+      ],
+      "metadata": {
+        "foundingYear": "魔法历四年",
+        "architecturalStyle": "地底宫殿式",
+        "mascot": "石龟",
+        "colors": ["深褐", "翡翠绿"],
+        "motto": "厚德载物，稳如磐石"
+      }
+    },
+    {
+      "id": "loc_005",
+      "name": "中央塔",
+      "description": "学院的核心建筑，高耸入云的巨大尖塔，是四大学院的交汇点，也是元素之心的所在地。",
+      "locationType": "landmark",
+      "coordinates": {
+        "x": 0,
+        "y": 0,
+        "description": "学院的正中心，连接四大学院"
+      },
+      "isPublic": false,
+      "isAccessible": false,
+      "displayOrder": 0,
+      "climate": "魔法能量影响，天气多变",
+      "population": "仅限高级教职员工和特殊情况下的学生",
+      "government": "大校长直接管辖",
+      "notableFeatures": [
+        "元素之心 - 维持整个学院运行的核心魔法装置",
+        "预言大厅 - 存放古代预言的神圣场所",
+        "校长室 - 大校长的办公和居住地",
+        "紧急集合厅 - 全院重大事件的集会场所"
+      ],
+      "dangers": [
+        "元素能量不稳定可能造成魔法爆炸",
+        "古老的防护法阵仍在运行",
+        "未经授权进入可能触发严重后果"
+      ],
+      "resources": [
+        "最纯净的四元素能量",
+        "古老的魔法知识",
+        "传说级的魔法道具"
+      ],
+      "secrets": [
+        "元素之心的真正秘密只有历代大校长知晓",
+        "预言大厅中藏着关于世界末日的预言",
+        "塔顶有通往其他位面的秘密传送门"
+      ],
+      "metadata": {
+        "foundingYear": "魔法历元年",
+        "architecturalStyle": "四元素融合式",
+        "height": "999米",
+        "accessLevel": "最高机密",
+        "specialProperty": "连接四大元素位面"
+      }
+    }
+  ],
+
+  "events": [
+    {
+      "id": "evt_001",
+      "title": "四贤者的约定",
+      "description": "三千年前，四位传奇大魔法师为了维护世界的元素平衡，共同创建了阿卡迪亚魔法学院，并将他们的力量融合创造了元素之心。",
+      "eventType": "historical",
+      "dateDescription": "魔法历元年",
+      "timelineOrder": 1,
+      "importanceLevel": 5,
+      "relatedLocations": ["loc_005"],
+      "relatedCharacters": [],
+      "consequences": "建立了世界上最重要的魔法教育机构，为后世培养了无数魔法师",
+      "participants": ["初代烈焰大魔法师·伊格尼斯", "初代碧波贤者·阿奎娜", "初代疾风法师·温德尔", "初代大地守护者·泰拉"],
+      "culturalImpact": "确立了四元素魔法理论的基础",
+      "politicalImpact": "改变了魔法师的培养方式，从师傅制转向学院制",
+      "artifacts": ["元素之心", "四贤者的法杖"],
+      "metadata": {
+        "historicalSignificance": "最高",
+        "commemorated": "每年建院日都会举行庆典",
+        "sources": ["《阿卡迪亚编年史》", "《四贤者传》"]
+      }
+    },
+    {
+      "id": "evt_002",
+      "title": "暗影入侵事件",
+      "description": "一千年前，来自暗影位面的魔物军团入侵了阿卡迪亚，学院的师生联合起来进行了为期七天七夜的防御战。",
+      "eventType": "historical",
+      "dateDescription": "魔法历2000年，暗月季",
+      "timelineOrder": 2,
+      "importanceLevel": 4,
+      "relatedLocations": ["loc_001", "loc_002", "loc_003", "loc_004", "loc_005"],
+      "consequences": "加强了学院的防御体系，建立了跨学院合作传统",
+      "participants": ["第十代大校长·卢修斯", "各学院师生", "暗影领主·内克斯"],
+      "casualties": "172名师生牺牲，数百人受伤",
+      "culturalImpact": "确立了团结协作的学院精神",
+      "politicalImpact": "建立了应对外敌入侵的预警系统",
+      "artifacts": ["光明护盾", "团结之剑"],
+      "witnesses": ["幸存者口述历史", "战斗遗迹"],
+      "metadata": {
+        "memorialDay": "光明节",
+        "heroesMonument": "中央塔下的英雄纪念碑",
+        "artifacts": ["暗影入侵纪录水晶"]
+      }
+    },
+    {
+      "id": "evt_003",
+      "title": "元素失衡现象",
+      "description": "最近数月，学院中开始出现元素能量失衡的现象，各种异常魔法事件频发，预言石板重新亮起。",
+      "eventType": "current",
+      "dateDescription": "魔法历3000年，当前进行中",
+      "timelineOrder": 10,
+      "importanceLevel": 5,
+      "relatedLocations": ["loc_005"],
+      "consequences": "威胁到学院和浮空城的稳定，可能引发灾难性后果",
+      "culturalImpact": "学生和教职员工感到不安，教学活动受到影响",
+      "economicImpact": "魔法实验成本增加，某些设施暂时关闭",
+      "metadata": {
+        "currentStatus": "调查中",
+        "investigationTeam": "特别委员会",
+        "urgencyLevel": "最高"
+      }
+    },
+    {
+      "id": "evt_004",
+      "title": "预言的觉醒",
+      "description": "根据古老预言，当四元素失衡时，将有选中者出现，重新平衡世界的元素力量。",
+      "eventType": "prophecy",
+      "dateDescription": "时间未定，条件触发",
+      "timelineOrder": 11,
+      "importanceLevel": 5,
+      "relatedLocations": ["loc_005"],
+      "consequences": "可能决定学院和世界的命运",
+      "metadata": {
+        "prophecySource": "初代四贤者的预言",
+        "fulfillmentConditions": "四元素失衡，选中者出现",
+        "interpretation": "存在多种解读"
+      }
+    }
+  ],
+
+  "organizations": [
+    {
+      "id": "org_001",
+      "name": "学院理事会",
+      "description": "由四大学院院长和大校长组成的最高决策机构，负责学院的重大事务决策。",
+      "organizationType": "academic",
+      "powerLevel": 5,
+      "alignment": "lawful_good",
+      "headquartersLocationId": "loc_005",
+      "memberCount": "5人核心成员，plus各部门代表",
+      "foundingDate": "魔法历元年",
+      "currentStatus": "active",
+      "relationships": {
+        "org_002": {
+          "organizationId": "org_002",
+          "relationship": "parent",
+          "strength": 5,
+          "history": "学生会是理事会认可和指导的学生自治组织"
+        }
+      },
+      "resources": [
+        {
+          "type": "political",
+          "description": "学院内的最高权力",
+          "level": 5
+        },
+        {
+          "type": "magical",
+          "description": "接触元素之心的权限",
+          "level": 5
+        },
+        {
+          "type": "economic",
+          "description": "学院的财政管理权",
+          "level": 4
+        }
+      ],
+      "goals": [
+        {
+          "description": "维护学院的稳定运行",
+          "priority": 5,
+          "progress": 80
+        },
+        {
+          "description": "解决元素失衡问题",
+          "priority": 5,
+          "progress": 20
+        },
+        {
+          "description": "培养优秀的魔法师",
+          "priority": 4,
+          "progress": 90
+        }
+      ],
+      "hierarchy": [
+        {
+          "rank": "大校长",
+          "description": "学院的最高领导者",
+          "requirements": ["传奇级魔法师", "得到四院长一致认可"],
+          "privileges": ["接触元素之心", "最终决策权"]
+        },
+        {
+          "rank": "学院院长",
+          "description": "各学院的领导者",
+          "requirements": ["大师级魔法师", "所在学院认可"],
+          "privileges": ["参与重大决策", "管理所属学院"]
+        }
+      ],
+      "metadata": {
+        "meetingFrequency": "每月一次，紧急时随时召开",
+        "votingSystem": "一致同意制",
+        "recordKeeping": "详细会议记录保存在中央塔档案室"
+      }
+    },
+    {
+      "id": "org_002",
+      "name": "学生会",
+      "description": "代表全体学生利益的自治组织，负责组织学生活动，协调学生与校方的关系。",
+      "organizationType": "academic",
+      "powerLevel": 3,
+      "alignment": "neutral_good",
+      "memberCount": "约50名核心成员，全体学生为潜在成员",
+      "foundingDate": "魔法历100年",
+      "currentStatus": "active",
+      "relationships": {
+        "org_001": {
+          "organizationId": "org_001",
+          "relationship": "subsidiary",
+          "strength": 4,
+          "history": "在理事会指导下运作，有相当程度的自主权"
+        }
+      },
+      "resources": [
+        {
+          "type": "social",
+          "description": "学生群体的支持和信任",
+          "level": 4
+        },
+        {
+          "type": "economic",
+          "description": "学生活动经费",
+          "level": 2
+        }
+      ],
+      "goals": [
+        {
+          "description": "维护学生权益",
+          "priority": 5,
+          "progress": 75
+        },
+        {
+          "description": "促进学院间交流",
+          "priority": 4,
+          "progress": 85
+        },
+        {
+          "description": "协助调查元素失衡事件",
+          "priority": 3,
+          "progress": 40
+        }
+      ],
+      "metadata": {
+        "electionCycle": "每年一次",
+        "currentPresident": "待定",
+        "headquarters": "学生活动中心"
+      }
+    },
+    {
+      "id": "org_003",
+      "name": "元素研究协会",
+      "description": "专门研究元素魔法理论和应用的学术组织，成员来自四大学院的优秀学者。",
+      "organizationType": "academic",
+      "powerLevel": 4,
+      "alignment": "true_neutral",
+      "memberCount": "约30名研究员",
+      "foundingDate": "魔法历500年",
+      "currentStatus": "active",
+      "resources": [
+        {
+          "type": "magical",
+          "description": "深入的元素魔法知识",
+          "level": 5
+        },
+        {
+          "type": "information",
+          "description": "丰富的研究资料",
+          "level": 4
+        }
+      ],
+      "goals": [
+        {
+          "description": "深入研究元素魔法原理",
+          "priority": 5,
+          "progress": 70
+        },
+        {
+          "description": "找出元素失衡的原因",
+          "priority": 5,
+          "progress": 30
+        }
+      ],
+      "metadata": {
+        "researchFocus": "元素之间的相互作用和平衡",
+        "notableAchievements": ["元素转换理论", "复合元素法术"]
+      }
+    },
+    {
+      "id": "org_004",
+      "name": "暗影猎手",
+      "description": "秘密组织，专门对抗来自暗影位面的威胁，成员身份高度机密。",
+      "organizationType": "secret",
+      "powerLevel": 4,
+      "alignment": "chaotic_good",
+      "memberCount": "未知，估计10-20人",
+      "foundingDate": "魔法历2010年（暗影入侵事件后）",
+      "currentStatus": "hidden",
+      "resources": [
+        {
+          "type": "military",
+          "description": "对抗暗影魔物的特殊技能",
+          "level": 4
+        },
+        {
+          "type": "information",
+          "description": "关于暗影位面的情报",
+          "level": 3
+        }
+      ],
+      "goals": [
+        {
+          "description": "监视暗影位面的活动",
+          "priority": 5,
+          "progress": 60
+        },
+        {
+          "description": "保护学院免受暗影威胁",
+          "priority": 5,
+          "progress": 80
+        }
+      ],
+      "metadata": {
+        "recruitmentMethod": "邀请制",
+        "identificationMark": "隐藏的光明印记",
+        "secrecyLevel": "最高"
+      }
+    }
+  ],
+
+  "cultures": [
+    {
+      "id": "cul_001",
+      "name": "烈焰文化",
+      "description": "烈焰学院的独特文化，崇尚热情、勇气和直率，重视个人荣誉和正面对抗。",
+      "cultureType": "ethnic",
+      "population": "烈焰学院师生",
+      "languages": ["通用语", "火焰语（古语）"],
+      "traditions": [
+        "火焰试炼仪式 - 新生入学的传统考验",
+        "凤凰节 - 庆祝重生和新开始的节日",
+        "荣誉决斗 - 解决争端的传统方式",
+        "火焰祈祷 - 每日晨间的集体仪式"
+      ],
+      "beliefs": [
+        "火焰代表生命力和创造力",
+        "直面挑战是成长的必经之路",
+        "真诚和热情比技巧更重要",
+        "荣誉胜过生命"
+      ],
+      "socialStructure": "精英制，以魔法实力和个人成就为准",
+      "technologyLevel": "medieval",
+      "magicAcceptance": "integral",
+      "relatedLocations": ["loc_001"],
+      "relatedOrganizations": [],
+      "values": ["勇气", "热情", "荣誉", "直率"],
+      "taboos": ["背叛朋友", "逃避战斗", "欺骗弱者"],
+      "holidays": [
+        {
+          "name": "凤凰节",
+          "description": "庆祝重生和新开始的节日",
+          "date": "春分日",
+          "significance": "象征着突破自我，获得新生"
+        },
+        {
+          "name": "烈火祭",
+          "description": "祭祀火元素的传统节日",
+          "date": "夏至日",
+          "significance": "祈求火元素的保护和力量"
+        }
+      ],
+      "socialClasses": [
+        {
+          "name": "火焰领主",
+          "description": "学院中最强大的火系魔法师",
+          "privileges": ["指导新生", "参与重要决策"],
+          "restrictions": ["必须保护弱小"],
+          "population_percentage": 5
+        },
+        {
+          "name": "火焰骑士",
+          "description": "具有一定实力的中级魔法师",
+          "privileges": ["独立进行研究", "参与学院活动"],
+          "restrictions": ["遵守学院纪律"],
+          "population_percentage": 30
+        },
+        {
+          "name": "火焰学徒",
+          "description": "初学者和新生",
+          "privileges": ["接受指导", "使用基础设施"],
+          "restrictions": ["必须完成学业", "服从上级"],
+          "population_percentage": 65
+        }
+      ],
+      "metadata": {
+        "motto": "燃烧的意志，永恒的热情",
+        "symbolColors": ["深红", "金黄"],
+        "sacredAnimal": "凤凰",
+        "culturalHeroes": ["初代烈焰大魔法师·伊格尼斯"]
+      }
+    },
+    {
+      "id": "cul_002",
+      "name": "碧波文化",
+      "description": "碧波学院的智慧文化，重视知识、和谐和深度思考，崇尚以智慧解决问题。",
+      "cultureType": "ethnic",
+      "population": "碧波学院师生",
+      "languages": ["通用语", "水之歌（古老的水系魔法语言）"],
+      "traditions": [
+        "镜湖冥想 - 在湖边进行的深度思考仪式",
+        "潮汐节 - 庆祝变化和适应的节日",
+        "智慧辩论 - 通过辩论提升思维的传统",
+        "净化仪式 - 清洁身心的日常实践"
+      ],
+      "beliefs": [
+        "智慧如水，能适应任何形状",
+        "和谐胜过冲突",
+        "深度思考比快速行动更重要",
+        "知识应该如水般流传"
+      ],
+      "socialStructure": "贤者制，以智慧和学识为尊",
+      "technologyLevel": "medieval",
+      "magicAcceptance": "integral",
+      "relatedLocations": ["loc_002"],
+      "values": ["智慧", "和谐", "包容", "深度"],
+      "taboos": ["无知的傲慢", "破坏和谐", "浪费知识"],
+      "holidays": [
+        {
+          "name": "潮汐节",
+          "description": "庆祝变化和适应能力的节日",
+          "date": "秋分日",
+          "significance": "学会如水般适应变化"
+        },
+        {
+          "name": "智慧祭",
+          "description": "祭祀水元素和智慧之神的节日",
+          "date": "冬至日",
+          "significance": "祈求智慧和内心平静"
+        }
+      ],
+      "metadata": {
+        "motto": "如水般包容，如潮般坚韧",
+        "symbolColors": ["海蓝", "珍珠白"],
+        "sacredAnimal": "海豚",
+        "culturalHeroes": ["初代碧波贤者·阿奎娜"]
+      }
+    }
+  ],
+
+  "items": [
+    {
+      "id": "item_001",
+      "name": "元素之心",
+      "description": "维持整个阿卡迪亚浮空城和魔法学院稳定的核心魔法装置，由四位初代大魔法师的力量融合而成。",
+      "itemType": "artifact",
+      "rarity": "unique",
+      "valueDescription": "无价之宝，关乎整个学院的存亡",
+      "properties": [
+        {
+          "name": "元素平衡",
+          "value": "维持四元素的稳定平衡",
+          "description": "自动调节周围的元素能量"
+        },
+        {
+          "name": "浮空支撑",
+          "value": "维持城市的浮空状态",
+          "description": "提供强大的反重力场"
+        },
+        {
+          "name": "魔力放大",
+          "value": "增强所有魔法效果",
+          "description": "在学院范围内所有魔法威力提升50%"
+        },
+        {
+          "name": "生命维持",
+          "value": "维持适宜的生存环境",
+          "description": "调节气候、净化空气和水源"
+        }
+      ],
+      "requirements": [
+        {
+          "type": "authorization",
+          "requirement": "大校长级别权限",
+          "description": "只有大校长才能直接接触"
+        },
+        {
+          "type": "skill",
+          "requirement": "传奇级四元素掌控",
+          "description": "需要同时掌握四种元素魔法"
+        }
+      ],
+      "effects": [
+        {
+          "type": "passive",
+          "description": "维持学院和浮空城的基本运行",
+          "magnitude": "城市级别",
+          "duration": "永久"
+        },
+        {
+          "type": "triggered",
+          "description": "在危机时刻释放防护结界",
+          "magnitude": "能抵御军团级攻击",
+          "conditions": ["感知到威胁", "生命力下降"]
+        }
+      ],
+      "lore": "三千年前，四位传奇大魔法师将自己的生命力和魔法力量融合，创造了这个奇迹般的装置。它不仅是一件魔法道具，更像是有着自我意识的生命体，能够感知学院的需要并自动做出调整。",
+      "currentLocationId": "loc_005",
+      "isUnique": true,
+      "isAvailable": false,
+      "history": [
+        {
+          "event": "创造",
+          "date": "魔法历元年",
+          "participants": ["四位初代大魔法师"],
+          "significance": "学院的诞生"
+        },
+        {
+          "event": "暗影入侵防护",
+          "date": "魔法历2000年",
+          "participants": ["第十代大校长"],
+          "significance": "成功抵御了暗影军团的攻击"
+        },
+        {
+          "event": "能量失衡开始",
+          "date": "魔法历3000年",
+          "participants": ["未知"],
+          "significance": "开始出现不稳定现象"
+        }
+      ],
+      "metadata": {
+        "creationMethod": "四贤者生命力融合",
+        "powerSource": "四元素位面直接连接",
+        "maintenance": "自我维护，但需要定期校准",
+        "threat_level": "如果损坏将导致城市坠落"
+      }
+    },
+    {
+      "id": "item_002",
+      "name": "烈焰学院院徽",
+      "description": "烈焰学院学生和教师佩戴的徽章，由特殊的火焰水晶制成，能够增强火系魔法。",
+      "itemType": "magical",
+      "rarity": "uncommon",
+      "valueDescription": "对烈焰学院成员来说珍贵，但对外人价值有限",
+      "properties": [
+        {
+          "name": "火焰增幅",
+          "value": 15,
+          "description": "火系魔法威力提升15%"
+        },
+        {
+          "name": "身份识别",
+          "value": true,
+          "description": "证明烈焰学院成员身份"
+        },
+        {
+          "name": "温度调节",
+          "value": "恒温25度",
+          "description": "佩戴者不会感到寒冷"
+        }
+      ],
+      "requirements": [
+        {
+          "type": "affiliation",
+          "requirement": "烈焰学院成员",
+          "description": "必须是正式的学院成员"
+        }
+      ],
+      "effects": [
+        {
+          "type": "passive",
+          "description": "持续增强火系魔法能力",
+          "magnitude": "小幅提升",
+          "duration": "佩戴期间"
+        }
+      ],
+      "isUnique": false,
+      "isAvailable": true,
+      "metadata": {
+        "distributionMethod": "入学时发放",
+        "replacement": "可以申请补发",
+        "craftingLocation": "烈焰学院的熔炉实验室"
+      }
+    },
+    {
+      "id": "item_003",
+      "name": "预言之书",
+      "description": "记录着关于元素失衡和世界命运预言的古老典籍，文字会根据情况变化。",
+      "itemType": "document",
+      "rarity": "legendary",
+      "valueDescription": "蕴含预知未来的智慧，价值无法估量",
+      "properties": [
+        {
+          "name": "预言显现",
+          "value": "动态内容",
+          "description": "根据当前情况显示相关预言"
+        },
+        {
+          "name": "真言识别",
+          "value": "防伪",
+          "description": "能够识别谎言和欺骗"
+        },
+        {
+          "name": "知识保护",
+          "value": "选择性显示",
+          "description": "只向有资格的人显示内容"
+        }
+      ],
+      "requirements": [
+        {
+          "type": "level",
+          "requirement": "高级魔法师以上",
+          "description": "需要足够的魔法造诣才能理解"
+        },
+        {
+          "type": "alignment",
+          "requirement": "非邪恶阵营",
+          "description": "邪恶的人无法看到内容"
+        }
+      ],
+      "effects": [
+        {
+          "type": "active",
+          "description": "提供关于未来的模糊提示",
+          "magnitude": "可能改变重大决策",
+          "conditions": ["诚心求问", "面临重大选择"]
+        }
+      ],
+      "lore": "这本书是四贤者在创建学院时留下的，里面记录了他们对未来的预见。书中的文字不是固定的，而是会根据读者的情况和世界的变化而变化，有时甚至会出现读者从未见过的文字。",
+      "currentLocationId": "loc_005",
+      "isUnique": true,
+      "isAvailable": false,
+      "metadata": {
+        "guardianship": "大校长保管",
+        "readingConditions": "特殊情况下才会开启",
+        "language": "古代魔法文字，会自动翻译"
+      }
+    }
+  ],
+
+  "rules": [
+    {
+      "id": "rule_001",
+      "category": "magic",
+      "title": "四元素平衡法则",
+      "description": "在阿卡迪亚学院内，四种基本元素（火、水、风、土）必须保持相对平衡。过度使用某一种元素魔法会导致环境不稳定。",
+      "ruleType": "law",
+      "scope": "global",
+      "relatedEntities": ["loc_001", "loc_002", "loc_003", "loc_004", "loc_005"],
+      "exceptions": [
+        "在专门的实验室内进行受控实验",
+        "紧急情况下的自卫行为",
+        "得到教师许可的教学演示"
+      ],
+      "enforcementLevel": "strict",
+      "consequences": "轻则魔法反噬，重则可能影响元素之心的稳定",
+      "examples": [
+        "不能在宿舍内施展大型火焰魔法",
+        "水系魔法师不能在图书馆制造洪水",
+        "风系魔法的飞行练习需要在指定区域进行"
+      ],
+      "isActive": true,
+      "priority": 10,
+      "conditions": [
+        {
+          "type": "location",
+          "requirement": "在学院范围内",
+          "description": "此法则仅在学院内有效"
+        }
+      ],
+      "effects": [
+        {
+          "target": "魔法施展者",
+          "modification": "限制极端元素魔法的使用",
+          "magnitude": "根据偏离程度递增"
+        }
+      ],
+      "metadata": {
+        "origin": "四贤者的约定",
+        "enforcement": "自动感知系统+教师监督",
+        "revision_history": "三千年来从未修改"
+      }
+    },
+    {
+      "id": "rule_002",
+      "category": "social",
+      "title": "学院间友好竞争原则",
+      "description": "四大学院之间鼓励良性竞争，但禁止恶意对抗和破坏行为。竞争应当促进共同进步。",
+      "ruleType": "guideline",
+      "scope": "global",
+      "enforcementLevel": "moderate",
+      "consequences": "破坏者将面临纪律处分，严重者可能被停学",
+      "examples": [
+        "学院间的魔法竞赛是被鼓励的",
+        "不得故意破坏其他学院的设施",
+        "不得散布针对其他学院的恶意谣言",
+        "可以进行友好的学术辩论"
+      ],
+      "isActive": true,
+      "priority": 7,
+      "metadata": {
+        "purpose": "维护学院和谐，促进交流",
+        "violations": "记录在案并报告给各学院院长"
+      }
+    },
+    {
+      "id": "rule_003",
+      "category": "combat",
+      "title": "决斗规则",
+      "description": "学院内允许进行正式的魔法决斗，但必须遵循严格的规则和安全措施。",
+      "ruleType": "law",
+      "scope": "global",
+      "enforcementLevel": "strict",
+      "consequences": "违反决斗规则可能导致严重伤亡，责任方将承担全部后果",
+      "examples": [
+        "决斗必须在指定的决斗场进行",
+        "必须有合格的教师作为裁判",
+        "禁止使用致命性魔法",
+        "双方必须在决斗前签署协议"
+      ],
+      "isActive": true,
+      "priority": 9,
+      "conditions": [
+        {
+          "type": "authorization",
+          "requirement": "教师许可",
+          "description": "必须得到至少一名教师的批准和监督"
+        },
+        {
+          "type": "location",
+          "requirement": "指定决斗场",
+          "description": "只能在具有安全保护措施的区域进行"
+        }
+      ],
+      "metadata": {
+        "safety_measures": "魔法护盾、治疗师待命、紧急传送",
+        "referee_requirements": "至少中级教师资格"
+      }
+    },
+    {
+      "id": "rule_004",
+      "category": "economic",
+      "title": "学分交易系统",
+      "description": "学院内使用学分作为交易货币，学生可以通过完成任务、优秀表现等方式获得学分。",
+      "ruleType": "guideline",
+      "scope": "global",
+      "enforcementLevel": "moderate",
+      "consequences": "违反交易规则将失去交易权限",
+      "examples": [
+        "可以用学分购买魔法材料",
+        "优秀的作业可以获得额外学分",
+        "帮助低年级学生可以获得学分奖励",
+        "损坏公共设施需要扣除学分"
+      ],
+      "isActive": true,
+      "priority": 5,
+      "metadata": {
+        "exchange_rate": "1学分 = 1小时的基础劳动",
+        "earning_methods": ["学术成就", "社区服务", "特殊贡献"],
+        "spending_options": ["魔法材料", "特殊权限", "个人定制服务"]
+      }
+    }
+  ],
+
+  "worldInfoEntries": [
+    {
+      "id": "wi_001",
+      "title": "阿卡迪亚魔法学院简介",
+      "content": "阿卡迪亚魔法学院是艾瑟拉大陆上最古老、最权威的魔法教育机构，建立于三千年前。学院位于浮空城阿卡迪亚之上，由四位传奇大魔法师共同创建。学院分为烈焰、碧波、疾风、大地四个学院，每个学院都有自己独特的教学理念和文化传统。学院的核心是位于中央塔的元素之心，它维持着整个浮空城的稳定。",
+      "keywords": ["阿卡迪亚", "魔法学院", "浮空城", "四大学院", "元素之心"],
+      "priority": 10,
+      "insertDepth": 2,
+      "probability": 1.0,
+      "matchType": "exact",
+      "caseSensitive": false,
+      "isActive": true,
+      "triggerOnce": false,
+      "category": "基础设定",
+      "displayOrder": 1,
+      "entryType": "description",
+      "relatedEntities": ["loc_001", "loc_002", "loc_003", "loc_004", "loc_005"],
+      "visibility": "public",
+      "conditions": [],
+      "sourceType": "manual",
+      "metadata": {
+        "importance": "highest",
+        "usage_frequency": "very_high",
+        "last_updated": "基础设定，稳定不变"
+      }
+    },
+    {
+      "id": "wi_002",
+      "title": "烈焰学院特色",
+      "content": "烈焰学院位于阿卡迪亚的东部，以红色和金色为主色调。这里的学生以热情、勇敢和直率著称。学院的标志性建筑是高耸的凤凰塔，塔内有永不熄灭的圣火。烈焰学院的学生擅长攻击性魔法和炼金术，他们的座右铭是'燃烧的意志，永恒的热情'。学院内的永燃图书馆收藏了大量珍贵的火系魔法典籍。",
+      "keywords": ["烈焰学院", "火系魔法", "凤凰塔", "永燃图书馆", "炼金术"],
+      "priority": 8,
+      "insertDepth": 3,
+      "probability": 0.9,
+      "matchType": "exact",
+      "caseSensitive": false,
+      "isActive": true,
+      "triggerOnce": false,
+      "category": "学院介绍",
+      "displayOrder": 2,
+      "entryType": "description",
+      "relatedEntities": ["loc_001"],
+      "visibility": "public",
+      "conditions": [
+        {
+          "type": "location_current",
+          "requirement": "loc_001",
+          "description": "在烈焰学院时更容易触发"
+        }
+      ],
+      "sourceType": "manual",
+      "metadata": {
+        "associated_culture": "cul_001",
+        "key_features": ["凤凰塔", "永燃图书馆", "熔炉实验室"]
+      }
+    },
+    {
+      "id": "wi_003",
+      "title": "元素失衡现象",
+      "content": "最近几个月，阿卡迪亚魔法学院出现了前所未有的元素失衡现象。魔法实验经常失控，某些区域的元素能量异常活跃，甚至连元素之心也开始出现不稳定的波动。学院的大校长已经组建了特别调查委员会来研究这个问题。一些古老的预言石板重新亮起，似乎预示着重大变化的到来。这种失衡不仅影响了正常的教学活动，也威胁到了整个浮空城的安全。",
+      "keywords": ["元素失衡", "魔法失控", "预言石板", "调查委员会", "危机"],
+      "priority": 9,
+      "insertDepth": 2,
+      "probability": 0.8,
+      "matchType": "partial",
+      "caseSensitive": false,
+      "isActive": true,
+      "triggerOnce": false,
+      "category": "当前事件",
+      "displayOrder": 3,
+      "entryType": "knowledge",
+      "relatedEntities": ["evt_003", "item_001"],
+      "visibility": "public",
+      "conditions": [],
+      "sourceType": "manual",
+      "metadata": {
+        "urgency": "high",
+        "investigation_status": "ongoing",
+        "threat_level": "significant"
+      }
+    },
+    {
+      "id": "wi_004",
+      "title": "四贤者的传说",
+      "content": "三千年前，四位传奇大魔法师——烈焰的伊格尼斯、碧波的阿奎娜、疾风的温德尔、大地的泰拉——为了维护世界的元素平衡，决定建立一所教授魔法的学院。他们将自己的生命力和魔法力量融合，创造了元素之心，并以此为核心建立了阿卡迪亚魔法学院。传说他们的灵魂仍然守护着学院，在最危急的时刻会显现给有缘人。每个学院都保存着对应贤者的遗物和教诲。",
+      "keywords": ["四贤者", "伊格尼斯", "阿奎娜", "温德尔", "泰拉", "传奇", "创始人"],
+      "priority": 7,
+      "insertDepth": 4,
+      "probability": 0.7,
+      "matchType": "exact",
+      "caseSensitive": false,
+      "isActive": true,
+      "triggerOnce": false,
+      "category": "历史传说",
+      "displayOrder": 4,
+      "entryType": "history",
+      "relatedEntities": ["evt_001", "item_001"],
+      "visibility": "public",
+      "conditions": [],
+      "sourceType": "manual",
+      "metadata": {
+        "historical_period": "founding_era",
+        "reliability": "high",
+        "cultural_significance": "fundamental"
+      }
+    },
+    {
+      "id": "wi_005",
+      "title": "学院的秘密通道",
+      "content": "阿卡迪亚魔法学院建筑复杂，除了表面可见的结构外，还隐藏着许多秘密通道和密室。这些通道大多建于学院创立初期，用于紧急情况下的疏散或秘密行动。一些通道连接着四大学院，另一些则通向学院的深层区域。据说最秘密的通道直通元素之心所在的中央塔核心区域，但具体位置只有历代大校长知晓。探索这些通道需要特殊的魔法钥匙或解谜技能。",
+      "keywords": ["秘密通道", "密室", "魔法钥匙", "探索", "谜题"],
+      "priority": 6,
+      "insertDepth": 5,
+      "probability": 0.6,
+      "matchType": "partial",
+      "caseSensitive": false,
+      "isActive": true,
+      "triggerOnce": false,
+      "category": "秘密信息",
+      "displayOrder": 5,
+      "entryType": "secret",
+      "relatedEntities": ["loc_005"],
+      "visibility": "conditional",
+      "conditions": [
+        {
+          "type": "character_present",
+          "requirement": "具有探索技能的角色",
+          "description": "只有善于探索的角色才会注意到这些细节"
+        }
+      ],
+      "sourceType": "manual",
+      "metadata": {
+        "discovery_difficulty": "medium_to_high",
+        "access_requirements": ["魔法钥匙", "解谜能力", "特殊权限"],
+        "danger_level": "varies"
+      }
+    },
+    {
+      "id": "wi_006",
+      "title": "暗影猎手组织",
+      "content": "暗影猎手是一个秘密组织，成立于一千年前的暗影入侵事件之后。这个组织专门监视和对抗来自暗影位面的威胁，成员身份高度机密，只有少数高层教职员工知晓他们的存在。组织成员通常具有特殊的反暗影魔法技能，他们在暗中保护着学院的安全。据说每个学院都有暗影猎手的成员，他们以隐秘的光明印记相互识别。最近的元素失衡事件让他们怀疑可能与暗影力量有关。",
+      "keywords": ["暗影猎手", "秘密组织", "暗影位面", "光明印记", "反暗影魔法"],
+      "priority": 5,
+      "insertDepth": 6,
+      "probability": 0.4,
+      "matchType": "exact",
+      "caseSensitive": false,
+      "isActive": true,
+      "triggerOnce": false,
+      "category": "秘密信息",
+      "displayOrder": 6,
+      "entryType": "secret",
+      "relatedEntities": ["org_004", "evt_002"],
+      "visibility": "secret",
+      "conditions": [
+        {
+          "type": "relationship_exists",
+          "requirement": "与暗影猎手成员有联系",
+          "description": "需要特殊的关系才能了解这个信息"
+        }
+      ],
+      "sourceType": "manual",
+      "metadata": {
+        "secrecy_level": "highest",
+        "membership": "invitation_only",
+        "activities": "covert_operations"
+      }
+    }
+  ],
+
+  "characterSettings": [
+    {
+      "id": "cs_001",
+      "characterId": "char_placeholder_student",
+      "scenarioId": "dcc74a90-781d-462f-b9e3-6fa088618857",
+      "backgroundOverride": "你是阿卡迪亚魔法学院的一名学生，刚刚入学不久，对学院的一切都充满好奇。你被分配到了某个学院（根据角色特点确定），正在努力适应学院生活并提升自己的魔法技能。最近学院中发生的元素失衡现象让你既担心又兴奋，因为这可能是一次证明自己的机会。",
+      "relationships": {
+        "rel_001": {
+          "entityId": "org_002",
+          "entityType": "organization",
+          "relationship": "member",
+          "strength": 3,
+          "isPublic": true,
+          "description": "学生会的普通成员，参与一些活动"
+        },
+        "rel_002": {
+          "entityId": "char_placeholder_roommate",
+          "entityType": "character",
+          "relationship": "roommate",
+          "strength": 4,
+          "isPublic": true,
+          "description": "室友关系，相处融洽"
+        }
+      },
+      "specialAbilities": [
+        {
+          "name": "元素感知",
+          "description": "能够感知到元素能量的细微变化",
+          "type": "innate",
+          "scope": "magical",
+          "limitations": ["只在学院范围内有效", "需要集中注意力"]
+        },
+        {
+          "name": "快速学习",
+          "description": "学习新魔法的速度比一般人快",
+          "type": "learned",
+          "scope": "mental",
+          "limitations": ["只适用于魔法知识", "需要有好的导师"]
+        }
+      ],
+      "restrictions": [
+        {
+          "type": "social",
+          "description": "作为新生，不能进入某些高级区域",
+          "severity": "moderate",
+          "conditions": ["没有高年级学生陪同", "没有教师许可"]
+        },
+        {
+          "type": "magical",
+          "description": "只能使用基础魔法，高级法术需要监督",
+          "severity": "major",
+          "conditions": ["独自练习时", "在非实验室环境"]
+        }
+      ],
+      "startingLocationId": "loc_001",
+      "startingItems": ["item_002"],
+      "reputation": {
+        "rep_001": {
+          "organizationId": "org_002",
+          "reputation": 60,
+          "known_as": "积极的新成员",
+          "notable_deeds": ["参与了迎新活动的组织工作"]
+        }
+      },
+      "secretsKnown": [
+        {
+          "secret": "注意到了某个教师的行为异常",
+          "importance": 2,
+          "source": "意外观察",
+          "consequences_if_revealed": "可能会被认为是多管闲事"
+        }
+      ],
+      "personalGoals": [
+        {
+          "description": "掌握所选学院的核心魔法技能",
+          "motivation": "想要成为优秀的魔法师",
+          "obstacles": ["课程难度高", "竞争激烈", "时间不够"],
+          "progress": 25
+        },
+        {
+          "description": "了解元素失衡现象的真相",
+          "motivation": "好奇心和责任感",
+          "obstacles": ["信息不足", "缺乏权限", "危险性未知"],
+          "progress": 10
+        }
+      ],
+      "isActive": true,
+      "metadata": {
+        "character_type": "student_protagonist",
+        "story_role": "main_character",
+        "development_potential": "high"
+      }
+    }
+  ]
+}

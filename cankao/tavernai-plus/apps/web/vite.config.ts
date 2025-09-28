@@ -63,7 +63,7 @@ export default defineConfig({
   build: {
     // 目标环境
     target: 'es2020',
-    
+
     // 代码分割优化
     rollupOptions: {
       output: {
@@ -71,16 +71,16 @@ export default defineConfig({
         manualChunks: {
           // Vue 生态系统
           'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          
+
           // UI 组件库
           'ui-vendor': ['element-plus', '@element-plus/icons-vue'],
-          
+
           // 工具库
           'utils-vendor': ['axios', 'date-fns'],
-          
+
           // WebSocket 相关
           'socket-vendor': ['socket.io-client'],
-          
+
           // 社区相关组件
           'community': [
             'src/views/community/CommunityView.vue',
@@ -90,7 +90,7 @@ export default defineConfig({
             'src/components/community/CreatePostDialog.vue',
             'src/components/community/CommentSection.vue'
           ],
-          
+
           // 语音和图像处理组件
           'media': [
             'src/components/voice/VoiceInput.vue',
@@ -100,7 +100,7 @@ export default defineConfig({
             'src/components/image/ImageAnalyzer.vue',
             'src/components/image/ImageEditor.vue'
           ],
-          
+
           // 市场相关组件
           'marketplace': [
             'src/views/marketplace/MarketplaceView.vue',
@@ -110,14 +110,14 @@ export default defineConfig({
             'src/components/character/CharacterMarketDetail.vue'
           ]
         },
-        
+
         // 资源命名
         chunkFileNames: 'js/[name]-[hash].js',
         entryFileNames: 'js/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
-    
+
     // 压缩优化
     minify: 'terser',
     terserOptions: {
@@ -127,11 +127,11 @@ export default defineConfig({
         pure_funcs: ['console.log', 'console.info', 'console.debug']
       }
     },
-    
+
     // 文件大小报告
     reportCompressedSize: true,
     chunkSizeWarningLimit: 1000,
-    
+
     // 其他优化
     sourcemap: false, // 生产环境关闭 sourcemap
     cssCodeSplit: true, // CSS 代码分割
@@ -139,14 +139,19 @@ export default defineConfig({
 
   // 开发服务器配置
   server: {
-    port: 3000,
+    port: 3001,
+    host: '0.0.0.0', // 允许外部访问
     proxy: {
       '/api': {
-        target: 'http://localhost:3007',
+        target: 'http://localhost:3008',
+        changeOrigin: true
+      },
+      '/health': {
+        target: 'http://localhost:3008',
         changeOrigin: true
       },
       '/ws': {
-        target: 'ws://localhost:3007',
+        target: 'ws://localhost:3008',
         ws: true
       }
     }
