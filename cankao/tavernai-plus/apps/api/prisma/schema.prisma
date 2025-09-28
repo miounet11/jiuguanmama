@@ -90,6 +90,7 @@ model User {
   scenarios          Scenario[]
   scenarioFavorites  ScenarioFavorite[]
   scenarioRatings    ScenarioRating[]
+  scenarioTemplates  ScenarioTemplate[] // 创建的剧本模板
 }
 
 // 角色模型
@@ -140,6 +141,10 @@ model Character {
 
   // 情景剧本系统关系
   scenarios CharacterScenario[]
+
+  // 增强世界剧本关系
+  leadingOrganizations WorldOrganization[] // 作为领导者的组织
+  ownedItems          WorldItem[]         // 拥有的物品
 
   @@unique([name, creatorId])
   @@index([creatorId])
@@ -1059,6 +1064,22 @@ model Scenario {
   category    String   @default("通用") // 剧本分类
   language    String   @default("zh-CN") // 语言设置
 
+  // 增强世界剧本字段
+  genre           String? // fantasy, scifi, modern, historical, horror, romance, mystery, adventure
+  complexity      String? // simple, moderate, complex, epic
+  contentRating   String? @map("content_rating") // general, teen, mature, adult
+  worldScope      String? @map("world_scope") // local, regional, continental, global, multiverse
+  timelineScope   String? @map("timeline_scope") // single_event, short_term, medium_term, long_term, eternal
+  playerCount     Int?    @map("player_count")
+  estimatedDuration Int?  @map("estimated_duration")
+  templateId      String? @map("template_id")
+  isFeatured      Boolean @default(false) @map("is_featured")
+  ratingAverage   Float   @default(0.0) @map("rating_average")
+  downloadCount   Int     @default(0) @map("download_count")
+
+  // 世界设定字段
+  worldSetting    String? @map("world_setting") // 详细的世界设定描述
+
   // 统计信息
   viewCount     Int @default(0) @map("view_count")
   useCount      Int @default(0) @map("use_count")
@@ -1078,7 +1099,16 @@ model Scenario {
   user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   parent     Scenario?        @relation("ScenarioVersions", fields: [parentId], references: [id], onDelete: SetNull)
   versions   Scenario[]       @relation("ScenarioVersions")
+  template   ScenarioTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
   worldInfos WorldInfoEntry[]
+
+  // 增强世界剧本关系
+  worldLocations     WorldLocation[]
+  worldEvents        WorldEvent[]
+  worldOrganizations WorldOrganization[]
+  worldCultures      WorldCulture[]
+  worldItems         WorldItem[]
+  worldRules         WorldRule[]
 
   // 多对多关系：角色可以使用多个剧本，剧本可以被多个角色使用
   characters CharacterScenario[]
@@ -1163,6 +1193,12 @@ model CharacterScenario {
   isDefault Boolean @default(false) @map("is_default") // 是否为角色的默认剧本
   isActive  Boolean @default(true) @map("is_active")
 
+  // 增强字段
+  relationshipType   String? @map("relationship_type") // protagonist, antagonist, supporting, participant, observer
+  importanceLevel    String? @map("importance_level") // low, medium, high, critical
+  compatibilityScore Float?  @map("compatibility_score")
+  notes             String?
+
   // 个性化设置
   customSettings String? @map("custom_settings") // JSON字符串存储个性化配置
 
@@ -1173,6 +1209,7 @@ model CharacterScenario {
   // 关系
   character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
   scenario  Scenario  @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  characterWorldSettings CharacterWorldSetting[]
 
   // 约束
   @@unique([characterId, scenarioId])
@@ -1218,4 +1255,199 @@ model ScenarioRating {
   @@index([userId])
   @@index([scenarioId])
   @@index([rating])
+}
+
+// ==================== 增强世界剧本系统模型 ====================
+
+// 世界地点模型
+model WorldLocation {
+  id              String  @id @default(uuid())
+  scenarioId      String  @map("scenario_id")
+  name            String
+  description     String
+  locationType    String  @map("location_type") // city, building, room, landmark, region, dimension
+  atmosphere      String?
+  significance    String  @default("minor") // minor, moderate, major, legendary
+  parentLocationId String? @map("parent_location_id")
+  coordinates     String?
+  isAccessible    Boolean @default(true) @map("is_accessible")
+  accessRequirements String? @map("access_requirements")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  scenario         Scenario       @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  parentLocation   WorldLocation? @relation("LocationHierarchy", fields: [parentLocationId], references: [id], onDelete: Cascade)
+  childLocations   WorldLocation[] @relation("LocationHierarchy")
+
+  @@index([scenarioId])
+  @@index([parentLocationId])
+  @@index([locationType])
+  @@index([significance])
+}
+
+// 世界事件模型
+model WorldEvent {
+  id                 String   @id @default(uuid())
+  scenarioId         String   @map("scenario_id")
+  name               String
+  description        String
+  eventType          String   @map("event_type") // historical, ongoing, future, cyclical, legendary
+  timeReference      String   @map("time_reference")
+  importance         String   @default("minor") // minor, moderate, major, world_changing
+  consequences       String?
+  involvedCharacters String   @default("[]") @map("involved_characters") // JSON array
+  relatedLocationIds String   @default("[]") @map("related_location_ids") // JSON array
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
+  @@index([eventType])
+  @@index([importance])
+  @@index([timeReference])
+}
+
+// 世界组织模型
+model WorldOrganization {
+  id                String  @id @default(uuid())
+  scenarioId        String  @map("scenario_id")
+  name              String
+  description       String
+  organizationType  String  @map("organization_type") // guild, government, religious, military, academic, commercial, criminal, secret
+  influence         String  @default("local") // local, regional, national, international, interdimensional
+  goals             String  @default("[]") // JSON array
+  leadership        String?
+  memberCount       String? @map("member_count")
+  headquarters      String?
+  isActive          Boolean @default(true) @map("is_active")
+  leaderCharacterId String? @map("leader_character_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  scenario        Scenario   @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  leaderCharacter Character? @relation(fields: [leaderCharacterId], references: [id], onDelete: SetNull)
+
+  @@index([scenarioId])
+  @@index([organizationType])
+  @@index([influence])
+  @@index([leaderCharacterId])
+}
+
+// 世界文化模型
+model WorldCulture {
+  id             String   @id @default(uuid())
+  scenarioId     String   @map("scenario_id")
+  name           String
+  description    String
+  language       String?
+  traditions     String   @default("[]") // JSON array
+  beliefs        String   @default("[]") // JSON array
+  influence      String   @default("local") // local, regional, national, international, interdimensional
+  population     String?
+  notableFigures String   @default("[]") @map("notable_figures") // JSON array
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
+  @@index([influence])
+  @@index([language])
+}
+
+// 世界物品模型
+model WorldItem {
+  id               String  @id @default(uuid())
+  scenarioId       String  @map("scenario_id")
+  name             String
+  description      String
+  itemType         String  @map("item_type") // weapon, armor, tool, artifact, consumable, currency, document, other
+  rarity           String  @default("common") // common, uncommon, rare, epic, legendary, mythical
+  properties       String  @default("[]") // JSON array
+  requirements     String?
+  effects          String?
+  value            String?
+  locationFound    String? @map("location_found")
+  ownerCharacterId String? @map("owner_character_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  scenario       Scenario   @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  ownerCharacter Character? @relation(fields: [ownerCharacterId], references: [id], onDelete: SetNull)
+
+  @@index([scenarioId])
+  @@index([itemType])
+  @@index([rarity])
+  @@index([ownerCharacterId])
+}
+
+// 世界规则模型
+model WorldRule {
+  id           String   @id @default(uuid())
+  scenarioId   String   @map("scenario_id")
+  name         String
+  description  String
+  ruleType     String   @map("rule_type") // physical, magical, social, economic, political, technological
+  scope        String   @default("local") // local, regional, global, universal, dimensional
+  enforcement  String   @default("natural") // natural, enforced, cultural, magical, technological
+  exceptions   String?
+  consequences String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
+  @@index([ruleType])
+  @@index([scope])
+  @@index([enforcement])
+}
+
+// 剧本模板模型
+model ScenarioTemplate {
+  id           String   @id @default(uuid())
+  name         String
+  description  String
+  templateData String   @map("template_data") // JSON data
+  category     String
+  isPublic     Boolean  @default(true) @map("is_public")
+  usageCount   Int      @default(0) @map("usage_count")
+  createdBy    String   @map("created_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  creator   User       @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  scenarios Scenario[]
+
+  @@index([createdBy])
+  @@index([category])
+  @@index([isPublic])
+  @@index([usageCount])
+}
+
+// 角色世界设定模型
+model CharacterWorldSetting {
+  id                   String   @id @default(uuid())
+  characterScenarioId  String   @map("character_scenario_id")
+  specialAbilities     String   @default("[]") @map("special_abilities") // JSON array
+  worldKnowledge       String?  @map("world_knowledge")
+  relationships        String   @default("[]") // JSON array
+  personalGoals        String   @default("[]") @map("personal_goals") // JSON array
+  currentStatus        String?  @map("current_status")
+  equipment            String   @default("[]") // JSON array
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  characterScenario CharacterScenario @relation(fields: [characterScenarioId], references: [id], onDelete: Cascade)
+
+  @@index([characterScenarioId])
 }
