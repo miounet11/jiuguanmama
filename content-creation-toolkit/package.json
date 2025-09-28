@@ -1,0 +1,28 @@
+{
+  "name": "tavernai-content-creation-toolkit",
+  "version": "1.0.0",
+  "description": "TavernAI+ 内容创建工具包 - 角色卡和世界脚本创建、验证、导入工具",
+  "type": "commonjs",
+  "scripts": {
+    "create": "node tools/creator.js",
+    "validate": "node tools/validator.js",
+    "import": "node tools/importer.js",
+    "test": "npm run validate && npm run import"
+  },
+  "dependencies": {
+    "ajv": "^8.12.0",
+    "ajv-formats": "^3.0.1",
+    "fs-extra": "^11.1.0",
+    "inquirer": "^9.2.0",
+    "path": "^0.12.7"
+  },
+  "keywords": [
+    "tavernai",
+    "character",
+    "scenario",
+    "ai",
+    "roleplay"
+  ],
+  "author": "TavernAI+ Team",
+  "license": "MIT"
+}

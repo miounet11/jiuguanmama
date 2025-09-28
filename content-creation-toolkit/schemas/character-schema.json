@@ -1,0 +1,171 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "九馆爸爸角色卡数据结构",
+  "description": "完整的角色卡JSON数据结构定义，确保所有角色卡数据的一致性和完整性",
+  "type": "object",
+  "required": ["名称", "描述", "性格", "开场对话", "场景", "对话示例", "触发器", "变量", "提示词"],
+  "properties": {
+    "名称": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 20,
+      "description": "角色的正式名称，建议2-4个字符，具有辨识度"
+    },
+    "描述": {
+      "type": "string",
+      "minLength": 50,
+      "maxLength": 500,
+      "description": "角色的详细描述，包括外貌、身份、特点等，150-300字为佳"
+    },
+    "性格": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 200,
+      "description": "角色的核心性格特征，用逗号分隔，如：病娇、占有欲强、外表温柔"
+    },
+    "开场对话": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 300,
+      "description": "角色的第一句话，应体现性格特点和背景设定，支持富文本格式"
+    },
+    "场景": {
+      "type": "string",
+      "minLength": 30,
+      "maxLength": 400,
+      "description": "角色出现的背景环境和初始情境描述"
+    },
+    "详细描述": {
+      "type": "string",
+      "description": "可选的更详细背景介绍"
+    },
+    "背景故事": {
+      "type": "string",
+      "description": "角色的过往经历和身世设定"
+    },
+    "说话风格": {
+      "type": "string",
+      "description": "角色的语言习惯、口头禅、措辞特点"
+    },
+    "对话示例": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "好感度_高于80": {
+            "type": "string",
+            "description": "高好感度时的对话内容"
+          },
+          "好感度_50至80": {
+            "type": "string",
+            "description": "中等好感度时的对话内容"
+          },
+          "好感度_20至50": {
+            "type": "string",
+            "description": "低好感度时的对话内容"
+          },
+          "好感度_低于20": {
+            "type": "string",
+            "description": "极低好感度或敌对时的对话"
+          }
+        },
+        "additionalProperties": true
+      },
+      "description": "不同好感度下的对话示例"
+    },
+    "触发器": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["条件", "响应"],
+        "properties": {
+          "条件": {
+            "type": "string",
+            "description": "触发条件的详细描述"
+          },
+          "响应": {
+            "type": "string",
+            "description": "角色的反应和后果"
+          },
+          "概率": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "触发概率，0-1之间的小数"
+          }
+        }
+      },
+      "description": "角色的触发器系统"
+    },
+    "变量": {
+      "type": "object",
+      "required": ["好感度"],
+      "properties": {
+        "好感度": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "初始好感度数值"
+        }
+      },
+      "additionalProperties": true,
+      "description": "角色的状态变量"
+    },
+    "提示词": {
+      "type": "string",
+      "minLength": 50,
+      "maxLength": 1000,
+      "description": "AI角色扮演的系统提示词，指导AI如何演绎角色"
+    },
+    "特殊设定": {
+      "type": "object",
+      "description": "角色的特殊设定或能力"
+    },
+    "关系网络": {
+      "type": "object",
+      "description": "与其他角色的关系设定"
+    },
+    "元数据": {
+      "type": "object",
+      "properties": {
+        "创建者": {
+          "type": "string",
+          "description": "角色卡创建者"
+        },
+        "创建时间": {
+          "type": "string",
+          "format": "date-time",
+          "description": "创建时间"
+        },
+        "版本": {
+          "type": "string",
+          "description": "角色卡版本号"
+        },
+        "分类": {
+          "type": "string",
+          "enum": [
+            "武侠仙侠",
+            "现代都市",
+            "奇幻冒险",
+            "科幻未来",
+            "古代宫廷",
+            "时空酒馆",
+            "银虹系列",
+            "原创"
+          ],
+          "description": "角色分类"
+        },
+        "标签": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "角色标签"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

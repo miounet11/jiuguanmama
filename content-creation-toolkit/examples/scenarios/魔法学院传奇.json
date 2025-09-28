@@ -1,0 +1,131 @@
+{
+  "name": "魔法学院传奇",
+  "description": "阿卡迪亚魔法学院是大陆上最古老也最神秘的魔法学府，坐落在悬浮的天空之城中。这里汇聚了来自各族的天才法师，他们在学习魔法的同时，也将面对古老预言中提及的黑暗势力复苏。在这个充满奇迹与危险的学院里，每个人都可能成为拯救世界的英雄，或是堕入黑暗的魔法师。",
+  "content": "阿卡迪亚魔法学院建立在一座巨大的浮空岛屿上，四周云雾缭绕，只能通过传送门进入。学院分为四个学院：炽焰学院（火系魔法）、冰霜学院（冰系魔法）、翠绿学院（自然魔法）、暗影学院（暗系魔法）。每个学院都有自己的传统和竞争关系，学生们在学习中不断探索魔法的奥秘，同时也要面对来自深渊的威胁。",
+  "category": "奇幻冒险",
+  "tags": ["魔法", "学院", "奇幻", "冒险", "成长", "友谊", "竞争"],
+  "language": "zh-CN",
+  "isPublic": true,
+  "isActive": true,
+  "version": 1,
+  "worldInfos": [
+    {
+      "title": "阿卡迪亚魔法学院历史",
+      "content": "学院建立于一千年前的魔法黄金时代，由四位传奇大法师共同创立。创始人分别是火焰大法师伊格尼斯、冰霜女巫艾尔莎、自然守护者西尔万，以及神秘的暗影法师诺克图斯。学院建在古代龙族遗留的浮空岛上，岛屿本身就蕴含着强大的魔法能量。经历过三次魔法大战，学院依然屹立不倒，被誉为魔法界的圣地。",
+      "keywords": ["学院", "历史", "阿卡迪亚", "创始人", "浮空岛", "魔法大战"],
+      "priority": 1000,
+      "insertDepth": 4,
+      "probability": 1.0,
+      "matchType": "contains",
+      "caseSensitive": false,
+      "isActive": true,
+      "triggerOnce": false,
+      "excludeRecursion": true,
+      "category": "历史背景",
+      "position": "before"
+    },
+    {
+      "title": "四大学院制度",
+      "content": "炽焰学院以红色为标志，学员性格热烈勇敢，擅长攻击性火系魔法。冰霜学院以蓝色为标志，学员冷静理智，精通防御和控制法术。翠绿学院以绿色为标志，学员温和友善，专攻治愈和自然魔法。暗影学院以紫色为标志，学员神秘莫测，掌握禁忌和暗系法术。四院之间既有竞争也有合作，每年都会举行学院杯竞赛。",
+      "keywords": ["炽焰", "冰霜", "翠绿", "暗影", "学院", "竞赛", "魔法", "四院"],
+      "priority": 950,
+      "insertDepth": 4,
+      "probability": 1.0,
+      "matchType": "contains",
+      "caseSensitive": false,
+      "isActive": true,
+      "triggerOnce": false,
+      "excludeRecursion": true,
+      "category": "学院制度",
+      "position": "before"
+    },
+    {
+      "title": "魔法体系与等级",
+      "content": "魔法分为九个等级，从初级学徒到传奇大法师。学徒期（1-3级）学习基础理论，正式法师（4-6级）掌握专业法术，高级法师（7-8级）可以创造新法术，传奇法师（9级）能够改变现实规则。每个等级都需要通过严格的考核，包括理论测试、实战演练和品德审查。学院还有特殊的荣誉称号，如'元素大师'、'禁咒学者'等。",
+      "keywords": ["魔法等级", "学徒", "法师", "考核", "传奇", "元素", "禁咒"],
+      "priority": 900,
+      "insertDepth": 4,
+      "probability": 1.0,
+      "matchType": "contains",
+      "caseSensitive": false,
+      "isActive": true,
+      "triggerOnce": false,
+      "excludeRecursion": true,
+      "category": "魔法体系",
+      "position": "before"
+    },
+    {
+      "title": "古老预言与黑暗势力",
+      "content": "学院图书馆深处保存着一个古老预言：'当千年之期将至，沉睡的黑暗将再次苏醒，只有新一代的光明守护者才能阻止世界的毁灭。'预言还提到会有四个来自不同学院的学生，他们将掌握失传的古代魔法，联手对抗黑暗魔王的回归。最近学院周围出现了异常的魔法波动，暗示着预言可能即将应验。",
+      "keywords": ["预言", "黑暗", "光明守护者", "毁灭", "古代魔法", "魔王", "异常"],
+      "priority": 850,
+      "insertDepth": 4,
+      "probability": 1.0,
+      "matchType": "contains",
+      "caseSensitive": false,
+      "isActive": true,
+      "triggerOnce": false,
+      "excludeRecursion": true,
+      "category": "主线剧情",
+      "position": "before"
+    },
+    {
+      "title": "学院设施与环境",
+      "content": "学院主要建筑包括：雄伟的中央塔楼（院长办公室和议事厅）、四座学院宿舍楼、大图书馆（藏有无数魔法书籍）、炼金实验室、决斗场、魔法花园、神秘的地下迷宫。食堂的食物由家养精灵烹制，宿舍由魔法维护。学院还有会移动的楼梯、会说话的画像、以及各种魔法生物作为助手。",
+      "keywords": ["中央塔楼", "图书馆", "实验室", "决斗场", "花园", "迷宫", "精灵", "魔法生物"],
+      "priority": 800,
+      "insertDepth": 4,
+      "probability": 1.0,
+      "matchType": "contains",
+      "caseSensitive": false,
+      "isActive": true,
+      "triggerOnce": false,
+      "excludeRecursion": true,
+      "category": "环境设施",
+      "position": "before"
+    }
+  ],
+  "characters": [
+    {
+      "characterId": "艾莉亚·星辰",
+      "role": "炽焰学院顶尖学生，火系魔法天才",
+      "relationship": "可能的伙伴或竞争对手",
+      "importance": "primary",
+      "availability": "always"
+    },
+    {
+      "characterId": "卡萨丁·暗影",
+      "role": "暗影学院神秘学生，精通禁忌魔法",
+      "relationship": "亦敌亦友的复杂关系",
+      "importance": "primary",
+      "availability": "conditional"
+    },
+    {
+      "characterId": "梅琳娜院长",
+      "role": "学院院长，传奇大法师",
+      "relationship": "导师和权威人物",
+      "importance": "secondary",
+      "availability": "conditional"
+    }
+  ],
+  "settings": {
+    "difficulty": "medium",
+    "duration": "long",
+    "playerCount": {
+      "min": 1,
+      "max": 4
+    },
+    "ageRating": "teen"
+  },
+  "metadata": {
+    "createdBy": "内容创建工具",
+    "createdAt": "2025-09-28T12:30:00.000Z",
+    "source": "content-creation-toolkit",
+    "inspiration": "融合哈利波特、魔法学院等经典奇幻元素",
+    "references": [
+      "经典魔法学院设定",
+      "奇幻文学传统元素",
+      "日系魔法学院动漫"
+    ]
+  }
+}
