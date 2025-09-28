@@ -1,0 +1,46 @@
+{
+  "name": "tavernai-plus-background-updater",
+  "version": "1.0.0",
+  "description": "TavernAI Plus 后台数据更新系统",
+  "main": "index.js",
+  "scripts": {
+    "start": "node start-updater.js",
+    "dev": "node start-updater.js --port=3002",
+    "test": "node test/test-all.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "check": "node check-system.js"
+  },
+  "keywords": [
+    "tavernai",
+    "background-tasks",
+    "character-generation",
+    "database-upgrade",
+    "task-queue"
+  ],
+  "author": "TavernAI Plus Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "better-sqlite3": "^8.7.0",
+    "cors": "^2.8.5",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.45.0",
+    "prettier": "^3.0.0",
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/tavernai-plus"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/tavernai-plus/issues"
+  },
+  "homepage": "https://github.com/your-org/tavernai-plus#readme"
+}
