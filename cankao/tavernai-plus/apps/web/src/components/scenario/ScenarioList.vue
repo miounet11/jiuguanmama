@@ -208,6 +208,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Grid, List } from '@element-plus/icons-vue'
@@ -223,12 +224,7 @@ const router = useRouter()
 // Store
 const scenarioStore = useScenarioStore()
 
-// 响应式数据
-const viewMode = ref<'grid' | 'list'>('grid')
-const showCreateDialog = ref(false)
-const localSearchQuery = ref('')
-
-// 计算属性
+// 响应式数据 - 使用 storeToRefs 保持响应式
 const {
   scenarios,
   isLoading,
@@ -243,10 +239,15 @@ const {
   showPublicOnly,
   categories,
   tags
-} = scenarioStore
+} = storeToRefs(scenarioStore)
+
+// 组件本地状态
+const viewMode = ref<'grid' | 'list'>('grid')
+const showCreateDialog = ref(false)
+const localSearchQuery = ref('')
 
 const selectedSort = computed({
-  get: () => sortBy,
+  get: () => sortBy.value,
   set: (value) => {
     scenarioStore.sortBy = value
   }

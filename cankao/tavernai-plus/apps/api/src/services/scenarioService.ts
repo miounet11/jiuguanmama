@@ -147,6 +147,10 @@ export class ScenarioService {
               avatar: true
             }
           },
+          worldInfos: {
+            where: { isActive: true },
+            orderBy: { priority: 'desc' }
+          },
           _count: {
             select: {
               worldInfos: true,
@@ -163,6 +167,10 @@ export class ScenarioService {
     const scenariosWithPermissions: ApiScenario[] = scenarios.map(scenario => ({
       ...scenario,
       tags: this.parseTags(scenario.tags),
+      worldInfos: scenario.worldInfos.map(entry => ({
+        ...entry,
+        keywords: this.parseKeywords(entry.keywords)
+      })),
       canEdit: userId === scenario.user.id,
       isFavorited: false // 这里可以后续扩展查询用户收藏状态
     }))

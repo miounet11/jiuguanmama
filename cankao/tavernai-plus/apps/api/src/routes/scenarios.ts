@@ -48,7 +48,15 @@ const worldInfoSchema = z.object({
 router.get('/', optionalAuth, validate(scenarioQuerySchema, 'query'), async (req, res) => {
   try {
     const userId = req.user?.id
-    const query = req.query as any
+    const rawQuery = req.query as any
+
+    // 确保数字参数的正确类型转换
+    const query = {
+      ...rawQuery,
+      page: rawQuery.page ? parseInt(rawQuery.page) : 1,
+      limit: rawQuery.limit ? parseInt(rawQuery.limit) : 20,
+      tags: rawQuery.tags ? rawQuery.tags.split(',') : undefined
+    }
 
     const result = await scenarioService.getScenarios(userId, query)
 
