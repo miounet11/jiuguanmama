@@ -120,6 +120,8 @@ router.post('/login', validate(loginSchema), async (req, res, next): Promise<voi
   try {
     const { email, password } = req.body
 
+    console.log('🔍 登录请求:', { email, passwordLength: password?.length })
+
     // 查找用户
     const user = await prisma.user.findUnique({
       where: { email },
@@ -138,7 +140,15 @@ router.post('/login', validate(loginSchema), async (req, res, next): Promise<voi
       }
     })
 
+    console.log('👤 用户查询结果:', {
+      found: !!user,
+      hasPasswordHash: !!user?.passwordHash,
+      isActive: user?.isActive,
+      username: user?.username
+    })
+
     if (!user || !user.passwordHash) {
+      console.log('❌ 用户不存在或没有密码哈希')
       res.status(401).json({
         success: false,
         message: 'Invalid email or password'

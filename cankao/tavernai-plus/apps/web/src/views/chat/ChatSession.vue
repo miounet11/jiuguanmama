@@ -350,8 +350,8 @@
             >
               <TavernIcon :name="isVoiceRecording ? 'stop' : 'microphone'" />
             </TavernButton>
-            <!-- 图像功能 -->
-            <ChatImageFeatures
+            <!-- 简化的图像功能 -->
+            <SimplifiedChatImageFeatures
               :current-character="character"
               :messages="messages"
               @image-generated="handleImageGenerated"
@@ -418,16 +418,20 @@
       </div>
     </div>
 
-    <!-- 语音功能组件 -->
-    <ChatVoiceFeatures
-      :messages="messages"
-      :current-character="character"
-      :is-mobile="isMobile"
-      @voice-text-ready="handleVoiceTextReady"
-      @voice-message-play="handleVoiceMessagePlay"
-      @voice-message-stop="handleVoiceMessageStop"
-      @auto-voice-toggle="handleAutoVoiceToggle"
-    />
+    <!-- 底部交互区域 -->
+    <div class="bottom-interaction-area">
+      <!-- 语音功能组件 -->
+      <ChatVoiceFeatures
+        :messages="messages"
+        :current-character="character"
+        :is-mobile="isMobile"
+        class="integrated-voice-features"
+        @voice-text-ready="handleVoiceTextReady"
+        @voice-message-play="handleVoiceMessagePlay"
+        @voice-message-stop="handleVoiceMessageStop"
+        @auto-voice-toggle="handleAutoVoiceToggle"
+      />
+    </div>
 
     <!-- 语音输入对话框 -->
     <div v-if="showVoiceDialog" class="modal-overlay" @click="showVoiceDialog = false">
@@ -481,11 +485,12 @@
 import { ref, reactive, onMounted, nextTick, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { http } from '@/utils/axios'
+import { formatTime as formatTimeUtil, getRelativeTime } from '@/utils/date'
 import ModelSelector from '@/components/common/ModelSelector.vue'
 import SillyTavernControls from '@/components/advanced/SillyTavernControls.vue'
 import ChatVoiceFeatures from '@/components/voice/ChatVoiceFeatures.vue'
 import VoiceInput from '@/components/voice/VoiceInput.vue'
-import ChatImageFeatures from '@/components/image/ChatImageFeatures.vue'
+import SimplifiedChatImageFeatures from '@/components/image/SimplifiedChatImageFeatures.vue'
 
 const route = useRoute()
 
@@ -622,12 +627,8 @@ const formatCount = (count: number) => {
   return count.toString()
 }
 
-const formatTime = (time: Date) => {
-  const date = new Date(time)
-  return date.toLocaleTimeString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+const formatTime = (time: Date | string | number) => {
+  return formatTimeUtil(time)
 }
 
 // 格式化消息内容（支持 Markdown）
@@ -1874,7 +1875,72 @@ const initializeContainer = () => {
     position: relative;
     z-index: 100;
   }
+}
 
+// 底部交互区域整合
+.bottom-interaction-area {
+  background: rgba($dark-bg-secondary, 0.98);
+  border-top: 1px solid rgba($primary-500, 0.3);
+  padding: $space-4 $space-5;
+  backdrop-filter: blur(15px);
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+
+  // 移动端优化
+  @include mobile-only {
+    padding: $space-3 $space-4;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 200;
+  }
+
+  // 整合语音功能样式
+  .integrated-voice-features {
+    margin-top: $space-3;
+
+    // 重写语音功能的布局，使其更适合底部区域
+    :deep(.voice-input-section) {
+      justify-content: center;
+      padding: $space-3 0;
+      border-top: 1px solid rgba($primary-500, 0.2);
+      margin-top: $space-3;
+    }
+
+    :deep(.auto-voice-section) {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: $space-2 0;
+      margin-top: $space-2;
+      border-top: 1px solid rgba($gray-700, 0.3);
+
+      .auto-voice-toggle {
+        background: transparent;
+      }
+    }
+
+    :deep(.voice-settings-panel) {
+      position: absolute;
+      right: 0;
+      top: $space-2;
+    }
+
+    // 移动端语音功能优化
+    @include mobile-only {
+      :deep(.voice-input-section) {
+        padding: $space-2 0;
+      }
+
+      :deep(.auto-voice-section) {
+        flex-direction: column;
+        gap: $space-2;
+        align-items: stretch;
+      }
+    }
+  }
   .input-container {
     display: flex;
     gap: $space-3;

@@ -353,12 +353,15 @@ onMounted(async () => {
 
 // 左侧边栏
 .chat-sidebar {
-  width: 320px;
+  width: 380px;
+  min-width: 280px;
+  max-width: 420px;
   border-right: 1px solid var(--dt-color-border-secondary);
   display: flex;
   flex-direction: column;
   background: var(--dt-color-surface-secondary);
   backdrop-filter: blur(10px);
+  flex-shrink: 0;
 
   .sidebar-header {
     padding: var(--dt-spacing-lg);
@@ -715,13 +718,36 @@ onMounted(async () => {
 }
 
 // 响应式优化
-@media (max-width: 1024px) {
+@media (max-width: 1440px) {
   .chat-sidebar {
-    width: 280px;
+    width: 320px;
+    min-width: 280px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .chat-sidebar {
+    width: 300px;
+    min-width: 260px;
   }
 
   .chat-page {
     padding: var(--dt-spacing-sm);
+  }
+}
+
+@media (max-width: 1024px) {
+  .chat-sidebar {
+    width: 280px;
+    min-width: 240px;
+  }
+
+  .chat-page {
+    padding: var(--dt-spacing-sm);
+  }
+
+  .chat-container {
+    height: calc(100vh - 1.5rem);
   }
 }
 
@@ -738,6 +764,8 @@ onMounted(async () => {
   .chat-sidebar {
     width: 100%;
     height: 40vh;
+    min-width: unset;
+    max-width: unset;
     border-right: none;
     border-bottom: 1px solid var(--dt-color-border-secondary);
   }
@@ -759,6 +787,40 @@ onMounted(async () => {
 
   .character-grid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-page {
+    padding: var(--dt-spacing-xs);
+  }
+
+  .chat-sidebar {
+    height: 35vh;
+
+    .sidebar-header {
+      padding: var(--dt-spacing-md);
+
+      h2 {
+        font-size: var(--dt-font-size-md);
+      }
+    }
+
+    .chat-item {
+      .chat-item-content {
+        padding: var(--dt-spacing-sm);
+      }
+
+      .chat-avatar {
+        width: 40px;
+        height: 40px;
+        margin-right: var(--dt-spacing-sm);
+      }
+    }
+  }
+
+  .chat-main {
+    height: 65vh;
   }
 }
 

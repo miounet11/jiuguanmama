@@ -3,10 +3,34 @@
  */
 
 /**
- * 格式化时间戳为可读的时间字符串
+ * 安全地创建Date对象，防止Invalid Date
+ */
+const createSafeDate = (timestamp: string | number | Date): Date | null => {
+  try {
+    if (!timestamp) return null
+
+    const date = new Date(timestamp)
+
+    // 检查是否为有效日期
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid timestamp:', timestamp)
+      return null
+    }
+
+    return date
+  } catch (error) {
+    console.warn('Error creating date:', error)
+    return null
+  }
+}
+
+/**
+ * 格式化时间戳为可读的时间字符串（带错误处理）
  */
 export const formatTime = (timestamp: string | number | Date): string => {
-  const date = new Date(timestamp)
+  const date = createSafeDate(timestamp)
+  if (!date) return '时间错误'
+
   const now = new Date()
   const diff = now.getTime() - date.getTime()
 
@@ -47,10 +71,11 @@ export const formatTime = (timestamp: string | number | Date): string => {
 }
 
 /**
- * 格式化为具体的日期时间字符串
+ * 格式化为具体的日期时间字符串（带错误处理）
  */
 export const formatDateTime = (timestamp: string | number | Date): string => {
-  const date = new Date(timestamp)
+  const date = createSafeDate(timestamp)
+  if (!date) return '时间错误'
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
@@ -61,10 +86,11 @@ export const formatDateTime = (timestamp: string | number | Date): string => {
 }
 
 /**
- * 格式化为时间字符串 (HH:MM)
+ * 格式化为时间字符串 (HH:MM)（带错误处理）
  */
 export const formatTimeOnly = (timestamp: string | number | Date): string => {
-  const date = new Date(timestamp)
+  const date = createSafeDate(timestamp)
+  if (!date) return '--:--'
   const hours = String(date.getHours()).padStart(2, '0')
   const minutes = String(date.getMinutes()).padStart(2, '0')
 

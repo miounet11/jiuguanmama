@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
 import { body, param } from 'express-validator';
-import prisma from '../lib/prisma';
+import { prisma } from '../lib/prisma';
 import NewAPIImageGenerator from '../services/newapi-image-generator';
 import { GenerationStatus } from '@prisma/client';
 
@@ -26,7 +26,7 @@ const validateBatchGenerate = [
  * 为指定角色生成头像
  */
 router.post('/characters/:id/generate-avatar',
-  authenticateToken,
+  authenticate,
   validateCharacterId,
   validateRequest,
   async (req, res) => {
@@ -107,7 +107,7 @@ router.post('/characters/:id/generate-avatar',
  * 为指定角色生成对话背景图
  */
 router.post('/characters/:id/generate-background',
-  authenticateToken,
+  authenticate,
   validateCharacterId,
   validateRequest,
   async (req, res) => {
@@ -188,7 +188,7 @@ router.post('/characters/:id/generate-background',
  * 重新生成角色的所有图片
  */
 router.post('/characters/:id/regenerate-images',
-  authenticateToken,
+  authenticate,
   validateCharacterId,
   validateRequest,
   async (req, res) => {
@@ -309,7 +309,7 @@ router.post('/characters/:id/regenerate-images',
  * 批量生成角色图片（管理员功能）
  */
 router.post('/admin/characters/batch-generate',
-  authenticateToken,
+  authenticate,
   validateBatchGenerate,
   validateRequest,
   async (req, res) => {
@@ -440,7 +440,7 @@ router.post('/admin/characters/batch-generate',
  * 获取角色图片生成状态
  */
 router.get('/characters/:id/generation-status',
-  authenticateToken,
+  authenticate,
   validateCharacterId,
   validateRequest,
   async (req, res) => {

@@ -657,22 +657,21 @@ onUnmounted(() => {
 
   .message-voice-controls {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    position: fixed;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 100;
+    flex-direction: row;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 0;
 
     .message-voice-button {
-      width: 32px;
-      height: 32px;
-      opacity: 0.7;
+      width: 36px;
+      height: 36px;
+      opacity: 0.8;
+      transition: all 0.2s ease;
 
       &:hover {
         opacity: 1;
-        transform: scale(1.1);
+        transform: scale(1.05);
       }
     }
   }

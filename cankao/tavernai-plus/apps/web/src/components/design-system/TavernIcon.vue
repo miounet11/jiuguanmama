@@ -16,6 +16,8 @@ import {
   CogIcon,
   DocumentIcon,
   PlusIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 
   // Actions
   PlayIcon,
@@ -27,6 +29,8 @@ import {
   ArrowDownIcon,
   ChevronUpIcon,
   ChevronDownIcon,
+  PaperAirplaneIcon,
+  DocumentDuplicateIcon,
 
   // Status
   CheckIcon,
@@ -43,6 +47,7 @@ import {
   TrashIcon,
   ShareIcon,
   ArrowDownTrayIcon as DownloadIcon,
+  ArrowUpTrayIcon,
 
   // System
   Cog6ToothIcon,
@@ -50,6 +55,8 @@ import {
   MagnifyingGlassIcon,
   EllipsisVerticalIcon,
   UserIcon,
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
 
   // Feedback
   HandThumbUpIcon,
@@ -61,12 +68,16 @@ import {
   VideoCameraIcon,
   MicrophoneIcon,
   SpeakerWaveIcon,
+  SpeakerXMarkIcon,
 
   // Special
   SparklesIcon,
   BoltIcon,
   FireIcon,
-  GiftIcon
+  GiftIcon,
+
+  // Additional icons (very safe imports only)
+  ClockIcon
 } from '@heroicons/vue/24/outline'
 
 // Spinner uses filled version for better visibility
@@ -91,9 +102,12 @@ const iconRegistry: Record<string, Component> = {
   home: HomeIcon,
   users: UsersIcon,
   chat: ChatBubbleLeftRightIcon,
+  'chat-bubble-left-right': ChatBubbleLeftRightIcon,
   settings: CogIcon,
   document: DocumentIcon,
   plus: PlusIcon,
+  'chevron-left': ChevronLeftIcon,
+  'chevron-right': ChevronRightIcon,
 
   // Actions
   play: PlayIcon,
@@ -105,11 +119,14 @@ const iconRegistry: Record<string, Component> = {
   'arrow-down': ArrowDownIcon,
   'chevron-up': ChevronUpIcon,
   'chevron-down': ChevronDownIcon,
+  'paper-airplane': PaperAirplaneIcon,
+  'document-duplicate': DocumentDuplicateIcon,
 
   // Status
   check: CheckIcon,
   close: XMarkIcon,
   x: XMarkIcon,
+  'x-mark': XMarkIcon,
   warning: ExclamationTriangleIcon,
   info: InformationCircleIcon,
   heart: HeartIcon,
@@ -119,16 +136,24 @@ const iconRegistry: Record<string, Component> = {
   eye: EyeIcon,
   'eye-slash': EyeSlashIcon,
   edit: PencilIcon,
+  pencil: PencilIcon,
   delete: TrashIcon,
+  trash: TrashIcon,
   share: ShareIcon,
   download: DownloadIcon,
+  'arrow-down-tray': DownloadIcon,
+  'arrow-up-tray': ArrowUpTrayIcon,
 
   // System
   gear: Cog6ToothIcon,
+  'cog-6-tooth': Cog6ToothIcon,
   bell: BellIcon,
   search: MagnifyingGlassIcon,
+  'magnifying-glass': MagnifyingGlassIcon,
   menu: EllipsisVerticalIcon,
   user: UserIcon,
+  'arrows-pointing-in': ArrowsPointingInIcon,
+  'arrows-pointing-out': ArrowsPointingOutIcon,
 
   // Feedback
   'thumb-up': HandThumbUpIcon,
@@ -140,6 +165,8 @@ const iconRegistry: Record<string, Component> = {
   video: VideoCameraIcon,
   microphone: MicrophoneIcon,
   speaker: SpeakerWaveIcon,
+  'speaker-wave': SpeakerWaveIcon,
+  'speaker-x-mark': SpeakerXMarkIcon,
 
   // Special
   sparkles: SparklesIcon,
@@ -150,7 +177,38 @@ const iconRegistry: Record<string, Component> = {
   // Loading
   spinner: ArrowPathIcon,
   'arrow-path': ArrowPathIcon,
-  loading: ArrowPathIcon
+  loading: ArrowPathIcon,
+
+  // Additional mappings from warnings (using only imported icons)
+  send: PaperAirplaneIcon,
+  clock: ClockIcon,
+  magic: SparklesIcon,
+  brain: SparklesIcon,
+  palette: PencilIcon, // 用铅笔图标替代画笔
+  store: HomeIcon, // 用房屋图标替代商店
+  explore: CogIcon, // 用设置图标替代探索
+  shield: StarIcon, // 用星形图标替代盾牌
+  book: DocumentIcon, // 用文档图标替代书籍
+  'trending-up': ArrowUpIcon, // 用箭头向上替代
+  'trending-down': ArrowDownIcon, // 用箭头向下替代
+  globe: UsersIcon, // 用用户群组图标替代地球
+  zap: BoltIcon,
+  'thumbs-up': HandThumbUpIcon,
+  rocket: ArrowUpIcon, // 用箭头向上替代火箭
+  code: CogIcon, // 用设置图标替代代码
+  building: HomeIcon, // 用房屋图标替代建筑
+  grid: PlusIcon, // 用加号图标替代网格
+  gamepad: CogIcon, // 用设置图标替代游戏手柄
+  crown: StarIcon, // 使用星形图标代替王冠
+  'document-text': DocumentIcon, // 用基本文档图标
+  'chat-bubble-left-ellipsis': ChatBubbleOvalLeftIcon, // 用现有的聊天气泡替代
+  'pencil-square': PencilIcon, // 用基本铅笔图标
+  'user-circle': UserIcon, // 用基本用户图标
+
+  // 新发现的缺失图标
+  refresh: ArrowPathIcon, // 刷新图标用旋转箭头
+  'message-circle': ChatBubbleOvalLeftIcon, // 消息圆圈用聊天气泡
+  'exclamation-triangle': ExclamationTriangleIcon // 警告三角形图标
 }
 
 // Computed

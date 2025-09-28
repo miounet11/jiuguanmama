@@ -100,6 +100,8 @@
       title="快速图像生成"
       width="600px"
       :close-on-click-modal="false"
+      class="image-generator-dialog"
+      :z-index="2500"
     >
       <div class="quick-generator-content">
         <!-- 智能提示词构建 -->
@@ -210,6 +212,8 @@
       title="场景插图生成"
       width="700px"
       :close-on-click-modal="false"
+      class="image-generator-dialog image-generator-dialog--large"
+      :z-index="2500"
     >
       <div class="scene-generator-content">
         <!-- 对话上下文分析 -->
@@ -292,6 +296,8 @@
       title="表情包生成器"
       width="500px"
       :close-on-click-modal="false"
+      class="image-generator-dialog image-generator-dialog--small"
+      :z-index="2500"
     >
       <div class="emoji-generator-content">
         <!-- 表情选择 -->
@@ -367,6 +373,8 @@
       title="图像分析结果"
       width="600px"
       :close-on-click-modal="false"
+      class="image-generator-dialog"
+      :z-index="2500"
     >
       <div v-if="analysisResult" class="analysis-content">
         <div class="uploaded-image">
@@ -1450,6 +1458,120 @@ onMounted(() => {
 
   .emotion-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 图片生成对话框专用样式管理 */
+.chat-image-features {
+  position: relative;
+  z-index: 1;
+}
+
+:deep(.image-generator-dialog) {
+  .el-dialog {
+    background: var(--dt-color-surface-primary, var(--el-bg-color));
+    border: 1px solid var(--dt-color-border-primary, var(--el-border-color));
+    backdrop-filter: blur(20px);
+    box-shadow: var(--dt-shadow-2xl, var(--el-box-shadow-light));
+    border-radius: var(--dt-border-radius-xl, 12px);
+    margin: 5vh auto;
+    max-height: 90vh;
+    overflow: hidden;
+  }
+
+  .el-dialog__header {
+    background: var(--dt-gradient-primary, linear-gradient(135deg, var(--el-color-primary), var(--el-color-primary-light-3)));
+    padding: var(--dt-spacing-lg, 20px);
+    border-bottom: 1px solid var(--dt-color-border-primary, var(--el-border-color));
+
+    .el-dialog__title {
+      color: white;
+      font-weight: var(--dt-font-weight-semibold, 600);
+    }
+
+    .el-dialog__close {
+      color: white;
+      font-size: var(--dt-font-size-lg, 18px);
+
+      &:hover {
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+
+  .el-dialog__body {
+    padding: var(--dt-spacing-lg, 20px);
+    max-height: 60vh;
+    overflow-y: auto;
+
+    /* 自定义滚动条 */
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: var(--dt-color-surface-secondary, var(--el-bg-color-page));
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--dt-color-primary-400, var(--el-color-primary-light-3));
+      border-radius: 3px;
+    }
+  }
+
+  .el-dialog__footer {
+    padding: var(--dt-spacing-md, 16px) var(--dt-spacing-lg, 20px);
+    border-top: 1px solid var(--dt-color-border-secondary, var(--el-border-color-light));
+    background: var(--dt-color-surface-secondary, var(--el-bg-color-page));
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  :deep(.image-generator-dialog) {
+    .el-dialog {
+      width: 95vw !important;
+      margin: 2vh auto;
+      max-height: 95vh;
+    }
+
+    .el-dialog__body {
+      max-height: 70vh;
+      padding: var(--dt-spacing-md, 16px);
+    }
+
+    .el-dialog__header {
+      padding: var(--dt-spacing-md, 16px);
+    }
+  }
+
+  /* 小屏幕特殊处理 */
+  :deep(.image-generator-dialog--large) {
+    .el-dialog {
+      width: 98vw !important;
+    }
+  }
+
+  :deep(.image-generator-dialog--small) {
+    .el-dialog {
+      width: 90vw !important;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  :deep(.image-generator-dialog) {
+    .el-dialog {
+      width: 100vw !important;
+      margin: 0;
+      height: 100vh !important;
+      max-height: 100vh;
+      border-radius: 0;
+    }
+
+    .el-dialog__body {
+      max-height: calc(100vh - 120px);
+    }
   }
 }
 </style>
