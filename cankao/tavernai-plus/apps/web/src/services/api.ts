@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import router from '@/router'
 
 // API 基础配置
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3007'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3008'
 const TIMEOUT = 30000
 
 // 创建 axios 实例
@@ -39,6 +39,22 @@ apiClient.interceptors.request.use(
   }
 )
 
+// 标记是否正在刷新token，避免多个请求同时刷新
+let isRefreshing = false
+let failedQueue: any[] = []
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error)
+    } else {
+      prom.resolve(token)
+    }
+  })
+
+  failedQueue = []
+}
+
 // 响应拦截器
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -59,9 +75,32 @@ apiClient.interceptors.response.use(
     // 处理不同的错误状态码
     switch (status) {
       case 401:
+        // 如果是refresh请求失败，直接跳转登录
+        if (config.url === '/api/auth/refresh') {
+          localStorage.removeItem('token')
+          localStorage.removeItem('refreshToken')
+          router.push('/login')
+          console.error('登录已过期，请重新登录')
+          return Promise.reject(error)
+        }
+
         // 未授权，尝试刷新令牌
         if (!config._retry) {
           config._retry = true
+
+          // 如果已经在刷新，将请求加入队列
+          if (isRefreshing) {
+            return new Promise((resolve, reject) => {
+              failedQueue.push({ resolve, reject })
+            }).then(token => {
+              config.headers.Authorization = `Bearer ${token}`
+              return apiClient.request(config)
+            }).catch(err => {
+              return Promise.reject(err)
+            })
+          }
+
+          isRefreshing = true
 
           const refreshToken = localStorage.getItem('refreshToken')
           if (refreshToken) {
@@ -74,20 +113,29 @@ apiClient.interceptors.response.use(
               localStorage.setItem('token', accessToken)
               localStorage.setItem('refreshToken', newRefreshToken)
 
+              // 处理队列中的请求
+              processQueue(null, accessToken)
+              isRefreshing = false
+
               // 重试原始请求
               config.headers.Authorization = `Bearer ${accessToken}`
               return apiClient.request(config)
             } catch (refreshError) {
-              // 刷新失败，跳转到登录
+              // 刷新失败，清理并跳转到登录
+              processQueue(refreshError, null)
+              isRefreshing = false
               localStorage.removeItem('token')
               localStorage.removeItem('refreshToken')
               router.push('/login')
               console.error('登录已过期，请重新登录')
+              return Promise.reject(refreshError)
             }
           } else {
             // 没有刷新令牌，直接跳转登录
+            isRefreshing = false
             router.push('/login')
             console.error('请先登录')
+            return Promise.reject(error)
           }
         }
         break

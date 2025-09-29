@@ -137,9 +137,9 @@ export default defineConfig({
     cssCodeSplit: true, // CSS 代码分割
   },
 
-  // 开发服务器配置
+  // 开发服务器配置 - 已修复代理配置
   server: {
-    port: 3001,
+    port: 3002,
     host: '0.0.0.0', // 允许外部访问
     proxy: {
       '/api': {

@@ -137,7 +137,17 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: '剧本未找到' });
     }
 
-    res.json(scenario);
+    // 处理 tags 字段 - 如果是字符串，转换为数组
+    if (scenario.tags && typeof scenario.tags === 'string') {
+      try {
+        scenario.tags = JSON.parse(scenario.tags);
+      } catch (e) {
+        // 如果解析失败，保持原值
+        console.warn('Failed to parse tags as JSON:', scenario.tags);
+      }
+    }
+
+    res.json({ success: true, data: scenario });
   } catch (error) {
     console.error('Error fetching scenario details:', error);
     res.status(500).json({ error: '获取剧本详情失败' });
