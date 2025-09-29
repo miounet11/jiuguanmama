@@ -23,9 +23,9 @@
           <div class="flex items-center space-x-4">
             <div v-if="!userStore.isAuthenticated" class="hidden sm:flex items-center space-x-2">
               <span class="text-sm text-gray-600">登录后可保存对话记录</span>
-              <el-button @click="handleLogin" type="primary" size="small">
+              <TavernButton @click="handleLogin" variant="primary" size="sm">
                 登录
-              </el-button>
+              </TavernButton>
             </div>
             <div v-else class="flex items-center space-x-2">
               <img
@@ -82,14 +82,14 @@
             </div>
 
             <!-- 开始按钮 -->
-            <el-button
+            <TavernButton
               @click="startQuickFlow"
-              type="primary"
-              size="large"
+              variant="primary"
+              size="xl"
               class="px-8 py-3 text-lg"
             >
               立即开始
-            </el-button>
+            </TavernButton>
           </div>
         </div>
 
@@ -159,22 +159,22 @@
           登录后可以保存对话记录，随时继续之前的对话
         </p>
         <div class="space-y-3">
-          <el-button
+          <TavernButton
             @click="navigateToLogin"
-            type="primary"
-            size="large"
+            variant="primary"
+            size="lg"
             class="w-full"
           >
             登录账户
-          </el-button>
-          <el-button
+          </TavernButton>
+          <TavernButton
             @click="continueAsGuest"
-            type="text"
-            size="large"
+            variant="ghost"
+            size="lg"
             class="w-full"
           >
             暂时跳过，以访客身份继续
-          </el-button>
+          </TavernButton>
         </div>
       </div>
     </el-dialog>

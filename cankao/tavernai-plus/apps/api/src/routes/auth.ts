@@ -299,6 +299,126 @@ router.post('/logout', authenticate, async (req: AuthRequest, res, next): Promis
 })
 
 // 获取当前用户信息
+// 更新用户信息
+router.patch('/profile', authenticate, async (req: AuthRequest, res, next): Promise<void> => {
+  try {
+    const { username, bio } = req.body
+
+    // 验证用户名唯一性（如果提供）
+    if (username && username !== req.user!.username) {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          username,
+          id: { not: req.user!.id }
+        }
+      })
+
+      if (existingUser) {
+        res.status(409).json({
+          success: false,
+          message: '用户名已被使用'
+        })
+        return
+      }
+    }
+
+    // 更新用户信息
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user!.id },
+      data: {
+        ...(username && { username }),
+        ...(bio !== undefined && { bio })
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        bio: true,
+        credits: true,
+        subscriptionTier: true,
+        subscriptionExpiresAt: true,
+        createdAt: true
+      }
+    })
+
+    res.json({
+      success: true,
+      user: updatedUser
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 上传头像
+router.post('/avatar', authenticate, async (req: AuthRequest, res, next): Promise<void> => {
+  try {
+    // 这里需要文件上传中间件，在实际项目中需要配置multer
+    // 暂时返回模拟响应
+    const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${req.user!.id}`
+
+    // 更新用户头像
+    await prisma.user.update({
+      where: { id: req.user!.id },
+      data: { avatar: avatarUrl }
+    })
+
+    res.json({
+      success: true,
+      avatarUrl
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 修改密码
+router.post('/change-password', authenticate, async (req: AuthRequest, res, next): Promise<void> => {
+  try {
+    const { currentPassword, newPassword } = req.body
+
+    // 获取用户当前密码哈希
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id }
+    })
+
+    if (!user || !user.passwordHash) {
+      res.status(400).json({
+        success: false,
+        message: '用户不存在或未设置密码'
+      })
+      return
+    }
+
+    // 验证当前密码
+    const isValidPassword = await bcrypt.compare(currentPassword, user.passwordHash)
+    if (!isValidPassword) {
+      res.status(400).json({
+        success: false,
+        message: '当前密码错误'
+      })
+      return
+    }
+
+    // 哈希新密码
+    const hashedPassword = await bcrypt.hash(newPassword, 12)
+
+    // 更新密码
+    await prisma.user.update({
+      where: { id: req.user!.id },
+      data: { passwordHash: hashedPassword }
+    })
+
+    res.json({
+      success: true,
+      message: '密码修改成功'
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 router.get('/profile', authenticate, async (req: AuthRequest, res, next): Promise<void> => {
   try {
     const user = await prisma.user.findUnique({
@@ -313,7 +433,15 @@ router.get('/profile', authenticate, async (req: AuthRequest, res, next): Promis
         subscriptionTier: true,
         subscriptionExpiresAt: true,
         isVerified: true,
-        createdAt: true
+        createdAt: true,
+        // 游戏化数据
+        _count: {
+          select: {
+            characterAffinities: true,
+            scenarioProgresses: true,
+            achievements: true
+          }
+        }
       }
     })
 
@@ -325,14 +453,65 @@ router.get('/profile', authenticate, async (req: AuthRequest, res, next): Promis
       return
     }
 
+    // 获取游戏化统计
+    const gamingStats = await getUserGamingStats(req.user!.id)
+
     res.json({
       success: true,
-      user
+      user,
+      gamingStats
     })
   } catch (error) {
     next(error)
     return
   }
 })
+
+// 获取用户游戏化统计
+async function getUserGamingStats(userId: string) {
+  const [
+    totalAffinities,
+    completedScenarios,
+    totalAchievements,
+    topCharacters,
+    recentProgress
+  ] = await Promise.all([
+    // 总亲密度等级
+    prisma.characterAffinity.aggregate({
+      where: { userId },
+      _sum: { affinityLevel: true }
+    }),
+    // 已完成的剧本
+    prisma.scenarioProgress.count({
+      where: { userId, status: 'completed' }
+    }),
+    // 成就数量
+    prisma.userAchievement.count({
+      where: { userId }
+    }),
+    // 亲密度最高的角色
+    prisma.characterAffinity.findMany({
+      where: { userId },
+      include: { character: { select: { name: true, avatar: true } } },
+      orderBy: { affinityLevel: 'desc' },
+      take: 3
+    }),
+    // 最近的进度
+    prisma.scenarioProgress.findMany({
+      where: { userId },
+      include: { scenario: { select: { name: true } } },
+      orderBy: { lastPlayedAt: 'desc' },
+      take: 5
+    })
+  ])
+
+  return {
+    totalAffinityLevel: totalAffinities._sum.affinityLevel || 0,
+    completedScenarios,
+    totalAchievements,
+    topCharacters,
+    recentProgress
+  }
+}
 
 export default router

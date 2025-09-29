@@ -41,9 +41,36 @@ const routes: RouteRecordRaw[] = [
     path: '/characters',
     name: 'Characters',
     component: () => import(/* webpackChunkName: "characters" */ '@/views/characters/CharacterList.vue'),
-    meta: { 
+    meta: {
       requiresAuth: false,
       title: '角色列表 - TavernAI Plus'
+    }
+  },
+  {
+    path: '/character-network',
+    name: 'CharacterNetwork',
+    component: () => import(/* webpackChunkName: "characters" */ '@/views/CharacterNetwork.vue'),
+    meta: {
+      requiresAuth: false,
+      title: '时空酒馆 - 角色关联网络 - TavernAI Plus'
+    }
+  },
+  {
+    path: '/worldinfo-test',
+    name: 'WorldInfoTest',
+    component: () => import(/* webpackChunkName: "scenarios" */ '@/views/WorldInfoTest.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'WorldInfo时空化测试 - TavernAI Plus'
+    }
+  },
+  {
+    path: '/creation-test',
+    name: 'CreationTest',
+    component: () => import(/* webpackChunkName: "test" */ '@/views/CreationTest.vue'),
+    meta: {
+      requiresAuth: false,
+      title: '创建功能时空化测试 - TavernAI Plus'
     }
   },
   {
@@ -229,12 +256,23 @@ const routes: RouteRecordRaw[] = [
     }
   },
 
+  // 游戏化时空酒馆 - 核心功能块
+  {
+    path: '/tavern',
+    name: 'GamificationDashboard',
+    component: () => import(/* webpackChunkName: "gamification" */ '@/views/GamificationDashboard.vue'),
+    meta: {
+      requiresAuth: true,
+      title: '时空酒馆 - TavernAI Plus'
+    }
+  },
+
   // 社区相关页面 - 独立块
   {
     path: '/community',
     name: 'Community',
     component: () => import(/* webpackChunkName: "community" */ '@/views/community/CommunityView.vue'),
-    meta: { 
+    meta: {
       requiresAuth: false,
       title: '社区 - TavernAI Plus'
     }

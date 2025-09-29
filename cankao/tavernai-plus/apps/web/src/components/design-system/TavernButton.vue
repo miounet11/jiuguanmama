@@ -6,7 +6,13 @@
     :type="tag === 'button' ? type : undefined"
     :to="tag === 'router-link' ? to : undefined"
     :href="tag === 'a' ? href : undefined"
+    :aria-label="ariaLabel"
+    :aria-describedby="ariaDescribedby"
+    :aria-expanded="ariaExpanded"
+    :role="role"
+    :tabindex="tabindex"
     @click="handleClick"
+    @keydown="handleKeydown"
   >
     <TavernIcon
       v-if="loading"
@@ -48,6 +54,12 @@ export interface TavernButtonProps {
   to?: string | object
   href?: string
   external?: boolean
+  // Accessibility props
+  ariaLabel?: string
+  ariaDescribedby?: string
+  ariaExpanded?: boolean
+  role?: string
+  tabindex?: number | string
 }
 
 // Props
@@ -93,6 +105,14 @@ const buttonClasses = computed(() => [
 const handleClick = (event: MouseEvent) => {
   if (!props.disabled && !props.loading) {
     emit('click', event)
+  }
+}
+
+const handleKeydown = (event: KeyboardEvent) => {
+  // 支持Enter和Space键激活按钮
+  if ((event.key === 'Enter' || event.key === ' ') && !props.disabled && !props.loading) {
+    event.preventDefault()
+    emit('click', event as any)
   }
 }
 </script>

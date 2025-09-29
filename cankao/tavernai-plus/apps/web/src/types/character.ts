@@ -3,6 +3,7 @@ export interface Character {
   name: string
   avatar: string | null
   description: string
+  fullDescription?: string // 扩展描述
   tags: string[]
   isPublic: boolean
   isNSFW: boolean
@@ -35,6 +36,17 @@ export interface Character {
     avatar?: string
   }
 
+  // 时空酒馆扩展字段
+  mbti?: {
+    type: string // 如 "INTJ", "ENFJ"
+    traits: string[] // 性格特质数组
+    compatibility: string[] // 兼容的MBTI类型
+    weaknesses: string[] // 性格弱点
+  }
+
+  // 角色关联网络
+  characterRelations?: CharacterRelation[]
+
   // 导入信息
   importedFrom?: string
   version?: number
@@ -46,6 +58,15 @@ export interface Character {
   // 时间戳
   createdAt: string
   updatedAt: string
+}
+
+// 角色关联类型
+export interface CharacterRelation {
+  characterId: string
+  relationType: 'complementary' | 'mentor_student' | 'professional' | 'protector_ward' | 'cultural_exchange' | 'technology_magic'
+  description: string
+  interactionTriggers: string[] // 互动触发条件
+  compatibilityScore?: number // 兼容性评分 0-1
 }
 
 export interface CharacterCreateData {

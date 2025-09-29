@@ -187,6 +187,12 @@ app.directive('lazy', vLazy)
 // 安装设计系统组件
 app.use(installDesignSystem)
 
+// 注册全局设计系统组件
+import { DesignSystemComponents } from '@/components/design-system'
+Object.entries(DesignSystemComponents).forEach(([name, component]) => {
+  app.component(name, component)
+})
+
 // 全局属性
 app.config.globalProperties.$message = ElMessage
 app.config.globalProperties.$notify = ElNotification

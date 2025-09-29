@@ -214,14 +214,17 @@ const settings = reactive({
 
 const savePersonalInfo = async () => {
   try {
-    // 这里添加保存个人信息的逻辑
-    console.log('Saving personal info:', settings)
-    // await userStore.updateProfile({
-    //   username: settings.username,
-    //   email: settings.email
-    // })
-  } catch (error) {
+    loading.value = true
+    await userStore.updateProfile({
+      username: settings.username,
+      bio: settings.bio
+    })
+    ElMessage.success('个人信息保存成功')
+  } catch (error: any) {
     console.error('Failed to save personal info:', error)
+    ElMessage.error(error.message || '保存失败')
+  } finally {
+    loading.value = false
   }
 }
 

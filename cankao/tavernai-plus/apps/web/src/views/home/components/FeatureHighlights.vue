@@ -204,14 +204,41 @@ const router = useRouter()
 // 主要功能特性
 const mainFeatures = ref([
   {
-    id: 'smart-chat',
+    id: 'spacetime-tavern',
     type: 'primary',
+    size: 'large',
+    icon: 'portal',
+    title: '时空酒馆系统',
+    description: '打破时空壁垒，让古今中外的角色在时空交汇中进行深度互动，体验前所未有的文化碰撞。',
+    color: '#9333ea',
+    badge: '时空',
+    badgeVariant: 'success' as const,
+    highlights: [
+      '时空交汇的多元宇宙体验',
+      'MBTI性格驱动的深度互动',
+      '角色关联网络的可视化探索',
+      '文化碰撞与化学反应'
+    ],
+    action: {
+      label: '探索时空网络',
+      variant: 'primary' as const,
+      icon: 'share',
+      target: '/character-network'
+    },
+    stats: [
+      { value: '15+', label: '时空剧本' },
+      { value: '100+', label: '关联角色' }
+    ]
+  },
+  {
+    id: 'smart-chat',
+    type: 'secondary',
     size: 'large',
     icon: 'brain',
     title: '智能对话引擎',
     description: '基于最先进的AI技术，提供自然流畅的对话体验，支持情感理解和上下文记忆。',
     color: 'var(--brand-primary-500)',
-    badge: '新',
+    badge: 'AI',
     badgeVariant: 'success' as const,
     highlights: [
       '支持GPT-4、Claude-3等顶级模型',

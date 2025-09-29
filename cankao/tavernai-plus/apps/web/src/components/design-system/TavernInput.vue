@@ -27,6 +27,11 @@
         :rows="rows"
         :cols="cols"
         :autocomplete="autocomplete"
+        :aria-label="ariaLabel"
+        :aria-describedby="ariaDescribedby"
+        :aria-invalid="hasError"
+        :aria-required="required"
+        :role="role"
         @blur="handleBlur"
         @focus="handleFocus"
         @input="handleInputChange"
@@ -121,6 +126,11 @@ export interface TavernInputProps {
   clearable?: boolean
   showPasswordToggle?: boolean
   showCharCount?: boolean
+
+  // 可访问性
+  ariaLabel?: string
+  ariaDescribedby?: string
+  role?: string
 
   // 限制
   maxlength?: number

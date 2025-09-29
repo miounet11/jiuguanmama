@@ -143,6 +143,227 @@
             />
           </el-form-item>
         </el-tab-pane>
+
+        <!-- 时空属性 -->
+        <el-tab-pane label="时空属性" name="spacetime">
+          <div class="space-y-6">
+            <!-- MBTI 性格分析 -->
+            <div class="mbti-section">
+              <h3 class="text-lg font-semibold text-purple-700 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                MBTI 性格类型
+              </h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- MBTI 类型选择 -->
+                <el-form-item label="人格类型">
+                  <el-select
+                    v-model="form.mbti.type"
+                    placeholder="选择MBTI人格类型"
+                    filterable
+                    class="w-full"
+                  >
+                    <el-option-group label="内向直觉 (NJ)">
+                      <el-option label="建筑师 INTJ" value="INTJ" />
+                      <el-option label="提倡者 INFJ" value="INFJ" />
+                      <el-option label="建筑师 ENTJ" value="ENTJ" />
+                      <el-option label="主人公 ENFJ" value="ENFJ" />
+                    </el-option-group>
+                    <el-option-group label="内向感知 (NP)">
+                      <el-option label="思想家 INTP" value="INTP" />
+                      <el-option label="调停者 INFP" value="INFP" />
+                      <el-option label="辩论家 ENTP" value="ENTP" />
+                      <el-option label="竞选者 ENFP" value="ENFP" />
+                    </el-option-group>
+                    <el-option-group label="外向感知 (SP)">
+                      <el-option label="鉴赏家 ISTP" value="ISTP" />
+                      <el-option label="探险家 ISFP" value="ISFP" />
+                      <el-option label="企业家 ESTP" value="ESTP" />
+                      <el-option label="娱乐家 ESFP" value="ESFP" />
+                    </el-option-group>
+                    <el-option-group label="外向判断 (SJ)">
+                      <el-option label="物流师 ISTJ" value="ISTJ" />
+                      <el-option label="守护者 ISFJ" value="ISFJ" />
+                      <el-option label="总经理 ESTJ" value="ESTJ" />
+                      <el-option label="执政官 ESFJ" value="ESFJ" />
+                    </el-option-group>
+                  </el-select>
+                </el-form-item>
+
+                <!-- 性格描述 -->
+                <el-form-item label="性格描述">
+                  <el-input
+                    v-model="form.mbti.description"
+                    placeholder="简要描述角色的性格特点"
+                    maxlength="200"
+                    show-word-limit
+                  />
+                </el-form-item>
+              </div>
+
+              <!-- 性格特质 -->
+              <el-form-item label="性格特质">
+                <el-select
+                  v-model="form.mbti.traits"
+                  multiple
+                  placeholder="选择角色的性格特质"
+                  class="w-full"
+                  collapse-tags
+                  collapse-tags-tooltip
+                >
+                  <el-option label="领导力" value="领导力" />
+                  <el-option label="创造力" value="创造力" />
+                  <el-option label="分析力" value="分析力" />
+                  <el-option label="同理心" value="同理心" />
+                  <el-option label="决断力" value="决断力" />
+                  <el-option label="适应性" value="适应性" />
+                  <el-option label="责任感" value="责任感" />
+                  <el-option label="洞察力" value="洞察力" />
+                  <el-option label="幽默感" value="幽默感" />
+                  <el-option label="坚韧性" value="坚韧性" />
+                </el-select>
+              </el-form-item>
+
+              <!-- 兼容人格类型 -->
+              <el-form-item label="兼容类型">
+                <el-select
+                  v-model="form.mbti.compatibility"
+                  multiple
+                  placeholder="选择兼容的MBTI类型"
+                  class="w-full"
+                  collapse-tags
+                  collapse-tags-tooltip
+                >
+                  <el-option label="INTJ - 建筑师" value="INTJ" />
+                  <el-option label="ENFJ - 主人公" value="ENFJ" />
+                  <el-option label="INFJ - 提倡者" value="INFJ" />
+                  <el-option label="ISFJ - 守护者" value="ISFJ" />
+                  <el-option label="ESFJ - 执政官" value="ESFJ" />
+                  <el-option label="INFP - 调停者" value="INFP" />
+                  <el-option label="INTP - 思想家" value="INTP" />
+                  <el-option label="ENTJ - 指挥官" value="ENTJ" />
+                  <el-option label="ENTP - 辩论家" value="ENTP" />
+                  <el-option label="ENFP - 竞选者" value="ENFP" />
+                  <el-option label="ESFP - 娱乐家" value="ESFP" />
+                  <el-option label="ISTJ - 物流师" value="ISTJ" />
+                  <el-option label="ISTP - 鉴赏家" value="ISTP" />
+                  <el-option label="ISFP - 探险家" value="ISFP" />
+                  <el-option label="ESTJ - 总经理" value="ESTJ" />
+                  <el-option label="ESTP - 企业家" value="ESTP" />
+                </el-select>
+              </el-form-item>
+            </div>
+
+            <!-- 角色关联网络 -->
+            <div class="relations-section">
+              <h3 class="text-lg font-semibold text-cyan-700 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                </svg>
+                角色关联网络
+              </h3>
+
+              <div class="text-sm text-gray-600 mb-4">
+                💡 为角色建立关联关系，可以创造更丰富的互动体验。关联将在时空酒馆中自动激活。
+              </div>
+
+              <div v-if="!form.characterRelations?.length" class="text-center py-8 text-gray-500">
+                <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                </svg>
+                <p>暂无角色关联</p>
+                <p class="text-xs mt-1">添加关联角色来丰富互动体验</p>
+                <el-button
+                  type="primary"
+                  size="small"
+                  @click="addRelation"
+                  class="mt-3"
+                >
+                  添加关联
+                </el-button>
+              </div>
+
+              <div v-else class="space-y-3">
+                <div
+                  v-for="(relation, index) in form.characterRelations"
+                  :key="index"
+                  class="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-4 border border-cyan-200 dark:border-cyan-700"
+                >
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 关联角色ID -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                        关联角色ID
+                      </label>
+                      <el-input
+                        v-model="relation.characterId"
+                        placeholder="输入关联角色的ID"
+                        size="small"
+                      />
+                    </div>
+
+                    <!-- 关系类型 -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                        关系类型
+                      </label>
+                      <el-select
+                        v-model="relation.relationType"
+                        placeholder="选择关系类型"
+                        size="small"
+                        class="w-full"
+                      >
+                        <el-option label="互补关系" value="complementary" />
+                        <el-option label="师徒关系" value="mentor_student" />
+                        <el-option label="专业联盟" value="professional" />
+                        <el-option label="守护关系" value="protector_ward" />
+                        <el-option label="文化交流" value="cultural_exchange" />
+                        <el-option label="科技魔法" value="technology_magic" />
+                      </el-select>
+                    </div>
+
+                    <!-- 关系描述 -->
+                    <div class="md:col-span-2">
+                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                        关系描述
+                      </label>
+                      <el-input
+                        v-model="relation.description"
+                        placeholder="描述两人之间的关系"
+                        size="small"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- 操作按钮 -->
+                  <div class="flex justify-end mt-3 pt-3 border-t border-cyan-200 dark:border-cyan-700">
+                    <el-button
+                      type="danger"
+                      size="small"
+                      text
+                      @click="removeRelation(index)"
+                    >
+                      删除关联
+                    </el-button>
+                  </div>
+                </div>
+
+                <div class="text-center">
+                  <el-button
+                    type="primary"
+                    size="small"
+                    @click="addRelation"
+                    :disabled="form.characterRelations.length >= 5"
+                  >
+                    添加更多关联
+                  </el-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
       </el-tabs>
     </el-form>
 
@@ -202,7 +423,19 @@ const form = ref({
   model: 'gpt-3.5-turbo',
   temperature: 0.7,
   maxTokens: 1000,
-  systemPrompt: ''
+  systemPrompt: '',
+  // 时空酒馆扩展字段
+  mbti: {
+    type: '',
+    description: '',
+    traits: [] as string[],
+    compatibility: [] as string[]
+  },
+  characterRelations: [] as Array<{
+    characterId: string
+    relationType: string
+    description: string
+  }>
 })
 
 const rules = {
@@ -270,6 +503,19 @@ const handleAIGenerate = async () => {
   } finally {
     generating.value = false
   }
+}
+
+// 时空属性管理方法
+const addRelation = () => {
+  form.value.characterRelations.push({
+    characterId: '',
+    relationType: 'complementary',
+    description: ''
+  })
+}
+
+const removeRelation = (index: number) => {
+  form.value.characterRelations.splice(index, 1)
 }
 
 const handleSubmit = async () => {

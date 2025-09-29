@@ -6,31 +6,32 @@
         <h1 class="banner-title">角色市场</h1>
         <p class="banner-subtitle">探索数千个精心设计的AI角色，开启独特的对话体验</p>
         <div class="search-container">
-          <el-input
+          <TavernInput
             v-model="searchQuery"
             placeholder="搜索角色、创作者或标签..."
-            size="large"
+            size="lg"
             @keyup.enter="handleSearch"
           >
             <template #prefix>
-              <el-icon><Search /></el-icon>
+              <TavernIcon name="search" />
             </template>
             <template #append>
-              <el-button @click="handleSearch">搜索</el-button>
+              <TavernButton @click="handleSearch" variant="primary">搜索</TavernButton>
             </template>
-          </el-input>
+          </TavernInput>
         </div>
         <div class="quick-tags">
           <span class="tag-label">热门标签:</span>
-          <el-tag
+          <TavernBadge
             v-for="tag in hotTags"
             :key="tag"
             @click="selectTag(tag)"
-            :effect="selectedTags.includes(tag) ? 'dark' : 'plain'"
+            :variant="selectedTags.includes(tag) ? 'primary' : 'neutral'"
+            clickable
             class="clickable-tag"
           >
             {{ tag }}
-          </el-tag>
+          </TavernBadge>
         </div>
       </div>
       <div class="banner-decoration">

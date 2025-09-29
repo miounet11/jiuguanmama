@@ -48,6 +48,10 @@ export interface Message extends BaseEntity {
   content: string
   timestamp: Date
   chatId: string
+
+  // 时空酒馆扩展字段
+  spacetimeEvents?: SpacetimeEvent[]
+  relationTriggers?: RelationTrigger[]
   userId?: string
   characterId?: string
 
@@ -334,4 +338,26 @@ export const DEFAULT_VIRTUAL_SCROLL_OPTIONS: Required<VirtualScrollOptions> = {
   threshold: 50,
   enableDynamicHeight: false,
   direction: 'vertical'
+}
+
+// 时空事件类型
+export interface SpacetimeEvent {
+  id: string
+  type: 'spacetime_tide' | 'echo' | 'resonance' | 'fusion' | 'conflict'
+  title: string
+  description: string
+  effects?: string[]
+  triggeredBy?: string // 触发者角色ID
+  timestamp: Date
+}
+
+// 关系触发类型
+export interface RelationTrigger {
+  id: string
+  characterId: string
+  characterName: string
+  relationType: 'complementary' | 'mentor_student' | 'professional' | 'protector_ward' | 'cultural_exchange' | 'technology_magic'
+  description: string
+  compatibilityScore?: number
+  timestamp: Date
 }

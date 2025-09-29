@@ -214,10 +214,18 @@ const handleRegister = async () => {
       password: formData.password
     })
 
-    successMessage.value = '注册成功！正在跳转到登录页面...'
+    successMessage.value = '🎉 欢迎来到时空酒馆！正在准备您的专属时空体验...'
 
-    setTimeout(() => {
-      router.push('/login')
+    // 延迟跳转，让用户看到成功信息
+    setTimeout(async () => {
+      // 自动登录
+      await userStore.login({
+        email: formData.email,
+        password: formData.password
+      })
+
+      // 新用户直接跳转到时空酒馆，开启游戏化体验
+      await router.push('/tavern')
     }, 2000)
   } catch (error: any) {
     errorMessage.value = error.response?.data?.message || '注册失败，请稍后再试'

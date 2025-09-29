@@ -62,6 +62,81 @@
         v-html="formattedContent"
       />
 
+      <!-- 时空事件展示 -->
+      <div v-if="message.spacetimeEvents?.length" class="spacetime-events mt-3 space-y-2">
+        <div
+          v-for="event in message.spacetimeEvents"
+          :key="event.id"
+          class="spacetime-event bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-lg p-3 border border-purple-200 dark:border-purple-700"
+        >
+          <div class="flex items-start gap-2">
+            <div class="flex-shrink-0">
+              <svg class="w-4 h-4 text-purple-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-sm font-medium text-purple-700 dark:text-purple-300">
+                  {{ event.title }}
+                </span>
+                <el-tag
+                  size="mini"
+                  :type="getEventTypeColor(event.type)"
+                  effect="plain"
+                  class="text-xs"
+                >
+                  {{ getEventTypeLabel(event.type) }}
+                </el-tag>
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-300">
+                {{ event.description }}
+              </p>
+              <div v-if="event.effects?.length" class="mt-2 flex flex-wrap gap-1">
+                <el-tag
+                  v-for="effect in event.effects"
+                  :key="effect"
+                  size="mini"
+                  type="info"
+                  effect="plain"
+                  class="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                >
+                  {{ effect }}
+                </el-tag>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 角色关系触发提示 -->
+      <div v-if="message.relationTriggers?.length" class="relation-triggers mt-3">
+        <div class="bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-lg p-3 border border-cyan-200 dark:border-cyan-700">
+          <div class="flex items-start gap-2">
+            <svg class="w-4 h-4 text-cyan-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+            </svg>
+            <div class="flex-1">
+              <span class="text-sm font-medium text-cyan-700 dark:text-cyan-300 block mb-2">
+                角色关系触发
+              </span>
+              <div class="space-y-1">
+                <div
+                  v-for="trigger in message.relationTriggers"
+                  :key="trigger.id"
+                  class="text-sm text-gray-600 dark:text-gray-300"
+                >
+                  <span class="font-medium">{{ trigger.characterName }}</span>
+                  <span class="text-cyan-600 dark:text-cyan-400">({{ getRelationTypeLabel(trigger.relationType) }})</span>
+                  <span class="mx-1">•</span>
+                  <span>{{ trigger.description }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 消息操作 -->
       <div v-if="showActions" class="message-actions" role="toolbar" :aria-label="actionsAriaLabel">
         <TavernButton
@@ -291,6 +366,41 @@ const handleVoicePlay = () => {
     // 开始播放
     emit('voice-play', props.message)
   }
+}
+
+// 时空事件类型相关方法
+const getEventTypeColor = (type: string): string => {
+  const colors: Record<string, string> = {
+    'spacetime_tide': 'primary',
+    'echo': 'info',
+    'resonance': 'success',
+    'fusion': 'warning',
+    'conflict': 'danger'
+  }
+  return colors[type] || 'info'
+}
+
+const getEventTypeLabel = (type: string): string => {
+  const labels: Record<string, string> = {
+    'spacetime_tide': '时空潮汐',
+    'echo': '回响',
+    'resonance': '共鸣',
+    'fusion': '融合',
+    'conflict': '冲突'
+  }
+  return labels[type] || type
+}
+
+const getRelationTypeLabel = (type: string): string => {
+  const labels: Record<string, string> = {
+    'complementary': '互补关系',
+    'mentor_student': '师徒关系',
+    'professional': '专业联盟',
+    'protector_ward': '守护关系',
+    'cultural_exchange': '文化交流',
+    'technology_magic': '科技魔法'
+  }
+  return labels[type] || type
 }
 </script>
 

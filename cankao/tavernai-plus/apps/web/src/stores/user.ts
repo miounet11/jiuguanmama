@@ -162,6 +162,23 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  const changePassword = async (data: {
+    currentPassword: string
+    newPassword: string
+  }) => {
+    loading.value = true
+    try {
+      await authService.changePassword(data)
+      ElMessage.success('密码修改成功')
+      return true
+    } catch (error: any) {
+      ElMessage.error(error.message || '密码修改失败')
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   const setRedirectPath = (path: string | null) => {
     redirectPath.value = path
   }

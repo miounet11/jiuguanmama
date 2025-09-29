@@ -187,6 +187,97 @@
               </div>
             </div>
 
+            <!-- MBTI 性格分析 -->
+            <div v-if="detailData?.mbti">
+              <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <svg class="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                MBTI 性格分析
+              </h3>
+              <div class="bg-gradient-to-r from-purple-900/20 to-indigo-900/20 rounded-lg p-4 border border-purple-500/30">
+                <!-- MBTI 类型 -->
+                <div class="mb-4">
+                  <div class="flex items-center gap-3 mb-2">
+                    <el-tag
+                      size="large"
+                      class="bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-0 px-4 py-2 text-lg font-bold"
+                    >
+                      {{ detailData.mbti.type }}
+                    </el-tag>
+                    <span class="text-purple-300 text-sm">人格类型</span>
+                  </div>
+                  <p class="text-gray-300 text-sm">
+                    {{ getMbtiDescription(detailData.mbti.type) }}
+                  </p>
+                </div>
+
+                <!-- 性格特质 -->
+                <div v-if="detailData.mbti.traits?.length" class="mb-4">
+                  <h4 class="text-white font-medium mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    性格特质
+                  </h4>
+                  <div class="flex flex-wrap gap-2">
+                    <el-tag
+                      v-for="trait in detailData.mbti.traits"
+                      :key="trait"
+                      type="success"
+                      effect="plain"
+                      size="small"
+                    >
+                      {{ trait }}
+                    </el-tag>
+                  </div>
+                </div>
+
+                <!-- 兼容类型 -->
+                <div v-if="detailData.mbti.compatibility?.length" class="mb-4">
+                  <h4 class="text-white font-medium mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                    </svg>
+                    兼容人格类型
+                  </h4>
+                  <div class="flex flex-wrap gap-2">
+                    <el-tag
+                      v-for="type in detailData.mbti.compatibility"
+                      :key="type"
+                      type="info"
+                      effect="plain"
+                      size="small"
+                      class="border-blue-500/50 text-blue-300"
+                    >
+                      {{ type }}
+                    </el-tag>
+                  </div>
+                </div>
+
+                <!-- 性格弱点 -->
+                <div v-if="detailData.mbti.weaknesses?.length">
+                  <h4 class="text-white font-medium mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    需要注意的弱点
+                  </h4>
+                  <div class="flex flex-wrap gap-2">
+                    <el-tag
+                      v-for="weakness in detailData.mbti.weaknesses"
+                      :key="weakness"
+                      type="warning"
+                      effect="plain"
+                      size="small"
+                    >
+                      {{ weakness }}
+                    </el-tag>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- 性格特点 -->
             <div v-if="detailData?.personality">
               <h3 class="text-lg font-semibold text-white mb-3">性格特点</h3>
@@ -343,6 +434,162 @@
                 <el-button @click="loadMoreReviews" :loading="loadingMoreReviews">
                   加载更多评价
                 </el-button>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
+
+        <!-- 时空关联 -->
+        <el-tab-pane label="时空关联" name="spacetime">
+          <div class="space-y-6">
+            <!-- 角色关联网络 -->
+            <div v-if="detailData?.characterRelations?.length">
+              <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <svg class="w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 011 1h2a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clip-rule="evenodd"/>
+                </svg>
+                角色关联网络
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div
+                  v-for="relation in detailData.characterRelations"
+                  :key="relation.characterId"
+                  class="bg-gradient-to-r from-cyan-900/20 to-blue-900/20 rounded-lg p-4 border border-cyan-500/30"
+                >
+                  <div class="flex items-start justify-between mb-3">
+                    <div>
+                      <div class="flex items-center gap-2 mb-1">
+                        <el-tag
+                          :type="getRelationTypeColor(relation.relationType)"
+                          size="small"
+                          effect="plain"
+                        >
+                          {{ getRelationTypeLabel(relation.relationType) }}
+                        </el-tag>
+                        <span class="text-cyan-300 text-sm">
+                          兼容度: {{ ((relation.compatibilityScore || 0) * 100).toFixed(0) }}%
+                        </span>
+                      </div>
+                      <p class="text-gray-300 text-sm mb-2">
+                        {{ relation.description }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- 互动触发器 -->
+                  <div v-if="relation.interactionTriggers?.length">
+                    <h4 class="text-white font-medium mb-2 text-sm">互动触发器:</h4>
+                    <div class="flex flex-wrap gap-1">
+                      <el-tag
+                        v-for="trigger in relation.interactionTriggers"
+                        :key="trigger"
+                        size="mini"
+                        type="info"
+                        effect="plain"
+                        class="text-xs"
+                      >
+                        {{ trigger }}
+                      </el-tag>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 剧本关联 -->
+            <div v-if="characterScenarios.length > 0">
+              <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                </svg>
+                适配剧本
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div
+                  v-for="scenario in characterScenarios"
+                  :key="scenario.id"
+                  class="bg-gradient-to-r from-green-900/20 to-emerald-900/20 rounded-lg p-4 border border-green-500/30 cursor-pointer hover:border-green-400/50 transition-colors"
+                  @click="openScenario(scenario)"
+                >
+                  <div class="flex items-start justify-between mb-2">
+                    <div class="flex-1">
+                      <h4 class="text-white font-medium mb-1">{{ scenario.name }}</h4>
+                      <p class="text-gray-400 text-sm line-clamp-2">{{ scenario.description }}</p>
+                    </div>
+                    <el-tag
+                      v-if="scenario.isDefault"
+                      type="success"
+                      size="mini"
+                      class="ml-2"
+                    >
+                      默认
+                    </el-tag>
+                  </div>
+
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-400">{{ scenario.category }}</span>
+                    <div class="flex items-center gap-1">
+                      <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                      </svg>
+                      <span class="text-yellow-400">{{ scenario.rating?.toFixed(1) || '0.0' }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 时空酒馆兼容性分析 -->
+            <div class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg p-6 border border-purple-500/50">
+              <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                时空酒馆兼容性分析
+              </h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- MBTI兼容性 -->
+                <div class="text-center">
+                  <div class="text-2xl mb-2">
+                    <span v-if="detailData?.mbti?.compatibility?.length" class="text-green-400">✓</span>
+                    <span v-else class="text-red-400">✗</span>
+                  </div>
+                  <h4 class="text-white font-medium mb-1">MBTI兼容性</h4>
+                  <p class="text-gray-400 text-sm">
+                    {{ detailData?.mbti?.compatibility?.length ? `${detailData.mbti.compatibility.length}个兼容类型` : '未配置兼容性' }}
+                  </p>
+                </div>
+
+                <!-- 角色关联度 -->
+                <div class="text-center">
+                  <div class="text-2xl mb-2">
+                    <span v-if="detailData?.characterRelations?.length" class="text-green-400">✓</span>
+                    <span v-else class="text-yellow-400">○</span>
+                  </div>
+                  <h4 class="text-white font-medium mb-1">角色关联度</h4>
+                  <p class="text-gray-400 text-sm">
+                    {{ detailData?.characterRelations?.length || 0 }}个关联角色
+                  </p>
+                </div>
+
+                <!-- 剧本适配度 -->
+                <div class="text-center">
+                  <div class="text-2xl mb-2">
+                    <span v-if="characterScenarios.length > 0" class="text-green-400">✓</span>
+                    <span v-else class="text-orange-400">△</span>
+                  </div>
+                  <h4 class="text-white font-medium mb-1">剧本适配度</h4>
+                  <p class="text-gray-400 text-sm">
+                    {{ characterScenarios.length }}个适配剧本
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-4 p-3 bg-black/20 rounded-lg">
+                <p class="text-purple-300 text-sm">
+                  💡 <strong>时空酒馆提示：</strong>这个角色已经完全适配时空酒馆系统，可以与其他时空角色进行深度互动，体验跨时代的文化碰撞与性格化学反应！
+                </p>
               </div>
             </div>
           </div>
@@ -580,6 +827,55 @@ const loadRecommendations = async () => {
   } catch (error) {
     console.error('加载推荐失败:', error)
   }
+}
+
+// MBTI 类型描述
+const getMbtiDescription = (type: string): string => {
+  const descriptions: Record<string, string> = {
+    'INTJ': '建筑师型人格 - 富有想象力和战略性的思想家，一切皆在计划之中',
+    'ENFJ': '主人公型人格 - 富有魅力和鼓舞人心的领导者，有能力让听众着迷',
+    'INFJ': '提倡者型人格 - 富有创造力和洞察力的理想主义者，善于理解他人',
+    'ISFJ': '守护者型人格 - 非常专注和温暖的守护者，时刻准备着保护爱的人',
+    'ESFJ': '执政官型人格 - 极有同情心和受欢迎的合作者，总是热心助人',
+    'INFP': '调停者型人格 - 诗意而仁慈的利他主义者，总是热衷于帮助好的事业',
+    'INTP': '思想家型人格 - 具有创造性的思想家，对知识有着不可遏制的渴望',
+    'ENTJ': '指挥官型人格 - 大胆而富有想象力的领导者，会为了愿景而奋斗',
+    'ENTP': '辩论家型人格 - 聪明而充满好奇心的思想家，不会拒绝智力上的挑战',
+    'ENFP': '竞选者型人格 - 热情而富有创造力的激励者，能看到生活中所有的可能性',
+    'ESFP': '娱乐家型人格 - 自发的、热情和友好的娱乐者，乐于生活的每一刻',
+    'ISTJ': '物流师型人格 - 实际和注重事实的可靠者，值得信赖',
+    'ISTP': '鉴赏家型人格 - 大胆而实际的实验者，擅长使用各种工具',
+    'ISFP': '探险家型人格 - 灵活而迷人的艺术家，时刻准备探索新的可能性',
+    'ESTJ': '总经理型人格 - 出色的管理者，在管理事物或人员方面无与伦比',
+    'ESTP': '企业家型人格 - 聪明、精力充沛和善于感知的企业家，真正地享受生活'
+  }
+  return descriptions[type] || `${type}人格类型 - 独特的性格特征等待探索`
+}
+
+// 关系类型颜色
+const getRelationTypeColor = (type: string): string => {
+  const colors: Record<string, string> = {
+    'complementary': 'success',
+    'mentor_student': 'primary',
+    'professional': 'info',
+    'protector_ward': 'warning',
+    'cultural_exchange': 'info',
+    'technology_magic': 'primary'
+  }
+  return colors[type] || 'info'
+}
+
+// 关系类型标签
+const getRelationTypeLabel = (type: string): string => {
+  const labels: Record<string, string> = {
+    'complementary': '互补关系',
+    'mentor_student': '师徒关系',
+    'professional': '专业联盟',
+    'protector_ward': '守护关系',
+    'cultural_exchange': '文化交流',
+    'technology_magic': '科技魔法'
+  }
+  return labels[type] || type
 }
 
 const handleImport = async () => {

@@ -98,6 +98,21 @@
         {{ character.description || '这个角色还没有描述...' }}
       </p>
 
+      <!-- MBTI 性格类型 -->
+      <div v-if="character.mbti" class="mb-2">
+        <el-tag
+          type="primary"
+          size="small"
+          class="mbti-badge bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-0"
+          title="MBTI 性格类型"
+        >
+          <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          {{ character.mbti.type }}
+        </el-tag>
+      </div>
+
       <!-- 标签 -->
       <div v-if="character.tags && character.tags.length > 0" class="flex flex-wrap gap-1 mb-3">
         <el-tag

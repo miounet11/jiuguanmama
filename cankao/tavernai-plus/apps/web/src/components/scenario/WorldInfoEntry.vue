@@ -44,6 +44,29 @@
           />
         </div>
 
+        <!-- 时空属性标签 -->
+        <div v-if="entry.spacetimeAttributes?.length" class="flex gap-1">
+          <el-tag
+            v-for="attr in entry.spacetimeAttributes.slice(0, 2)"
+            :key="attr"
+            size="mini"
+            type="info"
+            effect="plain"
+            class="bg-purple-50 text-purple-700 border-purple-200"
+          >
+            {{ attr }}
+          </el-tag>
+          <el-tag
+            v-if="entry.spacetimeAttributes.length > 2"
+            size="mini"
+            type="info"
+            effect="plain"
+            class="bg-purple-50 text-purple-700 border-purple-200"
+          >
+            +{{ entry.spacetimeAttributes.length - 2 }}
+          </el-tag>
+        </div>
+
         <!-- 优先级标签 -->
         <el-tag
           :type="getPriorityType(entry.priority)"
@@ -274,6 +297,304 @@
                 </el-checkbox>
               </div>
             </div>
+
+            <!-- 时空属性 -->
+            <div class="space-y-2 col-span-2">
+              <label class="block text-sm font-medium text-purple-700 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V7l-7-5z" clip-rule="evenodd"/>
+                </svg>
+                时空属性
+              </label>
+              <el-select
+                v-model="editForm.spacetimeAttributes"
+                multiple
+                filterable
+                allow-create
+                default-first-option
+                placeholder="选择或输入时空属性"
+                @change="handleFormChange"
+                class="w-full"
+              >
+                <el-option
+                  v-for="attr in spacetimeAttributeOptions"
+                  :key="attr.value"
+                  :label="attr.label"
+                  :value="attr.value"
+                />
+              </el-select>
+              <div class="text-xs text-gray-500 mt-1">
+                绑定此条目到时空属性，影响时空事件触发和文化语境
+              </div>
+            </div>
+          </div>
+        </el-collapse-item>
+
+        <!-- 时空触发器 -->
+        <el-collapse-item title="时空触发器" name="spacetime-triggers">
+          <div class="space-y-6 p-4">
+            <!-- 角色关系触发器 -->
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <label class="block text-sm font-medium text-cyan-700 flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                  </svg>
+                  角色关系触发器
+                </label>
+                <el-button
+                  type="primary"
+                  size="small"
+                  @click="addRelationTrigger"
+                  :disabled="editForm.relationTriggers?.length >= 5"
+                >
+                  <el-icon><Plus /></el-icon>
+                  添加触发器
+                </el-button>
+              </div>
+
+              <div v-if="!editForm.relationTriggers?.length" class="text-center py-8 text-gray-500">
+                <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                </svg>
+                <p>暂无关系触发器</p>
+                <p class="text-xs mt-1">添加触发器来响应角色关系变化</p>
+              </div>
+
+              <div v-else class="space-y-3">
+                <div
+                  v-for="(trigger, index) in editForm.relationTriggers"
+                  :key="trigger.id || index"
+                  class="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-4 border border-cyan-200 dark:border-cyan-700"
+                >
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 关系类型 -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                        关系类型
+                      </label>
+                      <el-select
+                        v-model="trigger.relationType"
+                        placeholder="选择关系类型"
+                        @change="handleFormChange"
+                        class="w-full"
+                      >
+                        <el-option label="互补关系" value="complementary" />
+                        <el-option label="师徒关系" value="mentor_student" />
+                        <el-option label="专业联盟" value="professional" />
+                        <el-option label="守护关系" value="protector_ward" />
+                        <el-option label="文化交流" value="cultural_exchange" />
+                        <el-option label="科技魔法" value="technology_magic" />
+                      </el-select>
+                    </div>
+
+                    <!-- 触发概率 -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                        触发概率
+                      </label>
+                      <el-slider
+                        v-model="trigger.triggerProbability"
+                        :min="0"
+                        :max="1"
+                        :step="0.1"
+                        show-input
+                        @change="handleFormChange"
+                        class="w-full"
+                      />
+                    </div>
+
+                    <!-- 触发条件 -->
+                    <div class="md:col-span-2">
+                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                        触发条件
+                      </label>
+                      <el-input
+                        v-model="trigger.triggerCondition"
+                        placeholder="描述触发此条目的条件"
+                        @change="handleFormChange"
+                      />
+                    </div>
+
+                    <!-- 效果描述 -->
+                    <div class="md:col-span-2">
+                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                        效果描述
+                      </label>
+                      <el-input
+                        v-model="trigger.effectDescription"
+                        placeholder="描述触发后的效果"
+                        @change="handleFormChange"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- 操作按钮 -->
+                  <div class="flex justify-end mt-3 pt-3 border-t border-cyan-200 dark:border-cyan-700">
+                    <el-button
+                      type="danger"
+                      size="small"
+                      text
+                      @click="removeRelationTrigger(index)"
+                    >
+                      <el-icon><Delete /></el-icon>
+                      删除
+                    </el-button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-xs text-gray-500 mt-2">
+                💡 关系触发器允许此条目在检测到特定角色关系时自动激活，提供更丰富的互动体验
+              </div>
+            </div>
+
+            <!-- 文化语境编辑器 -->
+            <div class="space-y-4">
+              <label class="block text-sm font-medium text-green-700 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                </svg>
+                文化语境设置
+              </label>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 时代背景 -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    时代背景
+                  </label>
+                  <el-select
+                    v-model="editForm.culturalContext?.era"
+                    placeholder="选择时代背景"
+                    @change="handleFormChange"
+                    class="w-full"
+                  >
+                    <el-option label="古代 (Ancient)" value="ancient" />
+                    <el-option label="中世纪 (Medieval)" value="medieval" />
+                    <el-option label="文艺复兴 (Renaissance)" value="renaissance" />
+                    <el-option label="工业时代 (Industrial)" value="industrial" />
+                    <el-option label="现代 (Modern)" value="modern" />
+                    <el-option label="未来 (Future)" value="future" />
+                    <el-option label="奇幻 (Fantasy)" value="fantasy" />
+                    <el-option label="科幻 (Sci-Fi)" value="scifi" />
+                  </el-select>
+                </div>
+
+                <!-- 地域设定 -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    地域设定
+                  </label>
+                  <el-input
+                    v-model="editForm.culturalContext?.region"
+                    placeholder="如：中国古代、欧洲中世纪、未来都市"
+                    @change="handleFormChange"
+                  />
+                </div>
+
+                <!-- 语言风格 -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    语言风格
+                  </label>
+                  <el-select
+                    v-model="editForm.culturalContext?.languageStyle"
+                    placeholder="选择语言风格"
+                    @change="handleFormChange"
+                    class="w-full"
+                  >
+                    <el-option label="正式 (Formal)" value="formal" />
+                    <el-option label="随意 (Casual)" value="casual" />
+                    <el-option label="诗意 (Poetic)" value="poetic" />
+                    <el-option label="技术性 (Technical)" value="technical" />
+                    <el-option label="粗俗 (Vulgar)" value="vulgar" />
+                    <el-option label="古风 (Archaic)" value="archaic" />
+                  </el-select>
+                </div>
+              </div>
+
+              <!-- 价值观设定 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  核心价值观
+                </label>
+                <el-select
+                  v-model="editForm.culturalContext?.valueSystem"
+                  multiple
+                  filterable
+                  allow-create
+                  placeholder="选择或添加核心价值观"
+                  @change="handleFormChange"
+                  class="w-full"
+                >
+                  <el-option label="侠义精神" value="侠义精神" />
+                  <el-option label="科技至上" value="科技至上" />
+                  <el-option label="魔法荣耀" value="魔法荣耀" />
+                  <el-option label="家族荣誉" value="家族荣誉" />
+                  <el-option label="个人自由" value="个人自由" />
+                  <el-option label="集体利益" value="集体利益" />
+                  <el-option label="知识追求" value="知识追求" />
+                  <el-option label="力量崇拜" value="力量崇拜" />
+                  <el-option label="和平主义" value="和平主义" />
+                  <el-option label="征服欲望" value="征服欲望" />
+                </el-select>
+              </div>
+
+              <!-- 社会规范 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  社会规范
+                </label>
+                <el-select
+                  v-model="editForm.culturalContext?.socialNorms"
+                  multiple
+                  filterable
+                  allow-create
+                  placeholder="选择或添加社会规范"
+                  @change="handleFormChange"
+                  class="w-full"
+                >
+                  <el-option label="尊师重道" value="尊师重道" />
+                  <el-option label="男女平等" value="男女平等" />
+                  <el-option label="阶级制度" value="阶级制度" />
+                  <el-option label="民主制度" value="民主制度" />
+                  <el-option label="宗教信仰" value="宗教信仰" />
+                  <el-option label="契约精神" value="契约精神" />
+                  <el-option label="礼仪规范" value="礼仪规范" />
+                  <el-option label="实用主义" value="实用主义" />
+                </el-select>
+              </div>
+
+              <!-- 文化符号 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  文化符号
+                </label>
+                <el-select
+                  v-model="editForm.culturalContext?.culturalSymbols"
+                  multiple
+                  filterable
+                  allow-create
+                  placeholder="选择或添加文化符号"
+                  @change="handleFormChange"
+                  class="w-full"
+                >
+                  <el-option label="龙" value="龙" />
+                  <el-option label="激光剑" value="激光剑" />
+                  <el-option label="魔法杖" value="魔法杖" />
+                  <el-option label="十字架" value="十字架" />
+                  <el-option label="机器人" value="机器人" />
+                  <el-option label="符文" value="符文" />
+                  <el-option label="面具" value="面具" />
+                  <el-option label="徽章" value="徽章" />
+                </el-select>
+              </div>
+
+              <div class="text-xs text-gray-500 mt-2">
+                🌍 文化语境设置将影响此条目的触发逻辑和内容表现，使其更符合特定文化背景下的表达方式
+              </div>
+            </div>
           </div>
         </el-collapse-item>
       </el-collapse>
@@ -327,7 +648,8 @@ import {
   View,
   Hide,
   More,
-  Connection
+  Connection,
+  Plus
 } from '@element-plus/icons-vue'
 import { useScenarioStore } from '@/stores/scenario'
 import KeywordManager from './KeywordManager.vue'
@@ -381,7 +703,11 @@ const editForm = reactive<UpdateWorldInfoEntryRequest>({
   excludeRecursion: props.entry.excludeRecursion,
   category: props.entry.category,
   group: props.entry.group,
-  position: props.entry.position
+  position: props.entry.position,
+  // 时空酒馆扩展字段
+  spacetimeAttributes: props.entry.spacetimeAttributes ? [...props.entry.spacetimeAttributes] : [],
+  relationTriggers: props.entry.relationTriggers ? [...props.entry.relationTriggers] : [],
+  culturalContext: props.entry.culturalContext ? { ...props.entry.culturalContext } : undefined
 })
 
 // 原始数据备份
@@ -395,6 +721,26 @@ const getPriorityType = (priority: number) => {
   return 'info'
 }
 
+// 时空属性选项
+const spacetimeAttributeOptions = [
+  { label: '魔力共鸣', value: '魔力共鸣' },
+  { label: '时光回溯', value: '时光回溯' },
+  { label: '空间扭曲', value: '空间扭曲' },
+  { label: '能量潮汐', value: '能量潮汐' },
+  { label: '意识链接', value: '意识链接' },
+  { label: '维度穿越', value: '维度穿越' },
+  { label: '命运交织', value: '命运交织' },
+  { label: '灵魂绑定', value: '灵魂绑定' },
+  { label: '时空裂隙', value: '时空裂隙' },
+  { label: '永恒循环', value: '永恒循环' },
+  { label: '因果律变', value: '因果律变' },
+  { label: '平行宇宙', value: '平行宇宙' },
+  { label: '时间加速', value: '时间加速' },
+  { label: '空间压缩', value: '空间压缩' },
+  { label: '现实重塑', value: '现实重塑' },
+  { label: '记忆回廊', value: '记忆回廊' }
+]
+
 // 方法
 const formatDate = (dateString: string): string => {
   try {
@@ -405,6 +751,31 @@ const formatDate = (dateString: string): string => {
     })
   } catch {
     return '未知'
+  }
+}
+
+// 时空触发器管理方法
+const addRelationTrigger = () => {
+  if (!editForm.relationTriggers) {
+    editForm.relationTriggers = []
+  }
+
+  editForm.relationTriggers.push({
+    id: `trigger_${Date.now()}`,
+    relationType: 'complementary',
+    triggerCondition: '',
+    triggerProbability: 0.5,
+    effectDescription: '',
+    cooldownMinutes: 60
+  })
+
+  handleFormChange()
+}
+
+const removeRelationTrigger = (index: number) => {
+  if (editForm.relationTriggers) {
+    editForm.relationTriggers.splice(index, 1)
+    handleFormChange()
   }
 }
 

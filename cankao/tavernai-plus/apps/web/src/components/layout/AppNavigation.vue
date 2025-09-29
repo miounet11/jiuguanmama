@@ -270,7 +270,9 @@ const showSearch = computed(() => {
 // 导航菜单配置
 const navigationItems = computed(() => [
   { path: '/', label: '首页', icon: House },
+  { path: '/tavern', label: '时空酒馆', icon: '🏰', requiresAuth: true },
   { path: '/characters', label: '角色', icon: Avatar },
+  { path: '/character-network', label: '时空网络', icon: Share },
   { path: '/scenarios', label: '剧本管理', icon: Document, requiresAuth: true },
   { path: '/marketplace', label: '市场', icon: Compass },
   { path: '/community', label: '社区', icon: ChatDotRound, badge: unreadCount.value > 0 ? unreadCount.value : undefined },

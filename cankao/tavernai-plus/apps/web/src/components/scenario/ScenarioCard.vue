@@ -118,6 +118,46 @@
         {{ scenario.description || '暂无描述...' }}
       </p>
 
+      <!-- 时空酒馆标识 -->
+      <div v-if="scenario.spacetimeHub" class="mb-2">
+        <el-tag
+          type="primary"
+          size="small"
+          class="bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-0"
+          title="时空酒馆分部"
+        >
+          <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V7l-7-5z" clip-rule="evenodd"/>
+          </svg>
+          时空酒馆分部
+        </el-tag>
+      </div>
+
+      <!-- 时空属性 -->
+      <div v-if="scenario.spacetimeHub?.spacetimeAttributes?.length" class="mb-3">
+        <div class="flex flex-wrap gap-1">
+          <el-tag
+            v-for="attribute in scenario.spacetimeHub.spacetimeAttributes.slice(0, 2)"
+            :key="attribute"
+            size="mini"
+            type="warning"
+            effect="plain"
+            class="text-xs bg-amber-50 text-amber-700 border-amber-200"
+          >
+            {{ attribute }}
+          </el-tag>
+          <el-tag
+            v-if="scenario.spacetimeHub.spacetimeAttributes.length > 2"
+            size="mini"
+            type="warning"
+            effect="plain"
+            class="text-xs"
+          >
+            +{{ scenario.spacetimeHub.spacetimeAttributes.length - 2 }}
+          </el-tag>
+        </div>
+      </div>
+
       <!-- 分类 -->
       <div class="mb-3">
         <el-tag
@@ -126,6 +166,26 @@
           effect="plain"
         >
           {{ scenario.category }}
+        </el-tag>
+        <!-- 游戏类型 -->
+        <el-tag
+          v-if="scenario.genre"
+          size="small"
+          type="success"
+          effect="plain"
+          class="ml-1"
+        >
+          {{ scenario.genre }}
+        </el-tag>
+        <!-- 复杂度 -->
+        <el-tag
+          v-if="scenario.complexity"
+          size="small"
+          type="primary"
+          effect="plain"
+          class="ml-1"
+        >
+          {{ scenario.complexity }}
         </el-tag>
       </div>
 

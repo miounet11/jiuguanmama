@@ -15,6 +15,16 @@ import TavernInput from './TavernInput.vue'
 import TavernCard from './TavernCard.vue'
 import TavernBadge from './TavernBadge.vue'
 import TavernIcon from './TavernIcon.vue'
+import TavernSelect from './TavernSelect.vue'
+import TavernTabs from './TavernTabs.vue'
+import TavernSwitch from './TavernSwitch.vue'
+import TavernEmpty from './TavernEmpty.vue'
+import TavernLoading from './TavernLoading.vue'
+import TavernTable from './TavernTable.vue'
+import TavernSlider from './TavernSlider.vue'
+import TavernTooltip from './TavernTooltip.vue'
+import TavernModal from './TavernModal.vue'
+import TavernForm from './TavernForm.vue'
 
 // 基础组件导出
 export { default as TavernButton } from './TavernButton.vue'
@@ -22,6 +32,16 @@ export { default as TavernInput } from './TavernInput.vue'
 export { default as TavernCard } from './TavernCard.vue'
 export { default as TavernBadge } from './TavernBadge.vue'
 export { default as TavernIcon } from './TavernIcon.vue'
+export { default as TavernSelect } from './TavernSelect.vue'
+export { default as TavernTabs } from './TavernTabs.vue'
+export { default as TavernSwitch } from './TavernSwitch.vue'
+export { default as TavernEmpty } from './TavernEmpty.vue'
+export { default as TavernLoading } from './TavernLoading.vue'
+export { default as TavernTable } from './TavernTable.vue'
+export { default as TavernSlider } from './TavernSlider.vue'
+export { default as TavernTooltip } from './TavernTooltip.vue'
+export { default as TavernModal } from './TavernModal.vue'
+export { default as TavernForm } from './TavernForm.vue'
 
 // 类型导出
 export type { TavernButtonProps } from './TavernButton.vue'
@@ -29,6 +49,16 @@ export type { TavernInputProps } from './TavernInput.vue'
 export type { TavernCardProps } from './TavernCard.vue'
 export type { TavernBadgeProps } from './TavernBadge.vue'
 export type { TavernIconProps } from './TavernIcon.vue'
+export type { TavernSelectProps } from './TavernSelect.vue'
+export type { TavernTabsProps } from './TavernTabs.vue'
+export type { TavernSwitchProps } from './TavernSwitch.vue'
+export type { TavernEmptyProps } from './TavernEmpty.vue'
+export type { TavernLoadingProps } from './TavernLoading.vue'
+export type { TavernTableProps } from './TavernTable.vue'
+export type { TavernSliderProps } from './TavernSlider.vue'
+export type { TavernTooltipProps } from './TavernTooltip.vue'
+export type { TavernModalProps } from './TavernModal.vue'
+export type { TavernFormProps } from './TavernForm.vue'
 
 /**
  * Design System 使用指南
@@ -37,15 +67,19 @@ export type { TavernIconProps } from './TavernIcon.vue'
  *
  * ```vue
  * <script setup>
- * import { TavernButton, TavernCard, TavernInput } from '@/components/design-system'
+ * import { TavernButton, TavernCard, TavernInput, TavernSelect, TavernSwitch, TavernEmpty, TavernLoading } from '@/components/design-system'
  * </script>
  *
  * <template>
- *   <TavernCard title="角色卡片" hoverable>
- *     <TavernInput v-model="name" label="角色名称" />
- *     <TavernButton variant="primary" @click="save">保存</TavernButton>
- *   </TavernCard>
- * </template>
+*   <TavernCard title="角色卡片" hoverable>
+*     <TavernInput v-model="name" label="角色名称" />
+*     <TavernSelect v-model="category" label="角色类型" placeholder="选择类型">
+*       <el-option label="武侠仙侠" value="fantasy" />
+*       <el-option label="现代都市" value="modern" />
+*     </TavernSelect>
+*     <TavernButton variant="primary" @click="save">保存</TavernButton>
+*   </TavernCard>
+* </template>
  * ```
  *
  * ## 设计原则
@@ -124,6 +158,105 @@ export type { TavernIconProps } from './TavernIcon.vue'
  * />
  * ```
  *
+ * ### Select组件
+ * ```vue
+ * <!-- 基础选择器 -->
+ * <TavernSelect
+ *   v-model="selectedValue"
+ *   placeholder="请选择角色类型"
+ *   clearable
+ * >
+ *   <el-option label="武侠仙侠" value="fantasy" />
+ *   <el-option label="现代都市" value="modern" />
+ *   <el-option label="奇幻冒险" value="adventure" />
+ * </TavernSelect>
+ *
+ * <!-- 多选选择器 -->
+ * <TavernSelect
+ *   v-model="selectedTags"
+ *   placeholder="选择标签"
+ *   multiple
+ *   collapse-tags
+ *   filterable
+ * >
+ *   <el-option
+ *     v-for="tag in tagOptions"
+ *     :key="tag.value"
+ *     :label="tag.label"
+ *     :value="tag.value"
+ *   />
+ * </TavernSelect>
+ *
+ * <!-- 带验证的选择器 -->
+ * <TavernSelect
+ *   v-model="model"
+ *   label="AI模型"
+ *   placeholder="选择对话模型"
+ *   :error="hasError"
+ *   error-message="请选择有效的模型"
+ *   help-message="选择不同的模型会影响对话质量"
+ * >
+ *   <el-option label="GPT-4" value="gpt-4" />
+ *   <el-option label="Claude 3" value="claude-3" />
+ *   <el-option label="DeepSeek V3" value="deepseek-v3" />
+* </TavernSelect>
+* ```
+ *
+ * ### Switch组件
+ * ```vue
+ * <!-- 基础开关 -->
+ * <TavernSwitch v-model="enabled" label="启用功能" />
+ *
+ * <!-- 带文本的开关 -->
+ * <TavernSwitch
+ *   v-model="notifications"
+ *   active-text="开"
+ *   inactive-text="关"
+ *   help-message="开启后将接收消息通知"
+ * />
+ *
+ * <!-- 加载状态 -->
+ * <TavernSwitch v-model="autoSave" :loading="saving" label="自动保存" />
+ * ```
+ *
+ * ### Empty组件
+ * ```vue
+ * <!-- 基础空状态 -->
+ * <TavernEmpty description="暂无角色数据">
+ *   <TavernButton @click="createCharacter">创建角色</TavernButton>
+ * </TavernEmpty>
+ *
+ * <!-- 可点击的空状态 -->
+ * <TavernEmpty
+ *   description="点击添加第一个角色"
+ *   clickable
+ *   size="lg"
+ *   @click="showCreateDialog"
+ * >
+ *   <TavernIcon name="plus" size="lg" />
+ * </TavernEmpty>
+ * ```
+ *
+ * ### Loading组件
+ * ```vue
+ * <!-- 内联加载 -->
+ * <TavernLoading text="加载中..." />
+ *
+ * <!-- 带进度的加载 -->
+ * <TavernLoading
+ *   text="生成角色中..."
+ *   :show-progress="true"
+ *   :progress="75"
+ * />
+ *
+ * <!-- 全屏加载 -->
+ * <TavernLoading
+ *   text="初始化中..."
+ *   fullscreen
+ *   background="rgba(0, 0, 0, 0.9)"
+ * />
+ * ```
+ *
  * ### Card组件
  * ```vue
  * <!-- 角色卡片 -->
@@ -183,11 +316,21 @@ export const DesignSystemComponents = {
   TavernInput,
   TavernCard,
   TavernBadge,
-  TavernIcon
+  TavernIcon,
+  TavernSelect,
+  TavernTabs,
+  TavernSwitch,
+  TavernEmpty,
+  TavernLoading,
+  TavernTable,
+  TavernSlider,
+  TavernTooltip,
+  TavernModal,
+  TavernForm
 } as const
 
 // 版本信息
-export const DESIGN_SYSTEM_VERSION = '2.0.0'
+export const DESIGN_SYSTEM_VERSION = '4.0.0'
 export const DESIGN_TOKENS_VERSION = '2.0.0'
 
 /**

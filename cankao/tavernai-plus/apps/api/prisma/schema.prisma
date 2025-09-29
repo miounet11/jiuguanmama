@@ -91,6 +91,13 @@ model User {
   scenarioFavorites  ScenarioFavorite[]
   scenarioRatings    ScenarioRating[]
   scenarioTemplates  ScenarioTemplate[] // 创建的剧本模板
+
+  // 游戏化玩法系统
+  characterAffinities CharacterAffinity[]
+  scenarioProgresses  ScenarioProgress[]
+  characterProficiencies CharacterProficiency[]
+  achievements        UserAchievement[]
+  dailyQuests         DailyQuest[]
 }
 
 // 角色模型
@@ -129,6 +136,13 @@ model Character {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
+  // 时空酒馆扩展字段
+  mbtiType        String?  @map("mbti_type") // MBTI人格类型，如 "INTJ"
+  mbtiDescription String?  @map("mbti_description") // MBTI性格描述
+  mbtiTraits      String   @default("[]") @map("mbti_traits") // JSON数组：性格特质
+  mbtiCompatibility String @default("[]") @map("mbti_compatibility") // JSON数组：兼容人格类型
+  mbtiWeaknesses  String   @default("[]") @map("mbti_weaknesses") // JSON数组：性格弱点
+
   // 基础关系
   creator      User                @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   chatSessions ChatSession[]
@@ -142,9 +156,17 @@ model Character {
   // 情景剧本系统关系
   scenarios CharacterScenario[]
 
+  // 时空酒馆角色关联网络
+  outgoingRelations CharacterRelation[] @relation("CharacterFrom") // 作为发起者的关系
+  incomingRelations CharacterRelation[] @relation("CharacterTo")   // 作为接收者的关系
+
   // 增强世界剧本关系
   leadingOrganizations WorldOrganization[] // 作为领导者的组织
   ownedItems          WorldItem[]         // 拥有的物品
+
+  // 游戏化玩法系统
+  userAffinities      CharacterAffinity[]
+  userProficiencies   CharacterProficiency[]
 
   @@unique([name, creatorId])
   @@index([creatorId])
@@ -270,6 +292,11 @@ model Message {
   edited      Boolean  @default(false)
   deleted     Boolean  @default(false)
   metadata    String?
+
+  // 时空酒馆扩展字段
+  spacetimeEvents   String @default("[]") @map("spacetime_events") // JSON数组：时空事件记录
+  relationTriggers  String @default("[]") @map("relation_triggers") // JSON数组：关系触发记录
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1064,6 +1091,13 @@ model Scenario {
   category    String   @default("通用") // 剧本分类
   language    String   @default("zh-CN") // 语言设置
 
+  // 时空酒馆分部扩展字段
+  spacetimeHubEnabled Boolean @default(false) @map("spacetime_hub_enabled") // 是否启用时空酒馆分部
+  spacetimeAttributes String @default("[]") @map("spacetime_attributes") // JSON数组：时空属性
+  spacetimeLayout    String? @map("spacetime_layout") // 空间布局描述
+  fusionMechanisms   String? @map("fusion_mechanisms") // 融合机制描述
+  plotPhases         String? @map("plot_phases") // 剧情阶段描述
+
   // 增强世界剧本字段
   genre           String? // fantasy, scifi, modern, historical, horror, romance, mystery, adventure
   complexity      String? // simple, moderate, complex, epic
@@ -1117,6 +1151,9 @@ model Scenario {
   favorites ScenarioFavorite[]
   ratings   ScenarioRating[]
 
+  // 游戏化玩法系统
+  userProgresses ScenarioProgress[]
+
   // 索引
   @@index([userId])
   @@index([isPublic])
@@ -1159,6 +1196,15 @@ model WorldInfoEntry {
 
   // 显示位置设置
   position String @default("before") // before, after, replace
+
+  // 时空酒馆扩展字段
+  spacetimeAttributes String @default("[]") @map("spacetime_attributes") // JSON数组：时空属性关联
+  relationTriggers    String @default("[]") @map("relation_triggers") // JSON数组：角色关系触发器
+  culturalContext     String @default("{}") @map("cultural_context") // JSON对象：文化语境信息
+
+  // 剧情阶段控制
+  plotPhases          String @default("[]") @map("plot_phases") // JSON数组：剧情阶段绑定
+  dynamicWeight       String @default("{}") @map("dynamic_weight") // JSON对象：动态权重配置
 
   // 统计信息
   triggerCount Int @default(0) @map("trigger_count") // 触发次数
@@ -1450,4 +1496,199 @@ model CharacterWorldSetting {
   characterScenario CharacterScenario @relation(fields: [characterScenarioId], references: [id], onDelete: Cascade)
 
   @@index([characterScenarioId])
+}
+
+// 时空酒馆角色关联网络
+model CharacterRelation {
+  id                String   @id @default(uuid())
+  fromCharacterId   String   @map("from_character_id") // 发起者角色ID
+  toCharacterId     String   @map("to_character_id")   // 接收者角色ID
+  relationType      String   @map("relation_type")     // 关系类型：complementary, mentor_student, professional, protector_ward, cultural_exchange, technology_magic
+  description       String   // 关系描述
+  interactionTriggers String @default("[]") @map("interaction_triggers") // JSON数组：互动触发条件
+  compatibilityScore Float?  @map("compatibility_score") // 兼容性评分 0-1
+  importance        Int      @default(1) // 关系重要性 1-5
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  fromCharacter Character @relation("CharacterFrom", fields: [fromCharacterId], references: [id], onDelete: Cascade)
+  toCharacter   Character @relation("CharacterTo", fields: [toCharacterId], references: [id], onDelete: Cascade)
+
+  @@unique([fromCharacterId, toCharacterId, relationType])
+  @@index([fromCharacterId])
+  @@index([toCharacterId])
+  @@index([relationType])
+  @@index([isActive])
+}
+
+// ==================== 游戏化玩法系统模型 ====================
+
+// 用户角色亲密度系统
+model CharacterAffinity {
+  id                String   @id @default(uuid())
+  userId            String   @map("user_id")
+  characterId       String   @map("character_id")
+  affinityLevel     Int      @default(1) @map("affinity_level") // 亲密度等级 1-10
+  affinityPoints    Int      @default(0) @map("affinity_points") // 亲密度点数
+  relationshipType  String   @default("acquaintance") @map("relationship_type") // 关系类型: stranger, acquaintance, friend, close_friend, best_friend, soulmate
+  unlockCount       Int      @default(0) @map("unlock_count") // 解锁次数
+  lastInteractionAt DateTime @default(now()) @map("last_interaction_at") // 最后互动时间
+  favorite          Boolean  @default(false) // 是否设为收藏
+  nickname          String? // 用户给角色起的昵称
+
+  // 时空酒馆扩展字段
+  spacetimeMemories String @default("[]") @map("spacetime_memories") // JSON数组：时空记忆记录
+  specialEvents     String @default("[]") @map("special_events") // JSON数组：特殊事件记录
+  giftsGiven        String @default("[]") @map("gifts_given") // JSON数组：赠送的礼物
+  sharedSecrets     String @default("[]") @map("shared_secrets") // JSON数组：分享的秘密
+
+  // 时间戳
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, characterId])
+  @@index([userId])
+  @@index([characterId])
+  @@index([affinityLevel])
+  @@index([relationshipType])
+  @@index([lastInteractionAt])
+}
+
+// 用户剧本进度系统
+model ScenarioProgress {
+  id                    String   @id @default(uuid())
+  userId                String   @map("user_id")
+  scenarioId            String   @map("scenario_id")
+  status                String   @default("not_started") @map("status") // not_started, in_progress, completed, abandoned
+  progressPercentage    Float    @default(0.0) @map("progress_percentage") // 完成百分比 0.0-1.0
+  totalSessions         Int      @default(0) @map("total_sessions") // 总会话次数
+  totalMessages         Int      @default(0) @map("total_messages") // 总消息数
+  totalTokens           Int      @default(0) @map("total_tokens") // 总token消耗
+  averageSessionTime    Int      @default(0) @map("average_session_time") // 平均会话时间（分钟）
+  proficiencyLevel      Int      @default(1) @map("proficiency_level") // 熟练度等级 1-20
+  proficiencyPoints     Int      @default(0) @map("proficiency_points") // 熟练度点数
+
+  // 时空酒馆扩展字段
+  spacetimeExploration String @default("{}") @map("spacetime_exploration") // JSON对象：时空探索进度
+  plotBranchesChosen   String @default("[]") @map("plot_branches_chosen") // JSON数组：选择的情节分支
+  keyDecisions         String @default("[]") @map("key_decisions") // JSON数组：关键决策记录
+  achievements         String @default("[]") @map("achievements") // JSON数组：获得的成就
+  difficulty           String   @default("normal") // 难度等级: easy, normal, hard, expert
+
+  // 时间戳
+  startedAt             DateTime? @map("started_at") // 开始时间
+  completedAt           DateTime? @map("completed_at") // 完成时间
+  lastPlayedAt          DateTime @default(now()) @map("last_played_at") // 最后游玩时间
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, scenarioId])
+  @@index([userId])
+  @@index([scenarioId])
+  @@index([status])
+  @@index([proficiencyLevel])
+  @@index([lastPlayedAt])
+}
+
+// 角色卡熟练度系统
+model CharacterProficiency {
+  id                  String   @id @default(uuid())
+  userId              String   @map("user_id")
+  characterId         String   @map("character_id")
+  proficiencyLevel    Int      @default(1) @map("proficiency_level") // 熟练度等级 1-50
+  proficiencyPoints   Int      @default(0) @map("proficiency_points") // 熟练度点数
+  masteryAreas        String   @default("[]") @map("mastery_areas") // JSON数组：精通领域
+
+  // 技能树系统
+  skillTreeUnlocked   String   @default("[]") @map("skill_tree_unlocked") // JSON数组：解锁的技能
+  activeSkills        String   @default("[]") @map("active_skills") // JSON数组：激活的技能
+  skillPoints         Int      @default(0) @map("skill_points") // 可用技能点数
+
+  // 时空酒馆扩展字段
+  spacetimeAdaptation String @default("{}") @map("spacetime_adaptation") // JSON对象：时空适应能力
+  dialogueMastery     String @default("{}") @map("dialogue_mastery") // JSON对象：对话精通度
+  characterInsights   String @default("[]") @map("character_insights") // JSON数组：角色洞察
+
+  // 统计信息
+  totalInteractions   Int      @default(0) @map("total_interactions") // 总互动次数
+  successfulOutcomes  Int      @default(0) @map("successful_outcomes") // 成功互动次数
+  averageRating       Float    @default(0.0) @map("average_rating") // 平均评分
+  bestDialogue        String?  @map("best_dialogue") // 最佳对话记录
+
+  // 时间戳
+  firstEncounterAt    DateTime @default(now()) @map("first_encounter_at") // 首次相遇时间
+  lastInteractionAt   DateTime @default(now()) @map("last_interaction_at") // 最后互动时间
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, characterId])
+  @@index([userId])
+  @@index([characterId])
+  @@index([proficiencyLevel])
+  @@index([lastInteractionAt])
+}
+
+// 用户游戏化成就系统
+model UserAchievement {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  achievementId   String   @map("achievement_id")
+  achievementType String   @map("achievement_type") // character_affinity, scenario_progress, skill_mastery, social, special
+  title           String
+  description     String
+  icon            String?
+  rarity          String   @default("common") // common, rare, epic, legendary
+  points          Int      @default(0) // 成就点数
+  unlockedAt      DateTime @default(now()) @map("unlocked_at")
+  progress        Float    @default(1.0) // 成就进度 0.0-1.0
+  metadata        String   @default("{}") // 额外数据
+
+  // 关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementType])
+  @@index([rarity])
+}
+
+// 每日任务系统
+model DailyQuest {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  questType     String   @map("quest_type") // chat, character_interaction, scenario_progress, social
+  title         String
+  description   String
+  targetValue   Int      @map("target_value") // 目标值
+  currentValue  Int      @default(0) @map("current_value") // 当前值
+  rewardPoints  Int      @default(0) @map("reward_points") // 奖励点数
+  rewardType    String   @default("credits") @map("reward_type") // credits, affinity_boost, proficiency_boost
+  isCompleted   Boolean  @default(false) @map("is_completed")
+  isClaimed     Boolean  @default(false) @map("is_claimed")
+  expiresAt     DateTime @map("expires_at")
+  completedAt   DateTime? @map("completed_at")
+  claimedAt     DateTime? @map("claimed_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // 关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([questType])
+  @@index([isCompleted])
+  @@index([expiresAt])
 }
