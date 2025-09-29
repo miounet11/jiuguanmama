@@ -1,5 +1,22 @@
 <template>
   <div class="chat-session-container">
+    <!-- 动态场景背景 -->
+    <div class="scene-background-container">
+      <div
+        v-for="(background, index) in backgroundLayers"
+        :key="background.id"
+        class="scene-background-layer"
+        :class="{
+          'active': index === activeBackgroundIndex,
+          'transitioning': isTransitioning
+        }"
+        :style="{
+          backgroundImage: `url(${background.url})`,
+          zIndex: 1 + index
+        }"
+      ></div>
+    </div>
+
     <!-- 移动端遮罩层 -->
     <div
       v-if="!sidebarCollapsed && isMobile"
@@ -159,6 +176,16 @@
           <span class="message-count">{{ messages.length }} 条消息</span>
         </div>
         <div class="chat-header-actions">
+          <!-- 场景背景选择器 -->
+          <TavernButton
+            variant="ghost"
+            size="sm"
+            @click="toggleSceneSelector"
+            title="切换场景背景"
+            class="scene-selector-btn"
+          >
+            <TavernIcon name="photo" />
+          </TavernButton>
           <TavernButton
             variant="ghost"
             size="sm"
@@ -175,6 +202,51 @@
           >
             <TavernIcon :name="fullscreen ? 'arrows-pointing-in' : 'arrows-pointing-out'" />
           </TavernButton>
+        </div>
+      </div>
+
+      <!-- 场景选择器面板 -->
+      <div v-if="showSceneSelector" class="scene-selector-panel">
+        <div class="scene-panel-header">
+          <h4>选择场景背景</h4>
+          <TavernButton
+            variant="ghost"
+            size="sm"
+            @click="showSceneSelector = false"
+          >
+            <TavernIcon name="x-mark" />
+          </TavernButton>
+        </div>
+        <div class="scene-backgrounds-grid">
+          <div
+            v-for="(scene, index) in availableScenes"
+            :key="scene.id"
+            class="scene-background-item"
+            :class="{ 'active': currentSceneId === scene.id }"
+            @click="changeScene(scene)"
+          >
+            <div
+              class="scene-thumbnail"
+              :style="{ backgroundImage: `url(${scene.thumbnail || scene.url})` }"
+            >
+              <div class="scene-overlay">
+                <TavernIcon v-if="currentSceneId === scene.id" name="check" class="check-icon" />
+              </div>
+            </div>
+            <span class="scene-name">{{ scene.name }}</span>
+          </div>
+        </div>
+
+        <!-- AI自动检测开关 -->
+        <div class="scene-auto-detect">
+          <label class="scene-option">
+            <input
+              type="checkbox"
+              v-model="autoDetectScene"
+              @change="onAutoDetectChange"
+            />
+            <span>根据对话内容自动切换场景</span>
+          </label>
         </div>
       </div>
 
@@ -571,6 +643,69 @@ const canSend = computed(() => {
 
 const canRegenerate = computed(() => {
   return messages.value.length > 0 && messages.value[messages.value.length - 1].role === 'assistant' && !isLoading.value
+})
+
+// 场景背景管理
+const showSceneSelector = ref(false)
+const currentSceneId = ref('default')
+const activeBackgroundIndex = ref(0)
+const isTransitioning = ref(false)
+const autoDetectScene = ref(false)
+
+// 可用场景背景库
+const availableScenes = ref([
+  {
+    id: 'default',
+    name: '默认',
+    url: '/backgrounds/default-chat.jpg',
+    thumbnail: '/backgrounds/thumbnails/default-chat.jpg',
+    keywords: ['默认', '通用']
+  },
+  {
+    id: 'tavern-interior',
+    name: '时空酒馆内景',
+    url: '/uploads/scenarios/backgrounds/timespace-tavern-interior.jpg',
+    thumbnail: '/uploads/scenarios/backgrounds/thumbnails/timespace-tavern-interior.jpg',
+    keywords: ['酒馆', '室内', '温馨', '聊天']
+  },
+  {
+    id: 'stellar-port',
+    name: '星际港口',
+    url: '/uploads/scenarios/backgrounds/stellar-port.jpg',
+    thumbnail: '/uploads/scenarios/backgrounds/thumbnails/stellar-port.jpg',
+    keywords: ['星际', '港口', '科幻', '未来', '太空']
+  },
+  {
+    id: 'magic-library',
+    name: '魔法图书馆',
+    url: '/uploads/scenarios/backgrounds/magic-library.jpg',
+    thumbnail: '/uploads/scenarios/backgrounds/thumbnails/magic-library.jpg',
+    keywords: ['图书馆', '魔法', '书籍', '学习', '奇幻']
+  },
+  {
+    id: 'cyber-city',
+    name: '赛博都市',
+    url: '/uploads/scenarios/backgrounds/cyber-city.jpg',
+    thumbnail: '/uploads/scenarios/backgrounds/thumbnails/cyber-city.jpg',
+    keywords: ['赛博朋克', '都市', '霓虹', '科技', '夜晚']
+  },
+  {
+    id: 'wasteland',
+    name: '末世废土',
+    url: '/uploads/scenarios/backgrounds/wasteland-scene.jpg',
+    thumbnail: '/uploads/scenarios/backgrounds/thumbnails/wasteland-scene.jpg',
+    keywords: ['废土', '末世', '荒凉', '生存']
+  }
+])
+
+// 背景图层 (用于切换动画)
+const backgroundLayers = ref([
+  availableScenes.value[0] // 默认背景
+])
+
+// 当前场景计算属性
+const currentScene = computed(() => {
+  return availableScenes.value.find(scene => scene.id === currentSceneId.value) || availableScenes.value[0]
 })
 
 // 虚拟滚动计算
@@ -1214,10 +1349,326 @@ const initializeContainer = () => {
     }
   }
 }
+
+// 场景切换方法
+const changeScene = (sceneId: string) => {
+  const sceneIndex = availableScenes.value.findIndex(scene => scene.id === sceneId)
+  if (sceneIndex !== -1 && currentSceneId.value !== sceneId) {
+    // 创建平滑过渡效果
+    const newScene = availableScenes.value[sceneIndex]
+
+    // 预加载新场景图片
+    const img = new Image()
+    img.onload = () => {
+      // 图片加载完成后执行切换动画
+      performSceneTransition(sceneIndex, sceneId, newScene)
+    }
+    img.onerror = () => {
+      // 即使图片加载失败也执行切换（可能有默认背景）
+      performSceneTransition(sceneIndex, sceneId, newScene)
+    }
+    img.src = newScene.url
+  }
+}
+
+// 执行场景过渡动画
+const performSceneTransition = (sceneIndex: number, sceneId: string, newScene: any) => {
+  // 更新背景图层数据
+  if (backgroundLayers.value.length <= sceneIndex) {
+    // 确保有足够的图层
+    backgroundLayers.value = availableScenes.value.slice(0, sceneIndex + 1)
+  }
+
+  // 添加新场景到图层（如果还没有）
+  if (!backgroundLayers.value.find(layer => layer.id === newScene.id)) {
+    backgroundLayers.value.push(newScene)
+  }
+
+  // 执行淡入淡出动画
+  activeBackgroundIndex.value = sceneIndex
+  currentSceneId.value = sceneId
+  showSceneSelector.value = false
+
+  // 可选：添加场景切换提示
+  if (newScene.name) {
+    console.log(`场景已切换到: ${newScene.name}`)
+  }
+}
+
+const toggleSceneSelector = () => {
+  showSceneSelector.value = !showSceneSelector.value
+}
+
+const onAutoDetectChange = () => {
+  if (autoDetectScene.value) {
+    // 启用自动检测时，分析最近的消息
+    if (messages.value.length > 0) {
+      const lastMessage = messages.value[messages.value.length - 1]
+      detectSceneFromMessage(lastMessage.content)
+    }
+  }
+}
+
+// 从消息内容检测场景
+const detectSceneFromMessage = (message: string) => {
+  if (!message || !autoDetectScene.value) return
+
+  for (const scene of availableScenes.value) {
+    if (scene.keywords.some(keyword => message.includes(keyword))) {
+      if (currentSceneId.value !== scene.id) {
+        changeScene(scene.id)
+        break
+      }
+    }
+  }
+}
+
+// 监听消息变化以触发场景自动检测
+watch(messages, (newMessages) => {
+  if (autoDetectScene.value && newMessages.length > 0) {
+    const lastMessage = newMessages[newMessages.length - 1]
+    if (lastMessage.role === 'assistant') {
+      detectSceneFromMessage(lastMessage.content)
+    }
+  }
+}, { deep: true })
 </script>
 
 <style lang="scss" scoped>
 @import '@/styles/variables.scss';
+
+// 场景背景样式
+.scene-background-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.scene-background-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transform: scale(1.05);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.active {
+    opacity: 0.4; // 背景半透明，保证文字可读性
+    transform: scale(1);
+  }
+
+  &.fade-out {
+    opacity: 0 !important;
+    transform: scale(0.95);
+  }
+
+  // 场景切换时的特殊动画效果
+  &.scene-entering {
+    animation: sceneEnter 1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  &.scene-leaving {
+    animation: sceneLeave 0.6s cubic-bezier(0.55, 0, 0.45, 1) forwards;
+  }
+
+  // 添加遮罩层确保文字可读性
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      135deg,
+      rgba(18, 18, 20, 0.75) 0%,
+      rgba(28, 28, 32, 0.65) 30%,
+      rgba(18, 18, 20, 0.8) 70%,
+      rgba(12, 12, 16, 0.85) 100%
+    );
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+}
+
+// 场景切换动画关键帧
+@keyframes sceneEnter {
+  from {
+    opacity: 0;
+    transform: scale(1.1) translateY(20px);
+    filter: blur(10px);
+  }
+  60% {
+    opacity: 0.2;
+    transform: scale(1.02) translateY(5px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 0.4;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes sceneLeave {
+  from {
+    opacity: 0.4;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+  40% {
+    opacity: 0.15;
+    transform: scale(0.98) translateY(-5px);
+    filter: blur(1px);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(-15px);
+    filter: blur(5px);
+  }
+}
+
+// 场景选择器样式
+.scene-selector-container {
+  position: relative;
+
+  .scene-selector-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .scene-icon {
+      font-size: 16px;
+    }
+
+    .scene-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .dropdown-arrow {
+      font-size: 12px;
+      transition: transform 0.2s ease;
+
+      &.expanded {
+        transform: rotate(180deg);
+      }
+    }
+  }
+}
+
+.scene-selector-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 320px;
+  max-height: 400px;
+  margin-top: 8px;
+  background: rgba(28, 28, 32, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  z-index: 1000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+
+    h4 {
+      margin: 0;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .auto-detect-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  .scenes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+
+    .scene-option {
+      position: relative;
+      aspect-ratio: 16/9;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: rgba(var(--el-color-primary-rgb), 0.6);
+        transform: translateY(-2px);
+      }
+
+      &.active {
+        border-color: var(--el-color-primary);
+        box-shadow: 0 0 0 1px var(--el-color-primary);
+      }
+
+      .scene-preview {
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+
+      .scene-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+        padding: 12px 8px 8px;
+
+        .scene-title {
+          color: white;
+          font-size: 12px;
+          font-weight: 500;
+          line-height: 1.2;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+      }
+    }
+  }
+}
 @import '@/styles/mixins.scss';
 
 .chat-session-container {

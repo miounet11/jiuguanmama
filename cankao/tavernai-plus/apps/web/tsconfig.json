@@ -16,31 +16,25 @@
     "jsx": "preserve",
 
     /* Linting */
-    "strict": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
 
     /* Path mapping */
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@shared/*": ["../../packages/shared/*"],
-      "@ui/*": ["../../packages/ui/*"]
+      "@ui/*": ["../../packages/ui/*"],
+      "@streaming/*": ["./src/components/streaming/*"],
+      "@extensions/*": ["./src/components/extensions/*"],
+      "@config/*": ["./src/components/config/*"]
     },
 
     /* Type checking */
     "sourceMap": true,
-
-    /* Additional strict checks */
-    "noImplicitAny": false,
-    "noImplicitReturns": false,
-    "noImplicitThis": false,
-    "strictNullChecks": false,
-    "strictFunctionTypes": false,
-    "strictBindCallApply": false,
-    "strictPropertyInitialization": false,
-    "alwaysStrict": false,
 
     /* Vue specific */
     "allowSyntheticDefaultImports": true,

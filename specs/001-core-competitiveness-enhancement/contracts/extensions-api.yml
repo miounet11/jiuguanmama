@@ -1,0 +1,617 @@
+openapi: 3.0.3
+info:
+  title: TavernAI Plus - 插件扩展API
+  description: 插件扩展系统API，支持插件管理、安装、配置和市场功能
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3001/api
+    description: 开发环境
+  - url: https://api.tavernai.com/api
+    description: 生产环境
+
+paths:
+  /extensions/marketplace:
+    get:
+      summary: 获取插件市场列表
+      description: 获取可用插件的分页列表，支持搜索和过滤
+      operationId: listMarketplaceExtensions
+      parameters:
+        - name: category
+          in: query
+          description: 插件分类过滤
+          schema:
+            type: string
+            enum: [ui, api, tool, theme, all]
+            default: all
+        - name: search
+          in: query
+          description: 搜索关键词
+          schema:
+            type: string
+            maxLength: 100
+        - name: sort
+          in: query
+          description: 排序方式
+          schema:
+            type: string
+            enum: [popular, rating, newest, name]
+            default: popular
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: 成功获取插件列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  extensions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExtensionListing'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  filters:
+                    type: object
+                    description: 可用过滤器选项
+                    properties:
+                      categories:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            count:
+                              type: integer
+
+  /extensions/marketplace/{extensionId}:
+    get:
+      summary: 获取插件详细信息
+      description: 获取指定插件的详细信息，包括评价和统计数据
+      operationId: getExtensionDetails
+      parameters:
+        - name: extensionId
+          in: path
+          required: true
+          description: 插件ID
+          schema:
+            type: string
+            pattern: '^[a-z0-9_-]+$'
+      responses:
+        '200':
+          description: 成功获取插件详情
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ExtensionListing'
+                  - type: object
+                    properties:
+                      reviews:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ExtensionReview'
+                      statistics:
+                        type: object
+                        properties:
+                          weeklyDownloads:
+                            type: integer
+                          monthlyDownloads:
+                            type: integer
+                          totalDownloads:
+                            type: integer
+                          averageRating:
+                            type: number
+                            format: float
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /extensions/installed:
+    get:
+      summary: 获取已安装插件列表
+      description: 获取当前用户已安装的插件列表
+      operationId: listInstalledExtensions
+      parameters:
+        - name: status
+          in: query
+          description: 过滤插件状态
+          schema:
+            type: string
+            enum: [active, disabled, error, all]
+            default: all
+      responses:
+        '200':
+          description: 成功获取已安装插件
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  extensions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InstalledExtension'
+      security:
+        - BearerAuth: []
+
+  /extensions/install:
+    post:
+      summary: 安装插件
+      description: 安装指定的插件到用户账户
+      operationId: installExtension
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - extensionId
+              properties:
+                extensionId:
+                  type: string
+                  description: 要安装的插件ID
+                version:
+                  type: string
+                  description: 插件版本，不指定则安装最新版本
+                  pattern: '^\d+\.\d+\.\d+(-[a-z0-9-]+)?$'
+                autoUpdate:
+                  type: boolean
+                  default: true
+                  description: 是否启用自动更新
+      responses:
+        '201':
+          description: 插件安装成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  installation:
+                    $ref: '#/components/schemas/InstalledExtension'
+                  message:
+                    type: string
+                    example: "Extension installed successfully"
+        '400':
+          description: 安装请求无效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: 插件已安装
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /extensions/installed/{extensionId}:
+    patch:
+      summary: 更新插件配置
+      description: 更新已安装插件的配置和状态
+      operationId: updateExtensionConfig
+      parameters:
+        - name: extensionId
+          in: path
+          required: true
+          description: 插件ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                  description: 启用/禁用插件
+                autoUpdate:
+                  type: boolean
+                  description: 是否自动更新
+                config:
+                  type: object
+                  description: 插件配置数据
+                userData:
+                  type: object
+                  description: 插件用户数据
+      responses:
+        '200':
+          description: 配置更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstalledExtension'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - BearerAuth: []
+
+    delete:
+      summary: 卸载插件
+      description: 从用户账户中卸载指定插件
+      operationId: uninstallExtension
+      parameters:
+        - name: extensionId
+          in: path
+          required: true
+          description: 插件ID
+          schema:
+            type: string
+        - name: keepData
+          in: query
+          description: 是否保留插件数据
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: 插件卸载成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Extension uninstalled successfully"
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - BearerAuth: []
+
+  /extensions/{extensionId}/reviews:
+    get:
+      summary: 获取插件评价
+      description: 获取指定插件的用户评价列表
+      operationId: getExtensionReviews
+      parameters:
+        - name: extensionId
+          in: path
+          required: true
+          description: 插件ID
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: 排序方式
+          schema:
+            type: string
+            enum: [newest, oldest, rating_high, rating_low, helpful]
+            default: helpful
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: 成功获取评价列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reviews:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExtensionReview'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  summary:
+                    type: object
+                    properties:
+                      averageRating:
+                        type: number
+                        format: float
+                      totalReviews:
+                        type: integer
+                      ratingDistribution:
+                        type: object
+                        description: 评分分布统计
+                        additionalProperties:
+                          type: integer
+
+    post:
+      summary: 提交插件评价
+      description: 为插件提交用户评价和评分
+      operationId: createExtensionReview
+      parameters:
+        - name: extensionId
+          in: path
+          required: true
+          description: 插件ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - rating
+              properties:
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  description: 评分 (1-5星)
+                review:
+                  type: string
+                  maxLength: 2000
+                  description: 评价内容
+                version:
+                  type: string
+                  description: 评价的插件版本
+      responses:
+        '201':
+          description: 评价提交成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtensionReview'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: 已存在评价
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+components:
+  schemas:
+    ExtensionListing:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 插件唯一标识
+        name:
+          type: string
+          description: 插件显示名称
+        version:
+          type: string
+          description: 当前版本
+        author:
+          type: object
+          properties:
+            id:
+              type: integer
+            username:
+              type: string
+            displayName:
+              type: string
+        description:
+          type: string
+          description: 插件描述
+        category:
+          type: string
+          enum: [ui, api, tool, theme]
+          description: 插件分类
+        iconUrl:
+          type: string
+          format: uri
+          description: 图标URL
+        screenshots:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: 截图URLs
+        status:
+          type: string
+          enum: [approved, pending, rejected]
+          description: 审核状态
+        downloads:
+          type: integer
+          description: 下载次数
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+          description: 平均评分
+        ratingCount:
+          type: integer
+          description: 评分人数
+        permissions:
+          type: array
+          items:
+            type: string
+            enum: [ui, api, storage, network, system]
+          description: 所需权限
+        sandboxLevel:
+          type: string
+          enum: [none, basic, strict]
+          description: 沙箱级别
+        securityReview:
+          type: boolean
+          description: 是否通过安全审核
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+
+    InstalledExtension:
+      allOf:
+        - $ref: '#/components/schemas/ExtensionListing'
+        - type: object
+          properties:
+            installationId:
+              type: integer
+              description: 安装记录ID
+            installedVersion:
+              type: string
+              description: 已安装版本
+            status:
+              type: string
+              enum: [installing, active, disabled, error]
+              description: 安装状态
+            enabled:
+              type: boolean
+              description: 是否启用
+            autoUpdate:
+              type: boolean
+              description: 自动更新开关
+            config:
+              type: object
+              description: 插件配置
+            userData:
+              type: object
+              description: 插件用户数据
+            installedAt:
+              type: string
+              format: date-time
+            lastUpdated:
+              type: string
+              format: date-time
+            lastUsed:
+              type: string
+              format: date-time
+
+    ExtensionReview:
+      type: object
+      properties:
+        id:
+          type: integer
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+            username:
+              type: string
+            displayName:
+              type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        review:
+          type: string
+          description: 评价内容
+        version:
+          type: string
+          description: 评价的插件版本
+        status:
+          type: string
+          enum: [active, hidden, reported]
+        helpfulCount:
+          type: integer
+          description: 有用投票数
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: 当前页码
+        limit:
+          type: integer
+          description: 每页数量
+        total:
+          type: integer
+          description: 总记录数
+        totalPages:
+          type: integer
+          description: 总页数
+        hasNext:
+          type: boolean
+          description: 是否有下一页
+        hasPrev:
+          type: boolean
+          description: 是否有上一页
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    UnauthorizedError:
+      description: 未授权访问
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFoundError:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: 请求参数验证失败
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

@@ -960,6 +960,91 @@ export class ScenarioService {
     await Promise.all(updates)
     return true
   }
+
+  /**
+   * 获取剧本关联的角色
+   */
+  async getScenarioCharacters(scenarioId: string, userId?: string): Promise<any[]> {
+    // 验证剧本存在且有权限访问
+    const scenario = await prisma.scenario.findUnique({
+      where: { id: scenarioId }
+    })
+
+    if (!scenario) {
+      throw new Error('剧本不存在')
+    }
+
+    // 权限检查：私有剧本只能被创建者查看
+    if (!scenario.isPublic && (!userId || userId !== scenario.userId)) {
+      throw new Error('没有权限访问此剧本')
+    }
+
+    // 获取剧本关联的角色
+    // 这里假设角色与剧本的关联是通过角色的tags或category字段
+    // 或者通过专门的关联表ScenarioCharacter
+
+    // 方案1：通过角色的tags匹配剧本的tags
+    const scenarioTags = this.parseTags(scenario.tags)
+
+    const characters = await prisma.character.findMany({
+      where: {
+        isDeleted: false,
+        OR: [
+          // 公开角色
+          { isPublic: true },
+          // 剧本创建者的角色
+          ...(userId ? [{ creatorId: scenario.userId }] : [])
+        ]
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        avatar: true,
+        tags: true,
+        rating: true,
+        chatCount: true,
+        createdAt: true,
+        creatorId: true,
+        isPublic: true
+      },
+      orderBy: [
+        { rating: 'desc' },
+        { chatCount: 'desc' },
+        { createdAt: 'desc' }
+      ],
+      take: 20 // 限制返回数量
+    })
+
+    // 过滤与剧本相关的角色（基于标签匹配）
+    const relatedCharacters = characters.filter(character => {
+      const characterTags = this.parseTags(character.tags)
+
+      // 如果剧本或角色没有标签，返回所有角色
+      if (scenarioTags.length === 0 || characterTags.length === 0) {
+        return true
+      }
+
+      // 检查是否有交集标签
+      return scenarioTags.some(tag =>
+        characterTags.some(charTag =>
+          charTag.toLowerCase().includes(tag.toLowerCase()) ||
+          tag.toLowerCase().includes(charTag.toLowerCase())
+        )
+      )
+    })
+
+    // 转换数据格式
+    return relatedCharacters.map(character => ({
+      id: character.id,
+      name: character.name,
+      description: character.description,
+      avatar: character.avatar,
+      tags: this.parseTags(character.tags),
+      rating: character.rating || 0,
+      chatCount: character.chatCount || 0
+    }))
+  }
 }
 
 // 导出单例服务实例

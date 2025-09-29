@@ -91,6 +91,14 @@ model User {
   scenarioFavorites  ScenarioFavorite[]
   scenarioRatings    ScenarioRating[]
   scenarioTemplates  ScenarioTemplate[] // 创建的剧本模板
+
+  // 核心竞争力提升功能关系
+  extensions         Extension[]          @relation("ExtensionAuthor")
+  extensionInstallations ExtensionInstallation[] @relation("UserExtensions")
+  extensionReviews   ExtensionReview[]    @relation("UserExtensionReviews")
+  streamingSessions  StreamingSession[]   @relation("UserStreamingSessions")
+  advancedConfigs    AdvancedConfig[]     @relation("UserAdvancedConfigs")
+  configTemplates    ConfigTemplate[]     @relation("UserConfigTemplates")
 }
 
 // 角色模型
@@ -129,6 +137,14 @@ model Character {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
+  // 图片生成相关字段
+  backgroundImage   String? // 对话背景图URL
+  mbtiType         String? // MBTI性格类型
+  emotionPack      String? // 表情包数据(预留)
+  avatarStatus     String  @default("PENDING") // 头像生成状态 (PENDING|GENERATING|COMPLETED|FAILED)
+  backgroundStatus String  @default("PENDING") // 背景生成状态
+  emotionStatus    String  @default("PENDING") // 表情生成状态(预留)
+
   // 基础关系
   creator      User                @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   chatSessions ChatSession[]
@@ -145,6 +161,9 @@ model Character {
   // 增强世界剧本关系
   leadingOrganizations WorldOrganization[] // 作为领导者的组织
   ownedItems          WorldItem[]         // 拥有的物品
+
+  // 核心竞争力提升功能关系
+  streamingSessions   StreamingSession[]  @relation("CharacterStreamingSessions")
 
   @@unique([name, creatorId])
   @@index([creatorId])
@@ -229,6 +248,7 @@ model ChatSession {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
   messages  Message[]
+  streamingSessions StreamingSession[]
 
   @@index([userId])
   @@index([characterId])
@@ -276,6 +296,7 @@ model Message {
   session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   character Character?  @relation(fields: [characterId], references: [id], onDelete: SetNull)
+  streamingMessages StreamingMessage[]
 
   @@index([sessionId])
   @@index([userId])
@@ -1451,3 +1472,276 @@ model CharacterWorldSetting {
 
   @@index([characterScenarioId])
 }
+
+// ==========================================
+// 核心竞争力提升功能模型 (T011-T013)
+// ==========================================
+
+// 扩展系统模型
+model Extension {
+  id               String    @id // 扩展唯一标识
+  name             String // 扩展显示名称
+  version          String // 版本号 (semver格式)
+  authorId         String? @map("author_id") // 作者用户ID
+  description      String? // 扩展描述
+  category         String // 扩展分类: ui, api, tool, theme
+  manifestUrl      String? @map("manifest_url") // 清单文件URL
+  packageUrl       String? @map("package_url") // 安装包URL
+  iconUrl          String? @map("icon_url") // 图标URL
+  screenshots      String @default("[]") // 截图URLs (JSON数组)
+
+  // 状态和统计
+  status           String @default("pending") // pending, approved, rejected, suspended
+  downloads        Int    @default(0) // 下载次数
+  rating           Float  @default(0.0) // 平均评分
+  ratingCount      Int    @default(0) @map("rating_count") // 评分人数
+
+  // 权限和安全
+  permissions      String @default("[]") // 权限列表 (JSON数组)
+  sandboxLevel     String @default("basic") // none, basic, strict
+  securityReview   Boolean @default(false) @map("security_review") // 安全审核状态
+
+  // 时间戳
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  publishedAt      DateTime? @map("published_at")
+
+  // 关系
+  author           User? @relation("ExtensionAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  installations    ExtensionInstallation[]
+  reviews          ExtensionReview[]
+
+  @@index([category])
+  @@index([status])
+  @@index([rating])
+  @@index([authorId])
+}
+
+model ExtensionInstallation {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id") // 安装用户
+  extensionId String   @map("extension_id") // 扩展ID
+  version     String   // 安装版本
+
+  // 安装状态
+  status      String   @default("installing") // installing, active, disabled, error
+  enabled     Boolean  @default(true) // 是否启用
+  autoUpdate  Boolean  @default(true) @map("auto_update") // 自动更新开关
+
+  // 配置数据
+  config      String   @default("{}") // 扩展配置 (JSON)
+  userData    String   @default("{}") @map("user_data") // 扩展用户数据 (JSON)
+
+  // 时间戳
+  installedAt DateTime @default(now()) @map("installed_at")
+  lastUpdated DateTime @updatedAt @map("last_updated")
+  lastUsed    DateTime? @map("last_used")
+
+  // 关系
+  user        User      @relation("UserExtensions", fields: [userId], references: [id], onDelete: Cascade)
+  extension   Extension @relation(fields: [extensionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, extensionId])
+  @@index([userId])
+  @@index([status])
+}
+
+model ExtensionReview {
+  id           String   @id @default(uuid())
+  extensionId  String   @map("extension_id") // 扩展ID
+  userId       String   @map("user_id") // 评价用户
+  rating       Int      // 评分 1-5
+  review       String?  // 评价内容
+  version      String   // 评价的扩展版本
+
+  // 评价状态
+  status       String   @default("active") // active, hidden, reported
+  helpfulCount Int      @default(0) @map("helpful_count") // 有用投票数
+
+  // 时间戳
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  extension    Extension @relation(fields: [extensionId], references: [id], onDelete: Cascade)
+  user         User      @relation("UserExtensionReviews", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, extensionId])
+  @@index([extensionId])
+  @@index([rating])
+}
+
+// 流式输出系统模型
+model StreamingSession {
+  id             String    @id // UUID会话ID
+  userId         String    @map("user_id") // 用户ID
+  chatId         String?   @map("chat_id") // 关联聊天ID
+  characterId    String?   @map("character_id") // 关联角色ID
+
+  // 会话状态
+  status         String    @default("active") // active, paused, completed, error
+  connectionType String    @default("sse") @map("connection_type") // sse, websocket, polling
+
+  // 流式配置
+  chunkSize      Int       @default(1024) @map("chunk_size") // 数据块大小
+  heartbeatInterval Int    @default(30) @map("heartbeat_interval") // 心跳间隔(秒)
+  maxDuration    Int       @default(300) @map("max_duration") // 最大持续时间(秒)
+
+  // 统计信息
+  messagesSent   Int       @default(0) @map("messages_sent") // 已发送消息数
+  bytesTransferred Int     @default(0) @map("bytes_transferred") // 传输字节数
+  connectionDrops Int      @default(0) @map("connection_drops") // 连接中断次数
+
+  // 时间戳
+  createdAt      DateTime  @default(now()) @map("created_at")
+  lastActivity   DateTime  @default(now()) @map("last_activity")
+  completedAt    DateTime? @map("completed_at")
+
+  // 关系
+  user           User            @relation("UserStreamingSessions", fields: [userId], references: [id], onDelete: Cascade)
+  chat           ChatSession?    @relation(fields: [chatId], references: [id], onDelete: SetNull)
+  character      Character?      @relation("CharacterStreamingSessions", fields: [characterId], references: [id], onDelete: SetNull)
+  messages       StreamingMessage[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([lastActivity])
+}
+
+model StreamingMessage {
+  id            String   @id @default(uuid())
+  sessionId     String   @map("session_id") // 流式会话ID
+  messageId     String?  @map("message_id") // 关联消息ID
+
+  // 消息内容
+  eventType     String   @default("message") @map("event_type") // message, error, complete, heartbeat
+  content       String?  // 消息内容
+  metadata      String   @default("{}") // 消息元数据 (JSON)
+
+  // 传输状态
+  status        String   @default("queued") // queued, sending, sent, error
+  sequenceNumber Int     @map("sequence_number") // 序列号
+  chunkIndex    Int      @default(0) @map("chunk_index") // 块索引
+  isComplete    Boolean  @default(false) @map("is_complete") // 是否完整消息
+
+  // 时间戳
+  createdAt     DateTime @default(now()) @map("created_at")
+  sentAt        DateTime? @map("sent_at")
+
+  // 关系
+  session       StreamingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  message       Message?         @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId])
+  @@index([sessionId, sequenceNumber])
+  @@index([status])
+}
+
+// 缓存管理模型
+model CacheItem {
+  id            String    @id @default(uuid())
+  cacheKey      String    @unique @map("cache_key") // 缓存键
+  cacheValue    String    @map("cache_value") // 缓存值
+  cacheType     String    @map("cache_type") // user, character, chat, ai_response
+
+  // 缓存元数据
+  sizeBytes     Int?      @map("size_bytes") // 数据大小(字节)
+  version       Int       @default(1) // 版本号
+  accessCount   Int       @default(0) @map("access_count") // 访问次数
+
+  // 过期管理
+  expiresAt     DateTime? @map("expires_at") // 过期时间
+  createdAt     DateTime  @default(now()) @map("created_at")
+  lastAccessed  DateTime  @default(now()) @map("last_accessed")
+
+  // 关联引用
+  entityType    String?   @map("entity_type") // 实体类型
+  entityId      String?   @map("entity_id") // 实体ID
+
+  @@index([cacheType])
+  @@index([expiresAt])
+  @@index([entityType, entityId])
+  @@index([lastAccessed])
+}
+
+model CacheStatistics {
+  id            String   @id @default(uuid())
+  date          DateTime // 统计日期
+  cacheType     String   @map("cache_type") // 缓存类型
+
+  // 性能指标
+  hitCount      Int      @default(0) @map("hit_count") // 命中次数
+  missCount     Int      @default(0) @map("miss_count") // 未命中次数
+  evictionCount Int      @default(0) @map("eviction_count") // 淘汰次数
+
+  // 容量指标
+  totalSize     Int      @default(0) @map("total_size") // 总缓存大小
+  itemCount     Int      @default(0) @map("item_count") // 缓存项数量
+  avgAccessTime Float?   @map("avg_access_time") // 平均访问时间(ms)
+
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@unique([date, cacheType])
+  @@index([date])
+  @@index([cacheType])
+}
+
+// 高级配置模型
+model AdvancedConfig {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id") // 用户ID
+  configName       String   @map("config_name") // 配置名称
+  configType       String   @map("config_type") // model, prompt, session, ui
+
+  // 配置内容
+  configData       String   @map("config_data") // 配置数据 (JSON)
+  isDefault        Boolean  @default(false) @map("is_default") // 是否默认配置
+  isPublic         Boolean  @default(false) @map("is_public") // 是否公开分享
+
+  // 兼容性
+  sillyTavernCompatible Boolean @default(false) @map("sillytavern_compatible") // SillyTavern兼容标记
+  importSource     String?  @map("import_source") // 导入来源
+
+  // 使用统计
+  usageCount       Int      @default(0) @map("usage_count") // 使用次数
+  lastUsed         DateTime? @map("last_used")
+
+  // 时间戳
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  user             User @relation("UserAdvancedConfigs", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([configType])
+  @@index([isPublic])
+}
+
+model ConfigTemplate {
+  id           String   @id @default(uuid())
+  name         String   // 模板名称
+  description  String?  // 模板描述
+  configType   String   @map("config_type") // model, prompt, session, ui
+  authorId     String?  @map("author_id") // 作者ID
+
+  // 模板内容
+  templateData String   @map("template_data") // 模板数据 (JSON)
+  variables    String   @default("{}") // 变量定义 (JSON)
+
+  // 分享和统计
+  isOfficial   Boolean  @default(false) @map("is_official") // 官方模板
+  downloads    Int      @default(0) // 下载次数
+  rating       Float    @default(0.0) // 评分
+
+  // 时间戳
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  author       User?    @relation("UserConfigTemplates", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([configType])
+  @@index([isOfficial])
+}
+

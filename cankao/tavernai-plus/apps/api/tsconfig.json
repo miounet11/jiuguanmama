@@ -6,7 +6,7 @@
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": false,
+    "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -19,24 +19,23 @@
     "paths": {
       "@/*": ["src/*"],
       "@shared/*": ["../../packages/shared/*"],
-      "@database/*": ["../../packages/database/*"]
+      "@database/*": ["../../packages/database/*"],
+      "@streaming/*": ["src/services/streaming/*"],
+      "@extensions/*": ["src/services/extensions/*"],
+      "@cache/*": ["src/services/cache/*"],
+      "@config/*": ["src/services/config/*"]
     },
     "types": ["node", "express", "jest"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
 
-    /* Additional strict checks for gradual migration */
-    "noImplicitAny": false,
-    "noImplicitReturns": false,
-    "noImplicitThis": false,
-    "strictNullChecks": false,
-    "strictFunctionTypes": false,
-    "strictBindCallApply": false,
-    "strictPropertyInitialization": false,
-    "alwaysStrict": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": false
+    /* Strict checks for new code - gradual migration for existing */
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]

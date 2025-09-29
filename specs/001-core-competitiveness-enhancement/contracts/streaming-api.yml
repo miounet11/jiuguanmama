@@ -1,0 +1,372 @@
+openapi: 3.0.3
+info:
+  title: TavernAI Plus - 流式输出API
+  description: 实时流式消息输出API，支持Server-Sent Events和WebSocket
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3001/api
+    description: 开发环境
+  - url: https://api.tavernai.com/api
+    description: 生产环境
+
+paths:
+  /stream/{sessionId}:
+    get:
+      summary: 建立流式输出连接
+      description: 通过Server-Sent Events建立实时消息流连接
+      operationId: createStreamConnection
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: 流式会话ID
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+        - name: lastEventId
+          in: header
+          required: false
+          description: 最后接收事件ID，用于断线重连
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功建立SSE连接
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE事件流
+              examples:
+                message_event:
+                  value: |
+                    event: message
+                    id: msg_001
+                    data: {"content": "Hello", "timestamp": 1698765432}
+
+                    event: complete
+                    id: msg_002
+                    data: {"messageId": "msg_12345", "totalTokens": 150}
+        '404':
+          description: 会话不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授权访问
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /stream/{sessionId}/interrupt:
+    post:
+      summary: 中断流式输出
+      description: 中断当前正在进行的流式消息生成
+      operationId: interruptStream
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: 流式会话ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+                  enum: [user_stop, regenerate, timeout]
+                  description: 中断原因
+                messageId:
+                  type: string
+                  description: 要中断的消息ID
+              example:
+                reason: "user_stop"
+                messageId: "msg_12345"
+      responses:
+        '200':
+          description: 成功中断流式输出
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Stream interrupted successfully"
+        '404':
+          description: 会话不存在或已结束
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /stream/sessions:
+    get:
+      summary: 获取用户流式会话列表
+      description: 获取当前用户的所有活跃流式会话
+      operationId: listStreamingSessions
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: 过滤会话状态
+          schema:
+            type: string
+            enum: [active, paused, completed, error]
+        - name: limit
+          in: query
+          required: false
+          description: 返回数量限制
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: 成功获取会话列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StreamingSession'
+                  total:
+                    type: integer
+                    description: 总会话数
+                  hasMore:
+                    type: boolean
+                    description: 是否有更多数据
+      security:
+        - BearerAuth: []
+
+    post:
+      summary: 创建新的流式会话
+      description: 为聊天会话创建新的流式输出会话
+      operationId: createStreamingSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chatId
+                - characterId
+              properties:
+                chatId:
+                  type: integer
+                  description: 关联的聊天ID
+                characterId:
+                  type: integer
+                  description: 关联的角色ID
+                connectionType:
+                  type: string
+                  enum: [sse, websocket, polling]
+                  default: sse
+                  description: 连接类型
+                config:
+                  type: object
+                  description: 流式配置
+                  properties:
+                    chunkSize:
+                      type: integer
+                      minimum: 256
+                      maximum: 65536
+                      default: 1024
+                    heartbeatInterval:
+                      type: integer
+                      minimum: 10
+                      maximum: 300
+                      default: 30
+                    maxDuration:
+                      type: integer
+                      minimum: 60
+                      maximum: 3600
+                      default: 300
+      responses:
+        '201':
+          description: 成功创建流式会话
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamingSession'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+components:
+  schemas:
+    StreamingSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: 会话唯一标识
+        userId:
+          type: integer
+          description: 用户ID
+        chatId:
+          type: integer
+          description: 关联聊天ID
+        characterId:
+          type: integer
+          description: 关联角色ID
+        status:
+          type: string
+          enum: [active, paused, completed, error]
+          description: 会话状态
+        connectionType:
+          type: string
+          enum: [sse, websocket, polling]
+          description: 连接类型
+        config:
+          type: object
+          description: 流式配置
+          properties:
+            chunkSize:
+              type: integer
+              description: 数据块大小
+            heartbeatInterval:
+              type: integer
+              description: 心跳间隔(秒)
+            maxDuration:
+              type: integer
+              description: 最大持续时间(秒)
+        statistics:
+          type: object
+          description: 会话统计信息
+          properties:
+            messagesSent:
+              type: integer
+              description: 已发送消息数
+            bytesTransferred:
+              type: integer
+              description: 传输字节数
+            connectionDrops:
+              type: integer
+              description: 连接中断次数
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+        lastActivity:
+          type: string
+          format: date-time
+          description: 最后活动时间
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: 完成时间
+
+    StreamEvent:
+      type: object
+      description: SSE事件数据结构
+      properties:
+        event:
+          type: string
+          enum: [message, error, complete, heartbeat]
+          description: 事件类型
+        id:
+          type: string
+          description: 事件ID
+        data:
+          type: object
+          description: 事件数据
+          properties:
+            content:
+              type: string
+              description: 消息内容
+            messageId:
+              type: string
+              description: 消息ID
+            timestamp:
+              type: integer
+              description: 时间戳
+            metadata:
+              type: object
+              description: 额外元数据
+        retry:
+          type: integer
+          description: 重试间隔(毫秒)
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: 错误码
+            message:
+              type: string
+              description: 错误信息
+            details:
+              type: object
+              description: 错误详情
+        timestamp:
+          type: string
+          format: date-time
+          description: 错误发生时间
+        path:
+          type: string
+          description: 请求路径
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer Token 认证
+
+  responses:
+    UnauthorizedError:
+      description: 未授权访问
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFoundError:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: 请求参数验证失败
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

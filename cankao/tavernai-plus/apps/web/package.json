@@ -16,6 +16,7 @@
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.16",
+    "@types/eventsource": "^1.1.15",
     "@vue/runtime-dom": "^3.5.21",
     "axios": "^1.6.5",
     "element-plus": "^2.4.4",

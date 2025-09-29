@@ -161,6 +161,27 @@ router.get('/:id', optionalAuth, async (req, res) => {
   }
 })
 
+// GET /scenarios/:id/characters - 获取剧本关联的角色
+router.get('/:id/characters', optionalAuth, async (req, res) => {
+  try {
+    const { id } = req.params
+    const userId = req.user?.id
+
+    const characters = await scenarioService.getScenarioCharacters(id, userId)
+
+    res.json({
+      success: true,
+      data: characters
+    })
+  } catch (error) {
+    console.error('Error fetching scenario characters:', error)
+    res.status(500).json({
+      success: false,
+      error: '获取剧本角色失败'
+    })
+  }
+})
+
 // POST /scenarios - 创建新剧本
 router.post('/', auth, validate(createScenarioSchema, 'body'), async (req, res) => {
   try {

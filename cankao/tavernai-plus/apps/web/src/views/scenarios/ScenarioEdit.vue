@@ -130,8 +130,8 @@ const handleBeforeUnload = (e: BeforeUnloadEvent) => {
 }
 
 // 组件挂载时的初始化
-onMounted(() => {
-  loadScenario()
+onMounted(async () => {
+  await loadScenario()
 
   // 设置页面标题
   if (scenario.value) {

@@ -44,6 +44,7 @@ import userModeRoutes from './routes/user-mode'
 import statsRoutes from './routes/stats'
 import scenariosRoutes from './routes/scenarios'
 import enhancedScenariosRoutes from './routes/enhancedScenarios'
+import characterImageRoutes from './routes/character-image'
 // import importRoutes from './routes/import' // 临时禁用
 
 // 导入工作流调度器
@@ -135,6 +136,7 @@ app.use('/api/user-mode', userModeRoutes) // 渐进式功能披露 API (Issue #1
 app.use('/api/stats', statsRoutes) // 统计数据 API
 app.use('/api/scenarios', scenariosRoutes) // 情景剧本系统 API (Issue #22)
 app.use('/api/enhanced-scenarios', enhancedScenariosRoutes) // 增强世界剧本系统 API
+app.use('/api', characterImageRoutes) // 角色图像生成 API
 // app.use('/api/import', importRoutes) // 导入导出功能 API (Issue #26) - 临时禁用
 // app.use('/api/workflows', workflowRoutes) // 智能工作流 API - 已删除
 

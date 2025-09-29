@@ -1,0 +1,603 @@
+openapi: 3.0.3
+info:
+  title: TavernAI Plus - 高级配置API
+  description: 高级用户配置系统API，支持模型参数、提示词模板、会话配置等
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3001/api
+    description: 开发环境
+  - url: https://api.tavernai.com/api
+    description: 生产环境
+
+paths:
+  /config/advanced:
+    get:
+      summary: 获取用户高级配置列表
+      description: 获取当前用户的所有高级配置
+      operationId: listAdvancedConfigs
+      parameters:
+        - name: type
+          in: query
+          description: 配置类型过滤
+          schema:
+            type: string
+            enum: [model, prompt, session, ui, all]
+            default: all
+        - name: includePublic
+          in: query
+          description: 是否包含公开配置
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: 成功获取配置列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdvancedConfig'
+                  templates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ConfigTemplate'
+      security:
+        - BearerAuth: []
+
+    post:
+      summary: 创建新的高级配置
+      description: 创建用户自定义的高级配置
+      operationId: createAdvancedConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - type
+                - configData
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+                  description: 配置名称
+                type:
+                  type: string
+                  enum: [model, prompt, session, ui]
+                  description: 配置类型
+                configData:
+                  type: object
+                  description: 配置数据
+                isDefault:
+                  type: boolean
+                  default: false
+                  description: 是否设为默认配置
+                isPublic:
+                  type: boolean
+                  default: false
+                  description: 是否公开分享
+                sillyTavernCompatible:
+                  type: boolean
+                  default: false
+                  description: 是否兼容SillyTavern
+      responses:
+        '201':
+          description: 配置创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvancedConfig'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+      security:
+        - BearerAuth: []
+
+  /config/advanced/{configId}:
+    get:
+      summary: 获取指定配置详情
+      description: 获取指定ID的高级配置详细信息
+      operationId: getAdvancedConfig
+      parameters:
+        - name: configId
+          in: path
+          required: true
+          description: 配置ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功获取配置详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvancedConfig'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - BearerAuth: []
+
+    put:
+      summary: 更新高级配置
+      description: 更新指定的高级配置
+      operationId: updateAdvancedConfig
+      parameters:
+        - name: configId
+          in: path
+          required: true
+          description: 配置ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+                configData:
+                  type: object
+                isDefault:
+                  type: boolean
+                isPublic:
+                  type: boolean
+      responses:
+        '200':
+          description: 配置更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvancedConfig'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - BearerAuth: []
+
+    delete:
+      summary: 删除高级配置
+      description: 删除指定的高级配置
+      operationId: deleteAdvancedConfig
+      parameters:
+        - name: configId
+          in: path
+          required: true
+          description: 配置ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 配置删除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - BearerAuth: []
+
+  /config/templates:
+    get:
+      summary: 获取配置模板列表
+      description: 获取官方和社区配置模板
+      operationId: listConfigTemplates
+      parameters:
+        - name: type
+          in: query
+          description: 模板类型
+          schema:
+            type: string
+            enum: [model, prompt, session, ui, all]
+            default: all
+        - name: official
+          in: query
+          description: 是否只显示官方模板
+          schema:
+            type: boolean
+            default: false
+        - name: sort
+          in: query
+          description: 排序方式
+          schema:
+            type: string
+            enum: [popular, rating, newest, name]
+            default: popular
+      responses:
+        '200':
+          description: 成功获取模板列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ConfigTemplate'
+
+  /config/templates/{templateId}/apply:
+    post:
+      summary: 应用配置模板
+      description: 基于模板创建新的用户配置
+      operationId: applyConfigTemplate
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          description: 模板ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: 新配置名称
+                variables:
+                  type: object
+                  description: 模板变量值
+                setAsDefault:
+                  type: boolean
+                  default: false
+      responses:
+        '201':
+          description: 模板应用成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvancedConfig'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - BearerAuth: []
+
+  /config/import/sillytavern:
+    post:
+      summary: 导入SillyTavern配置
+      description: 从SillyTavern格式导入用户配置
+      operationId: importSillyTavernConfig
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: SillyTavern配置文件
+                configType:
+                  type: string
+                  enum: [character, chat, settings, world_info]
+                  description: 配置类型
+                replaceExisting:
+                  type: boolean
+                  default: false
+                  description: 是否替换现有配置
+      responses:
+        '200':
+          description: 导入成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  imported:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdvancedConfig'
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        item:
+                          type: string
+                        error:
+                          type: string
+        '400':
+          description: 导入文件格式错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /config/export:
+    get:
+      summary: 导出用户配置
+      description: 导出用户配置为多种格式
+      operationId: exportUserConfigs
+      parameters:
+        - name: format
+          in: query
+          description: 导出格式
+          schema:
+            type: string
+            enum: [json, sillytavern, csv]
+            default: json
+        - name: configIds
+          in: query
+          description: 要导出的配置ID列表
+          schema:
+            type: array
+            items:
+              type: integer
+          style: form
+          explode: false
+        - name: includeUserData
+          in: query
+          description: 是否包含用户数据
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: 导出成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdvancedConfig'
+                  exportedAt:
+                    type: string
+                    format: date-time
+                  format:
+                    type: string
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+      security:
+        - BearerAuth: []
+
+components:
+  schemas:
+    AdvancedConfig:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 配置ID
+        userId:
+          type: integer
+          description: 用户ID
+        name:
+          type: string
+          description: 配置名称
+        type:
+          type: string
+          enum: [model, prompt, session, ui]
+          description: 配置类型
+        configData:
+          type: object
+          description: 配置数据
+          properties:
+            # Model configuration
+            modelParams:
+              type: object
+              properties:
+                temperature:
+                  type: number
+                  minimum: 0
+                  maximum: 2
+                  description: 创造性参数
+                topP:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                  description: 核心采样参数
+                maxTokens:
+                  type: integer
+                  minimum: 1
+                  maximum: 32768
+                  description: 最大令牌数
+                presencePenalty:
+                  type: number
+                  minimum: -2
+                  maximum: 2
+                  description: 存在惩罚
+                frequencyPenalty:
+                  type: number
+                  minimum: -2
+                  maximum: 2
+                  description: 频率惩罚
+            # Prompt templates
+            promptTemplates:
+              type: object
+              properties:
+                system:
+                  type: string
+                  description: 系统提示词
+                character:
+                  type: string
+                  description: 角色提示词模板
+                scenario:
+                  type: string
+                  description: 场景提示词模板
+                userMessage:
+                  type: string
+                  description: 用户消息模板
+            # Session configuration
+            sessionConfig:
+              type: object
+              properties:
+                contextLength:
+                  type: integer
+                  description: 上下文长度
+                messageRetention:
+                  type: integer
+                  description: 消息保留数量
+                autoSave:
+                  type: boolean
+                  description: 自动保存
+                exportFormat:
+                  type: string
+                  enum: [json, csv, txt]
+                  description: 导出格式
+        isDefault:
+          type: boolean
+          description: 是否默认配置
+        isPublic:
+          type: boolean
+          description: 是否公开
+        sillyTavernCompatible:
+          type: boolean
+          description: SillyTavern兼容性
+        importSource:
+          type: string
+          description: 导入来源
+        usageCount:
+          type: integer
+          description: 使用次数
+        lastUsed:
+          type: string
+          format: date-time
+          description: 最后使用时间
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ConfigTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 模板ID
+        name:
+          type: string
+          description: 模板名称
+        description:
+          type: string
+          description: 模板描述
+        type:
+          type: string
+          enum: [model, prompt, session, ui]
+          description: 配置类型
+        author:
+          type: object
+          description: 作者信息
+          properties:
+            id:
+              type: integer
+            username:
+              type: string
+            displayName:
+              type: string
+        templateData:
+          type: object
+          description: 模板数据
+        variables:
+          type: object
+          description: 模板变量定义
+          additionalProperties:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [string, number, boolean, select]
+              description:
+                type: string
+              default:
+                description: 默认值
+              options:
+                type: array
+                items:
+                  type: string
+                description: 选项列表（select类型使用）
+        isOfficial:
+          type: boolean
+          description: 是否官方模板
+        downloads:
+          type: integer
+          description: 下载次数
+        rating:
+          type: number
+          format: float
+          description: 评分
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    UnauthorizedError:
+      description: 未授权访问
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFoundError:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: 请求参数验证失败
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

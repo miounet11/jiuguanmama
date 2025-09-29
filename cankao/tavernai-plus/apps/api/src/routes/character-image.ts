@@ -11,13 +11,13 @@ const imageGenerator = new NewAPIImageGenerator();
 
 // 验证角色ID参数
 const validateCharacterId = [
-  param('id').isUUID().withMessage('Invalid character ID')
+  param('id').isLength({ min: 1 }).withMessage('Character ID is required')
 ];
 
 // 验证批量生成请求
 const validateBatchGenerate = [
   body('characterIds').isArray({ min: 1 }).withMessage('Character IDs array is required'),
-  body('characterIds.*').isUUID().withMessage('Invalid character ID format'),
+  body('characterIds.*').isLength({ min: 1 }).withMessage('Invalid character ID format'),
   body('type').isIn(['avatar', 'background', 'both']).withMessage('Type must be avatar, background, or both')
 ];
 
