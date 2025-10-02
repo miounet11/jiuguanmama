@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useFeaturesStore } from '@/stores'
 
 // 路由级懒加载 - 性能优化版本
 const routes: RouteRecordRaw[] = [
@@ -263,7 +264,34 @@ const routes: RouteRecordRaw[] = [
     component: () => import(/* webpackChunkName: "gamification" */ '@/views/GamificationDashboard.vue'),
     meta: {
       requiresAuth: true,
-      title: '时空酒馆 - TavernAI Plus'
+      title: '时空酒馆 - TavernAI Plus',
+      featureGate: 'F5' // Gamification feature
+    }
+  },
+
+  // 创作者工作室 - 创作者专用功能
+  {
+    path: '/creator-studio',
+    name: 'CreatorStudio',
+    component: () => import(/* webpackChunkName: "creator" */ '@/views/CreatorStudio.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresRole: 'creator',
+      title: '创作者工作室 - TavernAI Plus',
+      featureGate: 'F4' // Creator Studio feature
+    }
+  },
+
+  // 管理控制台 - 管理员专用功能
+  {
+    path: '/admin-console',
+    name: 'AdminConsole',
+    component: () => import(/* webpackChunkName: "admin-console" */ '@/views/AdminConsole.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: '管理控制台 - TavernAI Plus',
+      featureGate: 'F6' // Admin Console feature
     }
   },
 
@@ -411,8 +439,9 @@ let navigationStartTime: number
 
 router.beforeEach(async (to, from, next) => {
   navigationStartTime = performance.now()
-  
+
   const userStore = useUserStore()
+  const featuresStore = useFeaturesStore()
 
   // 设置页面标题
   if (to.meta.title) {
@@ -439,6 +468,42 @@ router.beforeEach(async (to, from, next) => {
     // 检查管理员权限
     if (to.meta.requiresAdmin && !userStore.isAdmin) {
       return next({ name: 'Home' })
+    }
+
+    // 检查角色权限
+    if (to.meta.requiresRole) {
+      const requiredRole = to.meta.requiresRole as string
+      if (userStore.currentUser?.role !== requiredRole && !userStore.isAdmin) {
+        return next({ name: 'Home' })
+      }
+    }
+
+    // 检查功能权限 (Feature Gate)
+    if (to.meta.featureGate) {
+      const featureCode = to.meta.featureGate as string
+
+      // 加载用户功能解锁状态（如果还没加载）
+      if (!featuresStore.isLoaded) {
+        try {
+          await featuresStore.fetchFeatures()
+          await featuresStore.fetchUserUnlocks()
+        } catch (error) {
+          console.error('Failed to load feature access:', error)
+          // 如果加载失败，允许继续（避免完全阻止访问）
+        }
+      }
+
+      // 检查功能是否解锁
+      if (!featuresStore.isFeatureUnlocked(featureCode)) {
+        // 重定向到功能升级页面
+        return next({
+          name: 'Subscription',
+          query: {
+            feature: featureCode,
+            redirect: to.fullPath
+          }
+        })
+      }
     }
   }
 

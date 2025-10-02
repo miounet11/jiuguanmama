@@ -238,7 +238,8 @@ import {
   Search,
   Menu,
   Close,
-  Document
+  Document,
+  Share
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { debounce } from 'lodash-es'

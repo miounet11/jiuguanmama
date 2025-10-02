@@ -1416,6 +1416,15 @@ async function main() {
 
   console.log('✅ 情景剧本与世界信息系统数据创建完成')
 
+  // Seed UX System (Universal User Experience)
+  console.log('🎯 开始创建 UX 系统数据...')
+  const { seedUXSystem } = require('./seed/features.ts')
+  try {
+    await seedUXSystem()
+  } catch (error) {
+    console.error('⚠️  UX 系统种子数据创建失败:', error)
+  }
+
   console.log('🎉 所有种子数据生成完成！')
   console.log('📊 数据统计:')
   console.log(`   - 用户: ${users.length}`)

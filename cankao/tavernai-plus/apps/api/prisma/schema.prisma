@@ -98,6 +98,12 @@ model User {
   characterProficiencies CharacterProficiency[]
   achievements        UserAchievement[]
   dailyQuests         DailyQuest[]
+
+  // Universal UX System
+  userPreferenceExtended UserPreferenceExtended?
+  tutorialProgresses     TutorialProgress[]
+  notifications          Notification[]
+  adminAuditLogs         AdminAuditLog[]
 }
 
 // 角色模型
@@ -1047,11 +1053,12 @@ model FeatureUnlock {
   id             String   @id @default(uuid())
   userId         String   @map("user_id")
   featureId      String   @map("feature_id")
-  unlockTrigger  String   @map("unlock_trigger") // 'usage' | 'time' | 'manual' | 'achievement'
+  unlockTrigger  String   @map("unlock_trigger") // 'usage' | 'time' | 'manual' | 'achievement' | 'level_up' | 'payment'
   unlockCondition String? @map("unlock_condition")
   unlockedAt     DateTime @default(now()) @map("unlocked_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  featureConfig FeatureConfig? @relation("FeatureConfigUnlocks", fields: [featureId], references: [featureId])
 
   @@index([userId])
   @@index([featureId])
@@ -1691,4 +1698,138 @@ model DailyQuest {
   @@index([questType])
   @@index([isCompleted])
   @@index([expiresAt])
+}
+
+// ========================================
+// Universal User Experience System Models
+// ========================================
+
+// Feature configuration and gating system
+model FeatureConfig {
+  id              String   @id @default(uuid())
+  featureId       String   @unique @map("feature_id")
+  name            String
+  description     String
+  icon            String
+  category        String
+  requiredRoles   String   @map("required_roles") // JSON array of UserRole
+  minLevel        Int      @default(1) @map("min_level")
+  requiresPremium Boolean  @default(false) @map("requires_premium")
+  dependencies    String   @default("[]") @map("dependencies") // JSON array of feature IDs
+  enabled         Boolean  @default(true)
+  beta            Boolean  @default(false)
+  version         String
+  launchedAt      DateTime? @map("launched_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  unlocks         FeatureUnlock[] @relation("FeatureConfigUnlocks")
+
+  @@index([category])
+  @@index([enabled])
+  @@index([beta])
+  @@map("feature_configs")
+}
+
+// Extended user preferences for UX customization
+model UserPreferenceExtended {
+  id                    String   @id @default(uuid())
+  userId                String   @unique @map("user_id")
+
+  // Interface preferences
+  primaryRole           String   @default("player") @map("primary_role")
+  theme                 String   @default("dark")
+  language              String   @default("zh-CN")
+  dashboardLayout       String   @default("{}") @map("dashboard_layout") // JSON
+  navigationCollapsed   Boolean  @default(false) @map("navigation_collapsed")
+
+  // Feature preferences
+  progressiveDisclosure Boolean  @default(true) @map("progressive_disclosure")
+  showTutorials         Boolean  @default(true) @map("show_tutorials")
+  showNewBadges         Boolean  @default(true) @map("show_new_badges")
+  autoUnlockFeatures    Boolean  @default(true) @map("auto_unlock_features")
+
+  // Notification preferences
+  featureLaunchAlerts   Boolean  @default(true) @map("feature_launch_alerts")
+  achievementAlerts     Boolean  @default(true) @map("achievement_alerts")
+  systemAlerts          Boolean  @default(false) @map("system_alerts")
+
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([primaryRole])
+  @@map("user_preference_extended")
+}
+
+// Tutorial and onboarding progress tracking
+model TutorialProgress {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  tutorialId  String   @map("tutorial_id")
+  currentStep Int      @default(0) @map("current_step")
+  totalSteps  Int      @map("total_steps")
+  completed   Boolean  @default(false)
+  skipped     Boolean  @default(false)
+  startedAt   DateTime @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tutorialId])
+  @@index([userId])
+  @@index([tutorialId])
+  @@index([completed])
+  @@map("tutorial_progress")
+}
+
+// Real-time notification system
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  type        String   // 'feature_launch', 'achievement', 'alert', 'system'
+  title       String
+  description String
+  icon        String?
+  actionLabel String?  @map("action_label")
+  actionPath  String?  @map("action_path")
+  priority    String   @default("normal") // 'low', 'normal', 'high', 'urgent'
+  read        Boolean  @default(false)
+  archived    Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  readAt      DateTime? @map("read_at")
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, read])
+  @@index([type])
+  @@index([priority])
+  @@map("notifications")
+}
+
+// Admin audit log for tracking admin actions
+model AdminAuditLog {
+  id          String   @id @default(uuid())
+  adminId     String   @map("admin_id")
+  action      String   // 'ban_user', 'approve_content', 'change_config', etc.
+  resource    String   // 'user:123', 'character:456', etc.
+  changes     String   @default("{}") @map("changes") // JSON object
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  timestamp   DateTime @default(now())
+
+  // Relations
+  admin       User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId, timestamp])
+  @@index([action, timestamp])
+  @@index([resource])
+  @@map("admin_audit_logs")
 }

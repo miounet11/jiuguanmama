@@ -1,628 +1,445 @@
 <template>
   <div class="gamification-dashboard">
-    <!-- 页面头部 -->
-    <div class="dashboard-header">
+    <!-- Page Header -->
+    <div class="page-header">
       <div class="header-content">
-        <h1 class="page-title">时空酒馆</h1>
-        <p class="page-subtitle">与AI角色的深度对话，解锁更多精彩体验</p>
+        <h1 class="page-title">成长系统</h1>
+        <p class="page-subtitle">追踪你的角色羁绊与技能成长</p>
+      </div>
+      <div class="header-actions">
+        <el-button :icon="Trophy" @click="showLeaderboard = true">
+          排行榜
+        </el-button>
+        <el-dropdown>
+          <el-button :icon="More">
+            更多<el-icon class="el-icon--right"><arrow-down /></el-icon>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="navigateTo('/gamification/history')">
+                成长历史
+              </el-dropdown-item>
+              <el-dropdown-item @click="navigateTo('/gamification/rewards')">
+                奖励中心
+              </el-dropdown-item>
+              <el-dropdown-item divided @click="navigateTo('/settings/gamification')">
+                系统设置
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
+    </div>
+
+    <!-- Overview Stats -->
+    <div v-loading="loading" class="overview-stats">
+      <div class="stat-card level">
+        <div class="stat-icon">
+          <el-icon :size="40"><TrendCharts /></el-icon>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">当前等级</p>
+          <p class="stat-value">{{ currentLevel }}</p>
+          <el-progress
+            :percentage="expProgress"
+            :stroke-width="6"
+            :show-text="false"
+            color="#409eff"
+          />
+          <p class="stat-sub">{{ currentExp }} / {{ expToNextLevel }} EXP</p>
+        </div>
       </div>
 
-      <!-- 快速统计 -->
-      <div class="header-stats">
-        <div class="stat-card">
-          <div class="stat-value">{{ gamificationStore.totalAffinityLevel }}</div>
-          <div class="stat-label">总亲密度等级</div>
+      <div class="stat-card affinity">
+        <div class="stat-icon">
+          <el-icon :size="40"><User /></el-icon>
         </div>
-
-        <div class="stat-card">
-          <div class="stat-value">{{ gamificationStore.completedScenariosCount }}</div>
-          <div class="stat-label">完成剧本数</div>
+        <div class="stat-content">
+          <p class="stat-label">角色羁绊</p>
+          <p class="stat-value">{{ totalAffinities }}</p>
+          <p class="stat-sub">{{ highAffinityCount }} 个高亲密度</p>
         </div>
+      </div>
 
-        <div class="stat-card">
-          <div class="stat-value">{{ gamificationStore.achievements.length }}</div>
-          <div class="stat-label">获得成就</div>
+      <div class="stat-card proficiency">
+        <div class="stat-icon">
+          <el-icon :size="40"><DataAnalysis /></el-icon>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">技能熟练度</p>
+          <p class="stat-value">{{ totalSkills }}</p>
+          <p class="stat-sub">{{ masterSkillCount }} 个精通技能</p>
+        </div>
+      </div>
+
+      <div class="stat-card achievements">
+        <div class="stat-icon">
+          <el-icon :size="40"><Medal /></el-icon>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">成就完成</p>
+          <p class="stat-value">{{ achievementProgress }}%</p>
+          <p class="stat-sub">{{ unlockedAchievements }} / {{ totalAchievements }</p>
         </div>
       </div>
     </div>
 
-    <!-- 主要内容区域 -->
-    <div class="dashboard-content">
-      <!-- 左侧：角色亲密度区域 -->
-      <div class="left-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">
-            <el-icon><User /></el-icon>
-            我的角色
-          </h2>
-          <el-button type="primary" size="small" @click="showCharacterSelector = true">
-            <el-icon><Plus /></el-icon>
-            选择角色
-          </el-button>
-        </div>
-
-        <div class="character-grid">
-          <CharacterAffinityCard
-            v-for="affinity in gamificationStore.favoriteCharacters"
-            :key="affinity.id"
-            :affinity="affinity"
-            @chat="handleCharacterChat"
-          />
-
-          <div
-            v-if="gamificationStore.favoriteCharacters.length === 0"
-            class="empty-state"
-          >
-            <el-icon size="48" class="empty-icon">
-              <User />
-            </el-icon>
-            <h3>还没有收藏的角色</h3>
-            <p>开始与角色对话，建立亲密关系吧</p>
-            <el-button type="primary" @click="showCharacterSelector = true">
-              选择角色
-            </el-button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 右侧：剧本进度区域 -->
-      <div class="right-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">
-            <el-icon><Document /></el-icon>
-            剧本进度
-          </h2>
-          <el-button type="primary" size="small" @click="showScenarioSelector = true">
-            <el-icon><Plus /></el-icon>
-            选择剧本
-          </el-button>
-        </div>
-
-        <div class="scenario-list">
-          <ScenarioProgressCard
-            v-for="progress in gamificationStore.recentProgress"
-            :key="progress.id"
-            :progress="progress"
-            @continue="handleContinueScenario"
-            @reset="handleResetScenario"
-            @abandon="handleAbandonScenario"
-          />
-
-          <div
-            v-if="gamificationStore.recentProgress.length === 0"
-            class="empty-state"
-          >
-            <el-icon size="48" class="empty-icon">
-              <Document />
-            </el-icon>
-            <h3>还没有开始的剧本</h3>
-            <p>选择一个剧本开始你的时空冒险</p>
-            <el-button type="primary" @click="showScenarioSelector = true">
-              选择剧本
-            </el-button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 每日任务区域 -->
-    <div class="daily-quests-section">
-      <div class="section-header">
+    <!-- Main Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Affinity Cards (Left Column) -->
+      <div class="grid-section affinity-section">
         <h2 class="section-title">
-          <el-icon><Trophy /></el-icon>
-          每日任务
+          <el-icon><Star /></el-icon>
+          角色羁绊
         </h2>
-        <el-button type="text" size="small" @click="refreshQuests">
-          <el-icon><Refresh /></el-icon>
-          刷新
+        <div class="affinity-cards">
+          <affinity-progress-card
+            v-for="character in topAffinities"
+            :key="character.id"
+            :character="character"
+            @click="viewCharacterDetails"
+          />
+        </div>
+        <el-button text type="primary" class="view-all-btn" @click="navigateTo('/gamification/affinities')">
+          查看全部羁绊 →
         </el-button>
       </div>
 
-      <div class="quests-grid">
-        <div
-          v-for="quest in gamificationStore.activeQuests"
-          :key="quest.id"
-          class="quest-card"
-        >
-          <div class="quest-header">
-            <h4 class="quest-title">{{ quest.title }}</h4>
-            <el-tag size="small" type="primary">
-              +{{ quest.rewardPoints }}
-            </el-tag>
-          </div>
+      <!-- Daily Quests (Right Column) -->
+      <div class="grid-section quests-section">
+        <daily-quest-panel />
+      </div>
 
-          <p class="quest-description">{{ quest.description }}</p>
+      <!-- Proficiency Skill Tree (Full Width) -->
+      <div class="grid-section skill-section">
+        <proficiency-skill-tree />
+      </div>
 
-          <div class="quest-progress">
-            <div class="progress-bar">
-              <div
-                class="progress-fill"
-                :style="{ width: `${Math.min(quest.currentValue / quest.targetValue * 100, 100)}%` }"
-              ></div>
-            </div>
-            <span class="progress-text">
-              {{ quest.currentValue }} / {{ quest.targetValue }}
-            </span>
-          </div>
-        </div>
-
-        <!-- 已完成的任务 -->
-        <div
-          v-for="quest in gamificationStore.completedQuests"
-          :key="quest.id"
-          class="quest-card completed"
-        >
-          <div class="quest-header">
-            <h4 class="quest-title">{{ quest.title }}</h4>
-            <el-button
-              type="success"
-              size="small"
-              @click="claimQuestReward(quest.id)"
-              :loading="claimingQuest === quest.id"
-            >
-              领取奖励
-            </el-button>
-          </div>
-
-          <p class="quest-description">{{ quest.description }}</p>
-
-          <div class="quest-reward">
-            <el-icon><Gift /></el-icon>
-            <span>{{ quest.rewardPoints }} 积分</span>
-          </div>
-        </div>
+      <!-- Achievement Wall (Full Width) -->
+      <div class="grid-section achievement-section">
+        <achievement-wall />
       </div>
     </div>
 
-    <!-- 角色选择器弹窗 -->
+    <!-- Leaderboard Dialog -->
     <el-dialog
-      v-model="showCharacterSelector"
-      title="选择角色"
-      width="800px"
-      :close-on-click-modal="false"
+      v-model="showLeaderboard"
+      title="排行榜"
+      width="600px"
+      :before-close="handleLeaderboardClose"
     >
-      <CharacterSelector
-        @select="handleSelectCharacter"
-        @cancel="showCharacterSelector = false"
-      />
+      <div class="leaderboard-content">
+        <el-tabs v-model="leaderboardTab">
+          <el-tab-pane label="等级排行" name="level" />
+          <el-tab-pane label="成就排行" name="achievements" />
+          <el-tab-pane label="羁绊排行" name="affinity" />
+        </el-tabs>
+        <div class="leaderboard-list">
+          <p style="text-align: center; color: #909399; padding: 40px 0;">
+            排行榜数据加载中...
+          </p>
+        </div>
+      </div>
     </el-dialog>
-
-    <!-- 剧本选择器弹窗 -->
-    <el-dialog
-      v-model="showScenarioSelector"
-      title="选择剧本"
-      width="800px"
-      :close-on-click-modal="false"
-    >
-      <ScenarioSelector
-        @select="handleSelectScenario"
-        @cancel="showScenarioSelector = false"
-      />
-    </el-dialog>
-
-    <!-- 通知浮层 -->
-    <div class="notifications-container">
-      <transition-group name="notification">
-        <GamificationNotification
-          v-for="notification in gamificationStore.notifications"
-          :key="notification.id"
-          :notification="notification"
-          @dismiss="gamificationStore.removeNotification(notification.id)"
-        />
-      </transition-group>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import {
-  User,
-  Document,
   Trophy,
-  Plus,
-  Refresh,
-  Gift
-} from '@element-plus/icons-vue'
+  More,
+  ArrowDown,
+  TrendCharts,
+  User,
+  DataAnalysis,
+  Medal,
+  Star,
+} from '@element-plus/icons-vue';
+import { useGamificationStore } from '@/stores';
+import AffinityProgressCard from '@/components/gamification/AffinityProgressCard.vue';
+import DailyQuestPanel from '@/components/gamification/DailyQuestPanel.vue';
+import ProficiencySkillTree from '@/components/gamification/ProficiencySkillTree.vue';
+import AchievementWall from '@/components/gamification/AchievementWall.vue';
 
-import { useGamificationStore } from '@/stores/gamification'
-import CharacterAffinityCard from '@/components/gamification/CharacterAffinityCard.vue'
-import ScenarioProgressCard from '@/components/gamification/ScenarioProgressCard.vue'
-import GamificationNotification from '@/components/gamification/GamificationNotification.vue'
-import CharacterSelector from '@/components/common/CharacterSelector.vue'
-import ScenarioSelector from '@/components/common/ScenarioSelector.vue'
+const router = useRouter();
+const gamificationStore = useGamificationStore();
 
-const router = useRouter()
-const gamificationStore = useGamificationStore()
+const loading = ref(false);
+const showLeaderboard = ref(false);
+const leaderboardTab = ref('level');
 
-// 响应式数据
-const showCharacterSelector = ref(false)
-const showScenarioSelector = ref(false)
-const claimingQuest = ref<string | null>(null)
+// Computed Stats
+const currentLevel = computed(() => gamificationStore.currentLevel);
+const currentExp = computed(() => gamificationStore.overview?.currentLevelExp || 0);
+const expToNextLevel = computed(() => gamificationStore.expToNextLevel);
+const totalExp = computed(() => gamificationStore.totalExp);
 
-// 方法
-const handleCharacterChat = (character: any) => {
-  router.push(`/chat?character=${character.id}`)
+const expProgress = computed(() => {
+  if (expToNextLevel.value === 0) return 100;
+  return Math.round((currentExp.value / expToNextLevel.value) * 100);
+});
+
+const topAffinities = computed(() => gamificationStore.topAffinities?.slice(0, 3) || []);
+const totalAffinities = computed(() => gamificationStore.affinityList?.length || 0);
+const highAffinityCount = computed(() => {
+  return gamificationStore.affinityList?.filter((a: any) => a.affinityLevel >= 5).length || 0;
+});
+
+const totalSkills = computed(() => gamificationStore.proficiencyList?.length || 0);
+const masterSkillCount = computed(() => {
+  return gamificationStore.proficiencyList?.filter((s: any) => s.level >= 40).length || 0;
+});
+
+const unlockedAchievements = computed(() => gamificationStore.unlockedAchievements?.length || 0);
+const totalAchievements = computed(() => gamificationStore.achievements?.length || 0);
+const achievementProgress = computed(() => {
+  if (totalAchievements.value === 0) return 0;
+  return Math.round((unlockedAchievements.value / totalAchievements.value) * 100);
+});
+
+function navigateTo(path: string) {
+  router.push(path);
 }
 
-const handleContinueScenario = (progress: any) => {
-  // TODO: 跳转到剧本对应的聊天界面
-  router.push(`/chat?scenario=${progress.scenarioId}`)
+function viewCharacterDetails(character: any) {
+  router.push(`/characters/${character.id}`);
 }
 
-const handleResetScenario = async (scenarioId: string) => {
-  // TODO: 实现重置进度功能
-  ElMessage.info('重置功能即将推出')
+function handleLeaderboardClose(done: () => void) {
+  done();
 }
 
-const handleAbandonScenario = async (scenarioId: string) => {
-  // TODO: 实现放弃剧本功能
-  ElMessage.info('放弃功能即将推出')
-}
-
-const handleSelectCharacter = async (character: any) => {
+async function loadDashboard() {
+  loading.value = true;
   try {
-    // 初始化角色亲密度
-    const success = await gamificationStore.updateCharacterAffinity({
-      characterId: character.id,
-      affinityPoints: 10, // 初始亲密度
-      interactionType: 'first_encounter'
-    })
-
-    if (success) {
-      showCharacterSelector.value = false
-      ElMessage.success(`已选择角色 ${character.name}`)
-    }
+    await Promise.all([
+      gamificationStore.fetchOverview(),
+      gamificationStore.fetchAffinityList({ limit: 10 }),
+      gamificationStore.fetchProficiencyList(),
+      gamificationStore.fetchAchievements(),
+      gamificationStore.fetchDailyQuests(),
+    ]);
   } catch (error) {
-    ElMessage.error('选择角色失败')
-  }
-}
-
-const handleSelectScenario = async (scenario: any) => {
-  try {
-    // 初始化剧本进度
-    const success = await gamificationStore.updateScenarioProgress({
-      scenarioId: scenario.id,
-      progressPercentage: 0,
-      sessionTime: 0,
-      messagesCount: 0,
-      tokensUsed: 0
-    })
-
-    if (success) {
-      showScenarioSelector.value = false
-      ElMessage.success(`已选择剧本《${scenario.name}》`)
-    }
-  } catch (error) {
-    ElMessage.error('选择剧本失败')
-  }
-}
-
-const claimQuestReward = async (questId: string) => {
-  try {
-    claimingQuest.value = questId
-    const success = await gamificationStore.claimQuestReward(questId)
-
-    if (success) {
-      ElMessage.success('奖励领取成功！')
-    }
-  } catch (error) {
-    ElMessage.error('领取奖励失败')
+    console.error('Failed to load gamification dashboard:', error);
   } finally {
-    claimingQuest.value = null
+    loading.value = false;
   }
 }
 
-const refreshQuests = async () => {
-  await gamificationStore.loadDailyQuests()
-  ElMessage.success('任务已刷新')
-}
-
-// 生命周期
-onMounted(async () => {
-  // 加载游戏化数据
-  await gamificationStore.refreshData()
-})
+onMounted(() => {
+  loadDashboard();
+});
 </script>
 
-<style scoped lang="scss">
+<style scoped>
 .gamification-dashboard {
-  min-height: 100vh;
-  background: var(--surface-0);
-  padding: var(--space-6);
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-.dashboard-header {
-  background: var(--surface-2);
-  border-radius: var(--radius-xl);
-  padding: var(--space-6);
-  margin-bottom: var(--space-6);
-  border: 1px solid var(--border-secondary);
-
-  .header-content {
-    margin-bottom: var(--space-4);
-
-    .page-title {
-      margin: 0 0 var(--space-2) 0;
-      font-size: var(--text-3xl);
-      font-weight: var(--font-bold);
-      background: linear-gradient(135deg, var(--brand-primary-500), var(--brand-secondary-500));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .page-subtitle {
-      margin: 0;
-      font-size: var(--text-lg);
-      color: var(--text-secondary);
-    }
-  }
-
-  .header-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-4);
-
-    .stat-card {
-      text-align: center;
-      padding: var(--space-4);
-      background: var(--surface-3);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border-secondary);
-
-      .stat-value {
-        font-size: var(--text-2xl);
-        font-weight: var(--font-bold);
-        color: var(--brand-primary-500);
-        margin-bottom: var(--space-1);
-      }
-
-      .stat-label {
-        font-size: var(--text-sm);
-        color: var(--text-tertiary);
-      }
-    }
-  }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
 }
 
-.dashboard-content {
+.header-content {
+  flex: 1;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  color: #303133;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #909399;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.overview-stats {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: var(--space-6);
-  margin-bottom: var(--space-6);
-
-  .left-panel,
-  .right-panel {
-    background: var(--surface-2);
-    border-radius: var(--radius-xl);
-    padding: var(--space-6);
-    border: 1px solid var(--border-secondary);
-  }
-
-  .panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-4);
-
-    .panel-title {
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      margin: 0;
-      font-size: var(--text-xl);
-      font-weight: var(--font-semibold);
-      color: var(--text-primary);
-
-      .el-icon {
-        color: var(--brand-primary-500);
-      }
-    }
-  }
-
-  .character-grid,
-  .scenario-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-  }
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
 }
 
-.daily-quests-section {
-  background: var(--surface-2);
-  border-radius: var(--radius-xl);
-  padding: var(--space-6);
-  border: 1px solid var(--border-secondary);
-
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-4);
-
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      margin: 0;
-      font-size: var(--text-xl);
-      font-weight: var(--font-semibold);
-      color: var(--text-primary);
-
-      .el-icon {
-        color: var(--brand-accent-500);
-      }
-    }
-  }
-
-  .quests-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: var(--space-4);
-
-    .quest-card {
-      background: var(--surface-3);
-      border-radius: var(--radius-lg);
-      padding: var(--space-4);
-      border: 1px solid var(--border-secondary);
-      transition: all 0.3s ease;
-
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-      }
-
-      &.completed {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
-        border-color: rgba(16, 185, 129, 0.3);
-      }
-
-      .quest-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: var(--space-2);
-
-        .quest-title {
-          margin: 0;
-          font-size: var(--text-base);
-          font-weight: var(--font-semibold);
-          color: var(--text-primary);
-          flex: 1;
-          margin-right: var(--space-2);
-        }
-      }
-
-      .quest-description {
-        margin: 0 0 var(--space-3) 0;
-        font-size: var(--text-sm);
-        color: var(--text-secondary);
-        line-height: var(--leading-snug);
-      }
-
-      .quest-progress {
-        .progress-bar {
-          height: 6px;
-          background: var(--surface-0);
-          border-radius: var(--radius-full);
-          overflow: hidden;
-          margin-bottom: var(--space-2);
-
-          .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--brand-primary-500), var(--brand-secondary-500));
-            border-radius: var(--radius-full);
-            transition: width 0.3s ease;
-          }
-        }
-
-        .progress-text {
-          font-size: var(--text-xs);
-          color: var(--text-tertiary);
-          text-align: center;
-        }
-      }
-
-      .quest-reward {
-        display: flex;
-        align-items: center;
-        gap: var(--space-2);
-        font-size: var(--text-sm);
-        color: var(--success);
-
-        .el-icon {
-          color: var(--success);
-        }
-      }
-    }
-  }
+.stat-card {
+  display: flex;
+  gap: 16px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s;
 }
 
-.empty-state {
-  text-align: center;
-  padding: var(--space-8);
-  color: var(--text-tertiary);
-
-  .empty-icon {
-    color: var(--text-disabled);
-    margin-bottom: var(--space-4);
-  }
-
-  h3 {
-    margin: 0 0 var(--space-2) 0;
-    font-size: var(--text-lg);
-    font-weight: var(--font-medium);
-    color: var(--text-secondary);
-  }
-
-  p {
-    margin: 0 0 var(--space-4) 0;
-    font-size: var(--text-sm);
-  }
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
-.notifications-container {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  z-index: 3000;
+.stat-icon {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: white;
+}
+
+.stat-card.level .stat-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card.affinity .stat-icon {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-card.proficiency .stat-icon {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stat-card.achievements .stat-icon {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #909399;
+  margin: 0 0 6px 0;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  color: #303133;
+}
+
+.stat-sub {
+  font-size: 12px;
+  color: #909399;
+  margin: 4px 0 0 0;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.grid-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.grid-section.affinity-section,
+.grid-section.quests-section {
+  grid-column: span 1;
+}
+
+.grid-section.skill-section,
+.grid-section.achievement-section {
+  grid-column: span 2;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+  color: #303133;
+}
+
+.affinity-cards {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  max-width: 400px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-// 通知动画
-.notification-enter-active,
-.notification-leave-active {
-  transition: all 0.3s ease;
+.view-all-btn {
+  width: 100%;
+  margin-top: 8px;
 }
 
-.notification-enter-from {
-  opacity: 0;
-  transform: translateX(100%);
+.leaderboard-content {
+  min-height: 400px;
 }
 
-.notification-leave-to {
-  opacity: 0;
-  transform: translateX(100%);
+.leaderboard-list {
+  margin-top: 20px;
 }
 
-// 响应式设计
-@media (max-width: 1024px) {
-  .dashboard-content {
+@media (max-width: 1200px) {
+  .dashboard-grid {
     grid-template-columns: 1fr;
+  }
+
+  .grid-section.affinity-section,
+  .grid-section.quests-section,
+  .grid-section.skill-section,
+  .grid-section.achievement-section {
+    grid-column: span 1;
   }
 }
 
 @media (max-width: 768px) {
   .gamification-dashboard {
-    padding: var(--space-4);
+    padding: 16px;
   }
 
-  .dashboard-header {
-    padding: var(--space-4);
-
-    .header-stats {
-      grid-template-columns: 1fr;
-      gap: var(--space-3);
-
-      .stat-card {
-        padding: var(--space-3);
-      }
-    }
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
   }
 
-  .dashboard-content,
-  .daily-quests-section {
-    padding: var(--space-4);
+  .header-actions {
+    width: 100%;
   }
 
-  .quests-grid {
-    grid-template-columns: 1fr;
+  .page-title {
+    font-size: 24px;
+  }
+
+  .overview-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card {
+    flex-direction: column;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .stat-icon {
+    margin: 0 auto;
+  }
+
+  .stat-value {
+    font-size: 24px;
   }
 }
 </style>

@@ -190,6 +190,15 @@ export const gamificationService = {
     return api.get('/api/gamification/daily-quests')
   },
 
+  // 更新任务进度
+  async updateQuestProgress(questId: string, increment: number = 1): Promise<{
+    success: boolean
+    quest: DailyQuest
+    completed: boolean
+  }> {
+    return api.post(`/api/gamification/daily-quests/${questId}/progress`, { increment })
+  },
+
   // 领取任务奖励
   async claimQuestReward(questId: string): Promise<{
     success: boolean
@@ -206,36 +215,50 @@ export const gamificationService = {
   // 获取用户游戏化概览
   async getGamingOverview(): Promise<{
     success: boolean
-    overview: {
-      totalAffinityLevel: number
-      completedScenarios: number
-      totalAchievements: number
-      topCharacters: CharacterAffinity[]
-      recentProgress: ScenarioProgress[]
-      dailyQuests: DailyQuest[]
-      nextMilestones: any[]
-    }
+    overview: any
   }> {
-    const [profileResponse, questsResponse] = await Promise.all([
-      api.get('/api/auth/profile'),
-      api.get('/api/gamification/daily-quests')
-    ])
+    return api.get('/api/gamification/overview')
+  },
 
-    if (!profileResponse.success) {
-      throw new Error('获取用户资料失败')
-    }
+  // 获取用户所有亲密度列表
+  async getAllAffinities(params?: {
+    sort?: 'level' | 'points' | 'recent'
+    limit?: number
+  }): Promise<{
+    success: boolean
+    affinities: CharacterAffinity[]
+  }> {
+    return api.get('/api/gamification/affinities', { params })
+  },
 
-    return {
-      success: true,
-      overview: {
-        totalAffinityLevel: profileResponse.gamingStats?.totalAffinityLevel || 0,
-        completedScenarios: profileResponse.gamingStats?.completedScenarios || 0,
-        totalAchievements: profileResponse.gamingStats?.totalAchievements || 0,
-        topCharacters: profileResponse.gamingStats?.topCharacters || [],
-        recentProgress: profileResponse.gamingStats?.recentProgress || [],
-        dailyQuests: questsResponse.success ? questsResponse.quests : [],
-        nextMilestones: [] // TODO: 计算下一个里程碑
-      }
-    }
+  // 获取用户所有剧本进度列表
+  async getAllScenarioProgresses(params?: {
+    status?: string
+    sort?: 'progress' | 'level' | 'recent'
+    limit?: number
+  }): Promise<{
+    success: boolean
+    progresses: ScenarioProgress[]
+  }> {
+    return api.get('/api/gamification/scenario-progresses', { params })
+  },
+
+  // 获取用户所有熟练度列表
+  async getAllProficiencies(params?: {
+    sort?: 'level' | 'points' | 'rating' | 'recent'
+    limit?: number
+  }): Promise<{
+    success: boolean
+    proficiencies: CharacterProficiency[]
+  }> {
+    return api.get('/api/gamification/proficiencies', { params })
+  },
+
+  // 放弃剧本
+  async abandonScenario(scenarioId: string): Promise<{
+    success: boolean
+    message: string
+  }> {
+    return api.post(`/api/gamification/scenario-progress/${scenarioId}/abandon`)
   }
 }

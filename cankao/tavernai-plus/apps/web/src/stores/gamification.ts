@@ -1,449 +1,195 @@
-import { defineStore } from 'pinia'
-import { ref, computed, reactive } from 'vue'
-import { gamificationService } from '@/services/gamification'
-import type {
-  CharacterAffinity,
-  ScenarioProgress,
-  CharacterProficiency,
-  UserAchievement,
-  DailyQuest
-} from '@/services/gamification'
-import { ElMessage } from 'element-plus'
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import { gamificationApi } from '@/services/dashboardApi';
 
-// 游戏化事件类型
-export type GamificationEvent =
-  | 'affinity_update'
-  | 'scenario_progress'
-  | 'proficiency_update'
-  | 'achievement_unlock'
-  | 'level_up'
-  | 'quest_complete'
-
-export interface GamificationState {
-  // 亲密度数据
-  characterAffinities: Map<string, CharacterAffinity>
-  // 剧本进度数据
-  scenarioProgress: Map<string, ScenarioProgress>
-  // 熟练度数据
-  characterProficiencies: Map<string, CharacterProficiency>
-  // 成就数据
-  achievements: UserAchievement[]
-  // 每日任务
-  dailyQuests: DailyQuest[]
-  // 加载状态
-  loading: boolean
-  // 通知队列
-  notifications: Array<{
-    id: string
-    type: GamificationEvent
-    title: string
-    message: string
-    timestamp: Date
-    data?: any
-  }>
-}
-
+/**
+ * Gamification Store (T040)
+ * Manages affinity levels, proficiency tracking, achievements, and daily quests
+ */
 export const useGamificationStore = defineStore('gamification', () => {
-  // 状态
-  const state = reactive<GamificationState>({
-    characterAffinities: new Map(),
-    scenarioProgress: new Map(),
-    characterProficiencies: new Map(),
-    achievements: [],
-    dailyQuests: [],
-    loading: false,
-    notifications: []
-  })
+  // State
+  const overview = ref<any>(null);
+  const affinityList = ref<any[]>([]);
+  const proficiencyList = ref<any[]>([]);
+  const dailyQuests = ref<any[]>([]);
+  const achievements = ref<any[]>([]);
+  const loading = ref(false);
+  const error = ref<string | null>(null);
 
-  // 计算属性
-  const totalAffinityLevel = computed(() => {
-    let total = 0
-    state.characterAffinities.forEach(affinity => {
-      total += affinity.affinityLevel
-    })
-    return total
-  })
+  // Getters
+  const totalExp = computed(() => overview.value?.totalExp || 0);
+  const currentLevel = computed(() => overview.value?.level || 1);
+  const expToNextLevel = computed(() => overview.value?.expToNextLevel || 0);
+  const expProgress = computed(() => {
+    const current = overview.value?.currentLevelExp || 0;
+    const needed = expToNextLevel.value;
+    return needed > 0 ? Math.round((current / needed) * 100) : 0;
+  });
 
-  const completedScenariosCount = computed(() => {
-    let count = 0
-    state.scenarioProgress.forEach(progress => {
-      if (progress.status === 'completed') count++
-    })
-    return count
-  })
+  const topAffinities = computed(() => {
+    return [...affinityList.value]
+      .sort((a, b) => b.level - a.level)
+      .slice(0, 5);
+  });
 
-  const favoriteCharacters = computed(() => {
-    return Array.from(state.characterAffinities.values())
-      .filter(affinity => affinity.favorite)
-      .sort((a, b) => b.affinityLevel - a.affinityLevel)
-  })
-
-  const recentProgress = computed(() => {
-    return Array.from(state.scenarioProgress.values())
-      .sort((a, b) => new Date(b.lastPlayedAt).getTime() - new Date(a.lastPlayedAt).getTime())
-      .slice(0, 5)
-  })
+  const topProficiencies = computed(() => {
+    return [...proficiencyList.value]
+      .sort((a, b) => b.level - a.level)
+      .slice(0, 5);
+  });
 
   const activeQuests = computed(() => {
-    return state.dailyQuests.filter(quest => !quest.isCompleted)
-  })
+    return dailyQuests.value.filter((q) => !q.completed);
+  });
 
   const completedQuests = computed(() => {
-    return state.dailyQuests.filter(quest => quest.isCompleted && !quest.isClaimed)
-  })
+    return dailyQuests.value.filter((q) => q.completed);
+  });
 
-  // 方法
+  const unlockedAchievements = computed(() => {
+    return achievements.value.filter((a) => a.unlocked);
+  });
 
-  // ==================== 亲密度系统 ====================
+  const lockedAchievements = computed(() => {
+    return achievements.value.filter((a) => !a.unlocked);
+  });
 
-  const getCharacterAffinity = async (characterId: string): Promise<CharacterAffinity | null> => {
+  const achievementProgress = computed(() => {
+    const unlocked = unlockedAchievements.value.length;
+    const total = achievements.value.length;
+    return total > 0 ? Math.round((unlocked / total) * 100) : 0;
+  });
+
+  // Actions
+  async function fetchOverview() {
+    loading.value = true;
+    error.value = null;
     try {
-      const response = await gamificationService.getCharacterAffinity(characterId)
-      if (response.success && response.affinity) {
-        state.characterAffinities.set(characterId, response.affinity)
-        return response.affinity
-      }
-      return null
-    } catch (error) {
-      console.error('获取角色亲密度失败:', error)
-      return null
-    }
-  }
-
-  const updateCharacterAffinity = async (data: {
-    characterId: string
-    affinityPoints: number
-    interactionType?: string
-  }): Promise<boolean> => {
-    try {
-      state.loading = true
-      const response = await gamificationService.updateCharacterAffinity(data)
-
+      const response = await gamificationApi.getOverview();
       if (response.success) {
-        const affinity = response.affinity
-        const oldLevel = state.characterAffinities.get(data.characterId)?.affinityLevel || 1
-
-        state.characterAffinities.set(data.characterId, affinity)
-
-        // 发送通知
-        if (response.leveledUp) {
-          addNotification({
-            type: 'level_up',
-            title: '亲密度升级！',
-            message: `与 ${affinity.character.name} 的亲密度升至 ${affinity.affinityLevel} 级`,
-            data: { affinity }
-          })
-        }
-
-        // 触发亲密度更新事件
-        addNotification({
-          type: 'affinity_update',
-          title: '亲密度提升',
-          message: `与 ${affinity.character.name} 的关系更加亲密了`,
-          data: { affinity, points: data.affinityPoints }
-        })
-
-        return true
+        overview.value = response.data;
+      } else {
+        error.value = 'Failed to fetch gamification overview';
       }
-      return false
-    } catch (error) {
-      console.error('更新亲密度失败:', error)
-      return false
+    } catch (err: any) {
+      error.value = err.message || 'Failed to fetch gamification overview';
+      console.error('Error fetching gamification overview:', err);
     } finally {
-      state.loading = false
+      loading.value = false;
     }
   }
 
-  const setCharacterFavorite = async (characterId: string, favorite: boolean): Promise<boolean> => {
+  async function fetchAffinityList(params?: { limit?: number; sortBy?: string }) {
+    loading.value = true;
+    error.value = null;
     try {
-      const response = await gamificationService.setCharacterFavorite(characterId, favorite)
+      const response = await gamificationApi.getAffinityList(params);
       if (response.success) {
-        const affinity = state.characterAffinities.get(characterId)
-        if (affinity) {
-          affinity.favorite = favorite
-          state.characterAffinities.set(characterId, affinity)
-        }
-        return true
+        affinityList.value = response.data;
+      } else {
+        error.value = 'Failed to fetch affinity list';
       }
-      return false
-    } catch (error) {
-      console.error('设置收藏失败:', error)
-      return false
-    }
-  }
-
-  // ==================== 剧本进度系统 ====================
-
-  const getScenarioProgress = async (scenarioId: string): Promise<ScenarioProgress | null> => {
-    try {
-      const response = await gamificationService.getScenarioProgress(scenarioId)
-      if (response.success && response.progress) {
-        state.scenarioProgress.set(scenarioId, response.progress)
-        return response.progress
-      }
-      return null
-    } catch (error) {
-      console.error('获取剧本进度失败:', error)
-      return null
-    }
-  }
-
-  const updateScenarioProgress = async (data: {
-    scenarioId: string
-    progressPercentage: number
-    sessionTime?: number
-    messagesCount?: number
-    tokensUsed?: number
-  }): Promise<boolean> => {
-    try {
-      state.loading = true
-      const response = await gamificationService.updateScenarioProgress(data)
-
-      if (response.success) {
-        const progress = response.progress
-        const oldProgress = state.scenarioProgress.get(data.scenarioId)?.progressPercentage || 0
-
-        state.scenarioProgress.set(data.scenarioId, progress)
-
-        // 发送通知
-        if (response.completed && oldProgress < 1.0) {
-          addNotification({
-            type: 'scenario_progress',
-            title: '剧本完成！',
-            message: `恭喜完成剧本《${progress.scenario.name}》`,
-            data: { progress }
-          })
-        }
-
-        if (response.leveledUp) {
-          addNotification({
-            type: 'level_up',
-            title: '熟练度提升！',
-            message: `在《${progress.scenario.name}》中的熟练度升至 ${progress.proficiencyLevel} 级`,
-            data: { progress }
-          })
-        }
-
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error('更新剧本进度失败:', error)
-      return false
+    } catch (err: any) {
+      error.value = err.message || 'Failed to fetch affinity list';
+      console.error('Error fetching affinity list:', err);
     } finally {
-      state.loading = false
+      loading.value = false;
     }
   }
 
-  // ==================== 熟练度系统 ====================
-
-  const getCharacterProficiency = async (characterId: string): Promise<CharacterProficiency | null> => {
+  async function fetchProficiencyList(params?: { limit?: number; sortBy?: string }) {
+    loading.value = true;
+    error.value = null;
     try {
-      const response = await gamificationService.getCharacterProficiency(characterId)
-      if (response.success && response.proficiency) {
-        state.characterProficiencies.set(characterId, response.proficiency)
-        return response.proficiency
-      }
-      return null
-    } catch (error) {
-      console.error('获取角色熟练度失败:', error)
-      return null
-    }
-  }
-
-  const updateCharacterProficiency = async (data: {
-    characterId: string
-    proficiencyPoints: number
-    interactionType: string
-    success?: boolean
-  }): Promise<boolean> => {
-    try {
-      state.loading = true
-      const response = await gamificationService.updateCharacterProficiency(data)
-
+      const response = await gamificationApi.getProficiencyList(params);
       if (response.success) {
-        const proficiency = response.proficiency
-        state.characterProficiencies.set(data.characterId, proficiency)
-
-        // 发送通知
-        if (response.leveledUp) {
-          addNotification({
-            type: 'level_up',
-            title: '熟练度升级！',
-            message: `与 ${proficiency.character.name} 的熟练度升至 ${proficiency.proficiencyLevel} 级`,
-            data: { proficiency }
-          })
-        }
-
-        return true
+        proficiencyList.value = response.data;
+      } else {
+        error.value = 'Failed to fetch proficiency list';
       }
-      return false
-    } catch (error) {
-      console.error('更新熟练度失败:', error)
-      return false
+    } catch (err: any) {
+      error.value = err.message || 'Failed to fetch proficiency list';
+      console.error('Error fetching proficiency list:', err);
     } finally {
-      state.loading = false
+      loading.value = false;
     }
   }
 
-  // ==================== 成就系统 ====================
-
-  const loadAchievements = async (): Promise<boolean> => {
+  async function fetchDailyQuests() {
+    loading.value = true;
+    error.value = null;
     try {
-      const response = await gamificationService.getUserAchievements()
+      const response = await gamificationApi.getDailyQuests();
       if (response.success) {
-        state.achievements = response.achievements
-        return true
+        dailyQuests.value = response.data;
+      } else {
+        error.value = 'Failed to fetch daily quests';
       }
-      return false
-    } catch (error) {
-      console.error('加载成就失败:', error)
-      return false
-    }
-  }
-
-  // ==================== 每日任务 ====================
-
-  const loadDailyQuests = async (): Promise<boolean> => {
-    try {
-      const response = await gamificationService.getDailyQuests()
-      if (response.success) {
-        state.dailyQuests = response.quests
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error('加载每日任务失败:', error)
-      return false
-    }
-  }
-
-  const claimQuestReward = async (questId: string): Promise<boolean> => {
-    try {
-      const response = await gamificationService.claimQuestReward(questId)
-      if (response.success) {
-        const quest = state.dailyQuests.find(q => q.id === questId)
-        if (quest) {
-          quest.isClaimed = true
-          quest.claimedAt = new Date()
-        }
-
-        ElMessage.success(`获得 ${response.reward.points} ${response.reward.type === 'credits' ? '积分' : '奖励'}`)
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error('领取奖励失败:', error)
-      return false
-    }
-  }
-
-  // ==================== 通知系统 ====================
-
-  const addNotification = (notification: Omit<GamificationState['notifications'][0], 'id' | 'timestamp'>) => {
-    const newNotification = {
-      ...notification,
-      id: Date.now().toString(),
-      timestamp: new Date()
-    }
-    state.notifications.unshift(newNotification)
-
-    // 限制通知数量
-    if (state.notifications.length > 10) {
-      state.notifications = state.notifications.slice(0, 10)
-    }
-  }
-
-  const removeNotification = (id: string) => {
-    const index = state.notifications.findIndex(n => n.id === id)
-    if (index >= -1) {
-      state.notifications.splice(index, 1)
-    }
-  }
-
-  const clearNotifications = () => {
-    state.notifications = []
-  }
-
-  // ==================== 数据加载 ====================
-
-  const loadGamingOverview = async (): Promise<boolean> => {
-    try {
-      state.loading = true
-      const response = await gamificationService.getGamingOverview()
-
-      if (response.success) {
-        const overview = response.overview
-
-        // 更新统计数据
-        // 这里可以根据需要加载更多详细信息
-
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error('加载游戏化概览失败:', error)
-      return false
+    } catch (err: any) {
+      error.value = err.message || 'Failed to fetch daily quests';
+      console.error('Error fetching daily quests:', err);
     } finally {
-      state.loading = false
+      loading.value = false;
     }
   }
 
-  const refreshData = async (): Promise<boolean> => {
+  async function fetchAchievements(params?: { category?: string; unlocked?: boolean }) {
+    loading.value = true;
+    error.value = null;
     try {
-      state.loading = true
-
-      const results = await Promise.allSettled([
-        loadAchievements(),
-        loadDailyQuests(),
-        loadGamingOverview()
-      ])
-
-      const successCount = results.filter(result =>
-        result.status === 'fulfilled' && result.value === true
-      ).length
-
-      return successCount > 0
-    } catch (error) {
-      console.error('刷新游戏化数据失败:', error)
-      return false
+      const response = await gamificationApi.getAchievements(params);
+      if (response.success) {
+        achievements.value = response.data;
+      } else {
+        error.value = 'Failed to fetch achievements';
+      }
+    } catch (err: any) {
+      error.value = err.message || 'Failed to fetch achievements';
+      console.error('Error fetching achievements:', err);
     } finally {
-      state.loading = false
+      loading.value = false;
     }
+  }
+
+  function resetState() {
+    overview.value = null;
+    affinityList.value = [];
+    proficiencyList.value = [];
+    dailyQuests.value = [];
+    achievements.value = [];
+    loading.value = false;
+    error.value = null;
   }
 
   return {
-    // 状态
-    ...state,
+    // State
+    overview,
+    affinityList,
+    proficiencyList,
+    dailyQuests,
+    achievements,
+    loading,
+    error,
 
-    // 计算属性
-    totalAffinityLevel,
-    completedScenariosCount,
-    favoriteCharacters,
-    recentProgress,
+    // Getters
+    totalExp,
+    currentLevel,
+    expToNextLevel,
+    expProgress,
+    topAffinities,
+    topProficiencies,
     activeQuests,
     completedQuests,
+    unlockedAchievements,
+    lockedAchievements,
+    achievementProgress,
 
-    // 方法
-    getCharacterAffinity,
-    updateCharacterAffinity,
-    setCharacterFavorite,
-
-    getScenarioProgress,
-    updateScenarioProgress,
-
-    getCharacterProficiency,
-    updateCharacterProficiency,
-
-    loadAchievements,
-    loadDailyQuests,
-    claimQuestReward,
-
-    addNotification,
-    removeNotification,
-    clearNotifications,
-
-    loadGamingOverview,
-    refreshData
-  }
-})
+    // Actions
+    fetchOverview,
+    fetchAffinityList,
+    fetchProficiencyList,
+    fetchDailyQuests,
+    fetchAchievements,
+    resetState,
+  };
+});
