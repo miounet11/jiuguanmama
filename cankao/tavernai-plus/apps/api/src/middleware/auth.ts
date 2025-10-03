@@ -19,6 +19,7 @@ declare global {
         subscriptionTier: string
         isActive: boolean
         isVerified: boolean
+        featureUnlocks?: string[] // Array of unlocked feature IDs
       }
     }
   }
@@ -35,6 +36,7 @@ export interface AuthRequest extends Request {
     subscriptionTier: string
     isActive: boolean
     isVerified: boolean
+    featureUnlocks?: string[]
   }
 }
 
@@ -43,6 +45,7 @@ export interface JWTPayload {
   username: string
   email: string
   role: string
+  featureUnlocks?: string[]
   iat?: number
   exp?: number
 }
@@ -82,11 +85,18 @@ export class TokenManager {
     email: string
     role: string
   }): Promise<{ accessToken: string; refreshToken: string }> {
+    // Load user's feature unlocks
+    const featureUnlocks = await prisma.featureUnlock.findMany({
+      where: { userId: user.id },
+      select: { featureId: true }
+    })
+
     const payload: JWTPayload = {
       userId: user.id,
       username: user.username,
       email: user.email,
-      role: user.role
+      role: user.role,
+      featureUnlocks: featureUnlocks.map(fu => fu.featureId)
     }
 
     const accessToken = this.generateAccessToken(payload)
@@ -166,7 +176,22 @@ export const authenticate = async (
       return
     }
 
-    req.user = user
+    // Load feature unlocks from JWT or database
+    let featureUnlocks = decoded.featureUnlocks || []
+
+    // If not in JWT (old tokens), load from database
+    if (!featureUnlocks || featureUnlocks.length === 0) {
+      const unlocks = await prisma.featureUnlock.findMany({
+        where: { userId: decoded.userId },
+        select: { featureId: true }
+      })
+      featureUnlocks = unlocks.map(u => u.featureId)
+    }
+
+    req.user = {
+      ...user,
+      featureUnlocks
+    }
     next()
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
@@ -222,7 +247,20 @@ export const optionalAuth = async (
       })
 
       if (user && user.isActive) {
-        req.user = user
+        // Load feature unlocks
+        let featureUnlocks = decoded.featureUnlocks || []
+        if (!featureUnlocks || featureUnlocks.length === 0) {
+          const unlocks = await prisma.featureUnlock.findMany({
+            where: { userId: decoded.userId },
+            select: { featureId: true }
+          })
+          featureUnlocks = unlocks.map(u => u.featureId)
+        }
+
+        req.user = {
+          ...user,
+          featureUnlocks
+        }
       }
     }
 

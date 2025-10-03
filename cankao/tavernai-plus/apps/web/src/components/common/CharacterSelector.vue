@@ -74,6 +74,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { characterService } from '@/services/character'
+import { ElMessage } from 'element-plus'
 
 interface Character {
   id: string
@@ -100,37 +102,7 @@ const emit = defineEmits<{
 
 const characters = ref<Character[]>(props.initialCharacters)
 const selectedCharacter = ref<Character | null>(null)
-
-// 示例角色数据（如果没有传入数据）
-const sampleCharacters = [
-  {
-    id: 'sample-1',
-    name: '时空旅人艾丽',
-    description: '一位神秘的时空旅行者，她掌握着穿梭不同时空的能力。性格温柔但内心坚定，对未知充满好奇。',
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=150&h=150&fit=crop&crop=face',
-    tags: ['时空旅行', '神秘', '温柔'],
-    chatCount: 1250,
-    rating: 4.8
-  },
-  {
-    id: 'sample-2',
-    name: '魔法师莱恩',
-    description: '来自中世纪的年轻魔法师，精通各种魔法咒语。外表斯文但内心燃烧着冒险的火焰。',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    tags: ['魔法', '冒险', '斯文'],
-    chatCount: 980,
-    rating: 4.6
-  },
-  {
-    id: 'sample-3',
-    name: '未来战士凯拉',
-    description: '来自未来的精英战士，拥有先进的科技装备。外表冷酷但内心渴望真正的友谊。',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-    tags: ['未来', '战士', '科技'],
-    chatCount: 1560,
-    rating: 4.9
-  }
-]
+const loading = ref(false)
 
 const selectCharacter = (character: Character) => {
   selectedCharacter.value = character
@@ -142,9 +114,37 @@ const confirmSelection = () => {
   }
 }
 
-onMounted(() => {
+const loadCharacters = async () => {
+  try {
+    loading.value = true
+    const response = await characterService.getCharacters({
+      page: 1,
+      limit: 12,
+      sort: 'rating'
+    })
+
+    if (response.success && response.characters) {
+      characters.value = response.characters.map((char: any) => ({
+        id: char.id,
+        name: char.name,
+        description: char.description,
+        avatar: char.avatar,
+        tags: char.tags ? JSON.parse(char.tags) : [],
+        chatCount: char.chatCount || 0,
+        rating: char.rating || 0
+      }))
+    }
+  } catch (error) {
+    console.error('加载角色列表失败:', error)
+    ElMessage.error('加载角色列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(async () => {
   if (characters.value.length === 0) {
-    characters.value = sampleCharacters
+    await loadCharacters()
   }
 })
 </script>

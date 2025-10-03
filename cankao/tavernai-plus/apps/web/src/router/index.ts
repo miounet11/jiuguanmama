@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useFeatureStore } from '@/stores'
 
 // 路由级懒加载 - 性能优化版本
 const routes: RouteRecordRaw[] = [
@@ -7,20 +8,20 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     name: 'Home',
     component: () => import(/* webpackChunkName: "home" */ '@/views/HomePage.vue'),
-    meta: { 
+    meta: {
       requiresAuth: false,
       preload: true, // 预加载标记
       title: 'TavernAI Plus - AI角色扮演平台'
     }
   },
-  
+
   // 认证相关页面 - 独立块
   {
     path: '/login',
     name: 'Login',
     component: () => import(/* webpackChunkName: "auth" */ '@/views/auth/LoginPage.vue'),
-    meta: { 
-      requiresAuth: false, 
+    meta: {
+      requiresAuth: false,
       hideLayout: true,
       title: '登录 - TavernAI Plus'
     }
@@ -29,8 +30,8 @@ const routes: RouteRecordRaw[] = [
     path: '/register',
     name: 'Register',
     component: () => import(/* webpackChunkName: "auth" */ '@/views/auth/RegisterPage.vue'),
-    meta: { 
-      requiresAuth: false, 
+    meta: {
+      requiresAuth: false,
       hideLayout: true,
       title: '注册 - TavernAI Plus'
     }
@@ -97,7 +98,7 @@ const routes: RouteRecordRaw[] = [
     path: '/marketplace',
     name: 'Marketplace',
     component: () => import(/* webpackChunkName: "marketplace" */ '@/views/marketplace/MarketplaceView.vue'),
-    meta: { 
+    meta: {
       requiresAuth: false,
       title: '角色市场 - TavernAI Plus'
     }
@@ -149,7 +150,7 @@ const routes: RouteRecordRaw[] = [
     path: '/chatroom/:roomId',
     name: 'ChatRoom',
     component: () => import(/* webpackChunkName: "chatroom" */ '@/views/chatroom/ChatRoomPage.vue'),
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: '聊天室 - TavernAI Plus'
     }
@@ -218,7 +219,7 @@ const routes: RouteRecordRaw[] = [
     path: '/profile',
     name: 'Profile',
     component: () => import(/* webpackChunkName: "profile" */ '@/views/profile/ProfilePage.vue'),
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: '个人资料 - TavernAI Plus'
     }
@@ -227,7 +228,7 @@ const routes: RouteRecordRaw[] = [
     path: '/profile/settings',
     name: 'Settings',
     component: () => import(/* webpackChunkName: "profile" */ '@/views/profile/SettingsPage.vue'),
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: '账户设置 - TavernAI Plus'
     }
@@ -238,7 +239,7 @@ const routes: RouteRecordRaw[] = [
     path: '/subscription',
     name: 'Subscription',
     component: () => import(/* webpackChunkName: "subscription" */ '@/views/subscription/SubscriptionPage.vue'),
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: '订阅管理 - TavernAI Plus'
     }
@@ -249,7 +250,7 @@ const routes: RouteRecordRaw[] = [
     path: '/admin/logs',
     name: 'AdminLogs',
     component: () => import(/* webpackChunkName: "admin" */ '@/views/admin/LogsPage.vue'),
-    meta: { 
+    meta: {
       requiresAuth: true,
       requiresAdmin: true,
       title: '系统日志 - TavernAI Plus'
@@ -263,7 +264,34 @@ const routes: RouteRecordRaw[] = [
     component: () => import(/* webpackChunkName: "gamification" */ '@/views/GamificationDashboard.vue'),
     meta: {
       requiresAuth: true,
-      title: '时空酒馆 - TavernAI Plus'
+      title: '时空酒馆 - TavernAI Plus',
+      featureGate: 'F5' // Gamification feature
+    }
+  },
+
+  // 创作者工作室 - 创作者专用功能
+  {
+    path: '/creator-studio',
+    name: 'CreatorStudio',
+    component: () => import(/* webpackChunkName: "creator" */ '@/views/CreatorStudio.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresRole: 'creator',
+      title: '创作者工作室 - TavernAI Plus',
+      featureGate: 'F4' // Creator Studio feature
+    }
+  },
+
+  // 管理控制台 - 管理员专用功能
+  {
+    path: '/admin-console',
+    name: 'AdminConsole',
+    component: () => import(/* webpackChunkName: "admin-console" */ '@/views/AdminConsole.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: '管理控制台 - TavernAI Plus',
+      featureGate: 'F6' // Admin Console feature
     }
   },
 
@@ -281,7 +309,7 @@ const routes: RouteRecordRaw[] = [
     path: '/community/post/:postId',
     name: 'PostDetail',
     component: () => import(/* webpackChunkName: "community" */ '@/views/community/PostDetailView.vue'),
-    meta: { 
+    meta: {
       requiresAuth: false,
       title: '帖子详情 - TavernAI Plus'
     }
@@ -290,7 +318,7 @@ const routes: RouteRecordRaw[] = [
     path: '/community/user/:userId',
     name: 'UserProfile',
     component: () => import(/* webpackChunkName: "community" */ '@/views/community/UserProfileView.vue'),
-    meta: { 
+    meta: {
       requiresAuth: false,
       title: '用户资料 - TavernAI Plus'
     }
@@ -299,7 +327,7 @@ const routes: RouteRecordRaw[] = [
     path: '/community/follow/:userId',
     name: 'UserFollow',
     component: () => import(/* webpackChunkName: "community" */ '@/views/community/UserFollowView.vue'),
-    meta: { 
+    meta: {
       requiresAuth: false,
       title: '关注列表 - TavernAI Plus'
     }
@@ -308,7 +336,7 @@ const routes: RouteRecordRaw[] = [
     path: '/community/notifications',
     name: 'Notifications',
     component: () => import(/* webpackChunkName: "community" */ '@/views/community/NotificationsView.vue'),
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: '消息通知 - TavernAI Plus'
     }
@@ -411,8 +439,9 @@ let navigationStartTime: number
 
 router.beforeEach(async (to, from, next) => {
   navigationStartTime = performance.now()
-  
+
   const userStore = useUserStore()
+  const featuresStore = useFeatureStore()
 
   // 设置页面标题
   if (to.meta.title) {
@@ -440,6 +469,42 @@ router.beforeEach(async (to, from, next) => {
     if (to.meta.requiresAdmin && !userStore.isAdmin) {
       return next({ name: 'Home' })
     }
+
+    // 检查角色权限
+    if (to.meta.requiresRole) {
+      const requiredRole = to.meta.requiresRole as string
+      if (userStore.currentUser?.role !== requiredRole && !userStore.isAdmin) {
+        return next({ name: 'Home' })
+      }
+    }
+
+    // 检查功能权限 (Feature Gate)
+    if (to.meta.featureGate) {
+      const featureCode = to.meta.featureGate as string
+
+      // 加载用户功能解锁状态（如果还没加载）
+      if (!featuresStore.isLoaded) {
+        try {
+          await featuresStore.fetchFeatures()
+          await featuresStore.fetchUserUnlocks()
+        } catch (error) {
+          console.error('Failed to load feature access:', error)
+          // 如果加载失败，允许继续（避免完全阻止访问）
+        }
+      }
+
+      // 检查功能是否解锁
+      if (!featuresStore.isFeatureUnlocked(featureCode)) {
+        // 重定向到功能升级页面
+        return next({
+          name: 'Subscription',
+          query: {
+            feature: featureCode,
+            redirect: to.fullPath
+          }
+        })
+      }
+    }
   }
 
   // 已登录用户访问登录/注册页面
@@ -453,7 +518,7 @@ router.beforeEach(async (to, from, next) => {
 router.afterEach((to, from) => {
   // 路由导航性能监控
   const navigationTime = performance.now() - navigationStartTime
-  
+
   if (import.meta.env.DEV) {
     console.log(`🚀 路由导航性能: ${to.name} - ${navigationTime.toFixed(2)}ms`)
   }
@@ -479,7 +544,7 @@ router.afterEach((to, from) => {
 // 路由错误处理
 router.onError((error) => {
   console.error('Router error:', error)
-  
+
   // 发送错误报告
   if (!import.meta.env.DEV) {
     fetch('/api/analytics/route-error', {

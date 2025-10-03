@@ -15,6 +15,7 @@ declare global {
         subscriptionTier: string
         isActive: boolean
         isVerified: boolean
+        featureUnlocks?: string[]
       }
       isAdmin?: boolean
     }

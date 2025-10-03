@@ -351,7 +351,7 @@
               <TavernIcon :name="isVoiceRecording ? 'stop' : 'microphone'" />
             </TavernButton>
             <!-- 简化的图像功能 -->
-            <SimplifiedChatImageFeatures
+            <ChatImageFeatures
               :current-character="character"
               :messages="messages"
               @image-generated="handleImageGenerated"
@@ -490,7 +490,7 @@ import ModelSelector from '@/components/common/ModelSelector.vue'
 import SillyTavernControls from '@/components/advanced/SillyTavernControls.vue'
 import ChatVoiceFeatures from '@/components/voice/ChatVoiceFeatures.vue'
 import VoiceInput from '@/components/voice/VoiceInput.vue'
-import SimplifiedChatImageFeatures from '@/components/image/SimplifiedChatImageFeatures.vue'
+import ChatImageFeatures from '@/components/image/ChatImageFeatures.vue'
 
 const route = useRoute()
 

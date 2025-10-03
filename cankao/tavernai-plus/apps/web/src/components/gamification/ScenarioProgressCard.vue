@@ -177,6 +177,7 @@ const emit = defineEmits<{
   continue: [progress: ScenarioProgress]
   reset: [scenarioId: string]
   abandon: [scenarioId: string]
+  'view-details': [scenarioId: string]
 }>()
 
 // 计算属性
@@ -241,8 +242,8 @@ const formatDate = (date: Date): string => {
 const handleActionCommand = async (command: string) => {
   switch (command) {
     case 'view-details':
-      // TODO: 打开详情弹窗
-      ElMessage.info('详情功能即将推出')
+      // 打开详情弹窗或跳转到详情页
+      emit('view-details', props.progress.scenarioId)
       break
 
     case 'reset-progress':

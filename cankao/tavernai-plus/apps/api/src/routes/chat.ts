@@ -289,23 +289,9 @@ router.get('/:id', authenticate, async (req: AuthRequest, res, next) => {
 
     // 如果没有现有会话，创建新的
     if (!session) {
-      // 获取角色关联的剧本
-      const activeScenarios = await characterScenarioService.resolveActiveScenarios(
-        characterId,
-        undefined, // 新会话还没有chatId
-        {
-          type: 'character_first',
-          globalScenariosEnabled: true,
-          maxActiveScenarios: 10
-        }
-      )
-
-      // 提取活跃的世界信息
-      const worldInfoEntries = await characterScenarioService.activateWorldInfoEntries(
-        activeScenarios,
-        [], // 新会话没有消息历史
-        20
-      )
+      // TODO: Implement scenario resolution
+      const activeScenarios: any[] = []
+      const worldInfoEntries: any[] = []
 
       session = await prisma.chatSession.create({
         data: {
@@ -447,23 +433,9 @@ router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res
       })
 
       if (!session) {
-        // 获取角色关联的剧本
-        const activeScenarios = await characterScenarioService.resolveActiveScenarios(
-          character.id,
-          undefined, // 新会话还没有chatId
-          {
-            type: 'character_first',
-            globalScenariosEnabled: true,
-            maxActiveScenarios: 10
-          }
-        )
-
-        // 提取活跃的世界信息
-        const worldInfoEntries = await characterScenarioService.activateWorldInfoEntries(
-          activeScenarios,
-          [], // 新会话没有消息历史
-          20
-        )
+        // TODO: Implement scenario resolution
+        const activeScenarios: any[] = []
+        const worldInfoEntries: any[] = []
 
         session = await prisma.chatSession.create({
           data: {
@@ -912,6 +884,123 @@ router.post('/sessions/:sessionId/messages', authenticate, async (req: AuthReque
           }
         })
 
+        // 游戏化：更新亲密度和熟练度
+        try {
+          const totalMessages = session.messageCount + 2 // 用户消息 + AI回复
+          const affinityPoints = Math.floor(5 + Math.random() * 15) // 5-20点随机亲密度
+
+          // 更新角色亲密度
+          const affinity = await prisma.characterAffinity.upsert({
+            where: {
+              userId_characterId: {
+                userId: req.user!.id,
+                characterId: character.id
+              }
+            },
+            update: {
+              affinityPoints: { increment: affinityPoints },
+              unlockCount: { increment: 1 },
+              lastInteractionAt: new Date()
+            },
+            create: {
+              userId: req.user!.id,
+              characterId: character.id,
+              affinityPoints,
+              affinityLevel: 1,
+              relationshipType: 'stranger'
+            }
+          })
+
+          // 计算新的亲密度等级
+          const newAffinityLevel = Math.min(10, Math.floor(affinity.affinityPoints / 100) + 1)
+          const relationshipTypes = ['stranger', 'acquaintance', 'friend', 'close_friend', 'best_friend', 'soulmate']
+          const newRelationshipType = relationshipTypes[Math.min(newAffinityLevel - 1, relationshipTypes.length - 1)]
+
+          if (newAffinityLevel > affinity.affinityLevel) {
+            await prisma.characterAffinity.update({
+              where: { id: affinity.id },
+              data: {
+                affinityLevel: newAffinityLevel,
+                relationshipType: newRelationshipType
+              }
+            })
+          }
+
+          // 更新角色熟练度
+          const proficiencyPoints = Math.floor(10 + Math.random() * 40) // 10-50点
+          const proficiency = await prisma.characterProficiency.upsert({
+            where: {
+              userId_characterId: {
+                userId: req.user!.id,
+                characterId: character.id
+              }
+            },
+            update: {
+              proficiencyPoints: { increment: proficiencyPoints },
+              totalInteractions: { increment: 1 },
+              lastInteractionAt: new Date()
+            },
+            create: {
+              userId: req.user!.id,
+              characterId: character.id,
+              proficiencyPoints,
+              proficiencyLevel: 1,
+              masteryAreas: '[]',
+              skillTreeUnlocked: '["basic_dialogue"]',
+              activeSkills: '[]',
+              spacetimeAdaptation: '{}',
+              dialogueMastery: '{}',
+              characterInsights: '[]'
+            }
+          })
+
+          // 计算新的熟练度等级
+          const newProficiencyLevel = Math.min(50, Math.floor(proficiency.proficiencyPoints / 200) + 1)
+          if (newProficiencyLevel > proficiency.proficiencyLevel) {
+            await prisma.characterProficiency.update({
+              where: { id: proficiency.id },
+              data: { proficiencyLevel: newProficiencyLevel }
+            })
+          }
+
+          // 如果有剧本，更新剧本进度
+          if (session.worldInfoId) {
+            const progressIncrement = Math.random() * 0.05 // 每次对话增加0-5%进度
+            await prisma.scenarioProgress.upsert({
+              where: {
+                userId_scenarioId: {
+                  userId: req.user!.id,
+                  scenarioId: session.worldInfoId
+                }
+              },
+              update: {
+                progressPercentage: { increment: progressIncrement },
+                totalSessions: { increment: 1 },
+                totalMessages: { increment: 2 },
+                totalTokens: { increment: userMessage.tokens + finalMessage.tokens },
+                lastPlayedAt: new Date()
+              },
+              create: {
+                userId: req.user!.id,
+                scenarioId: session.worldInfoId,
+                status: 'in_progress',
+                progressPercentage: progressIncrement,
+                totalSessions: 1,
+                totalMessages: 2,
+                totalTokens: userMessage.tokens + finalMessage.tokens,
+                proficiencyLevel: 1,
+                proficiencyPoints: 0,
+                difficulty: 'normal',
+                startedAt: new Date(),
+                lastPlayedAt: new Date()
+              }
+            })
+          }
+        } catch (gamificationError) {
+          console.error('游戏化数据更新失败:', gamificationError)
+          // 不影响主流程
+        }
+
         // 发送完整消息
         const io = getSocket()
         io.to(`session:${req.params.sessionId}`).emit('message', {
@@ -1288,22 +1377,9 @@ router.get('/:sessionId/world-info', authenticate, async (req: AuthRequest, res,
       select: { role: true, content: true }
     })
 
-    // 获取当前活跃的剧本和世界信息
-    const activeScenarios = await characterScenarioService.getCachedScenarios(
-      session.characterId,
-      sessionId,
-      {
-        type: 'character_first',
-        globalScenariosEnabled: true,
-        maxActiveScenarios: 10
-      }
-    )
-
-    const worldInfoEntries = await characterScenarioService.activateWorldInfoEntries(
-      activeScenarios,
-      messages,
-      20
-    )
+    // TODO: Implement scenario resolution
+    const activeScenarios: any[] = []
+    const worldInfoEntries: any[] = []
 
     res.json({
       success: true,
@@ -1388,8 +1464,7 @@ router.post('/:sessionId/world-info/toggle', authenticate, async (req: AuthReque
       }
     })
 
-    // 清除缓存以便重新计算
-    characterScenarioService.clearCache(session.characterId)
+    // TODO: Implement cache clearing when scenario service methods are available
 
     res.json({
       success: true,

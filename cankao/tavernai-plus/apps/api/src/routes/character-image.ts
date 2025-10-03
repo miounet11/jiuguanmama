@@ -4,7 +4,6 @@ import { validateRequest } from '../middleware/validation';
 import { body, param } from 'express-validator';
 import { prisma } from '../lib/prisma';
 import NewAPIImageGenerator from '../services/newapi-image-generator';
-import { GenerationStatus } from '@prisma/client';
 
 const router = Router();
 const imageGenerator = new NewAPIImageGenerator();

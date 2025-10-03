@@ -58,7 +58,13 @@ router.get('/affinity/:characterId', authenticate, async (req: AuthRequest, res)
           userId,
           characterId,
           affinityLevel: 1,
-          relationshipType: 'stranger'
+          affinityPoints: 0,
+          relationshipType: 'stranger',
+          unlockCount: 0,
+          spacetimeMemories: '[]',
+          specialEvents: '[]',
+          giftsGiven: '[]',
+          sharedSecrets: '[]'
         },
         include: {
           character: {
@@ -82,6 +88,7 @@ router.get('/affinity/:characterId', authenticate, async (req: AuthRequest, res)
       affinity
     })
   } catch (error) {
+    console.error('获取亲密度失败:', error)
     res.status(500).json({
       success: false,
       message: '获取亲密度信息失败'
@@ -109,7 +116,12 @@ router.post('/affinity/update', authenticate, validate(affinityUpdateSchema), as
           characterId,
           affinityLevel: 1,
           affinityPoints: 0,
-          relationshipType: 'stranger'
+          relationshipType: 'stranger',
+          unlockCount: 0,
+          spacetimeMemories: '[]',
+          specialEvents: '[]',
+          giftsGiven: '[]',
+          sharedSecrets: '[]'
         }
       })
     }
@@ -119,6 +131,8 @@ router.post('/affinity/update', authenticate, validate(affinityUpdateSchema), as
     const newLevel = Math.min(10, Math.floor(newPoints / 100) + 1)
     const relationshipTypes = ['stranger', 'acquaintance', 'friend', 'close_friend', 'best_friend', 'soulmate']
     const newRelationshipType = relationshipTypes[Math.min(newLevel - 1, relationshipTypes.length - 1)]
+
+    const leveledUp = newLevel > affinity.affinityLevel
 
     // 更新亲密度
     const updatedAffinity = await prisma.characterAffinity.update({
@@ -141,13 +155,15 @@ router.post('/affinity/update', authenticate, validate(affinityUpdateSchema), as
     })
 
     // 检查是否解锁成就
-    await checkAffinityAchievements(userId, newLevel)
+    if (leveledUp) {
+      await checkAffinityAchievements(userId, characterId, newLevel)
+    }
 
     // 记录时空记忆（如果是特殊交互）
     if (interactionType === 'special_event' || affinityPoints >= 50) {
       const memories = JSON.parse(affinity.spacetimeMemories || '[]')
       memories.push({
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
         type: interactionType || 'interaction',
         points: affinityPoints,
         level: newLevel
@@ -164,9 +180,10 @@ router.post('/affinity/update', authenticate, validate(affinityUpdateSchema), as
     res.json({
       success: true,
       affinity: updatedAffinity,
-      leveledUp: newLevel > affinity.affinityLevel
+      leveledUp
     })
   } catch (error) {
+    console.error('更新亲密度失败:', error)
     res.status(500).json({
       success: false,
       message: '更新亲密度失败'
@@ -192,7 +209,15 @@ router.post('/affinity/:characterId/favorite', authenticate, async (req: AuthReq
       create: {
         userId,
         characterId,
-        favorite: favorite
+        favorite: favorite,
+        affinityLevel: 1,
+        affinityPoints: 0,
+        relationshipType: 'stranger',
+        unlockCount: 0,
+        spacetimeMemories: '[]',
+        specialEvents: '[]',
+        giftsGiven: '[]',
+        sharedSecrets: '[]'
       },
       include: {
         character: {
@@ -209,9 +234,50 @@ router.post('/affinity/:characterId/favorite', authenticate, async (req: AuthReq
       affinity
     })
   } catch (error) {
+    console.error('设置收藏失败:', error)
     res.status(500).json({
       success: false,
       message: '设置收藏失败'
+    })
+  }
+})
+
+// 获取用户所有角色亲密度列表
+router.get('/affinities', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.id
+    const { sort = 'level', limit = 20 } = req.query
+
+    const orderBy: any = 
+      sort === 'level' ? { affinityLevel: 'desc' } :
+      sort === 'points' ? { affinityPoints: 'desc' } :
+      { lastInteractionAt: 'desc' }
+
+    const affinities = await prisma.characterAffinity.findMany({
+      where: { userId },
+      include: {
+        character: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            description: true
+          }
+        }
+      },
+      orderBy,
+      take: Number(limit)
+    })
+
+    res.json({
+      success: true,
+      affinities
+    })
+  } catch (error) {
+    console.error('获取亲密度列表失败:', error)
+    res.status(500).json({
+      success: false,
+      message: '获取亲密度列表失败'
     })
   }
 })
@@ -252,6 +318,7 @@ router.get('/scenario-progress/:scenarioId', authenticate, async (req: AuthReque
       progress
     })
   } catch (error) {
+    console.error('获取剧本进度失败:', error)
     res.status(500).json({
       success: false,
       message: '获取剧本进度失败'
@@ -281,7 +348,19 @@ router.post('/scenario-progress/update', authenticate, validate(scenarioProgress
           userId,
           scenarioId,
           status: 'in_progress',
-          startedAt: new Date()
+          startedAt: new Date(),
+          progressPercentage: 0,
+          totalSessions: 0,
+          totalMessages: 0,
+          totalTokens: 0,
+          averageSessionTime: 0,
+          proficiencyLevel: 1,
+          proficiencyPoints: 0,
+          spacetimeExploration: '{}',
+          plotBranchesChosen: '[]',
+          keyDecisions: '[]',
+          achievements: '[]',
+          difficulty: 'normal'
         }
       })
     }
@@ -295,7 +374,8 @@ router.post('/scenario-progress/update', authenticate, validate(scenarioProgress
       : progress.averageSessionTime
 
     // 计算熟练度
-    const newProficiencyPoints = progress.proficiencyPoints + Math.floor((progressPercentage - oldProgress) * 1000)
+    const progressDelta = Math.max(0, progressPercentage - oldProgress)
+    const newProficiencyPoints = progress.proficiencyPoints + Math.floor(progressDelta * 1000)
     const newProficiencyLevel = Math.min(20, Math.floor(newProficiencyPoints / 100) + 1)
 
     // 更新状态
@@ -310,7 +390,7 @@ router.post('/scenario-progress/update', authenticate, validate(scenarioProgress
       where: { id: progress.id },
       data: {
         status: newStatus,
-        progressPercentage,
+        progressPercentage: Math.min(1.0, progressPercentage),
         totalSessions: newTotalSessions,
         totalMessages: newTotalMessages,
         totalTokens: newTotalTokens,
@@ -331,7 +411,7 @@ router.post('/scenario-progress/update', authenticate, validate(scenarioProgress
     })
 
     // 检查成就
-    if (newStatus === 'completed') {
+    if (newStatus === 'completed' && oldProgress < 1.0) {
       await checkScenarioCompletionAchievements(userId, scenarioId, newProficiencyLevel)
     }
 
@@ -346,9 +426,97 @@ router.post('/scenario-progress/update', authenticate, validate(scenarioProgress
       isFirstTime
     })
   } catch (error) {
+    console.error('更新剧本进度失败:', error)
     res.status(500).json({
       success: false,
       message: '更新剧本进度失败'
+    })
+  }
+})
+
+// 获取用户所有剧本进度列表
+router.get('/scenario-progresses', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.id
+    const { status, sort = 'recent', limit = 20 } = req.query
+
+    const where: any = { userId }
+    if (status) {
+      where.status = status
+    }
+
+    const orderBy: any = 
+      sort === 'progress' ? { progressPercentage: 'desc' } :
+      sort === 'level' ? { proficiencyLevel: 'desc' } :
+      { lastPlayedAt: 'desc' }
+
+    const progresses = await prisma.scenarioProgress.findMany({
+      where,
+      include: {
+        scenario: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            genre: true,
+            complexity: true,
+            contentRating: true
+          }
+        }
+      },
+      orderBy,
+      take: Number(limit)
+    })
+
+    res.json({
+      success: true,
+      progresses
+    })
+  } catch (error) {
+    console.error('获取剧本进度列表失败:', error)
+    res.status(500).json({
+      success: false,
+      message: '获取剧本进度列表失败'
+    })
+  }
+})
+
+// 放弃剧本
+router.post('/scenario-progress/:scenarioId/abandon', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { scenarioId } = req.params
+    const userId = req.user!.id
+
+    const progress = await prisma.scenarioProgress.findUnique({
+      where: {
+        userId_scenarioId: { userId, scenarioId }
+      }
+    })
+
+    if (!progress) {
+      return res.status(404).json({
+        success: false,
+        message: '进度记录不存在'
+      })
+    }
+
+    await prisma.scenarioProgress.update({
+      where: { id: progress.id },
+      data: {
+        status: 'abandoned',
+        lastPlayedAt: new Date()
+      }
+    })
+
+    res.json({
+      success: true,
+      message: '已放弃该剧本'
+    })
+  } catch (error) {
+    console.error('放弃剧本失败:', error)
+    res.status(500).json({
+      success: false,
+      message: '放弃剧本失败'
     })
   }
 })
@@ -383,12 +551,17 @@ router.get('/proficiency/:characterId', authenticate, async (req: AuthRequest, r
           userId,
           characterId,
           proficiencyLevel: 1,
-          masteryAreas: JSON.stringify([]),
-          skillTreeUnlocked: JSON.stringify(['basic_dialogue']),
-          activeSkills: JSON.stringify([]),
-          spacetimeAdaptation: JSON.stringify({}),
-          dialogueMastery: JSON.stringify({}),
-          characterInsights: JSON.stringify([])
+          proficiencyPoints: 0,
+          masteryAreas: '[]',
+          skillTreeUnlocked: '["basic_dialogue"]',
+          activeSkills: '[]',
+          skillPoints: 0,
+          spacetimeAdaptation: '{}',
+          dialogueMastery: '{}',
+          characterInsights: '[]',
+          totalInteractions: 0,
+          successfulOutcomes: 0,
+          averageRating: 0.0
         },
         include: {
           character: {
@@ -412,6 +585,7 @@ router.get('/proficiency/:characterId', authenticate, async (req: AuthRequest, r
       proficiency
     })
   } catch (error) {
+    console.error('获取熟练度失败:', error)
     res.status(500).json({
       success: false,
       message: '获取熟练度信息失败'
@@ -439,12 +613,16 @@ router.post('/proficiency/update', authenticate, validate(proficiencyUpdateSchem
           characterId,
           proficiencyLevel: 1,
           proficiencyPoints: 0,
-          masteryAreas: JSON.stringify([]),
-          skillTreeUnlocked: JSON.stringify(['basic_dialogue']),
-          activeSkills: JSON.stringify([]),
-          spacetimeAdaptation: JSON.stringify({}),
-          dialogueMastery: JSON.stringify({}),
-          characterInsights: JSON.stringify([])
+          masteryAreas: '[]',
+          skillTreeUnlocked: '["basic_dialogue"]',
+          activeSkills: '[]',
+          skillPoints: 0,
+          spacetimeAdaptation: '{}',
+          dialogueMastery: '{}',
+          characterInsights: '[]',
+          totalInteractions: 0,
+          successfulOutcomes: 0,
+          averageRating: 0.0
         }
       })
     }
@@ -452,6 +630,7 @@ router.post('/proficiency/update', authenticate, validate(proficiencyUpdateSchem
     // 更新熟练度
     const newPoints = proficiency.proficiencyPoints + proficiencyPoints
     const newLevel = Math.min(50, Math.floor(newPoints / 200) + 1)
+    const leveledUp = newLevel > proficiency.proficiencyLevel
 
     const updatedProficiency = await prisma.characterProficiency.update({
       where: { id: proficiency.id },
@@ -475,7 +654,7 @@ router.post('/proficiency/update', authenticate, validate(proficiencyUpdateSchem
     // 更新平均评分
     const totalInteractions = updatedProficiency.totalInteractions
     const successfulOutcomes = updatedProficiency.successfulOutcomes
-    const averageRating = successfulOutcomes / totalInteractions
+    const averageRating = totalInteractions > 0 ? successfulOutcomes / totalInteractions : 0
 
     await prisma.characterProficiency.update({
       where: { id: proficiency.id },
@@ -485,17 +664,61 @@ router.post('/proficiency/update', authenticate, validate(proficiencyUpdateSchem
     })
 
     // 检查技能解锁
-    await checkSkillUnlocks(userId, characterId, newLevel, interactionType)
+    if (leveledUp) {
+      await checkSkillUnlocks(userId, characterId, newLevel, interactionType)
+    }
 
     res.json({
       success: true,
       proficiency: updatedProficiency,
-      leveledUp: newLevel > proficiency.proficiencyLevel
+      leveledUp
     })
   } catch (error) {
+    console.error('更新熟练度失败:', error)
     res.status(500).json({
       success: false,
       message: '更新熟练度失败'
+    })
+  }
+})
+
+// 获取用户所有角色熟练度列表
+router.get('/proficiencies', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.id
+    const { sort = 'level', limit = 20 } = req.query
+
+    const orderBy: any = 
+      sort === 'level' ? { proficiencyLevel: 'desc' } :
+      sort === 'points' ? { proficiencyPoints: 'desc' } :
+      sort === 'rating' ? { averageRating: 'desc' } :
+      { lastInteractionAt: 'desc' }
+
+    const proficiencies = await prisma.characterProficiency.findMany({
+      where: { userId },
+      include: {
+        character: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            personality: true
+          }
+        }
+      },
+      orderBy,
+      take: Number(limit)
+    })
+
+    res.json({
+      success: true,
+      proficiencies
+    })
+  } catch (error) {
+    console.error('获取熟练度列表失败:', error)
+    res.status(500).json({
+      success: false,
+      message: '获取熟练度列表失败'
     })
   }
 })
@@ -506,28 +729,41 @@ router.post('/proficiency/update', authenticate, validate(proficiencyUpdateSchem
 router.get('/achievements', authenticate, async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id
+    const { type, rarity, limit = 100 } = req.query
+
+    const where: any = { userId }
+    if (type) where.achievementType = type
+    if (rarity) where.rarity = rarity
 
     const achievements = await prisma.userAchievement.findMany({
-      where: { userId },
-      orderBy: { unlockedAt: 'desc' }
+      where,
+      orderBy: { unlockedAt: 'desc' },
+      take: Number(limit)
     })
 
     // 按稀有度分组统计
     const stats = await prisma.userAchievement.groupBy({
       by: ['rarity'],
       where: { userId },
-      _count: true
+      _count: true,
+      _sum: { points: true }
     })
+
+    const statsMap = stats.reduce((acc, stat) => {
+      acc[stat.rarity] = {
+        count: stat._count,
+        totalPoints: stat._sum.points || 0
+      }
+      return acc
+    }, {} as Record<string, any>)
 
     res.json({
       success: true,
       achievements,
-      stats: stats.reduce((acc, stat) => {
-        acc[stat.rarity] = stat._count
-        return acc
-      }, {} as Record<string, number>)
+      stats: statsMap
     })
   } catch (error) {
+    console.error('获取成就失败:', error)
     res.status(500).json({
       success: false,
       message: '获取成就信息失败'
@@ -554,14 +790,72 @@ router.get('/daily-quests', authenticate, async (req: AuthRequest, res) => {
       orderBy: { createdAt: 'desc' }
     })
 
+    // 如果今天没有任务，生成新任务
+    if (quests.length === 0) {
+      const newQuests = await generateDailyQuests(userId)
+      return res.json({
+        success: true,
+        quests: newQuests
+      })
+    }
+
     res.json({
       success: true,
       quests
     })
   } catch (error) {
+    console.error('获取每日任务失败:', error)
     res.status(500).json({
       success: false,
       message: '获取每日任务失败'
+    })
+  }
+})
+
+// 更新任务进度
+router.post('/daily-quests/:questId/progress', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { questId } = req.params
+    const { increment = 1 } = req.body
+    const userId = req.user!.id
+
+    const quest = await prisma.dailyQuest.findFirst({
+      where: {
+        id: questId,
+        userId,
+        isCompleted: false
+      }
+    })
+
+    if (!quest) {
+      return res.status(404).json({
+        success: false,
+        message: '任务不存在或已完成'
+      })
+    }
+
+    const newValue = Math.min(quest.currentValue + increment, quest.targetValue)
+    const isCompleted = newValue >= quest.targetValue
+
+    const updatedQuest = await prisma.dailyQuest.update({
+      where: { id: questId },
+      data: {
+        currentValue: newValue,
+        isCompleted,
+        ...(isCompleted ? { completedAt: new Date() } : {})
+      }
+    })
+
+    res.json({
+      success: true,
+      quest: updatedQuest,
+      completed: isCompleted
+    })
+  } catch (error) {
+    console.error('更新任务进度失败:', error)
+    res.status(500).json({
+      success: false,
+      message: '更新任务进度失败'
     })
   }
 })
@@ -615,6 +909,7 @@ router.post('/daily-quests/:questId/claim', authenticate, async (req: AuthReques
       }
     })
   } catch (error) {
+    console.error('领取奖励失败:', error)
     res.status(500).json({
       success: false,
       message: '领取奖励失败'
@@ -622,18 +917,144 @@ router.post('/daily-quests/:questId/claim', authenticate, async (req: AuthReques
   }
 })
 
+// ==================== 游戏化概览 ====================
+
+// 获取用户游戏化总览
+router.get('/overview', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.id
+
+    const [
+      totalAffinities,
+      completedScenarios,
+      totalAchievements,
+      topCharacters,
+      recentProgress,
+      activeProficiencies
+    ] = await Promise.all([
+      // 总亲密度等级
+      prisma.characterAffinity.aggregate({
+        where: { userId },
+        _sum: { affinityLevel: true },
+        _count: true
+      }),
+      // 已完成的剧本
+      prisma.scenarioProgress.count({
+        where: { userId, status: 'completed' }
+      }),
+      // 成就数量和总积分
+      prisma.userAchievement.aggregate({
+        where: { userId },
+        _count: true,
+        _sum: { points: true }
+      }),
+      // 亲密度最高的角色
+      prisma.characterAffinity.findMany({
+        where: { userId },
+        include: { 
+          character: { 
+            select: { 
+              id: true,
+              name: true, 
+              avatar: true 
+            } 
+          } 
+        },
+        orderBy: { affinityLevel: 'desc' },
+        take: 5
+      }),
+      // 最近的剧本进度
+      prisma.scenarioProgress.findMany({
+        where: { userId },
+        include: { 
+          scenario: { 
+            select: { 
+              id: true,
+              name: true,
+              description: true,
+              genre: true
+            } 
+          } 
+        },
+        orderBy: { lastPlayedAt: 'desc' },
+        take: 5
+      }),
+      // 熟练度最高的角色
+      prisma.characterProficiency.findMany({
+        where: { userId },
+        include: { 
+          character: { 
+            select: { 
+              id: true,
+              name: true, 
+              avatar: true 
+            } 
+          } 
+        },
+        orderBy: { proficiencyLevel: 'desc' },
+        take: 5
+      })
+    ])
+
+    res.json({
+      success: true,
+      overview: {
+        totalAffinityLevel: totalAffinities._sum.affinityLevel || 0,
+        totalCharactersInteracted: totalAffinities._count,
+        completedScenarios,
+        inProgressScenarios: await prisma.scenarioProgress.count({
+          where: { userId, status: 'in_progress' }
+        }),
+        totalAchievements: totalAchievements._count,
+        totalAchievementPoints: totalAchievements._sum.points || 0,
+        topCharacters: topCharacters.map(a => ({
+          character: a.character,
+          affinityLevel: a.affinityLevel,
+          relationshipType: a.relationshipType
+        })),
+        recentProgress: recentProgress.map(p => ({
+          scenario: p.scenario,
+          progressPercentage: p.progressPercentage,
+          proficiencyLevel: p.proficiencyLevel,
+          status: p.status,
+          lastPlayedAt: p.lastPlayedAt
+        })),
+        topProficiencies: activeProficiencies.map(p => ({
+          character: p.character,
+          proficiencyLevel: p.proficiencyLevel,
+          averageRating: p.averageRating
+        }))
+      }
+    })
+  } catch (error) {
+    console.error('获取游戏化概览失败:', error)
+    res.status(500).json({
+      success: false,
+      message: '获取游戏化概览失败'
+    })
+  }
+})
+
 // ==================== 辅助函数 ====================
 
-async function checkAffinityAchievements(userId: string, level: number) {
+async function checkAffinityAchievements(userId: string, characterId: string, level: number) {
   const achievements = [
-    { id: 'first_friend', threshold: 2, title: '初识', description: '与第一个角色成为朋友' },
-    { id: 'close_buddy', threshold: 5, title: '挚友', description: '与角色达到亲密度5级' },
-    { id: 'soulmate', threshold: 10, title: '灵魂伴侣', description: '与角色达到最高亲密度' }
+    { id: `first_friend_${characterId}`, threshold: 3, title: '初识', description: '与角色成为朋友', rarity: 'common', points: 10 },
+    { id: `close_buddy_${characterId}`, threshold: 5, title: '挚友', description: '与角色达到亲密度5级', rarity: 'rare', points: 30 },
+    { id: `soulmate_${characterId}`, threshold: 10, title: '灵魂伴侣', description: '与角色达到最高亲密度', rarity: 'epic', points: 100 }
   ]
 
   for (const achievement of achievements) {
     if (level >= achievement.threshold) {
-      await unlockAchievement(userId, achievement.id, achievement.title, achievement.description, 'character_affinity')
+      await unlockAchievement(
+        userId, 
+        achievement.id, 
+        achievement.title, 
+        achievement.description, 
+        'character_affinity',
+        achievement.rarity,
+        achievement.points
+      )
     }
   }
 }
@@ -645,20 +1066,49 @@ async function checkScenarioCompletionAchievements(userId: string, scenarioId: s
   })
 
   const completionAchievements = [
-    { id: 'first_scenario', threshold: 1, title: '冒险开始', description: '完成第一个剧本' },
-    { id: 'scenario_explorer', threshold: 5, title: '剧本探索者', description: '完成5个剧本' },
-    { id: 'scenario_master', threshold: 10, title: '剧本大师', description: '完成10个剧本' }
+    { id: 'first_scenario', threshold: 1, title: '冒险开始', description: '完成第一个剧本', rarity: 'common', points: 10 },
+    { id: 'scenario_explorer', threshold: 5, title: '剧本探索者', description: '完成5个剧本', rarity: 'rare', points: 50 },
+    { id: 'scenario_master', threshold: 10, title: '剧本大师', description: '完成10个剧本', rarity: 'epic', points: 150 },
+    { id: 'scenario_legend', threshold: 20, title: '时空传奇', description: '完成20个剧本', rarity: 'legendary', points: 300 }
   ]
 
   for (const achievement of completionAchievements) {
     if (completedCount >= achievement.threshold) {
-      await unlockAchievement(userId, achievement.id, achievement.title, achievement.description, 'scenario_progress')
+      await unlockAchievement(
+        userId, 
+        achievement.id, 
+        achievement.title, 
+        achievement.description, 
+        'scenario_progress',
+        achievement.rarity,
+        achievement.points
+      )
     }
   }
 
   // 熟练度成就
   if (proficiencyLevel >= 10) {
-    await unlockAchievement(userId, `scenario_proficiency_${scenarioId}`, '熟练掌握', '在剧本中达到10级熟练度', 'skill_mastery')
+    await unlockAchievement(
+      userId, 
+      `scenario_proficiency_${scenarioId}`, 
+      '熟练掌握', 
+      '在剧本中达到10级熟练度', 
+      'skill_mastery',
+      'rare',
+      30
+    )
+  }
+
+  if (proficiencyLevel >= 20) {
+    await unlockAchievement(
+      userId, 
+      `scenario_expert_${scenarioId}`, 
+      '剧本专家', 
+      '在剧本中达到最高熟练度', 
+      'skill_mastery',
+      'epic',
+      100
+    )
   }
 }
 
@@ -667,7 +1117,9 @@ async function checkSkillUnlocks(userId: string, characterId: string, level: num
     { level: 5, skill: 'advanced_dialogue', name: '高级对话' },
     { level: 10, skill: 'emotional_intelligence', name: '情感洞察' },
     { level: 15, skill: 'role_immersion', name: '角色沉浸' },
-    { level: 25, skill: 'storytelling_master', name: '叙事大师' }
+    { level: 25, skill: 'storytelling_master', name: '叙事大师' },
+    { level: 30, skill: 'spacetime_mastery', name: '时空掌控' },
+    { level: 40, skill: 'ultimate_bond', name: '终极羁绊' }
   ]
 
   for (const unlock of skillUnlocks) {
@@ -687,6 +1139,17 @@ async function checkSkillUnlocks(userId: string, characterId: string, level: num
               skillPoints: { increment: 1 }
             }
           })
+
+          // 解锁技能成就
+          await unlockAchievement(
+            userId,
+            `skill_unlock_${unlock.skill}`,
+            `解锁技能：${unlock.name}`,
+            `成功解锁 ${unlock.name} 技能`,
+            'skill_mastery',
+            'rare',
+            20
+          )
         }
       }
     }
@@ -717,6 +1180,8 @@ async function unlockAchievement(
           achievementType: type,
           rarity,
           points,
+          progress: 1.0,
+          metadata: '{}',
           unlockedAt: new Date()
         }
       })
@@ -726,10 +1191,77 @@ async function unlockAchievement(
         where: { id: userId },
         data: { credits: { increment: points } }
       })
+
+      console.log(`✨ 用户 ${userId} 解锁成就: ${title} (+${points}点)`)
     }
   } catch (error) {
     console.error('解锁成就失败:', error)
   }
+}
+
+// 生成每日任务
+async function generateDailyQuests(userId: string) {
+  const today = new Date()
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  tomorrow.setHours(0, 0, 0, 0)
+
+  const questTemplates = [
+    {
+      type: 'chat',
+      title: '每日对话',
+      description: '与任意AI角色进行3次对话',
+      targetValue: 3,
+      rewardPoints: 30,
+      rewardType: 'credits'
+    },
+    {
+      type: 'character_interaction',
+      title: '角色互动',
+      description: '与2个不同的角色对话',
+      targetValue: 2,
+      rewardPoints: 20,
+      rewardType: 'credits'
+    },
+    {
+      type: 'scenario_progress',
+      title: '剧本推进',
+      description: '在任意剧本中推进进度',
+      targetValue: 1,
+      rewardPoints: 25,
+      rewardType: 'affinity_boost'
+    },
+    {
+      type: 'chat',
+      title: '深度对话',
+      description: '发送10条消息',
+      targetValue: 10,
+      rewardPoints: 40,
+      rewardType: 'proficiency_boost'
+    }
+  ]
+
+  const quests = await Promise.all(
+    questTemplates.map(template =>
+      prisma.dailyQuest.create({
+        data: {
+          userId,
+          questType: template.type,
+          title: template.title,
+          description: template.description,
+          targetValue: template.targetValue,
+          currentValue: 0,
+          rewardPoints: template.rewardPoints,
+          rewardType: template.rewardType,
+          isCompleted: false,
+          isClaimed: false,
+          expiresAt: tomorrow
+        }
+      })
+    )
+  )
+
+  return quests
 }
 
 export default router

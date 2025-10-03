@@ -1,19 +1,8 @@
 <template>
   <div class="tavern-loading-wrapper">
-    <!-- 全屏加载 -->
-    <el-loading
-      v-if="fullscreen"
-      v-model="visible"
-      :text="text"
-      :background="background"
-      :spinner="customSpinner"
-      :svg="svg"
-      :svg-view-box="svgViewBox"
-    />
-
     <!-- 内联加载 -->
     <div
-      v-else
+      v-if="visible"
       :class="[
         'tavern-loading',
         `tavern-loading--${variant}`,
@@ -74,8 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { ElLoading } from 'element-plus'
+import { computed } from 'vue'
 
 export interface TavernLoadingProps {
   visible?: boolean

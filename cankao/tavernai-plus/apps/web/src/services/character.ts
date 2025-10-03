@@ -21,9 +21,9 @@ export interface CharacterListResponse {
 
 export const characterService = {
   // 获取角色列表
-  async getCharacters(params?: CharacterListParams): Promise<CharacterListResponse> {
+  async getCharacters(params?: CharacterListParams): Promise<any> {
     const response = await api.get('/characters', { params })
-    return response.data
+    return response
   },
   
   // 获取单个角色详情

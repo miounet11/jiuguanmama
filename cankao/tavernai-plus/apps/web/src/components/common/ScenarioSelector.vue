@@ -87,6 +87,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { User, Clock, Star } from '@element-plus/icons-vue'
+import { scenarioApiService } from '@/services/scenarioApi'
+import { ElMessage } from 'element-plus'
 
 interface Scenario {
   id: string
@@ -114,50 +116,7 @@ const emit = defineEmits<{
 
 const scenarios = ref<Scenario[]>(props.initialScenarios)
 const selectedScenario = ref<Scenario | null>(null)
-
-// 示例剧本数据
-const sampleScenarios = [
-  {
-    id: 'scenario-1',
-    name: '时空裂隙的守护者',
-    description: '时空裂隙正在吞噬现实世界，你是唯一能修复裂隙的守护者。在这个充满未知危险的旅程中，你将遇到各种时空旅行者，与他们建立羁绊，共同拯救世界。',
-    genre: '奇幻',
-    playerCount: 1,
-    estimatedDuration: 120,
-    ratingAverage: 4.8,
-    tags: ['时空旅行', '拯救世界', '多人互动']
-  },
-  {
-    id: 'scenario-2',
-    name: '魔法学院的秘密',
-    description: '进入神秘的魔法学院学习魔法知识。在这里，你不仅要掌握强大的魔法，还要处理复杂的学院政治，与同学和老师建立各种关系。',
-    genre: '魔法',
-    playerCount: 1,
-    estimatedDuration: 90,
-    ratingAverage: 4.6,
-    tags: ['魔法学习', '校园生活', '人际关系']
-  },
-  {
-    id: 'scenario-3',
-    name: '未来都市的地下世界',
-    description: '在高度发达的未来都市中，你发现了隐藏在表象之下的地下世界。这里有黑客、赏金猎人、神秘组织，你需要在错综复杂的关系网中生存。',
-    genre: '科幻',
-    playerCount: 1,
-    estimatedDuration: 150,
-    ratingAverage: 4.9,
-    tags: ['未来科技', '地下世界', '阴谋诡计']
-  },
-  {
-    id: 'scenario-4',
-    name: '古代王朝的复活',
-    description: '穿越到古代王朝，成为一位王室成员。你需要处理朝政、外交、后宫斗争，同时寻找回到现代的方法。这个剧本充满宫廷斗争和历史谜团。',
-    genre: '历史',
-    playerCount: 1,
-    estimatedDuration: 180,
-    ratingAverage: 4.7,
-    tags: ['古代王朝', '宫廷斗争', '历史穿越']
-  }
-]
+const loading = ref(false)
 
 const selectScenario = (scenario: Scenario) => {
   selectedScenario.value = scenario
@@ -172,11 +131,16 @@ const confirmSelection = () => {
 const getGenreType = (genre?: string): string => {
   const typeMap: Record<string, string> = {
     奇幻: 'success',
+    fantasy: 'success',
     魔法: 'primary',
     科幻: 'warning',
+    scifi: 'warning',
     历史: 'info',
+    historical: 'info',
     现代: '',
-    恐怖: 'danger'
+    modern: '',
+    恐怖: 'danger',
+    horror: 'danger'
   }
   return typeMap[genre || ''] || ''
 }
@@ -189,9 +153,38 @@ const formatDuration = (minutes?: number): string => {
   return remainingMinutes > 0 ? `${hours}小时${remainingMinutes}分钟` : `${hours}小时`
 }
 
-onMounted(() => {
+const loadScenarios = async () => {
+  try {
+    loading.value = true
+    const response = await scenarioApiService.getScenarios({
+      page: 1,
+      limit: 12,
+      sort: 'rating'
+    })
+
+    if (response.success && response.data.scenarios) {
+      scenarios.value = response.data.scenarios.map((scenario: any) => ({
+        id: scenario.id,
+        name: scenario.name,
+        description: scenario.description,
+        genre: scenario.genre,
+        playerCount: scenario.playerCount || 1,
+        estimatedDuration: scenario.estimatedDuration,
+        ratingAverage: scenario.ratingAverage || scenario.rating || 0,
+        tags: scenario.tags ? (typeof scenario.tags === 'string' ? JSON.parse(scenario.tags) : scenario.tags) : []
+      }))
+    }
+  } catch (error) {
+    console.error('加载剧本列表失败:', error)
+    ElMessage.error('加载剧本列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(async () => {
   if (scenarios.value.length === 0) {
-    scenarios.value = sampleScenarios
+    await loadScenarios()
   }
 })
 </script>

@@ -306,48 +306,48 @@ defineExpose({
 // Form Item 样式 (用于嵌套组件)
 :deep(.tavern-form-item) {
   margin-bottom: var(--form-item-margin-bottom);
+}
 
-  &__label {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-color);
-    line-height: 1.4;
+:deep(.tavern-form-item__label) {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color);
+  line-height: 1.4;
 
-    &::after {
-      content: ':';
-      margin-left: 4px;
-    }
+  &::after {
+    content: ':';
+    margin-left: 4px;
   }
+}
 
-  &__content {
-    position: relative;
-  }
+:deep(.tavern-form-item__content) {
+  position: relative;
+}
 
-  &__error {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    font-size: 12px;
+:deep(.tavern-form-item__error) {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  font-size: 12px;
+  color: var(--tavern-error);
+  line-height: 1.4;
+  margin-top: 4px;
+  animation: tavern-form-error-enter 0.3s ease;
+}
+
+:deep(.tavern-form-item__help) {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+// 必填标识
+:deep(.tavern-form-item--required) {
+  .tavern-form-item__label::before {
+    content: '*';
     color: var(--tavern-error);
-    line-height: 1.4;
-    margin-top: 4px;
-    animation: tavern-form-error-enter 0.3s ease;
-  }
-
-  &__help {
-    font-size: 12px;
-    color: var(--text-muted);
-    line-height: 1.4;
-    margin-top: 4px;
-  }
-
-  // 必填标识
-  &--required {
-    .tavern-form-item__label::before {
-      content: '*';
-      color: var(--tavern-error);
-      margin-right: 4px;
-    }
+    margin-right: 4px;
   }
 }
 
@@ -366,18 +366,16 @@ defineExpose({
 /* 暗色主题适配 */
 .dark {
   .tavern-form {
-    :deep(.tavern-form-item) {
-      &__label {
-        color: var(--text-color-dark);
-      }
+    :deep(.tavern-form-item__label) {
+      color: var(--text-color-dark);
+    }
 
-      &__error {
-        color: var(--tavern-error);
-      }
+    :deep(.tavern-form-item__error) {
+      color: var(--tavern-error);
+    }
 
-      &__help {
-        color: var(--text-muted-dark);
-      }
+    :deep(.tavern-form-item__help) {
+      color: var(--text-muted-dark);
     }
   }
 }
