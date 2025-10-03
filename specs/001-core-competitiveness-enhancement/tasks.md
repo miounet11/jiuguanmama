@@ -278,39 +278,39 @@ cankao/tavernai-plus/                # 主项目目录
 ## Phase 3.8: 集成测试 [P]
 
 ### 端到端业务流程测试 [P]
-- [ ] **T057** [P] 流式对话完整流程集成测试
+- [x] **T057** [P] 流式对话完整流程集成测试
   - 文件：`tests/integration/streaming-chat-flow.test.ts`
   - 场景：创建会话→建立连接→流式输出→中断重连
 
-- [ ] **T058** [P] 插件完整生命周期集成测试
+- [x] **T058** [P] 插件完整生命周期集成测试
   - 文件：`tests/integration/plugin-lifecycle.test.ts`
   - 场景：浏览插件→安装→配置→使用→卸载
 
-- [ ] **T059** [P] 高级配置导入导出集成测试
+- [x] **T059** [P] 高级配置导入导出集成测试
   - 文件：`tests/integration/config-import-export.test.ts`
   - 场景：SillyTavern导入→配置编辑→应用→导出
 
-- [ ] **T060** [P] 缓存系统性能集成测试
+- [x] **T060** [P] 缓存系统性能集成测试
   - 文件：`tests/integration/cache-performance.test.ts`
   - 场景：缓存预热→并发访问→失效验证→性能测试
 
 ### 跨模块集成测试 [P]
-- [ ] **T061** [P] 插件与流式输出交互测试
+- [x] **T061** [P] 插件与流式输出交互测试
   - 文件：`tests/integration/plugin-streaming-integration.test.ts`
   - 场景：插件修改流式输出、自定义消息处理
 
-- [ ] **T062** [P] 高级配置对AI模型影响测试
+- [x] **T062** [P] 高级配置对AI模型影响测试
   - 文件：`tests/integration/config-ai-integration.test.ts`
   - 场景：配置更新→AI参数变更→对话效果验证
 
 ## Phase 3.9: 性能优化和监控
 
 ### 性能优化任务
-- [ ] **T063** 数据库查询性能优化
+- [x] **T063** 数据库查询性能优化
   - 文件：`apps/api/src/lib/db-optimization.ts`
   - 功能：索引优化、查询缓存、连接池调优
 
-- [ ] **T064** 前端性能监控集成
+- [x] **T064** 前端性能监控集成
   - 文件：`apps/web/src/utils/performance-monitor.ts`
   - 功能：Core Web Vitals、用户体验指标、性能预算
 
