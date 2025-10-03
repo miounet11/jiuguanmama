@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodSchema, ZodError } from 'zod';
+import { validationResult } from 'express-validator';
 
 export function validateSchema(schema: ZodSchema) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -75,3 +76,15 @@ export function validateParams(schema: ZodSchema) {
     }
   };
 }
+
+// Express-validator based validation middleware
+export const validateRequest = (req: Request, res: Response, next: NextFunction) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      error: '验证失败',
+      details: errors.array()
+    });
+  }
+  next();
+};

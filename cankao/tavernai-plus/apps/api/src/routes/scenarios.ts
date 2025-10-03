@@ -217,14 +217,7 @@ router.delete('/:id', auth, async (req, res) => {
     const { id } = req.params
     const userId = req.user!.id
 
-    const success = await scenarioService.deleteScenario(id, userId)
-
-    if (!success) {
-      return res.status(404).json({
-        success: false,
-        error: '剧本不存在或无权限删除'
-      })
-    }
+    await scenarioService.deleteScenario(id, userId)
 
     res.json({
       success: true,
@@ -356,14 +349,7 @@ router.delete('/:scenarioId/worldinfo/:entryId', auth, async (req, res) => {
     const { scenarioId, entryId } = req.params
     const userId = req.user!.id
 
-    const success = await scenarioService.deleteWorldInfoEntry(scenarioId, entryId, userId)
-
-    if (!success) {
-      return res.status(404).json({
-        success: false,
-        error: '世界信息条目不存在或无权限删除'
-      })
-    }
+    await scenarioService.deleteWorldInfoEntry(scenarioId, entryId, userId)
 
     res.json({
       success: true,

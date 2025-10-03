@@ -19,7 +19,7 @@ const updatePreferencesSchema = z.object({
  */
 router.get('/', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const {
       page = '1',
       limit = '20',
@@ -61,7 +61,7 @@ router.get('/', authenticate, async (req: AuthRequest, res): Promise<void> => {
  */
 router.get('/unread-count', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     const count = await notificationService.getUnreadCount(userId);
 
@@ -84,7 +84,7 @@ router.get('/unread-count', authenticate, async (req: AuthRequest, res): Promise
  */
 router.put('/:notificationId/read', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { notificationId } = req.params;
 
     const success = await notificationService.markAsRead(userId, notificationId);
@@ -115,7 +115,7 @@ router.put('/:notificationId/read', authenticate, async (req: AuthRequest, res):
  */
 router.put('/mark-all-read', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     const count = await notificationService.markAllAsRead(userId);
 
@@ -139,7 +139,7 @@ router.put('/mark-all-read', authenticate, async (req: AuthRequest, res): Promis
  */
 router.delete('/:notificationId', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { notificationId } = req.params;
 
     const success = await notificationService.archiveNotification(userId, notificationId);
@@ -174,7 +174,7 @@ router.post(
   validate(updatePreferencesSchema),
   async (req: AuthRequest, res): Promise<void> => {
     try {
-      const userId = req.user!.userId;
+      const userId = req.user!.id;
       const preferences = req.body;
 
       const success = await notificationService.updatePreferences(userId, preferences);
@@ -206,7 +206,7 @@ router.post(
  */
 router.get('/stats', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     const stats = await notificationService.getStats(userId);
 

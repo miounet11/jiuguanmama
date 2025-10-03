@@ -23,7 +23,7 @@ const recommendationsSchema = z.object({
  */
 router.get('/status', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     const status = await onboardingService.startOnboarding(userId);
 
@@ -46,7 +46,7 @@ router.get('/status', authenticate, async (req: AuthRequest, res): Promise<void>
  */
 router.post('/start', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     const status = await onboardingService.startOnboarding(userId);
 
@@ -74,7 +74,7 @@ router.post(
   validate(completeStepSchema),
   async (req: AuthRequest, res): Promise<void> => {
     try {
-      const userId = req.user!.userId;
+      const userId = req.user!.id;
       const stepData = req.body;
 
       const status = await onboardingService.completeStep(userId, stepData);
@@ -100,7 +100,7 @@ router.post(
  */
 router.post('/skip', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     const success = await onboardingService.skipOnboarding(userId);
 
@@ -133,7 +133,7 @@ router.get(
   authenticate,
   async (req: AuthRequest, res): Promise<void> => {
     try {
-      const userId = req.user!.userId;
+      const userId = req.user!.id;
       const { interests, mbtiType } = req.query;
 
       // Parse interests from query string

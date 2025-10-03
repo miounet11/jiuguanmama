@@ -78,14 +78,14 @@
     <!-- 分页组件 -->
     <div v-if="showPagination && total > 0" class="tavern-table__pagination">
       <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
+        :current-page="currentPage"
+        :page-size="pageSize"
         :page-sizes="pageSizes"
         :total="total"
         :layout="paginationLayout"
         :background="paginationBackground"
         @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
+        @current-change="handleCurrentPageChange"
       />
     </div>
   </div>
@@ -190,6 +190,8 @@ const emit = defineEmits<{
   'expand-change': [row: any, expanded: boolean]
   'page-change': [currentPage: number, pageSize: number]
   'size-change': [pageSize: number]
+  'update:currentPage': [page: number]
+  'update:pageSize': [size: number]
 }>()
 
 const elSize = computed(() => {
@@ -269,11 +271,13 @@ const handleExpandChange = (...args: any[]) => {
 }
 
 const handleSizeChange = (pageSize: number) => {
+  emit('update:pageSize', pageSize)
   emit('size-change', pageSize)
   emit('page-change', props.currentPage, pageSize)
 }
 
 const handleCurrentPageChange = (currentPage: number) => {
+  emit('update:currentPage', currentPage)
   emit('page-change', currentPage, props.pageSize)
 }
 </script>

@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from './auth';
-import { prisma } from '../config/database';
+import { prisma } from '../server';
 
 /**
  * Valid user roles in the system
@@ -16,7 +16,7 @@ export function requireRole(allowedRoles: UserRole | UserRole[]) {
 
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId = req.user?.userId;
+      const userId = req.user?.id;
 
       if (!userId) {
         res.status(401).json({
@@ -87,7 +87,7 @@ export function requirePrimaryRole(allowedRoles: UserRole | UserRole[]) {
 
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId = req.user?.userId;
+      const userId = req.user?.id;
 
       if (!userId) {
         res.status(401).json({
@@ -155,7 +155,7 @@ export async function attachRoleInfo(
   next: NextFunction
 ): Promise<void> {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
 
     if (!userId) {
       res.status(401).json({

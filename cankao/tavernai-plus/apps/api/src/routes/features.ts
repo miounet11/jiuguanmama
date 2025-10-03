@@ -17,7 +17,7 @@ const unlockFeatureSchema = z.object({
  */
 router.get('/', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     const features = await featureGateService.getAvailableFeatures(userId);
 
@@ -41,7 +41,7 @@ router.get('/', authenticate, async (req: AuthRequest, res): Promise<void> => {
  */
 router.get('/:featureId', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { featureId } = req.params;
 
     const features = await featureGateService.getAvailableFeatures(userId);
@@ -78,7 +78,7 @@ router.post(
   validate(unlockFeatureSchema),
   async (req: AuthRequest, res): Promise<void> => {
     try {
-      const userId = req.user!.userId;
+      const userId = req.user!.id;
       const { featureId } = req.params;
       const { unlockMethod = 'manual' } = req.body;
 
@@ -128,7 +128,7 @@ router.post(
  */
 router.get('/:featureId/can-access', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { featureId } = req.params;
 
     const accessCheck = await featureGateService.canAccess(userId, featureId);
@@ -152,7 +152,7 @@ router.get('/:featureId/can-access', authenticate, async (req: AuthRequest, res)
  */
 router.get('/user-unlocks', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     const unlocks = await featureGateService.getUserUnlocks(userId);
 

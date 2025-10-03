@@ -10,7 +10,7 @@ const router = Router();
  */
 router.get('/overview', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     const overview = await gamificationDashboardService.getGamificationOverview(userId);
 
@@ -41,7 +41,7 @@ router.get('/overview', authenticate, async (req: AuthRequest, res): Promise<voi
  */
 router.get('/affinity-list', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { page = '1', limit = '20', sortBy = 'level' } = req.query;
 
     const result = await gamificationDashboardService.getAffinityList(userId, {
@@ -75,7 +75,7 @@ router.get('/affinity-list', authenticate, async (req: AuthRequest, res): Promis
  */
 router.get('/proficiency-list', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { page = '1', limit = '20', sortBy = 'level' } = req.query;
 
     const result = await gamificationDashboardService.getProficiencyList(userId, {
@@ -109,7 +109,7 @@ router.get('/proficiency-list', authenticate, async (req: AuthRequest, res): Pro
  */
 router.get('/daily-quests', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     const quests = await gamificationDashboardService.getDailyQuests(userId);
 
@@ -133,7 +133,7 @@ router.get('/daily-quests', authenticate, async (req: AuthRequest, res): Promise
  */
 router.get('/achievements', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { category, unlocked, rarity } = req.query;
 
     const achievements = await gamificationDashboardService.getAchievements(userId, {

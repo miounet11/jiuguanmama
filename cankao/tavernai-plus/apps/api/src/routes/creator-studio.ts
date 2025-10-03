@@ -26,7 +26,7 @@ const aiGenerationSchema = z.object({
  */
 router.get('/overview', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     const overview = await creatorStudioService.getCreatorOverview(userId);
 
@@ -57,7 +57,7 @@ router.get('/overview', authenticate, async (req: AuthRequest, res): Promise<voi
  */
 router.get('/statistics', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { limit = '10', sortBy = 'views' } = req.query;
 
     const statistics = await creatorStudioService.getWorkStatistics(userId, {
@@ -96,7 +96,7 @@ router.post(
   validate(aiGenerationSchema),
   async (req: AuthRequest, res): Promise<void> => {
     try {
-      const userId = req.user!.userId;
+      const userId = req.user!.id;
       const { prompt, config = {} } = req.body;
 
       const result = await creatorStudioService.aiGenerateCharacter(userId, prompt, config);
@@ -137,7 +137,7 @@ router.post(
   validate(aiGenerationSchema),
   async (req: AuthRequest, res): Promise<void> => {
     try {
-      const userId = req.user!.userId;
+      const userId = req.user!.id;
       const { prompt, config = {} } = req.body;
 
       const result = await creatorStudioService.aiGenerateScenario(userId, prompt, config);

@@ -17,7 +17,7 @@ const updateProgressSchema = z.object({
  */
 router.get('/', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     const tutorials = await tutorialService.getTutorials(userId);
 
@@ -72,7 +72,7 @@ router.get('/:tutorialId', authenticate, async (req: AuthRequest, res): Promise<
  */
 router.post('/:tutorialId/start', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { tutorialId } = req.params;
 
     const progress = await tutorialService.startTutorial(userId, tutorialId);
@@ -109,7 +109,7 @@ router.post(
   validate(updateProgressSchema),
   async (req: AuthRequest, res): Promise<void> => {
     try {
-      const userId = req.user!.userId;
+      const userId = req.user!.id;
       const { tutorialId } = req.params;
       const { step } = req.body;
 
@@ -144,7 +144,7 @@ router.post(
  */
 router.post('/:tutorialId/complete', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { tutorialId } = req.params;
 
     const success = await tutorialService.completeTutorial(userId, tutorialId);
@@ -175,7 +175,7 @@ router.post('/:tutorialId/complete', authenticate, async (req: AuthRequest, res)
  */
 router.post('/:tutorialId/skip', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { tutorialId } = req.params;
 
     const success = await tutorialService.skipTutorial(userId, tutorialId);

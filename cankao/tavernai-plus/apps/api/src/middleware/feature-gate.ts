@@ -9,7 +9,7 @@ import { featureGateService } from '../services/feature-gate.service';
 export function featureGate(featureId: string) {
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId = req.user?.userId;
+      const userId = req.user?.id;
 
       if (!userId) {
         res.status(401).json({
@@ -52,7 +52,7 @@ export function featureGate(featureId: string) {
 export function featureGateAny(featureIds: string[]) {
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId = req.user?.userId;
+      const userId = req.user?.id;
 
       if (!userId) {
         res.status(401).json({
@@ -97,7 +97,7 @@ export function featureGateAny(featureIds: string[]) {
 export function featureGateAll(featureIds: string[]) {
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId = req.user?.userId;
+      const userId = req.user?.id;
 
       if (!userId) {
         res.status(401).json({
@@ -145,7 +145,7 @@ export async function attachAvailableFeatures(
   next: NextFunction
 ): Promise<void> {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
 
     if (!userId) {
       res.status(401).json({

@@ -32,7 +32,7 @@ const updateConfigSchema = z.object({
  */
 router.get('/dashboard', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const adminId = req.user!.userId;
+    const adminId = req.user!.id;
 
     const dashboard = await adminConsoleService.getAdminDashboard(adminId);
 
@@ -63,7 +63,7 @@ router.get('/dashboard', authenticate, async (req: AuthRequest, res): Promise<vo
  */
 router.get('/metrics/realtime', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const adminId = req.user!.userId;
+    const adminId = req.user!.id;
 
     const metrics = await adminConsoleService.getRealtimeMetrics(adminId);
 
@@ -94,7 +94,7 @@ router.get('/metrics/realtime', authenticate, async (req: AuthRequest, res): Pro
  */
 router.get('/alerts', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const adminId = req.user!.userId;
+    const adminId = req.user!.id;
     const { severity, resolved, limit = '50' } = req.query;
 
     const alerts = await adminConsoleService.getAlerts(adminId, {
@@ -123,7 +123,7 @@ router.get('/alerts', authenticate, async (req: AuthRequest, res): Promise<void>
  */
 router.post('/alerts/:alertId/resolve', authenticate, requireAdmin, auditResolveAlert, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const adminId = req.user!.userId;
+    const adminId = req.user!.id;
     const { alertId } = req.params;
 
     const success = await adminConsoleService.resolveAlert(adminId, alertId);
@@ -154,7 +154,7 @@ router.post('/alerts/:alertId/resolve', authenticate, requireAdmin, auditResolve
  */
 router.get('/moderation/queue', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const adminId = req.user!.userId;
+    const adminId = req.user!.id;
     const { type, status, page = '1', limit = '20' } = req.query;
 
     const result = await adminConsoleService.getModerationQueue(adminId, {
@@ -193,7 +193,7 @@ router.post(
   validate(processModerationSchema),
   async (req: AuthRequest, res): Promise<void> => {
     try {
-      const adminId = req.user!.userId;
+      const adminId = req.user!.id;
       const { itemId } = req.params;
       const { action, reason } = req.body;
 
@@ -237,7 +237,7 @@ router.post(
   auditBanUser,
   async (req: AuthRequest, res): Promise<void> => {
     try {
-      const adminId = req.user!.userId;
+      const adminId = req.user!.id;
       const { userId } = req.params;
       const { reason, duration } = req.body;
 
@@ -270,7 +270,7 @@ router.post(
  */
 router.get('/audit-logs', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const adminId = req.user!.userId;
+    const adminId = req.user!.id;
     const { action, startDate, endDate, page = '1', limit = '50' } = req.query;
 
     const result = await adminConsoleService.getAuditLogs(adminId, {
@@ -306,7 +306,7 @@ router.get('/audit-logs', authenticate, async (req: AuthRequest, res): Promise<v
  */
 router.get('/config', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const adminId = req.user!.userId;
+    const adminId = req.user!.id;
 
     const config = await adminConsoleService.getSystemConfig(adminId);
 
@@ -343,7 +343,7 @@ router.put(
   auditChangeConfig,
   async (req: AuthRequest, res): Promise<void> => {
     try {
-      const adminId = req.user!.userId;
+      const adminId = req.user!.id;
       const config = req.body;
 
       const success = await adminConsoleService.updateSystemConfig(adminId, config);

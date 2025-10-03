@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from './auth';
-import { prisma } from '../config/database';
+import { prisma } from '../server';
 
 /**
  * Valid audit log action types
@@ -62,7 +62,7 @@ async function createAuditLog(
  */
 export function auditLog(action: AuditAction, getResource?: (req: AuthRequest) => string) {
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
 
     if (!userId) {
       res.status(401).json({
@@ -146,7 +146,7 @@ export function auditLogManual(
   res: Response,
   next: NextFunction
 ): void {
-  const userId = req.user?.userId;
+  const userId = req.user?.id;
 
   if (!userId) {
     res.status(401).json({

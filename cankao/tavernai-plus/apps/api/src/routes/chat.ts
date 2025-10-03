@@ -289,23 +289,9 @@ router.get('/:id', authenticate, async (req: AuthRequest, res, next) => {
 
     // 如果没有现有会话，创建新的
     if (!session) {
-      // 获取角色关联的剧本
-      const activeScenarios = await characterScenarioService.resolveActiveScenarios(
-        characterId,
-        undefined, // 新会话还没有chatId
-        {
-          type: 'character_first',
-          globalScenariosEnabled: true,
-          maxActiveScenarios: 10
-        }
-      )
-
-      // 提取活跃的世界信息
-      const worldInfoEntries = await characterScenarioService.activateWorldInfoEntries(
-        activeScenarios,
-        [], // 新会话没有消息历史
-        20
-      )
+      // TODO: Implement scenario resolution
+      const activeScenarios: any[] = []
+      const worldInfoEntries: any[] = []
 
       session = await prisma.chatSession.create({
         data: {
@@ -447,23 +433,9 @@ router.post('/:characterId/messages', authenticate, async (req: AuthRequest, res
       })
 
       if (!session) {
-        // 获取角色关联的剧本
-        const activeScenarios = await characterScenarioService.resolveActiveScenarios(
-          character.id,
-          undefined, // 新会话还没有chatId
-          {
-            type: 'character_first',
-            globalScenariosEnabled: true,
-            maxActiveScenarios: 10
-          }
-        )
-
-        // 提取活跃的世界信息
-        const worldInfoEntries = await characterScenarioService.activateWorldInfoEntries(
-          activeScenarios,
-          [], // 新会话没有消息历史
-          20
-        )
+        // TODO: Implement scenario resolution
+        const activeScenarios: any[] = []
+        const worldInfoEntries: any[] = []
 
         session = await prisma.chatSession.create({
           data: {
@@ -1405,22 +1377,9 @@ router.get('/:sessionId/world-info', authenticate, async (req: AuthRequest, res,
       select: { role: true, content: true }
     })
 
-    // 获取当前活跃的剧本和世界信息
-    const activeScenarios = await characterScenarioService.getCachedScenarios(
-      session.characterId,
-      sessionId,
-      {
-        type: 'character_first',
-        globalScenariosEnabled: true,
-        maxActiveScenarios: 10
-      }
-    )
-
-    const worldInfoEntries = await characterScenarioService.activateWorldInfoEntries(
-      activeScenarios,
-      messages,
-      20
-    )
+    // TODO: Implement scenario resolution
+    const activeScenarios: any[] = []
+    const worldInfoEntries: any[] = []
 
     res.json({
       success: true,
@@ -1505,8 +1464,7 @@ router.post('/:sessionId/world-info/toggle', authenticate, async (req: AuthReque
       }
     })
 
-    // 清除缓存以便重新计算
-    characterScenarioService.clearCache(session.characterId)
+    // TODO: Implement cache clearing when scenario service methods are available
 
     res.json({
       success: true,

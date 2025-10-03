@@ -28,7 +28,7 @@ const updatePreferencesSchema = z.object({
  */
 router.get('/view-config', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { role } = req.query;
 
     const viewConfig = await roleViewService.getRoleConfig(userId, role as string | undefined);
@@ -64,7 +64,7 @@ router.put(
   validate(updatePreferencesSchema),
   async (req: AuthRequest, res): Promise<void> => {
     try {
-      const userId = req.user!.userId;
+      const userId = req.user!.id;
       const preferences = req.body;
 
       // Update preferences in database
@@ -94,7 +94,7 @@ router.post(
   validate(switchRoleSchema),
   async (req: AuthRequest, res): Promise<void> => {
     try {
-      const userId = req.user!.userId;
+      const userId = req.user!.id;
       const { role } = req.body;
 
       const success = await roleViewService.switchRole(userId, role);
@@ -130,7 +130,7 @@ router.post(
  */
 router.get('/navigation', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { role } = req.query;
 
     const navigation = await roleViewService.getNavigation(userId, role as string);
@@ -154,7 +154,7 @@ router.get('/navigation', authenticate, async (req: AuthRequest, res): Promise<v
  */
 router.get('/dashboard', authenticate, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { role } = req.query;
 
     const dashboard = await roleViewService.getDashboard(userId, role as string);

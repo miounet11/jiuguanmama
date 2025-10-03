@@ -1,6 +1,6 @@
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 import { useUserStore } from '@/stores/user';
-import { useFeaturesStore } from '@/stores';
+import { useFeatureStore } from '@/stores';
 
 /**
  * Route Guards for Feature Gating and Access Control
@@ -13,7 +13,7 @@ import { useFeaturesStore } from '@/stores';
  * @returns Promise<boolean> - True if user has access
  */
 export async function checkFeatureAccess(featureCode: string): Promise<{ canAccess: boolean; reason?: string }> {
-  const featuresStore = useFeaturesStore();
+  const featuresStore = useFeatureStore();
 
   // Load features if not already loaded
   if (!featuresStore.isLoaded) {
