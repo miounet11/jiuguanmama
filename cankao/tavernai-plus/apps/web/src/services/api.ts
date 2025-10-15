@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import router from '@/router'
 
 // API 基础配置
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3008'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3009'
 const TIMEOUT = 30000
 
 // 创建 axios 实例

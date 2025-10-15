@@ -9,7 +9,7 @@ import router from '@/router'
 import { apiCacheManager } from '@/utils/cache/cacheManager'
 
 // API 配置
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3007'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3009'
 const TIMEOUT = 30000
 const MAX_RETRIES = 3
 const RETRY_DELAY = 1000

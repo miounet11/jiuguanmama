@@ -143,15 +143,15 @@ export default defineConfig({
     host: '0.0.0.0', // 允许外部访问
     proxy: {
       '/api': {
-        target: 'http://localhost:3008',
+        target: 'http://localhost:3009',
         changeOrigin: true
       },
       '/health': {
-        target: 'http://localhost:3008',
+        target: 'http://localhost:3009',
         changeOrigin: true
       },
       '/ws': {
-        target: 'ws://localhost:3008',
+        target: 'ws://localhost:3009',
         ws: true
       }
     }
