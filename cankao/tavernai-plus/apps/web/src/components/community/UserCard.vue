@@ -146,7 +146,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { User } from '@/types/community'
+import type { User as CommunityUser } from '@/types/community'
 import { useUserStore } from '@/stores/user'
 import {
   CircleCheck,
@@ -165,7 +165,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 
 interface Props {
-  user: User
+  user: CommunityUser
   showFollowButton?: boolean
   showUnfollowButton?: boolean
   showMoreActions?: boolean
@@ -175,7 +175,7 @@ interface Props {
 interface Emits {
   follow: [userId: string]
   unfollow: [userId: string]
-  click: [user: User]
+  click: [user: CommunityUser]
 }
 
 const props = withDefaults(defineProps<Props>(), {

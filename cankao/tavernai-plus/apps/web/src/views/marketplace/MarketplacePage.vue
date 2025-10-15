@@ -211,7 +211,7 @@ import {
   Search, Star, ChatDotRound, User, TrophyBase, MagicStick,
   VideoPlay, Reading, Ship, Cpu
 } from '@element-plus/icons-vue'
-import CharacterMarketCard from '@/components/marketplace/CharacterMarketCard.vue'
+import CharacterMarketCard from '@/components/character/CharacterMarketCard.vue'
 import { characterService } from '@/services/character'
 import { chatService } from '@/services/chat'
 import marketplaceService from '@/services/marketplace'

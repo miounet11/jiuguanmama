@@ -220,7 +220,7 @@ import { useCharacterStore, type Character } from '@/stores/character'
 import { useChatStore } from '@/stores/chat'
 import { useQuickChatPerformance } from '@/composables/useQuickChatPerformance'
 import { ElMessage } from 'element-plus'
-import { Search, Loading, Check, MessageBox, Cpu, Rocket, Settings } from '@element-plus/icons-vue'
+import { Search, Loading, Check, MessageBox, Cpu, Star, Setting } from '@element-plus/icons-vue'
 import OneClickChatButton from './OneClickChatButton.vue'
 import ConversationQuickSetup from './ConversationQuickSetup.vue'
 
@@ -266,7 +266,7 @@ const chatModes: ChatMode[] = [
     id: 'quick',
     name: '快速对话',
     description: '使用默认设置，立即开始对话',
-    icon: Rocket,
+    icon: Star,
     iconClass: 'text-blue-500',
     setupTime: '0秒',
     defaultSettings: {
@@ -279,7 +279,7 @@ const chatModes: ChatMode[] = [
     id: 'custom',
     name: '自定义设置',
     description: '调整AI模型参数和对话设置',
-    icon: Settings,
+    icon: Setting,
     iconClass: 'text-purple-500',
     setupTime: '10-30秒',
     defaultSettings: {

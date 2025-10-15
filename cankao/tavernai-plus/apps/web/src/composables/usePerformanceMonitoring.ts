@@ -1,5 +1,5 @@
 // 性能监控组合函数 - Issue #36
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, readonly } from 'vue'
 
 interface PerformanceMetric {
   name: string

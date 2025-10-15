@@ -1,5 +1,5 @@
 // 图片优化组合函数 - Issue #36
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, readonly } from 'vue'
 
 interface ImageOptimizationOptions {
   quality?: number

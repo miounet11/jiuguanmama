@@ -33,7 +33,7 @@
     <div v-if="mode?.id === 'quick'" class="quick-mode-settings">
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
         <div class="flex items-center mb-2">
-          <el-icon class="text-blue-500 mr-2"><Rocket /></el-icon>
+          <el-icon class="text-blue-500 mr-2"><Star /></el-icon>
           <span class="font-medium text-blue-800">快速模式已启用</span>
         </div>
         <p class="text-sm text-blue-700 mb-3">
@@ -238,7 +238,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { Rocket } from '@element-plus/icons-vue'
+import { Star } from '@element-plus/icons-vue'
 import AdvancedSettings from './AdvancedSettings.vue'
 
 interface Character {

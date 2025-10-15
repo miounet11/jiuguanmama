@@ -236,7 +236,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { QuestionFilled, Star, Cpu, Rocket } from '@element-plus/icons-vue'
+import { QuestionFilled, Star, Cpu } from '@element-plus/icons-vue'
 
 interface Character {
   id: string
@@ -320,7 +320,7 @@ const advancedPresets: AdvancedPreset[] = [
     id: 'dynamic',
     name: '动态对话',
     description: '富有变化的动态对话',
-    icon: Rocket,
+    icon: Star,
     iconClass: 'text-green-500',
     settings: {
       topP: 0.95,

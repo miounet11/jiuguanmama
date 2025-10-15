@@ -2,7 +2,7 @@
  * 移动端导航管理组合函数
  * 处理移动端特有的导航行为、手势返回、底部导航等
  */
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, readonly } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useSwipeGesture } from './useTouchGestures'
 

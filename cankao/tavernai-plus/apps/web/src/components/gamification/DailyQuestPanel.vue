@@ -26,7 +26,7 @@
           <div class="quest-icon">
             <el-icon :size="24" :color="quest.completed ? '#67c23a' : '#409eff'">
               <CircleCheckFilled v-if="quest.completed" />
-              <Circle v-else />
+              <Star v-else />
             </el-icon>
           </div>
 
@@ -84,7 +84,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import {
   RefreshRight,
   DocumentRemove,
-  Circle,
+  Star,
   CircleCheckFilled,
   Coin,
 } from '@element-plus/icons-vue';

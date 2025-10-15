@@ -2,7 +2,7 @@
  * 虚拟键盘处理组合函数
  * 处理移动端虚拟键盘弹出时的布局调整、视口变化等
  */
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, readonly } from 'vue'
 
 export interface KeyboardState {
   isVisible: boolean

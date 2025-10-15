@@ -87,9 +87,31 @@ app.use(helmet({
   crossOriginEmbedderPolicy: process.env.NODE_ENV === 'production'
 }))
 
-// CORS 配置 - 简化配置以确保工作
+// CORS 配置 - 支持开发和生产环境
+const allowedOrigins = [
+  // 开发环境
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+  'http://127.0.0.1:3002',
+  // 生产环境
+  'https://www.isillytavern.com',
+  'https://api.isillytavern.com'
+]
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'http://127.0.0.1:3002'],
+  origin: function (origin, callback) {
+    // 允许没有origin的请求（如移动端app或curl请求）
+    if (!origin) return callback(null, true)
+
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -141,6 +163,25 @@ app.use('/api/spacetime-tavern', spacetimeTavernRoutes) // 时空酒馆系统 AP
 app.use('/api/gamification', gamificationRoutes) // 游戏化玩法系统 API
 // app.use('/api/import', importRoutes) // 导入导出功能 API (Issue #26) - 临时禁用
 // app.use('/api/workflows', workflowRoutes) // 智能工作流 API - 已删除
+
+// Analytics 端点 - 处理前端错误报告
+app.post('/api/analytics/route-error', (req, res) => {
+  try {
+    const errorData = req.body
+    console.log('📊 Frontend error reported:', {
+      message: errorData.message,
+      stack: errorData.stack?.substring(0, 200), // 只记录前200个字符
+      url: errorData.url,
+      timestamp: new Date().toISOString()
+    })
+
+    // 返回成功响应，告诉前端错误已收到
+    res.json({ success: true, message: 'Error analytics received' })
+  } catch (error) {
+    console.error('Analytics endpoint error:', error)
+    res.status(500).json({ success: false, error: 'Failed to process analytics' })
+  }
+})
 
 // 健康检查端点
 app.get('/health', async (req, res) => {

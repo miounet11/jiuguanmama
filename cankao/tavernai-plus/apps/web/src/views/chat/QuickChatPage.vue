@@ -60,7 +60,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div class="feature-card p-6 bg-white rounded-lg shadow-sm border">
                 <div class="feature-icon mb-4">
-                  <el-icon size="32" class="text-blue-500"><Rocket /></el-icon>
+                  <el-icon size="32" class="text-blue-500"><Star /></el-icon>
                 </div>
                 <h3 class="font-semibold text-gray-900 mb-2">极速启动</h3>
                 <p class="text-sm text-gray-600">智能默认设置，30秒内开始对话</p>
@@ -187,7 +187,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useChatStore, type ChatSession } from '@/stores/chat'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft, Rocket, Star, Setting } from '@element-plus/icons-vue'
+import { ArrowLeft, Star, Setting } from '@element-plus/icons-vue'
 import QuickStartFlow from '@/components/chat/QuickStartFlow.vue'
 
 const route = useRoute()

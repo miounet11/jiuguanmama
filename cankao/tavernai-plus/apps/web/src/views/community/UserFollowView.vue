@@ -117,7 +117,7 @@ import { ref, reactive, computed, watch, onMounted, onUnmounted, nextTick } from
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useCommunityStore } from '@/stores/community'
-import { User, Follow } from '@/types/community'
+import type { User as CommunityUser, Follow } from '@/types/community'
 import UserCard from '@/components/community/UserCard.vue'
 import { User as UserIcon, UserFilled, Loading } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -131,8 +131,8 @@ const communityStore = useCommunityStore()
 // 响应式数据
 const loading = ref(false)
 const loadingMore = ref(false)
-const users = ref<User[]>([])
-const recommendedUsers = ref<User[]>([])
+const users = ref<CommunityUser[]>([])
+const recommendedUsers = ref<CommunityUser[]>([])
 const searchQuery = ref('')
 const sortBy = ref('latest')
 const currentTab = ref<'following' | 'followers'>('following')

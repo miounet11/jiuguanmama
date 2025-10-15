@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, computed, readonly } from 'vue'
 import type { Ref } from 'vue'
 
 export interface InfiniteScrollOptions {
@@ -186,13 +186,6 @@ export function useInfiniteScroll(options: InfiniteScrollOptions) {
   }
 }
 
-// 只读包装函数
-function readonly<T>(ref: Ref<T>) {
-  return computed(() => ref.value)
-}
-
-// 导入 computed
-import { computed } from 'vue'
 
 /**
  * 高级无限滚动组合函数

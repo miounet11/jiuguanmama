@@ -81,9 +81,31 @@ app.use((0, helmet_1.default)({
     },
     crossOriginEmbedderPolicy: process.env.NODE_ENV === 'production'
 }));
-// CORS 配置 - 简化配置以确保工作
+// CORS 配置 - 支持开发和生产环境
+const allowedOrigins = [
+    // 开发环境
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:3002',
+    // 生产环境
+    'https://www.isillytavern.com',
+    'https://api.isillytavern.com'
+];
 app.use((0, cors_1.default)({
-    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'http://127.0.0.1:3002'],
+    origin: function (origin, callback) {
+        // 允许没有origin的请求（如移动端app或curl请求）
+        if (!origin)
+            return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        }
+        else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],

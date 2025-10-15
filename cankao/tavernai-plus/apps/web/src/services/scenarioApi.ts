@@ -97,3 +97,5 @@ export const scenarioApiService = {
     return response
   }
 }
+
+export const scenarioApi = new ScenarioApi()

@@ -139,14 +139,19 @@ export default defineConfig({
 
   // 开发服务器配置
   server: {
+    host: '0.0.0.0',  // 允许外部访问
     port: 3000,
+    strictPort: false,
+    hmr: {
+      port: 3000,
+    },
     proxy: {
       '/api': {
-        target: 'http://localhost:3007',
+        target: 'http://localhost:3001',  // 代理到API服务器
         changeOrigin: true
       },
       '/ws': {
-        target: 'ws://localhost:3007',
+        target: 'ws://localhost:3001',  // WebSocket代理
         ws: true
       }
     }

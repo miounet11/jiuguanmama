@@ -114,7 +114,7 @@
     <div v-if="showExtraInfo" class="extra-info-card">
       <div class="info-header">
         <el-icon :size="16">
-          <Lightbulb />
+          <Check />
         </el-icon>
         <span class="info-title">专家模式的优势</span>
       </div>
@@ -142,11 +142,9 @@ import {
   ArrowDown,
   InfoFilled,
   DataAnalysis,
-  Lightbulb,
   Check,
   Setting,
   ChatRound,
-  Magic,
   Star,
   Document,
   Trophy
@@ -218,7 +216,7 @@ const previewFeatures = computed(() => [
     id: 'character-ai-gen',
     name: 'AI角色生成',
     description: 'AI辅助创建角色',
-    icon: Magic
+    icon: Star
   },
   {
     id: 'advanced-search',
@@ -236,7 +234,7 @@ const previewFeatures = computed(() => [
     id: 'worldinfo-dynamic',
     name: '动态世界观',
     description: '智能背景信息',
-    icon: Magic
+    icon: Star
   }
 ])
 

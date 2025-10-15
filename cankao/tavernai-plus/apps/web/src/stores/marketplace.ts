@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, readonly } from 'vue'
 import marketplaceService from '@/services/marketplace'
 import type {
   MarketplaceCharacter,
@@ -505,7 +505,3 @@ export const useMarketplaceStore = defineStore('marketplace', () => {
   }
 })
 
-// 辅助函数
-function readonly<T>(ref: import('vue').Ref<T>) {
-  return computed(() => ref.value)
-}

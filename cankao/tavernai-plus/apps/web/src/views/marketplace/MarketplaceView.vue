@@ -159,7 +159,7 @@
                 v-for="category in (categories || [])"
                 :key="category.name"
                 class="category-item"
-                :class="{ 'active': currentFilters.category === category.name }"
+                :class="{ 'active': currentFilters.value.category === category.name }"
                 @click="selectCategory(category.name)"
               >
                 <div class="category-info">
@@ -183,7 +183,7 @@
               <TavernBadge
                 v-for="tag in (trendingTags || [])"
                 :key="tag.tag"
-                :variant="currentFilters.tags?.includes(tag.tag) ? 'primary' : 'secondary'"
+                :variant="currentFilters.value.tags?.includes(tag.tag) ? 'primary' : 'secondary'"
                 class="tag-badge"
                 @click="toggleTag(tag.tag)"
               >
@@ -231,7 +231,7 @@
                 排序
               </label>
               <select
-                v-model="currentFilters.sortBy"
+                v-model="currentFilters.value.sortBy"
                 @change="handleSortChange"
                 class="sort-select"
               >
@@ -409,7 +409,7 @@ const stats = reactive({
 })
 
 // 筛选器状态
-const currentFilters = reactive<MarketplaceFilter>({
+const currentFilters = ref<MarketplaceFilter>({
   category: '',
   minRating: undefined,
   language: '',
@@ -438,18 +438,18 @@ const stopCarousel = () => {
 
 // 防抖搜索
 const debouncedSearch = debounce((value: string) => {
-  currentFilters.search = value
+  currentFilters.value.search = value
   currentPage.value = 1
   loadCharacters()
 }, 300)
 
 // 计算属性
 const hasActiveFilters = computed(() => {
-  return currentFilters.category ||
-    currentFilters.minRating ||
-    currentFilters.language ||
-    currentFilters.search ||
-    (currentFilters.tags && currentFilters.tags.length > 0)
+  return currentFilters.value.category ||
+    currentFilters.value.minRating ||
+    currentFilters.value.language ||
+    currentFilters.value.search ||
+    (currentFilters.value.tags && currentFilters.value.tags.length > 0)
 })
 
 const totalPages = computed(() => {
@@ -497,7 +497,7 @@ const loadCharacters = async () => {
   try {
     loading.value = true
     const filters = {
-      ...currentFilters,
+      ...currentFilters.value,
       page: currentPage.value,
       limit: pageSize.value
     }
@@ -565,25 +565,25 @@ const formatNumber = (num: number): string => {
 }
 
 const selectCategory = (categoryName: string) => {
-  if (currentFilters.category === categoryName) {
-    currentFilters.category = ''
+  if (currentFilters.value.category === categoryName) {
+    currentFilters.value.category = ''
   } else {
-    currentFilters.category = categoryName
+    currentFilters.value.category = categoryName
   }
   currentPage.value = 1
   loadCharacters()
 }
 
 const toggleTag = (tag: string) => {
-  if (!currentFilters.tags) {
-    currentFilters.tags = []
+  if (!currentFilters.value.tags) {
+    currentFilters.value.tags = []
   }
 
-  const index = currentFilters.tags.indexOf(tag)
+  const index = currentFilters.value.tags.indexOf(tag)
   if (index > -1) {
-    currentFilters.tags.splice(index, 1)
+    currentFilters.value.tags.splice(index, 1)
   } else {
-    currentFilters.tags.push(tag)
+    currentFilters.value.tags.push(tag)
   }
 
   currentPage.value = 1
@@ -592,11 +592,11 @@ const toggleTag = (tag: string) => {
 
 const clearFilters = () => {
   searchQuery.value = ''
-  currentFilters.category = ''
-  currentFilters.minRating = undefined
-  currentFilters.language = ''
-  currentFilters.search = ''
-  currentFilters.tags = []
+  currentFilters.value.category = ''
+  currentFilters.value.minRating = undefined
+  currentFilters.value.language = ''
+  currentFilters.value.search = ''
+  currentFilters.value.tags = []
   currentPage.value = 1
   loadCharacters()
 }

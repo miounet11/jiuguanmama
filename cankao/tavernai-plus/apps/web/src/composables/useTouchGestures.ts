@@ -2,7 +2,7 @@
  * 触控手势处理组合函数
  * 支持滑动、长按、双击等移动端手势
  */
-import { ref, onMounted, onUnmounted, Ref } from 'vue'
+import { ref, onMounted, onUnmounted, Ref, readonly } from 'vue'
 
 export interface TouchPoint {
   x: number

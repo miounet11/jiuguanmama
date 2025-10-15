@@ -134,7 +134,7 @@
         <el-button :icon="DataAnalysis" @click="navigateTo('/admin/analytics')">
           数据分析
         </el-button>
-        <el-button :icon="Files} @click="navigateTo('/admin/logs')">
+        <el-button :icon="Files" @click="navigateTo('/admin/logs')">
           日志审计
         </el-button>
       </div>

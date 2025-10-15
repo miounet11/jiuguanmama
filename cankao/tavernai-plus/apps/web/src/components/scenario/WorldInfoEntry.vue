@@ -465,7 +465,7 @@
                     时代背景
                   </label>
                   <el-select
-                    v-model="editForm.culturalContext?.era"
+                    v-model="eraValue"
                     placeholder="选择时代背景"
                     @change="handleFormChange"
                     class="w-full"
@@ -487,7 +487,7 @@
                     地域设定
                   </label>
                   <el-input
-                    v-model="editForm.culturalContext?.region"
+                    v-model="regionValue"
                     placeholder="如：中国古代、欧洲中世纪、未来都市"
                     @change="handleFormChange"
                   />
@@ -499,7 +499,7 @@
                     语言风格
                   </label>
                   <el-select
-                    v-model="editForm.culturalContext?.languageStyle"
+                    v-model="languageStyleValue"
                     placeholder="选择语言风格"
                     @change="handleFormChange"
                     class="w-full"
@@ -520,7 +520,7 @@
                   核心价值观
                 </label>
                 <el-select
-                  v-model="editForm.culturalContext?.valueSystem"
+                  v-model="valueSystemValue"
                   multiple
                   filterable
                   allow-create
@@ -547,7 +547,7 @@
                   社会规范
                 </label>
                 <el-select
-                  v-model="editForm.culturalContext?.socialNorms"
+                  v-model="socialNormsValue"
                   multiple
                   filterable
                   allow-create
@@ -572,7 +572,7 @@
                   文化符号
                 </label>
                 <el-select
-                  v-model="editForm.culturalContext?.culturalSymbols"
+                  v-model="culturalSymbolsValue"
                   multiple
                   filterable
                   allow-create
@@ -924,6 +924,67 @@ watch(() => hasChanges.value, (newValue) => {
     saveTimeout = setTimeout(() => {
       handleSave()
     }, 2000) // 2秒后自动保存
+  }
+})
+
+// 计算属性 - 处理可选链的v-model绑定
+const eraValue = computed({
+  get: () => editForm.culturalContext?.era || '',
+  set: (value: string) => {
+    if (!editForm.culturalContext) {
+      editForm.culturalContext = {}
+    }
+    editForm.culturalContext.era = value
+  }
+})
+
+const regionValue = computed({
+  get: () => editForm.culturalContext?.region || '',
+  set: (value: string) => {
+    if (!editForm.culturalContext) {
+      editForm.culturalContext = {}
+    }
+    editForm.culturalContext.region = value
+  }
+})
+
+const languageStyleValue = computed({
+  get: () => editForm.culturalContext?.languageStyle || '',
+  set: (value: string) => {
+    if (!editForm.culturalContext) {
+      editForm.culturalContext = {}
+    }
+    editForm.culturalContext.languageStyle = value
+  }
+})
+
+const valueSystemValue = computed({
+  get: () => editForm.culturalContext?.valueSystem || [],
+  set: (value: string[]) => {
+    if (!editForm.culturalContext) {
+      editForm.culturalContext = {}
+    }
+    editForm.culturalContext.valueSystem = value
+  }
+})
+
+const socialNormsValue = computed({
+  get: () => editForm.culturalContext?.socialNorms || [],
+  set: (value: string[]) => {
+    if (!editForm.culturalContext) {
+      editForm.culturalContext = {}
+    }
+    editForm.culturalContext.socialNorms = value
+  }
+})
+
+const culturalSymbolsValue = computed({
+  get: () => editForm.culturalContext?.culturalSymbols || [],
+  set: (value: string[]) => {
+    if (!editForm.culturalContext) {
+      editForm.culturalContext = {}
+    }
+    editForm.culturalContext.culturalSymbols = value
   }
 })
 

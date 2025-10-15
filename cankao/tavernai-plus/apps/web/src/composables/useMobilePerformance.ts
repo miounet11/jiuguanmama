@@ -2,7 +2,7 @@
  * 移动端性能优化组合函数
  * 提供内存监控、图片优化、滚动优化等移动端性能优化功能
  */
-import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, computed, readonly } from 'vue'
 
 export interface PerformanceMetrics {
   // 内存使用情况

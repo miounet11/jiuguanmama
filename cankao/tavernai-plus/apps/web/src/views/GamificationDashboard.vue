@@ -79,7 +79,7 @@
         <div class="stat-content">
           <p class="stat-label">成就完成</p>
           <p class="stat-value">{{ achievementProgress }}%</p>
-          <p class="stat-sub">{{ unlockedAchievements }} / {{ totalAchievements }</p>
+          <p class="stat-sub">{{ unlockedAchievements }} / {{ totalAchievements }}</p>
         </div>
       </div>
     </div>

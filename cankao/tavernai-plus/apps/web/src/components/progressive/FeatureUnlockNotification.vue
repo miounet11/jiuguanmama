@@ -110,8 +110,6 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import {
   Star,
   Trophy,
-  Gift,
-  Magic,
   Setting,
   ChatRound,
   User,
@@ -210,10 +208,10 @@ const unlockIcon = computed(() => {
   const featureIcons = {
     'character': User,
     'chat': ChatRound,
-    'creation': Magic,
+    'creation': Star,
     'worldinfo': Document,
     'export': Document,
-    'sharing': Gift,
+    'sharing': Star,
     'settings': Setting,
     'rating': Star,
     'favorites': Star
@@ -270,7 +268,7 @@ const previewItems = computed(() => {
   if (props.feature.id.includes('character')) {
     if (props.feature.id.includes('creation')) {
       items.push(
-        { key: 'template', icon: Magic, text: '使用创建模板' },
+        { key: 'template', icon: Star, text: '使用创建模板' },
         { key: 'ai-gen', icon: Picture, text: 'AI生成头像' },
         { key: 'advanced', icon: Setting, text: '高级编辑选项' }
       )
@@ -286,7 +284,7 @@ const previewItems = computed(() => {
       items.push(
         { key: 'edit', icon: Setting, text: '编辑历史消息' },
         { key: 'regen', icon: ArrowRight, text: '重新生成回复' },
-        { key: 'branch', icon: Magic, text: '分支对话' }
+        { key: 'branch', icon: Star, text: '分支对话' }
       )
     } else if (props.feature.id.includes('model')) {
       items.push(
