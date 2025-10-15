@@ -53,7 +53,8 @@ import {
   ElEmpty,
   ElPagination,
   ElText,
-  ElSwitch
+  ElSwitch,
+  ElSpin
 } from 'element-plus'
 
 // 只导入需要的样式
@@ -89,6 +90,7 @@ import 'element-plus/theme-chalk/el-empty.css'
 import 'element-plus/theme-chalk/el-pagination.css'
 import 'element-plus/theme-chalk/el-text.css'
 import 'element-plus/theme-chalk/el-switch.css'
+import 'element-plus/theme-chalk/el-loading.css'
 
 // 主样式文件
 import '@/styles/main.scss'
@@ -174,7 +176,8 @@ const components = [
   ElEmpty,
   ElPagination,
   ElText,
-  ElSwitch
+  ElSwitch,
+  ElSpin
 ]
 
 components.forEach(component => {

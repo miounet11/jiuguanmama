@@ -379,27 +379,30 @@ const renderNetwork = () => {
   }
 
   // 创建网络
-  const DataSet = (window as any).vis?.DataSet
-  if (!DataSet) {
+  const vis = (window as any).vis
+  if (!vis) {
     console.error('Vis.js not loaded')
+    ElMessage.error('Vis.js 库加载失败，请刷新页面重试')
     return
   }
 
-  const visNodes = new DataSet(nodes)
-  const visEdges = new DataSet(edges)
+  try {
+    // Vis.js 9.x API
+    const visNodes = new vis.DataSet(nodes)
+    const visEdges = new vis.DataSet(edges)
 
-  const data = {
-    nodes: visNodes,
-    edges: visEdges
-  }
+    const data = {
+      nodes: visNodes,
+      edges: visEdges
+    }
 
-  const Network = (window as any).vis?.Network
-  if (!Network) {
-    console.error('Vis.js Network not available')
+    visNetwork = new vis.Network(networkContainer.value, data, options)
+    console.log('Vis.js network created successfully')
+  } catch (error) {
+    console.error('Vis.js network creation error:', error)
+    ElMessage.error('网络图创建失败')
     return
   }
-
-  visNetwork = new Network(networkContainer.value, data, options)
 
   // 事件监听
   visNetwork.on('selectNode', (params: any) => {

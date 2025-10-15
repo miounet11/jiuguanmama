@@ -165,7 +165,7 @@ app.use('/api/gamification', gamificationRoutes) // 游戏化玩法系统 API
 // app.use('/api/workflows', workflowRoutes) // 智能工作流 API - 已删除
 
 // Analytics 端点 - 处理前端错误报告
-app.post('/api/analytics/route-error', (req, res) => {
+app.post('/analytics/route-error', (req, res) => {
   try {
     const errorData = req.body
     console.log('📊 Frontend error reported:', {
@@ -180,6 +180,24 @@ app.post('/api/analytics/route-error', (req, res) => {
   } catch (error) {
     console.error('Analytics endpoint error:', error)
     res.status(500).json({ success: false, error: 'Failed to process analytics' })
+  }
+})
+
+// Analytics 端点 - 处理导航分析
+app.post('/analytics/navigation', (req, res) => {
+  try {
+    const navData = req.body
+    console.log('🧭 Navigation analytics:', {
+      from: navData.from,
+      to: navData.to,
+      timestamp: new Date().toISOString()
+    })
+
+    // 返回成功响应
+    res.json({ success: true, message: 'Navigation analytics received' })
+  } catch (error) {
+    console.error('Navigation analytics error:', error)
+    res.status(500).json({ success: false, error: 'Failed to process navigation analytics' })
   }
 })
 
