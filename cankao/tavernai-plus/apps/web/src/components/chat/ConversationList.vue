@@ -732,7 +732,7 @@ watch(
 }
 
 // 头部区域
-&__header {
+.conversation-list__header {
   padding: $spacing-4;
   border-bottom: 1px solid var(--border-secondary);
   background: var(--surface-2);
@@ -741,7 +741,7 @@ watch(
   flex-direction: column;
 }
 
-&__search {
+.conversation-list__search {
   display: flex;
   align-items: center;
   gap: $spacing-3;
@@ -752,21 +752,21 @@ watch(
   min-width: 0;
 }
 
-&__filters {
+.conversation-list__filters {
   display: flex;
   align-items: center;
   gap: $spacing-2;
   flex-wrap: wrap;
 }
 
-&__view-controls {
+.conversation-list__view-controls {
   display: flex;
   align-items: center;
   gap: $spacing-1;
   position: relative;
 }
 
-&__group-controls {
+.conversation-list__group-controls {
   display: flex;
   align-items: center;
   gap: $spacing-2;
@@ -774,19 +774,19 @@ watch(
 }
 
 // 多选操作栏
-&__multi-select-bar {
+.conversation-list__multi-select-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: $spacing-3 $spacing-4;
-  background: var(--primary-50);
-  border-bottom: 1px solid var(--primary-200);
+  background: var(--brand-primary-50);
+  border-bottom: 1px solid var(--brand-primary-200);
 }
 
 .selected-count {
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
-  color: $primary-700;
+  color: var(--brand-primary-700);
 }
 
 .multi-select-actions {
@@ -796,7 +796,7 @@ watch(
 }
 
 // 内容区域
-&__content {
+.conversation-list__content {
   flex: 1;
   overflow-y: auto;
   padding: $spacing-2;
@@ -807,7 +807,7 @@ watch(
 }
 
 // 空状态
-&__empty {
+.conversation-list__empty {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -846,7 +846,7 @@ watch(
 }
 
 // 分组列表
-&__groups {
+.conversation-list__groups {
   display: flex;
   flex-direction: column;
   gap: $spacing-4;
@@ -908,7 +908,7 @@ watch(
 }
 
 // 平铺列表
-&__items {
+.conversation-list__items {
   display: flex;
   flex-direction: column;
   gap: $spacing-2;
@@ -922,7 +922,7 @@ watch(
 }
 
 // 加载更多
-&__load-more {
+.conversation-list__load-more {
   display: flex;
   justify-content: center;
   padding: $spacing-4;
@@ -930,7 +930,7 @@ watch(
 }
 
 // 加载状态
-&__loading {
+.conversation-list__loading {
   padding: $spacing-4;
 }
 
@@ -1014,8 +1014,8 @@ watch(
   }
 
   &.active {
-    background: var(--primary-50);
-    color: $primary-700;
+    background: var(--brand-primary-50);
+    color: var(--brand-primary-700);
   }
 }
 
@@ -1031,58 +1031,54 @@ watch(
 
 // 按钮状态
 .active {
-  background: var(--primary-100);
-  color: $primary-700;
-  border-color: $primary-300;
+  background: var(--brand-primary-100);
+  color: var(--brand-primary-700);
+  border-color: var(--brand-primary-300);
 }
 
 // 响应式适配
 @media (max-width: $breakpoint-md) {
-  .conversation-list {
-    &__header {
-      padding: $spacing-3;
-      gap: $spacing-2;
-    }
+  .conversation-list__header {
+    padding: $spacing-3;
+    gap: $spacing-2;
+  }
 
-    &__search {
-      flex-direction: column;
-      gap: $spacing-2;
-    }
+  .conversation-list__search {
+    flex-direction: column;
+    gap: $spacing-2;
+  }
 
-    &__filters {
-      width: 100%;
-      justify-content: space-between;
-    }
+  .conversation-list__filters {
+    width: 100%;
+    justify-content: space-between;
+  }
 
-    &__view-controls {
-      width: 100%;
-      justify-content: space-between;
-    }
+  .conversation-list__view-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
 
-    &__group-controls {
-      flex-direction: column;
-      gap: $spacing-2;
-      align-items: stretch;
-    }
+  .conversation-list__group-controls {
+    flex-direction: column;
+    gap: $spacing-2;
+    align-items: stretch;
+  }
 
-    .multi-select-actions {
-      flex-wrap: wrap;
-    }
+  .multi-select-actions {
+    flex-wrap: wrap;
   }
 }
 
 @media (max-width: $breakpoint-sm) {
-  .conversation-list {
-    &__filters {
-      justify-content: flex-start;
-      overflow-x: auto;
-      padding-bottom: $spacing-1;
-    }
+  .conversation-list__filters {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: $spacing-1;
+  }
 
-    .conversation-group__content--grid,
-    &__items--grid {
-      grid-template-columns: 1fr;
-    }
+  .conversation-group__content--grid,
+  .conversation-list__items--grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

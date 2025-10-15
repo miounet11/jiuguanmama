@@ -644,7 +644,7 @@ onUnmounted(() => {
 }
 
 // 遮罩层
-&__overlay {
+.mobile-conversation-list__overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -656,13 +656,13 @@ onUnmounted(() => {
 }
 
 // 头部区域
-&__header {
+.mobile-conversation-list__header {
   background: var(--surface-2);
   border-bottom: 1px solid var(--border-secondary);
   flex-shrink: 0;
 }
 
-&__nav {
+.mobile-conversation-list__nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -676,26 +676,26 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: $border-radius-lg;
+  border-radius: var(--radius-lg);
 
   &--primary {
-    background: $primary-500;
+    background: var(--brand-primary-500);
     color: white;
 
     &:hover {
-      background: $primary-600;
+      background: var(--brand-primary-600);
     }
   }
 }
 
-&__title {
+.mobile-conversation-list__title {
   font-size: $font-size-lg;
   font-weight: $font-weight-semibold;
-  color: $text-primary;
+  color: var(--text-primary);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: $spacing-2;
+  gap: var(--space-2);
 }
 
 .title-badge {
@@ -703,7 +703,7 @@ onUnmounted(() => {
 }
 
 // 搜索区域
-&__search {
+.mobile-conversation-list__search {
   padding: $spacing-3 $spacing-4;
   border-bottom: 1px solid var(--border-secondary);
 }
@@ -713,7 +713,7 @@ onUnmounted(() => {
 }
 
 // 筛选标签
-&__filters {
+.mobile-conversation-list__filters {
   padding: $spacing-3 $spacing-4;
 }
 
@@ -749,21 +749,21 @@ onUnmounted(() => {
   }
 
   &--active {
-    background: $primary-500;
-    border-color: $primary-500;
+    background: var(--brand-primary-500);
+    border-color: var(--brand-primary-500);
     color: white;
   }
 }
 
 // 主内容区域
-&__content {
+.mobile-conversation-list__content {
   flex: 1;
   overflow: hidden;
   position: relative;
 }
 
 // 下拉刷新指示器
-&__refresh-indicator {
+.mobile-conversation-list__refresh-indicator {
   position: absolute;
   top: 0;
   left: 0;
@@ -775,7 +775,7 @@ onUnmounted(() => {
   justify-content: center;
   background: var(--surface-2);
   border-bottom: 1px solid var(--border-secondary);
-  color: $primary-500;
+  color: var(--brand-primary-500);
   font-size: $font-size-sm;
   z-index: 10;
 
@@ -786,7 +786,7 @@ onUnmounted(() => {
 }
 
 // 滚动容器
-&__scroll {
+.mobile-conversation-list__scroll {
   height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -863,7 +863,7 @@ onUnmounted(() => {
 }
 
 // 加载更多
-&__load-more {
+.mobile-conversation-list__load-more {
   padding: $spacing-4;
   text-align: center;
   cursor: pointer;
@@ -883,7 +883,7 @@ onUnmounted(() => {
 }
 
 // 加载状态
-&__loading {
+.mobile-conversation-list__loading {
   padding: $spacing-4;
 }
 
@@ -937,14 +937,14 @@ onUnmounted(() => {
 }
 
 // 底部操作栏
-&__footer {
+.mobile-conversation-list__footer {
   background: var(--surface-2);
   border-top: 1px solid var(--border-secondary);
   padding: $spacing-3 $spacing-4;
   flex-shrink: 0;
 }
 
-&__actions {
+.mobile-conversation-list__actions {
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -1030,7 +1030,7 @@ onUnmounted(() => {
 
   .filter-tab,
   .nav-btn,
-  &__load-more {
+  .mobile-conversation-list__load-more {
     min-height: 44px; // iOS推荐的最小触摸目标尺寸
   }
 }
