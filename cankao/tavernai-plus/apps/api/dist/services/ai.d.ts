@@ -71,12 +71,12 @@ declare class AIService {
             error: any;
             lastChecked: number;
         };
-        error?: undefined;
+        error?: never;
     } | {
         healthy: boolean;
         responseTime: number;
         error: any;
-        details?: undefined;
+        details?: never;
     }>;
     checkAPIStatus(): Promise<{
         available: boolean;

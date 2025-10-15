@@ -1,0 +1,450 @@
+// =====================================
+// TavernAI Plus 响应式设计系统
+// 针对移动端优先的完整响应式解决方案
+// =====================================
+
+// 1. 核心响应式断点系统 (扩展原有系统)
+$breakpoint-xs: 475px;    // 超小屏手机 (iPhone SE)
+$breakpoint-sm: 640px;    // 小屏手机 (iPhone 12)
+$breakpoint-md: 768px;    // 平板竖屏 (iPad)
+$breakpoint-lg: 1024px;   // 平板横屏/小笔记本
+$breakpoint-xl: 1280px;   // 桌面端
+$breakpoint-2xl: 1536px;  // 大屏桌面
+$breakpoint-3xl: 1920px;  // 超大屏桌面
+
+// 触摸设备专用断点
+$touch-sm: 480px;         // 小屏触摸设备
+$touch-md: 768px;         // 中等触摸设备
+$touch-lg: 1024px;        // 大屏触摸设备
+
+// 响应式容器系统
+$container-xs: 100%;
+$container-sm: 640px;
+$container-md: 768px;
+$container-lg: 1024px;
+$container-xl: 1280px;
+$container-2xl: 1536px;
+$container-3xl: 1920px;
+
+// 2. 移动端触摸友好尺寸系统
+$touch-target-min: 44px;      // 最小触摸目标 (Apple HIG)
+$touch-target-comfortable: 48px;  // 舒适触摸目标
+$touch-target-large: 56px;    // 大型触摸目标
+
+// 移动端间距系统 (更精细的移动端优化)
+$mobile-spacing-xs: 0.25rem;  // 4px
+$mobile-spacing-sm: 0.5rem;   // 8px
+$mobile-spacing-md: 0.75rem;  // 12px
+$mobile-spacing-lg: 1rem;     // 16px
+$mobile-spacing-xl: 1.25rem;  // 20px
+$mobile-spacing-2xl: 1.5rem;  // 24px
+$mobile-spacing-3xl: 2rem;    // 32px
+
+// 3. 响应式字体系统
+// 动态字体大小 (基于视口和断点)
+$fluid-font-min: 14px;        // 最小字体
+$fluid-font-max: 18px;        // 最大字体
+$fluid-font-scaling: 1vw;     // 缩放因子
+
+// 标题系统
+$h1-mobile: 1.75rem;          // 28px - 移动端H1
+$h1-tablet: 2.25rem;          // 36px - 平板端H1
+$h1-desktop: 3rem;            // 48px - 桌面端H1
+
+$h2-mobile: 1.5rem;           // 24px - 移动端H2
+$h2-tablet: 1.875rem;         // 30px - 平板端H2
+$h2-desktop: 2.25rem;         // 36px - 桌面端H2
+
+$h3-mobile: 1.25rem;          // 20px - 移动端H3
+$h3-tablet: 1.5rem;           // 24px - 平板端H3
+$h3-desktop: 1.875rem;        // 30px - 桌面端H3
+
+// 4. 移动端网格系统
+$mobile-grid-columns: 4;       // 移动端列数
+$tablet-grid-columns: 8;       // 平板端列数
+$desktop-grid-columns: 12;     // 桌面端列数
+
+$mobile-grid-gap: 1rem;        // 移动端网格间距
+$tablet-grid-gap: 1.5rem;      // 平板端网格间距
+$desktop-grid-gap: 2rem;       // 桌面端网格间距
+
+// 5. 响应式阴影系统
+$shadow-mobile-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+$shadow-mobile-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+$shadow-mobile-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
+
+$shadow-desktop-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+$shadow-desktop-md: 0 8px 16px rgba(0, 0, 0, 0.3);
+$shadow-desktop-lg: 0 16px 32px rgba(0, 0, 0, 0.4);
+
+// 6. 移动端动画系统
+$animation-mobile-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+$animation-mobile-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+$animation-mobile-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+// 7. 安全区域系统 (iPhone X+ 等设备)
+$safe-area-top: env(safe-area-inset-top);
+$safe-area-bottom: env(safe-area-inset-bottom);
+$safe-area-left: env(safe-area-inset-left);
+$safe-area-right: env(safe-area-inset-right);
+
+// 8. 移动端性能优化
+$mobile-max-images: 6;         // 移动端最大图片数量
+$mobile-lazy-distance: 200px;  // 移动端懒加载距离
+$mobile-throttle-delay: 16ms;  // 移动端节流延迟
+
+// =====================================
+// 响应式 Mixins (扩展原有系统)
+// =====================================
+
+// 移动端优先断点 (新增强化版本)
+@mixin mobile-only {
+  @media (max-width: #{$breakpoint-md - 1px}) {
+    @content;
+  }
+}
+
+@mixin mobile-portrait {
+  @media (max-width: #{$breakpoint-md - 1px}) and (orientation: portrait) {
+    @content;
+  }
+}
+
+@mixin mobile-landscape {
+  @media (max-width: #{$breakpoint-md - 1px}) and (orientation: landscape) {
+    @content;
+  }
+}
+
+// 平板端断点
+@mixin tablet-only {
+  @media (min-width: $breakpoint-md) and (max-width: #{$breakpoint-lg - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet-portrait {
+  @media (min-width: $breakpoint-md) and (max-width: #{$breakpoint-lg - 1px}) and (orientation: portrait) {
+    @content;
+  }
+}
+
+@mixin tablet-landscape {
+  @media (min-width: $breakpoint-lg) and (max-width: #{$breakpoint-xl - 1px}) and (orientation: landscape) {
+    @content;
+  }
+}
+
+// 桌面端断点
+@mixin desktop-only {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+@mixin large-desktop {
+  @media (min-width: $breakpoint-2xl) {
+    @content;
+  }
+}
+
+// 触摸设备专用
+@mixin touch-device {
+  @media (pointer: coarse) {
+    @content;
+  }
+}
+
+@mixin hover-device {
+  @media (pointer: fine) {
+    @content;
+  }
+}
+
+// 高密度屏幕
+@mixin retina-display {
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+    @content;
+  }
+}
+
+@mixin ultra-retina {
+  @media (-webkit-min-device-pixel-ratio: 3), (min-resolution: 3dppx) {
+    @content;
+  }
+}
+
+// 响应式容器
+@mixin responsive-container($max-width: null) {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: $mobile-spacing-lg;
+  padding-right: $mobile-spacing-lg;
+
+  @include tablet-only {
+    padding-left: $mobile-spacing-xl;
+    padding-right: $mobile-spacing-xl;
+  }
+
+  @include desktop-only {
+    padding-left: $mobile-spacing-2xl;
+    padding-right: $mobile-spacing-2xl;
+  }
+
+  @if $max-width {
+    max-width: $max-width;
+  }
+}
+
+// 响应式网格
+@mixin responsive-grid($columns: $desktop-grid-columns, $gap: $desktop-grid-gap) {
+  display: grid;
+  gap: $gap;
+
+  @include mobile-only {
+    grid-template-columns: repeat(min($mobile-grid-columns, $columns), 1fr);
+    gap: $mobile-grid-gap;
+  }
+
+  @include tablet-only {
+    grid-template-columns: repeat(min($tablet-grid-columns, $columns), 1fr);
+    gap: $tablet-grid-gap;
+  }
+
+  @include desktop-only {
+    grid-template-columns: repeat($columns, 1fr);
+    gap: $gap;
+  }
+}
+
+// 响应式字体
+@mixin responsive-font($min-size, $max-size, $min-vw: 320px, $max-vw: 1200px) {
+  font-size: $min-size;
+
+  @media (min-width: $min-vw) and (max-width: $max-vw) {
+    font-size: calc(#{$min-size} + #{strip-unit($max-size - $min-size)} * ((100vw - #{$min-vw}) / #{strip-unit($max-vw - $min-vw)}));
+  }
+
+  @media (min-width: $max-vw) {
+    font-size: $max-size;
+  }
+}
+
+// 触摸友好的按钮
+@mixin touch-button($size: $touch-target-comfortable) {
+  min-height: $size;
+  min-width: $size;
+  padding: ($size / 4) ($size / 2);
+  border-radius: $size / 8;
+
+  @include touch-device {
+    // 确保触摸目标足够大
+    @media (max-width: $touch-lg) {
+      min-height: max($size, $touch-target-min);
+      min-width: max($size, $touch-target-min);
+    }
+  }
+}
+
+// 安全区域适配
+@mixin safe-area-padding($top: 0, $right: 0, $bottom: 0, $left: 0) {
+  padding-top: calc(#{$top} + #{$safe-area-top}) * ($top > 0);
+  padding-right: calc(#{$right} + #{$safe-area-right}) * ($right > 0);
+  padding-bottom: calc(#{$bottom} + #{$safe-area-bottom}) * ($bottom > 0);
+  padding-left: calc(#{$left} + #{$safe-area-left}) * ($left > 0);
+}
+
+// 移动端性能优化
+@mixin mobile-performance-optimization {
+  @include mobile-only {
+    // 减少复杂动画
+    transform: translateZ(0); // 硬件加速
+    backface-visibility: hidden;
+
+    // 优化滚动
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+
+    // 减少重绘
+    will-change: auto;
+  }
+}
+
+// 移动端输入框优化
+@mixin mobile-input-optimization {
+  @include mobile-only {
+    font-size: 16px; // 防止iOS缩放
+    padding: 12px 16px;
+    border-radius: 8px;
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba($primary-color, 0.3);
+    }
+  }
+}
+
+// 响应式图片
+@mixin responsive-image($aspect-ratio: 16/9) {
+  width: 100%;
+  height: auto;
+  aspect-ratio: $aspect-ratio;
+  object-fit: cover;
+
+  @include mobile-only {
+    // 移动端优化
+    loading: lazy;
+    transform: translateZ(0);
+  }
+}
+
+// 移动端卡片适配
+@mixin mobile-card {
+  @include mobile-only {
+    margin: $mobile-spacing-md;
+    border-radius: $border-radius-lg;
+    box-shadow: $shadow-mobile-md;
+
+    // 触摸友好的交互
+    &:active {
+      transform: scale(0.98);
+      transition: transform $animation-mobile-fast;
+    }
+  }
+
+  @include desktop-only {
+    transition: all $transition-base;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-desktop-lg;
+    }
+  }
+}
+
+// 底部导航适配
+@mixin bottom-navigation {
+  @include mobile-only {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: var(--surface-2);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border-secondary);
+
+    @include safe-area-padding(0, 0, 16px, 0);
+  }
+
+  @include desktop-only {
+    display: none;
+  }
+}
+
+// 侧边栏适配
+@mixin sidebar-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+
+  @include tablet-only {
+    grid-template-columns: 250px 1fr;
+  }
+
+  @include desktop-only {
+    grid-template-columns: 300px 1fr;
+  }
+
+  @include large-desktop {
+    grid-template-columns: 350px 1fr;
+  }
+}
+
+// 响应式隐藏/显示
+@mixin hide-on-mobile {
+  @include mobile-only {
+    display: none !important;
+  }
+}
+
+@mixin show-on-mobile {
+  @include desktop-only {
+    display: none !important;
+  }
+}
+
+@mixin hide-on-tablet {
+  @include tablet-only {
+    display: none !important;
+  }
+}
+
+@mixin show-on-tablet {
+  @include mobile-only, @include desktop-only {
+    display: none !important;
+  }
+}
+
+// 工具函数
+@function strip-unit($number) {
+  @if type-of($number) == 'number' and not unitless($number) {
+    @return $number / ($number * 0 + 1);
+  }
+  @return $number;
+}
+
+// 响应式间距计算
+@function responsive-spacing($mobile, $tablet: null, $desktop: null) {
+  @return $mobile;
+
+  @include tablet-only {
+    @return $tablet or $mobile * 1.25;
+  }
+
+  @include desktop-only {
+    @return $desktop or $mobile * 1.5;
+  }
+}
+
+// =====================================
+// 移动端主题变量
+// =====================================
+
+// 移动端专用颜色
+$mobile-primary: lighten($primary-color, 5%);
+$mobile-secondary: lighten($secondary-color, 5%);
+$mobile-background: lighten($bg-primary, 2%);
+$mobile-surface: lighten($bg-secondary, 3%);
+
+// 移动端状态颜色
+$mobile-success: #10B981;
+$mobile-warning: #F59E0B;
+$mobile-error: #EF4444;
+$mobile-info: #3B82F6;
+
+// 移动端渐变
+$mobile-gradient-primary: linear-gradient(135deg, $mobile-primary, darken($mobile-primary, 10%));
+$mobile-gradient-secondary: linear-gradient(135deg, $mobile-secondary, darken($mobile-secondary, 10%));
+
+// =====================================
+// 打印样式 (移动端友好)
+// =====================================
+
+@media print {
+  @include mobile-only {
+    // 移动端打印优化
+    body {
+      font-size: 12pt;
+      line-height: 1.4;
+    }
+
+    .no-print {
+      display: none !important;
+    }
+
+    .print-break {
+      page-break-before: always;
+    }
+  }
+}

@@ -13,12 +13,12 @@ const router = (0, express_1.Router)();
 const imageGenerator = new newapi_image_generator_1.default();
 // 验证角色ID参数
 const validateCharacterId = [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid character ID')
+    (0, express_validator_1.param)('id').isLength({ min: 1 }).withMessage('Character ID is required')
 ];
 // 验证批量生成请求
 const validateBatchGenerate = [
     (0, express_validator_1.body)('characterIds').isArray({ min: 1 }).withMessage('Character IDs array is required'),
-    (0, express_validator_1.body)('characterIds.*').isUUID().withMessage('Invalid character ID format'),
+    (0, express_validator_1.body)('characterIds.*').isLength({ min: 1 }).withMessage('Invalid character ID format'),
     (0, express_validator_1.body)('type').isIn(['avatar', 'background', 'both']).withMessage('Type must be avatar, background, or both')
 ];
 /**

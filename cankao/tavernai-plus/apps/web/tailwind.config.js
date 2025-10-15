@@ -250,4 +250,35 @@ export default {
     require('@tailwindcss/aspect-ratio'),
   ],
   darkMode: 'class',
+  // 响应式设计增强配置
+  safelist: [
+    // 移动端优化类名
+    'mobile-only',
+    'tablet-only',
+    'desktop-only',
+    'touch-device',
+    'hover-device',
+    'low-performance',
+    'high-performance',
+
+    // 触摸友好类名
+    'touch-friendly',
+    'touch-target',
+    'safe-area-padding',
+
+    // 设备特定类名
+    'device-mobile',
+    'device-tablet',
+    'device-desktop',
+
+    // 性能优化类名
+    'hardware-accelerated',
+    'will-change-auto',
+    'optimized-scroll',
+
+    // 状态类名
+    'keyboard-visible',
+    'voice-mode',
+    'gesture-active',
+  ],
 }

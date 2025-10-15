@@ -286,7 +286,7 @@ export const useChatStore = defineStore('chat', () => {
     }
 
     const token = localStorage.getItem('token')
-    const wsUrl = `ws://localhost:3001/ws?token=${token}`
+    const wsUrl = `ws://localhost:3009/ws?token=${token}`
 
     wsConnection.value = new WebSocket(wsUrl)
 

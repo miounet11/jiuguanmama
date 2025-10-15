@@ -2,7 +2,7 @@
  * 情景剧本业务逻辑服务
  * 提供剧本和世界信息的高级业务功能，包括权限管理、数据验证、统计分析等
  */
-import { ApiScenario, ApiScenarioDetail, ApiWorldInfoEntry, CreateScenarioRequest, UpdateScenarioRequest, CreateWorldInfoEntryRequest, UpdateWorldInfoEntryRequest, ScenarioListQuery, ScenarioStats } from '../types/api';
+import { ApiScenario, ApiScenarioDetail, CreateScenarioRequest, UpdateScenarioRequest, ScenarioListQuery } from '../types/api';
 export declare class ScenarioService {
     /**
      * 获取剧本列表（支持分页和筛选）
@@ -28,35 +28,33 @@ export declare class ScenarioService {
      */
     deleteScenario(id: string, userId: string): Promise<void>;
     /**
-     * 创建世界信息条目
-     */
-    createWorldInfoEntry(scenarioId: string, userId: string, data: CreateWorldInfoEntryRequest): Promise<ApiWorldInfoEntry>;
-    /**
-     * 更新世界信息条目
-     */
-    updateWorldInfoEntry(scenarioId: string, entryId: string, userId: string, data: UpdateWorldInfoEntryRequest): Promise<ApiWorldInfoEntry>;
-    /**
-     * 删除世界信息条目
-     */
-    deleteWorldInfoEntry(scenarioId: string, entryId: string, userId: string): Promise<void>;
-    /**
      * 测试关键词匹配
      */
     testMatching(scenarioId: string, userId: string, testText: string, depth?: number): Promise<{
         testText: string;
         depth: number;
-        matchResults: any;
+        matchResults: {
+            entry: {
+                id: any;
+                title: any;
+                content: any;
+                keywords: string[];
+                priority: any;
+                matchType: any;
+                category: any;
+            };
+            matches: any;
+            confidence: any;
+            priority: number;
+            insertPosition: any;
+        }[];
         statistics: {
-            totalEntries: any;
+            totalEntries: number;
             matchingTime: number;
             averageConfidence: number;
         };
-        performanceMetrics: any;
+        performanceMetrics: import("./worldInfoMatcher").PerformanceMetrics;
     }>;
-    /**
-     * 获取剧本统计信息
-     */
-    getScenarioStats(): Promise<ScenarioStats>;
     /**
      * 增加剧本浏览次数
      */
@@ -73,6 +71,40 @@ export declare class ScenarioService {
      * 解析关键词字符串
      */
     private parseKeywords;
+    /**
+     * 获取剧本分类列表
+     */
+    getCategories(): Promise<{
+        name: string;
+        count: number;
+    }[]>;
+    /**
+     * 获取标签列表
+     */
+    getTags(): Promise<{
+        name: string;
+        count: number;
+    }[]>;
+    /**
+     * 克隆剧本
+     */
+    cloneScenario(scenarioId: string, userId: string): Promise<any>;
+    /**
+     * 获取剧本的世界信息条目
+     */
+    getWorldInfoEntries(scenarioId: string, userId?: string): Promise<any[]>;
+    /**
+     * 测试世界信息匹配
+     */
+    testWorldInfoMatching(scenarioId: string, text: string, userId?: string): Promise<any[]>;
+    /**
+     * 重新排序世界信息条目
+     */
+    reorderWorldInfoEntries(scenarioId: string, entryIds: string[], userId: string): Promise<boolean>;
+    /**
+     * 获取剧本关联的角色
+     */
+    getScenarioCharacters(scenarioId: string, userId?: string): Promise<any[]>;
 }
 export declare const scenarioService: ScenarioService;
 //# sourceMappingURL=scenarioService.d.ts.map

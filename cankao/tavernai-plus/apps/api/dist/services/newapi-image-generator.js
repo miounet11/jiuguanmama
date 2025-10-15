@@ -16,7 +16,7 @@ class NewAPIImageGenerator {
     constructor() {
         this.apiKey = process.env.NEWAPI_KEY || '';
         this.baseUrl = process.env.NEWAPI_BASE_URL || 'https://ttkk.inping.com/v1';
-        this.model = process.env.DEFAULT_MODEL || 'nano-banana';
+        this.model = process.env.IMAGE_MODEL || 'nano-banana';
         if (!this.apiKey) {
             throw new Error('NEWAPI_KEY environment variable is required');
         }

@@ -16,7 +16,7 @@ import {
   SearchResult
 } from '@/types/community'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3009'
 
 class CommunityApi {
   private async request<T>(

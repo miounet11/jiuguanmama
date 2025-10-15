@@ -117,6 +117,10 @@ class ScenarioService {
                             avatar: true
                         }
                     },
+                    worldInfos: {
+                        where: { isActive: true },
+                        orderBy: { priority: 'desc' }
+                    },
                     _count: {
                         select: {
                             worldInfos: true,
@@ -132,6 +136,10 @@ class ScenarioService {
         const scenariosWithPermissions = scenarios.map(scenario => ({
             ...scenario,
             tags: this.parseTags(scenario.tags),
+            worldInfos: scenario.worldInfos.map(entry => ({
+                ...entry,
+                keywords: this.parseKeywords(entry.keywords)
+            })),
             canEdit: userId === scenario.user.id,
             isFavorited: false // 这里可以后续扩展查询用户收藏状态
         }));
@@ -508,6 +516,366 @@ class ScenarioService {
         catch {
             return keywordsString.split(',').map(k => k.trim()).filter(k => k.length > 0);
         }
+    }
+    /**
+     * 获取剧本分类列表
+     */
+    async getCategories() {
+        const categories = await server_1.prisma.scenario.groupBy({
+            by: ['category'],
+            where: {
+                isActive: true,
+                isPublic: true
+            },
+            _count: {
+                id: true
+            }
+        });
+        return categories.map(cat => ({
+            name: cat.category,
+            count: cat._count.id
+        }));
+    }
+    /**
+     * 获取标签列表
+     */
+    async getTags() {
+        const scenarios = await server_1.prisma.scenario.findMany({
+            where: {
+                isActive: true,
+                isPublic: true
+            },
+            select: { tags: true }
+        });
+        const tagMap = new Map();
+        scenarios.forEach(scenario => {
+            const tags = this.parseTags(scenario.tags);
+            tags.forEach(tag => {
+                tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
+            });
+        });
+        return Array.from(tagMap.entries())
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count);
+    }
+    /**
+     * 获取剧本统计信息
+     */
+    async getScenarioStats(userId) {
+        const [total, publicCount, userCount] = await Promise.all([
+            server_1.prisma.scenario.count({ where: { isActive: true } }),
+            server_1.prisma.scenario.count({ where: { isActive: true, isPublic: true } }),
+            userId ? server_1.prisma.scenario.count({ where: { isActive: true, userId } }) : 0
+        ]);
+        const [totalWorldInfo, categories] = await Promise.all([
+            server_1.prisma.worldInfoEntry.count({ where: { isActive: true } }),
+            this.getCategories()
+        ]);
+        return {
+            total,
+            publicCount,
+            userCount,
+            totalWorldInfo,
+            categories: categories.slice(0, 10) // 只返回前10个分类
+        };
+    }
+    /**
+     * 克隆剧本
+     */
+    async cloneScenario(scenarioId, userId) {
+        const originalScenario = await server_1.prisma.scenario.findUnique({
+            where: { id: scenarioId },
+            include: {
+                worldInfoEntries: true
+            }
+        });
+        if (!originalScenario) {
+            return null;
+        }
+        // 检查权限：只有公开剧本或自己的剧本才能克隆
+        if (!originalScenario.isPublic && originalScenario.userId !== userId) {
+            return null;
+        }
+        // 克隆剧本
+        const clonedScenario = await server_1.prisma.scenario.create({
+            data: {
+                userId,
+                name: `${originalScenario.name} (副本)`,
+                description: originalScenario.description,
+                content: originalScenario.content,
+                category: originalScenario.category,
+                tags: originalScenario.tags,
+                language: originalScenario.language,
+                isPublic: false, // 克隆的剧本默认为私有
+                isActive: true
+            }
+        });
+        // 克隆世界信息条目
+        if (originalScenario.worldInfoEntries.length > 0) {
+            await server_1.prisma.worldInfoEntry.createMany({
+                data: originalScenario.worldInfoEntries.map(entry => ({
+                    scenarioId: clonedScenario.id,
+                    title: entry.title,
+                    content: entry.content,
+                    keywords: entry.keywords,
+                    priority: entry.priority,
+                    insertDepth: entry.insertDepth,
+                    probability: entry.probability,
+                    matchType: entry.matchType,
+                    caseSensitive: entry.caseSensitive,
+                    isActive: entry.isActive,
+                    triggerOnce: entry.triggerOnce,
+                    excludeRecursion: entry.excludeRecursion,
+                    category: entry.category,
+                    group: entry.group,
+                    position: entry.position
+                }))
+            });
+        }
+        return {
+            ...clonedScenario,
+            tags: this.parseTags(clonedScenario.tags)
+        };
+    }
+    /**
+     * 获取剧本的世界信息条目
+     */
+    async getWorldInfoEntries(scenarioId, userId) {
+        // 检查剧本访问权限
+        const scenario = await server_1.prisma.scenario.findUnique({
+            where: { id: scenarioId }
+        });
+        if (!scenario) {
+            throw new Error('剧本不存在');
+        }
+        // 权限检查：公开剧本或自己的剧本
+        if (!scenario.isPublic && scenario.userId !== userId) {
+            throw new Error('无权限访问此剧本');
+        }
+        const entries = await server_1.prisma.worldInfoEntry.findMany({
+            where: { scenarioId },
+            orderBy: [
+                { priority: 'desc' },
+                { createdAt: 'asc' }
+            ]
+        });
+        return entries.map(entry => ({
+            ...entry,
+            keywords: this.parseKeywords(entry.keywords)
+        }));
+    }
+    /**
+     * 创建世界信息条目
+     */
+    async createWorldInfoEntry(scenarioId, userId, data) {
+        // 检查剧本权限
+        await this.checkScenarioOwnership(scenarioId, userId);
+        // 处理关键词数据
+        const createData = { ...data, scenarioId };
+        if (data.keywords) {
+            createData.keywords = JSON.stringify(data.keywords);
+        }
+        const entry = await server_1.prisma.worldInfoEntry.create({
+            data: createData
+        });
+        return {
+            ...entry,
+            keywords: this.parseKeywords(entry.keywords)
+        };
+    }
+    /**
+     * 更新世界信息条目
+     */
+    async updateWorldInfoEntry(scenarioId, entryId, userId, data) {
+        // 检查剧本权限
+        await this.checkScenarioOwnership(scenarioId, userId);
+        // 检查条目是否存在
+        const existingEntry = await server_1.prisma.worldInfoEntry.findUnique({
+            where: { id: entryId }
+        });
+        if (!existingEntry || existingEntry.scenarioId !== scenarioId) {
+            return null;
+        }
+        // 处理关键词数据
+        const updateData = { ...data };
+        if (data.keywords) {
+            updateData.keywords = JSON.stringify(data.keywords);
+        }
+        const updatedEntry = await server_1.prisma.worldInfoEntry.update({
+            where: { id: entryId },
+            data: updateData
+        });
+        return {
+            ...updatedEntry,
+            keywords: this.parseKeywords(updatedEntry.keywords)
+        };
+    }
+    /**
+     * 删除世界信息条目
+     */
+    async deleteWorldInfoEntry(scenarioId, entryId, userId) {
+        // 检查剧本权限
+        await this.checkScenarioOwnership(scenarioId, userId);
+        // 检查条目是否存在
+        const existingEntry = await server_1.prisma.worldInfoEntry.findUnique({
+            where: { id: entryId }
+        });
+        if (!existingEntry || existingEntry.scenarioId !== scenarioId) {
+            return false;
+        }
+        // 删除条目
+        await server_1.prisma.worldInfoEntry.delete({
+            where: { id: entryId }
+        });
+        return true;
+    }
+    /**
+     * 测试世界信息匹配
+     */
+    async testWorldInfoMatching(scenarioId, text, userId) {
+        // 获取世界信息条目
+        const entries = await this.getWorldInfoEntries(scenarioId, userId);
+        const matchResults = entries.map(entry => {
+            let isMatch = false;
+            let matchType = entry.matchType || 'contains';
+            // 根据匹配类型进行测试
+            switch (matchType) {
+                case 'exact':
+                    isMatch = entry.keywords.some(keyword => entry.caseSensitive ? text === keyword : text.toLowerCase() === keyword.toLowerCase());
+                    break;
+                case 'contains':
+                    isMatch = entry.keywords.some(keyword => entry.caseSensitive ? text.includes(keyword) : text.toLowerCase().includes(keyword.toLowerCase()));
+                    break;
+                case 'starts_with':
+                    isMatch = entry.keywords.some(keyword => entry.caseSensitive ? text.startsWith(keyword) : text.toLowerCase().startsWith(keyword.toLowerCase()));
+                    break;
+                case 'ends_with':
+                    isMatch = entry.keywords.some(keyword => entry.caseSensitive ? text.endsWith(keyword) : text.toLowerCase().endsWith(keyword.toLowerCase()));
+                    break;
+                case 'regex':
+                    try {
+                        isMatch = entry.keywords.some(keyword => {
+                            const regex = new RegExp(keyword, entry.caseSensitive ? '' : 'i');
+                            return regex.test(text);
+                        });
+                    }
+                    catch {
+                        isMatch = false;
+                    }
+                    break;
+                default:
+                    isMatch = false;
+            }
+            return {
+                entryId: entry.id,
+                title: entry.title,
+                content: entry.content,
+                keywords: entry.keywords,
+                matchType,
+                isMatch,
+                priority: entry.priority,
+                probability: entry.probability
+            };
+        });
+        // 只返回匹配的条目，按优先级排序
+        return matchResults
+            .filter(result => result.isMatch)
+            .sort((a, b) => b.priority - a.priority);
+    }
+    /**
+     * 重新排序世界信息条目
+     */
+    async reorderWorldInfoEntries(scenarioId, entryIds, userId) {
+        // 检查剧本权限
+        await this.checkScenarioOwnership(scenarioId, userId);
+        // 验证所有条目都属于该剧本
+        const entries = await server_1.prisma.worldInfoEntry.findMany({
+            where: {
+                scenarioId,
+                id: { in: entryIds }
+            }
+        });
+        if (entries.length !== entryIds.length) {
+            return false;
+        }
+        // 更新优先级（从高到低）
+        const updates = entryIds.map((entryId, index) => server_1.prisma.worldInfoEntry.update({
+            where: { id: entryId },
+            data: { priority: 1000 - index }
+        }));
+        await Promise.all(updates);
+        return true;
+    }
+    /**
+     * 获取剧本关联的角色
+     */
+    async getScenarioCharacters(scenarioId, userId) {
+        // 验证剧本存在且有权限访问
+        const scenario = await server_1.prisma.scenario.findUnique({
+            where: { id: scenarioId }
+        });
+        if (!scenario) {
+            throw new Error('剧本不存在');
+        }
+        // 权限检查：私有剧本只能被创建者查看
+        if (!scenario.isPublic && (!userId || userId !== scenario.userId)) {
+            throw new Error('没有权限访问此剧本');
+        }
+        // 获取剧本关联的角色
+        // 这里假设角色与剧本的关联是通过角色的tags或category字段
+        // 或者通过专门的关联表ScenarioCharacter
+        // 方案1：通过角色的tags匹配剧本的tags
+        const scenarioTags = this.parseTags(scenario.tags);
+        const characters = await server_1.prisma.character.findMany({
+            where: {
+                isDeleted: false,
+                OR: [
+                    // 公开角色
+                    { isPublic: true },
+                    // 剧本创建者的角色
+                    ...(userId ? [{ creatorId: scenario.userId }] : [])
+                ]
+            },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                avatar: true,
+                tags: true,
+                rating: true,
+                chatCount: true,
+                createdAt: true,
+                creatorId: true,
+                isPublic: true
+            },
+            orderBy: [
+                { rating: 'desc' },
+                { chatCount: 'desc' },
+                { createdAt: 'desc' }
+            ],
+            take: 20 // 限制返回数量
+        });
+        // 过滤与剧本相关的角色（基于标签匹配）
+        const relatedCharacters = characters.filter(character => {
+            const characterTags = this.parseTags(character.tags);
+            // 如果剧本或角色没有标签，返回所有角色
+            if (scenarioTags.length === 0 || characterTags.length === 0) {
+                return true;
+            }
+            // 检查是否有交集标签
+            return scenarioTags.some(tag => characterTags.some(charTag => charTag.toLowerCase().includes(tag.toLowerCase()) ||
+                tag.toLowerCase().includes(charTag.toLowerCase())));
+        });
+        // 转换数据格式
+        return relatedCharacters.map(character => ({
+            id: character.id,
+            name: character.name,
+            description: character.description,
+            avatar: character.avatar,
+            tags: this.parseTags(character.tags),
+            rating: character.rating || 0,
+            chatCount: character.chatCount || 0
+        }));
     }
 }
 exports.ScenarioService = ScenarioService;

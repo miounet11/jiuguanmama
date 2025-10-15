@@ -115,6 +115,123 @@
   --chat-system-text: #fbbf24;
   --chat-thinking-bg: rgba(59, 130, 246, 0.1);
   --chat-thinking-text: var(--brand-secondary-400);
+
+  // ==================== DT 前缀变量映射 (向后兼容) ====================
+  // 为了兼容现有代码中使用的 --dt-* 前缀变量
+
+  // 背景色系映射
+  --dt-color-background-primary: var(--surface-0);
+  --dt-color-background-secondary: var(--surface-1);
+  --dt-color-background-tertiary: var(--surface-2);
+  --dt-color-background-quaternary: var(--surface-3);
+
+  // 表面色系映射
+  --dt-color-surface-primary: var(--surface-1);
+  --dt-color-surface-secondary: var(--surface-2);
+  --dt-color-surface-tertiary: var(--surface-3);
+  --dt-color-surface-quaternary: var(--surface-4);
+
+  // 边框色系映射
+  --dt-color-border-primary: var(--border-primary);
+  --dt-color-border-secondary: var(--border-secondary);
+  --dt-color-border-tertiary: var(--border-tertiary);
+  --dt-color-border-accent: var(--border-accent);
+  --dt-color-border-interactive: var(--border-interactive);
+
+  // 文本色系映射
+  --dt-color-text-primary: var(--text-primary);
+  --dt-color-text-secondary: var(--text-secondary);
+  --dt-color-text-tertiary: var(--text-tertiary);
+  --dt-color-text-quaternary: var(--text-quaternary);
+  --dt-color-text-disabled: var(--text-disabled);
+
+  // 主色系映射
+  --dt-color-primary-400: var(--brand-primary-400);
+  --dt-color-primary-500: var(--brand-primary-500);
+  --dt-color-primary-600: var(--brand-primary-600);
+  --dt-color-secondary-400: var(--brand-secondary-400);
+  --dt-color-secondary-500: var(--brand-secondary-500);
+  --dt-color-accent-500: var(--brand-accent-500);
+
+  // 渐变映射
+  --dt-gradient-primary: linear-gradient(135deg, var(--brand-primary-500), var(--brand-primary-600));
+  --dt-gradient-secondary: linear-gradient(135deg, var(--brand-secondary-500), var(--brand-secondary-600));
+  --dt-gradient-accent: linear-gradient(135deg, var(--brand-accent-500), var(--brand-accent-600));
+
+  // 间距映射 (DT 命名规范)
+  --dt-spacing-xs: var(--space-1);
+  --dt-spacing-sm: var(--space-2);
+  --dt-spacing-md: var(--space-4);
+  --dt-spacing-lg: var(--space-6);
+  --dt-spacing-xl: var(--space-8);
+  --dt-spacing-2xl: var(--space-12);
+  --dt-spacing-3xl: var(--space-16);
+  --dt-spacing-4xl: var(--space-20);
+  --dt-spacing-5xl: var(--space-24);
+
+  // 字体大小映射 (DT 命名规范)
+  --dt-font-size-xs: var(--text-xs);
+  --dt-font-size-sm: var(--text-sm);
+  --dt-font-size-base: var(--text-base);
+  --dt-font-size-lg: var(--text-lg);
+  --dt-font-size-xl: var(--text-xl);
+  --dt-font-size-2xl: var(--text-2xl);
+  --dt-font-size-3xl: var(--text-3xl);
+  --dt-font-size-4xl: var(--text-4xl);
+  --dt-font-size-5xl: var(--text-5xl);
+
+  // 字重映射 (DT 命名规范)
+  --dt-font-weight-light: var(--font-light);
+  --dt-font-weight-normal: var(--font-normal);
+  --dt-font-weight-medium: var(--font-medium);
+  --dt-font-weight-semibold: var(--font-semibold);
+  --dt-font-weight-bold: var(--font-bold);
+
+  // 圆角映射 (DT 命名规范)
+  --dt-border-radius-sm: var(--radius-sm);
+  --dt-border-radius-base: var(--radius-base);
+  --dt-border-radius-lg: var(--radius-lg);
+  --dt-border-radius-xl: var(--radius-xl);
+  --dt-border-radius-2xl: var(--radius-2xl);
+  --dt-border-radius-full: var(--radius-full);
+
+  // 阴影映射 (DT 命名规范)
+  --dt-shadow-sm: var(--shadow-sm);
+  --dt-shadow-base: var(--shadow-base);
+  --dt-shadow-lg: var(--shadow-lg);
+  --dt-shadow-xl: var(--shadow-xl);
+  --dt-shadow-2xl: var(--shadow-2xl);
+  --dt-shadow-primary: var(--shadow-primary);
+  --dt-shadow-secondary: var(--shadow-secondary);
+  --dt-shadow-accent: var(--shadow-accent);
+  --dt-shadow-glow: var(--shadow-glow);
+
+  // 过渡动画映射 (DT 命名规范)
+  --dt-transition-fast: var(--duration-fast);
+  --dt-transition-normal: var(--duration-normal);
+  --dt-transition-slow: var(--duration-slow);
+  --dt-transition-all: var(--transition-all);
+  --dt-transition-colors: var(--transition-colors);
+  --dt-transition-transform: var(--transition-transform);
+  --dt-transition-opacity: var(--transition-opacity);
+
+  // 功能色彩映射 (DT 命名规范)
+  --dt-color-success: var(--success);
+  --dt-color-warning: var(--warning);
+  --dt-color-error: var(--error);
+  --dt-color-info: var(--info);
+
+  // 中性色映射 (DT 命名规范)
+  --dt-color-gray-50: var(--neutral-50);
+  --dt-color-gray-100: var(--neutral-100);
+  --dt-color-gray-200: var(--neutral-200);
+  --dt-color-gray-300: var(--neutral-300);
+  --dt-color-gray-400: var(--neutral-400);
+  --dt-color-gray-500: var(--neutral-500);
+  --dt-color-gray-600: var(--neutral-600);
+  --dt-color-gray-700: var(--neutral-700);
+  --dt-color-gray-800: var(--neutral-800);
+  --dt-color-gray-900: var(--neutral-900);
 }
 
 // 暗色主题

@@ -113,8 +113,8 @@ export interface PerformanceMetrics {
 }
 export declare class PromptInjectionError extends Error {
     code: string;
-    context?: any;
-    constructor(message: string, code: string, context?: any);
+    context?: any | undefined;
+    constructor(message: string, code: string, context?: any | undefined);
 }
 export interface TokenCalculationResult {
     total: number;

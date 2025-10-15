@@ -41,10 +41,17 @@ const worldInfoSchema = zod_1.z.object({
     groupId: zod_1.z.string().optional()
 });
 // GET /scenarios - 获取剧本列表
-router.get('/', auth_1.optionalAuth, (0, validate_1.validateRequest)({ query: scenarioQuerySchema }), async (req, res) => {
+router.get('/', auth_1.optionalAuth, (0, validate_1.validate)(scenarioQuerySchema, 'query'), async (req, res) => {
     try {
         const userId = req.user?.id;
-        const query = req.query;
+        const rawQuery = req.query;
+        // 确保数字参数的正确类型转换
+        const query = {
+            ...rawQuery,
+            page: rawQuery.page ? parseInt(rawQuery.page) : 1,
+            limit: rawQuery.limit ? parseInt(rawQuery.limit) : 20,
+            tags: rawQuery.tags ? rawQuery.tags.split(',') : undefined
+        };
         const result = await scenarioService.getScenarios(userId, query);
         res.json({
             success: true,
@@ -144,8 +151,27 @@ router.get('/:id', auth_1.optionalAuth, async (req, res) => {
         });
     }
 });
+// GET /scenarios/:id/characters - 获取剧本关联的角色
+router.get('/:id/characters', auth_1.optionalAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.id;
+        const characters = await scenarioService.getScenarioCharacters(id, userId);
+        res.json({
+            success: true,
+            data: characters
+        });
+    }
+    catch (error) {
+        console.error('Error fetching scenario characters:', error);
+        res.status(500).json({
+            success: false,
+            error: '获取剧本角色失败'
+        });
+    }
+});
 // POST /scenarios - 创建新剧本
-router.post('/', auth_1.authenticate, (0, validate_1.validateRequest)({ body: createScenarioSchema }), async (req, res) => {
+router.post('/', auth_1.authenticate, (0, validate_1.validate)(createScenarioSchema, 'body'), async (req, res) => {
     try {
         const userId = req.user.id;
         const scenarioData = req.body;
@@ -164,7 +190,7 @@ router.post('/', auth_1.authenticate, (0, validate_1.validateRequest)({ body: cr
     }
 });
 // PUT /scenarios/:id - 更新剧本
-router.put('/:id', auth_1.authenticate, (0, validate_1.validateRequest)({ body: updateScenarioSchema }), async (req, res) => {
+router.put('/:id', auth_1.authenticate, (0, validate_1.validate)(updateScenarioSchema, 'body'), async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
@@ -262,7 +288,7 @@ router.get('/:id/worldinfo', auth_1.optionalAuth, async (req, res) => {
     }
 });
 // POST /scenarios/:id/worldinfo - 添加世界信息条目
-router.post('/:id/worldinfo', auth_1.authenticate, (0, validate_1.validateRequest)({ body: worldInfoSchema }), async (req, res) => {
+router.post('/:id/worldinfo', auth_1.authenticate, (0, validate_1.validate)(worldInfoSchema, 'body'), async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
@@ -288,7 +314,7 @@ router.post('/:id/worldinfo', auth_1.authenticate, (0, validate_1.validateReques
     }
 });
 // PUT /scenarios/:scenarioId/worldinfo/:entryId - 更新世界信息条目
-router.put('/:scenarioId/worldinfo/:entryId', auth_1.authenticate, (0, validate_1.validateRequest)({ body: worldInfoSchema.partial() }), async (req, res) => {
+router.put('/:scenarioId/worldinfo/:entryId', auth_1.authenticate, (0, validate_1.validate)(worldInfoSchema.partial(), 'body'), async (req, res) => {
     try {
         const { scenarioId, entryId } = req.params;
         const userId = req.user.id;

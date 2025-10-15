@@ -1,7 +1,27 @@
 <template>
   <div class="chat-page">
-    <!-- PC端优化的侧边栏布局 -->
-    <div class="chat-container">
+    <!-- 移动端对话列表 -->
+    <MobileConversationList
+      v-if="isMobile"
+      :conversations="formattedConversations"
+      :active-conversation-id="selectedChatId"
+      :is-visible="showMobileConversationList"
+      :is-loading="isLoading"
+      :has-more="hasMore"
+      :show-create-new-button="true"
+      @close="closeMobileConversationList"
+      @create-new="createNewChat"
+      @conversation-click="handleResponsiveConversationClick"
+      @conversation-rename="handleRenameConversation"
+      @conversation-pin="handlePinConversation"
+      @conversation-archive="handleArchiveConversation"
+      @conversation-delete="handleDeleteConversation"
+      @load-more="handleLoadMore"
+      @refresh="fetchChats(1, true)"
+    />
+
+    <!-- 桌面端布局 -->
+    <div v-else class="chat-container">
       <!-- 左侧会话列表 -->
       <div class="chat-sidebar">
         <div class="sidebar-header">
@@ -17,81 +37,87 @@
           </TavernButton>
         </div>
 
-        <!-- 对话列表 -->
+        <!-- 现代化对话列表 -->
         <div class="chat-list">
-          <!-- 现有对话 -->
-          <TavernCard
-            v-for="chat in chatList"
-            :key="chat.id"
-            @click="openChat(chat.id)"
-            class="chat-item"
-            :class="{ active: selectedChatId === chat.id }"
-            variant="glass"
-            hoverable
-          >
-            <div class="chat-item-content">
-              <img
-                :src="chat.character?.avatar || '/default-avatar.png'"
-                :alt="chat.character?.name || '角色'"
-                class="chat-avatar"
-              />
-              <div class="chat-info">
-                <div class="chat-name">{{ chat.character?.name || '未知角色' }}</div>
-                <div class="chat-preview">{{ chat.lastMessage || '暂无消息' }}</div>
-              </div>
-              <div class="chat-meta">
-                <span class="chat-time">{{ formatTime(chat.lastMessageAt) }}</span>
-                <TavernBadge v-if="chat.unreadCount > 0" variant="danger" size="sm">
-                  {{ chat.unreadCount }}
-                </TavernBadge>
-              </div>
-            </div>
-          </TavernCard>
-
-          <!-- 空状态 -->
-          <div v-if="!chatList || chatList.length === 0" class="empty-state">
-            <TavernIcon name="chat-bubble-left-right" size="4xl" class="empty-icon" />
-            <p>还没有对话</p>
-            <TavernButton @click="createNewChat" variant="primary">
-              开始新对话
-            </TavernButton>
-          </div>
+          <ConversationList
+            :conversations="formattedConversations"
+            :active-conversation-id="selectedChatId"
+            :is-loading="isLoading"
+            :has-more="hasMore"
+            :show-create-new-button="true"
+            @create-new="createNewChat"
+            @conversation-click="openChat"
+            @conversation-rename="handleRenameConversation"
+            @conversation-pin="handlePinConversation"
+            @conversation-archive="handleArchiveConversation"
+            @conversation-delete="handleDeleteConversation"
+            @load-more="handleLoadMore"
+            @batch-operation="handleBatchOperation"
+          />
         </div>
       </div>
 
       <!-- 右侧聊天区域 -->
       <div class="chat-main">
-        <router-view v-if="selectedChatId" />
-        <div v-else class="welcome-screen">
-          <div class="welcome-content">
-            <div class="welcome-logo-container">
-              <img src="/miaoda-ai.svg" alt="MIAODA AI" class="welcome-logo" />
-            </div>
-            <h1 class="gradient-title">欢迎使用 TavernAI Plus</h1>
-            <p>选择一个对话或创建新对话开始</p>
-            <TavernButton @click="createNewChat" variant="primary" size="lg" class="create-chat-btn">
-              <TavernIcon name="plus" />
-              创建新对话
-            </TavernButton>
+        <!-- 移动端顶部导航 -->
+        <div v-if="isMobile && selectedChatId" class="mobile-chat-header">
+          <TavernButton
+            variant="ghost"
+            size="md"
+            @click="openMobileConversationList"
+            class="mobile-nav-btn"
+          >
+            <TavernIcon name="bars-3" size="lg" />
+          </TavernButton>
+
+          <div class="mobile-chat-title">
+            <span class="mobile-chat-name">{{ getCurrentChatName() }}</span>
           </div>
 
-          <!-- 快速开始卡片 -->
-          <div class="quick-start">
-            <h3 class="gradient-text">热门角色</h3>
-            <div class="character-grid">
-              <TavernCard
-                v-for="char in popularCharacters"
-                :key="char.id"
-                @click="quickStart(char)"
-                class="character-quick-card"
-                variant="glass"
-                hoverable
-              >
-                <div class="character-card-content">
-                  <img :src="char.avatar || '/default-avatar.png'" :alt="char.name" class="character-avatar" />
-                  <span class="character-name">{{ char.name }}</span>
-                </div>
-              </TavernCard>
+          <TavernButton
+            variant="ghost"
+            size="md"
+            @click="showMobileChatOptions"
+            class="mobile-nav-btn"
+          >
+            <TavernIcon name="ellipsis-vertical" size="lg" />
+          </TavernButton>
+        </div>
+
+        <!-- 聊天内容区域 -->
+        <div class="chat-content">
+          <router-view v-if="selectedChatId" />
+          <div v-else class="welcome-screen">
+            <div class="welcome-content">
+              <div class="welcome-logo-container">
+                <img src="/miaoda-ai.svg" alt="MIAODA AI" class="welcome-logo" />
+              </div>
+              <h1 class="gradient-title">欢迎使用 TavernAI Plus</h1>
+              <p>选择一个对话或创建新对话开始</p>
+              <TavernButton @click="createNewChat" variant="primary" size="lg" class="create-chat-btn">
+                <TavernIcon name="plus" />
+                创建新对话
+              </TavernButton>
+            </div>
+
+            <!-- 快速开始卡片 -->
+            <div class="quick-start">
+              <h3 class="gradient-text">热门角色</h3>
+              <div class="character-grid">
+                <TavernCard
+                  v-for="char in popularCharacters"
+                  :key="char.id"
+                  @click="quickStart(char)"
+                  class="character-quick-card"
+                  variant="glass"
+                  hoverable
+                >
+                  <div class="character-card-content">
+                    <img :src="char.avatar || '/default-avatar.png'" :alt="char.name" class="character-avatar" />
+                    <span class="character-name">{{ char.name }}</span>
+                  </div>
+                </TavernCard>
+              </div>
             </div>
           </div>
         </div>
@@ -152,10 +178,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElDialog } from 'element-plus'
 import { api } from '@/services/api'
+import ConversationList from '@/components/chat/ConversationList.vue'
+import MobileConversationList from '@/components/chat/MobileConversationList.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -191,8 +219,37 @@ const characterSearchQuery = ref('')
 const availableCharacters = ref<Character[]>([])
 const popularCharacters = ref<Character[]>([])
 const isLoading = ref(false)
+const hasMore = ref(false)
+const currentPage = ref(1)
+const pageSize = ref(20)
+
+// 响应式设计
+const isMobile = ref(false)
+const showMobileConversationList = ref(false)
 
 // 计算属性
+const formattedConversations = computed(() => {
+  return chatList.value.map(chat => ({
+    id: chat.id,
+    characterId: chat.characterId,
+    characterName: chat.character?.name || '未知角色',
+    characterAvatar: chat.character?.avatar,
+    lastMessage: chat.lastMessage,
+    lastMessageAt: chat.lastMessageAt,
+    messageCount: chat.messageCount || 0,
+    unreadCount: chat.unreadCount || 0,
+    isPinned: false, // TODO: 从后端获取置顶状态
+    isArchived: false, // TODO: 从后端获取归档状态
+    isOnline: Math.random() > 0.5, // TODO: 从后端获取在线状态
+    isStreaming: false, // TODO: 从WebSocket获取流式状态
+    hasError: false, // TODO: 从状态管理获取错误状态
+    isEdited: false, // TODO: 从后端获取编辑状态
+    lastMessageSender: '', // TODO: 从消息数据获取发送者
+    tags: [], // TODO: 从后端获取标签
+    characterStatus: Math.random() > 0.5 ? 'online' : 'offline' as 'online' | 'offline' // TODO: 从后端获取状态
+  }))
+})
+
 const filteredCharacters = computed(() => {
   if (!characterSearchQuery.value || !availableCharacters.value) {
     return availableCharacters.value || []
@@ -227,19 +284,38 @@ const formatTime = (time: Date | string | undefined) => {
 }
 
 // 获取对话列表
-const fetchChats = async () => {
+const fetchChats = async (page: number = 1, reset: boolean = false) => {
   try {
     isLoading.value = true
-    const response = await api.get('/chat/sessions')
+    const response = await api.get('/chat/sessions', {
+      params: {
+        page,
+        limit: pageSize.value,
+        includeDetails: true
+      }
+    })
 
-    if (response.success && response.sessions) {
-      chatList.value = response.sessions
+    if (response.success) {
+      const newSessions = response.sessions || []
+
+      if (reset || page === 1) {
+        chatList.value = newSessions
+      } else {
+        chatList.value.push(...newSessions)
+      }
+
+      hasMore.value = response.hasMore || false
+      currentPage.value = page
     } else {
-      chatList.value = []
+      if (reset || page === 1) {
+        chatList.value = []
+      }
     }
   } catch (error) {
     console.error('获取对话列表失败:', error)
-    chatList.value = []
+    if (reset || page === 1) {
+      chatList.value = []
+    }
   } finally {
     isLoading.value = false
   }
@@ -307,15 +383,198 @@ const openChat = (chatId: string) => {
   router.push(`/chat/${chatId}`)
 }
 
+// 新的事件处理函数
+const handleRenameConversation = async (chatId: string) => {
+  try {
+    const newTitle = prompt('请输入新的对话标题：')
+    if (newTitle && newTitle.trim()) {
+      const response = await api.put(`/chat/sessions/${chatId}`, {
+        title: newTitle.trim()
+      })
+
+      if (response.success) {
+        const chat = chatList.value.find(c => c.id === chatId)
+        if (chat) {
+          chat.title = newTitle.trim()
+        }
+        ElMessage.success('对话标题已更新')
+      } else {
+        ElMessage.error('更新对话标题失败')
+      }
+    }
+  } catch (error) {
+    console.error('重命名对话失败:', error)
+    ElMessage.error('重命名对话失败')
+  }
+}
+
+const handlePinConversation = async (chatId: string, pinned: boolean) => {
+  try {
+    const response = await api.put(`/chat/sessions/${chatId}`, {
+      isPinned: pinned
+    })
+
+    if (response.success) {
+      const chat = chatList.value.find(c => c.id === chatId)
+      if (chat) {
+        // 更新本地状态，实际应该从后端返回的数据更新
+        ElMessage.success(pinned ? '对话已置顶' : '已取消置顶')
+      }
+    } else {
+      ElMessage.error('操作失败')
+    }
+  } catch (error) {
+    console.error('置顶/取消置顶对话失败:', error)
+    ElMessage.error('操作失败')
+  }
+}
+
+const handleArchiveConversation = async (chatId: string, archived: boolean) => {
+  try {
+    const response = await api.put(`/chat/sessions/${chatId}`, {
+      isArchived: archived
+    })
+
+    if (response.success) {
+      const chat = chatList.value.find(c => c.id === chatId)
+      if (chat) {
+        // 更新本地状态，实际应该从后端返回的数据更新
+        ElMessage.success(archived ? '对话已归档' : '已取消归档')
+      }
+    } else {
+      ElMessage.error('操作失败')
+    }
+  } catch (error) {
+    console.error('归档/取消归档对话失败:', error)
+    ElMessage.error('操作失败')
+  }
+}
+
+const handleDeleteConversation = async (chatId: string) => {
+  try {
+    const confirmed = confirm('确定要删除这个对话吗？此操作无法撤销。')
+    if (!confirmed) return
+
+    const response = await api.delete(`/chat/sessions/${chatId}`)
+
+    if (response.success) {
+      chatList.value = chatList.value.filter(c => c.id !== chatId)
+      if (selectedChatId.value === chatId) {
+        selectedChatId.value = ''
+        router.push('/chat')
+      }
+      ElMessage.success('对话已删除')
+    } else {
+      ElMessage.error('删除对话失败')
+    }
+  } catch (error) {
+    console.error('删除对话失败:', error)
+    ElMessage.error('删除对话失败')
+  }
+}
+
+const handleLoadMore = () => {
+  if (!isLoading.value && hasMore.value) {
+    fetchChats(currentPage.value + 1, false)
+  }
+}
+
+const handleBatchOperation = async (operation: string, conversationIds: string[]) => {
+  try {
+    let endpoint = '/chat/sessions/batch'
+    let data = { operation, conversationIds }
+
+    const response = await api.post(endpoint, data)
+
+    if (response.success) {
+      // 重新获取对话列表
+      await fetchChats(1, true)
+
+      let message = ''
+      switch (operation) {
+        case 'pin':
+          message = '已批量置顶'
+          break
+        case 'archive':
+          message = '已批量归档'
+          break
+        case 'delete':
+          message = '已批量删除'
+          break
+        default:
+          message = '批量操作完成'
+      }
+
+      ElMessage.success(message)
+    } else {
+      ElMessage.error('批量操作失败')
+    }
+  } catch (error) {
+    console.error('批量操作失败:', error)
+    ElMessage.error('批量操作失败')
+  }
+}
+
+// 检查是否为移动设备
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
+// 移动端对话列表处理
+const openMobileConversationList = () => {
+  showMobileConversationList.value = true
+}
+
+const closeMobileConversationList = () => {
+  showMobileConversationList.value = false
+}
+
+// 获取当前聊天名称
+const getCurrentChatName = () => {
+  const currentChat = chatList.value.find(chat => chat.id === selectedChatId.value)
+  return currentChat?.character?.name || '对话'
+}
+
+// 显示移动端聊天选项
+const showMobileChatOptions = () => {
+  // 可以在这里实现移动端聊天选项的逻辑
+  // 比如显示操作菜单等
+}
+
+// 响应式处理对话点击
+const handleResponsiveConversationClick = (chatId: string) => {
+  selectedChatId.value = chatId
+  router.push(`/chat/${chatId}`)
+
+  // 移动端点击后关闭侧边栏
+  if (isMobile.value) {
+    closeMobileConversationList()
+  }
+}
+
 // 监听路由变化
 watch(() => route.params.sessionId, (newId) => {
   if (newId) {
     selectedChatId.value = newId as string
+    // 移动端有选中对话时关闭侧边栏
+    if (isMobile.value) {
+      closeMobileConversationList()
+    }
   }
 })
 
+// 监听窗口大小变化
+const handleResize = () => {
+  checkMobile()
+  if (!isMobile.value) {
+    closeMobileConversationList()
+  }
+}
+
 // 初始化
 onMounted(async () => {
+  checkMobile()
+
   await fetchChats()
   await fetchPopularCharacters()
 
@@ -323,6 +582,14 @@ onMounted(async () => {
   if (route.params.sessionId) {
     selectedChatId.value = route.params.sessionId as string
   }
+
+  // 添加窗口大小变化监听
+  window.addEventListener('resize', handleResize)
+})
+
+// 清理工作
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
@@ -392,98 +659,9 @@ onMounted(async () => {
 
   .chat-list {
     flex: 1;
-    overflow-y: auto;
-    padding: var(--dt-spacing-sm);
-
-    .chat-item {
-      margin-bottom: var(--dt-spacing-xs);
-      cursor: pointer;
-      transition: all var(--dt-transition-normal);
-      border-radius: var(--dt-border-radius-lg);
-
-      &.active {
-        background: var(--dt-gradient-primary) !important;
-        border-color: var(--dt-color-primary-500) !important;
-        transform: translateY(-2px);
-        box-shadow: var(--dt-shadow-lg);
-
-        .chat-item-content {
-          color: var(--dt-color-text-inverse);
-
-          .chat-preview,
-          .chat-time {
-            color: var(--dt-color-text-inverse-secondary);
-          }
-        }
-      }
-
-      .chat-item-content {
-        display: flex;
-        align-items: center;
-        padding: var(--dt-spacing-md);
-        width: 100%;
-      }
-
-      .chat-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        margin-right: var(--dt-spacing-md);
-        object-fit: cover;
-        border: 2px solid var(--dt-color-border-primary);
-        transition: all var(--dt-transition-normal);
-      }
-
-      .chat-info {
-        flex: 1;
-        min-width: 0;
-
-        .chat-name {
-          font-weight: var(--dt-font-weight-semibold);
-          margin-bottom: var(--dt-spacing-xs);
-          font-size: var(--dt-font-size-sm);
-          color: var(--dt-color-text-primary);
-        }
-
-        .chat-preview {
-          font-size: var(--dt-font-size-xs);
-          color: var(--dt-color-text-secondary);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-      }
-
-      .chat-meta {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: var(--dt-spacing-xs);
-
-        .chat-time {
-          font-size: var(--dt-font-size-xs);
-          color: var(--dt-color-text-tertiary);
-        }
-      }
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: var(--dt-spacing-4xl) var(--dt-spacing-lg);
-      color: var(--dt-color-text-secondary);
-
-      .empty-icon {
-        margin-bottom: var(--dt-spacing-lg);
-        color: var(--dt-color-text-tertiary);
-        opacity: 0.6;
-      }
-
-      p {
-        margin-bottom: var(--dt-spacing-lg);
-        font-size: var(--dt-font-size-sm);
-        color: var(--dt-color-text-secondary);
-      }
-    }
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -494,6 +672,54 @@ onMounted(async () => {
   flex-direction: column;
   background: var(--dt-color-surface-primary);
   backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+// 移动端聊天头部
+.mobile-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--dt-spacing-sm) var(--dt-spacing-md);
+  background: var(--dt-color-surface-secondary);
+  border-bottom: 1px solid var(--dt-color-border-secondary);
+  height: 60px;
+  flex-shrink: 0;
+}
+
+.mobile-nav-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--dt-border-radius-lg);
+}
+
+.mobile-chat-title {
+  flex: 1;
+  text-align: center;
+  min-width: 0;
+}
+
+.mobile-chat-name {
+  font-size: var(--dt-font-size-base);
+  font-weight: var(--dt-font-weight-semibold);
+  color: var(--dt-color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+// 聊天内容区域
+.chat-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
   .welcome-screen {
     flex: 1;
@@ -620,7 +846,6 @@ onMounted(async () => {
       }
     }
   }
-}
 
 // 角色选择对话框
 .character-selector-dialog {

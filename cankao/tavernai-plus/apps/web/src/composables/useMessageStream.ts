@@ -104,7 +104,7 @@ export function useMessageStream(): UseMessageStreamReturn {
       abortController.value = new AbortController()
 
       // 获取API基地址
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3007'
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3009'
       const token = localStorage.getItem('token')
 
       if (!token) {

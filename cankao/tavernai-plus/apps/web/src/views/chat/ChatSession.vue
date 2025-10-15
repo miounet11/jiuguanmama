@@ -1048,7 +1048,7 @@ const sendMessage = async () => {
 
 const sendStreamingMessage = async (messageContent: string) => {
   try {
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3007'
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3009'
     const response = await fetch(`${API_BASE_URL}/api/chats/${route.params.characterId}/messages`, {
       method: 'POST',
       headers: {

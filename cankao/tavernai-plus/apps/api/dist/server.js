@@ -44,6 +44,8 @@ const personas_1 = __importDefault(require("./routes/personas"));
 const user_mode_1 = __importDefault(require("./routes/user-mode"));
 const stats_1 = __importDefault(require("./routes/stats"));
 const scenarios_1 = __importDefault(require("./routes/scenarios"));
+const enhancedScenarios_1 = __importDefault(require("./routes/enhancedScenarios"));
+const character_image_1 = __importDefault(require("./routes/character-image"));
 // import importRoutes from './routes/import' // 临时禁用
 // 导入工作流调度器
 // 导入可扩展性和性能优化服务
@@ -80,7 +82,7 @@ app.use((0, helmet_1.default)({
 }));
 // CORS 配置 - 简化配置以确保工作
 app.use((0, cors_1.default)({
-    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'http://127.0.0.1:3002'],
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'http://127.0.0.1:3002', 'http://127.0.0.1:3003'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -123,6 +125,8 @@ app.use('/api/personas', personas_1.default); // 用户人格管理 API
 app.use('/api/user-mode', user_mode_1.default); // 渐进式功能披露 API (Issue #16)
 app.use('/api/stats', stats_1.default); // 统计数据 API
 app.use('/api/scenarios', scenarios_1.default); // 情景剧本系统 API (Issue #22)
+app.use('/api/enhanced-scenarios', enhancedScenarios_1.default); // 增强世界剧本系统 API
+app.use('/api', character_image_1.default); // 角色图像生成 API
 // app.use('/api/import', importRoutes) // 导入导出功能 API (Issue #26) - 临时禁用
 // app.use('/api/workflows', workflowRoutes) // 智能工作流 API - 已删除
 // 健康检查端点
