@@ -86,9 +86,14 @@ app.use(helmet({
   crossOriginEmbedderPolicy: process.env.NODE_ENV === 'production'
 }))
 
-// CORS 配置 - 简化配置以确保工作
+// CORS 配置 - 更新端口支持
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'http://127.0.0.1:3002', 'http://127.0.0.1:3003'],
+  origin: [
+    'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003', 'http://localhost:3004', 'http://localhost:3005',
+    'http://localhost:8080', 'http://localhost:8081', // 新增固定端口
+    'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'http://127.0.0.1:3002', 'http://127.0.0.1:3003', 'http://127.0.0.1:3004', 'http://127.0.0.1:3005',
+    'http://127.0.0.1:8080', 'http://127.0.0.1:8081' // 新增固定端口
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -225,7 +230,7 @@ async function startServer() {
     console.log('✅ 性能优化服务初始化完成')
 
     // 启动 HTTP 服务器
-    httpServer.listen(envConfig.PORT, () => {
+    httpServer.listen(envConfig.PORT, envConfig.HOST, () => {
       console.log(`🚀 服务器运行在 http://${envConfig.HOST}:${envConfig.PORT}`)
       console.log(`📱 WebSocket 服务器就绪`)
       console.log(`🌍 环境: ${envConfig.NODE_ENV}`)

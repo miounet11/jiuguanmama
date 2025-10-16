@@ -1,8 +1,8 @@
 <template>
   <div class="scenario-list">
     <!-- 搜索和筛选栏 -->
-    <div class="search-filter-bar bg-white rounded-lg shadow-sm p-4 mb-6">
-      <div class="flex flex-col lg:flex-row gap-4">
+    <div class="search-filter-bar">
+      <div class="search-filter-content">
         <!-- 搜索框 -->
         <div class="flex-1">
           <el-input
@@ -23,7 +23,7 @@
         </div>
 
         <!-- 筛选器 -->
-        <div class="flex gap-3">
+        <div class="filters-container">
           <!-- 分类选择 -->
           <el-select
             v-model="selectedCategory"
@@ -67,9 +67,9 @@
       </div>
 
       <!-- 标签筛选 -->
-      <div v-if="tags.length > 0" class="mt-4">
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-sm font-medium text-gray-700">热门标签:</span>
+      <div v-if="tags.length > 0" class="tags-filter-section">
+        <div class="tags-header">
+          <span class="tags-label">热门标签:</span>
           <el-button
             v-if="selectedTags.length > 0"
             size="small"
@@ -80,24 +80,24 @@
             清除标签筛选
           </el-button>
         </div>
-        <div class="flex flex-wrap gap-2">
+        <div class="tags-container">
           <el-tag
-            v-for="tag in tags.slice(0, 10)"
-            :key="tag"
-            :type="selectedTags.includes(tag) ? 'primary' : 'info'"
-            :effect="selectedTags.includes(tag) ? 'dark' : 'plain'"
+            v-for="tagData in tags.slice(0, 10)"
+            :key="tagData.name"
+            :type="selectedTags.includes(tagData.name) ? 'primary' : 'info'"
+            :effect="selectedTags.includes(tagData.name) ? 'dark' : 'plain'"
             class="cursor-pointer"
-            @click="toggleTag(tag)"
+            @click="toggleTag(tagData.name)"
           >
-            {{ tag }}
+            {{ tagData.name }}
           </el-tag>
         </div>
       </div>
     </div>
 
     <!-- 工具栏 -->
-    <div class="toolbar flex justify-between items-center mb-4">
-      <div class="flex items-center gap-4">
+    <div class="toolbar">
+      <div class="toolbar-left">
         <h2 class="text-xl font-semibold text-gray-800">
           剧本列表
           <span v-if="totalItems > 0" class="text-sm font-normal text-gray-500">
@@ -116,7 +116,7 @@
         </el-radio-group>
       </div>
 
-      <div class="flex gap-2">
+      <div class="toolbar-right">
         <!-- 刷新按钮 -->
         <el-button
           @click="refreshScenarios"
@@ -409,81 +409,212 @@ onMounted(async () => {
   ])
 
   // 初始化本地搜索查询
-  localSearchQuery.value = searchQuery
+  localSearchQuery.value = searchQuery.value || ''
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/variables.scss';
+
 .scenario-list {
-  @apply max-w-7xl mx-auto px-4 py-6;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-normal) var(--spacing-tight);
 }
 
 .search-filter-bar {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background: white;
-  border: 1px solid #e5e7eb;
-}
+  background: var(--surface-1);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-comfortable);
+  margin-bottom: var(--spacing-comfortable);
+  box-shadow: var(--shadow-base);
 
-.search-filter-bar .el-input__wrapper {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  .search-filter-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-normal);
+
+    @media (min-width: 1024px) {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  .filters-container {
+    display: flex;
+    gap: var(--spacing-tight);
+    flex-wrap: wrap;
+  }
+
+  .tags-filter-section {
+    margin-top: var(--spacing-normal);
+
+    .tags-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-tight);
+      margin-bottom: var(--spacing-tight);
+
+      .tags-label {
+        font-size: var(--text-sm);
+        font-weight: var(--font-medium);
+        color: var(--text-secondary);
+      }
+    }
+
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-tight);
+    }
+  }
+
+  .el-input__wrapper {
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-secondary);
+  }
 }
 
 .toolbar {
-  @apply bg-white rounded-lg shadow-sm px-4 py-3;
+  background: var(--surface-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-normal) var(--spacing-comfortable);
+  margin-bottom: var(--spacing-normal);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-comfortable);
+
+    h2 {
+      font-size: var(--text-xl);
+      font-weight: var(--font-semibold);
+      color: var(--text-primary);
+      margin: 0;
+
+      span {
+        font-size: var(--text-sm);
+        font-weight: var(--font-normal);
+        color: var(--text-tertiary);
+      }
+    }
+  }
+
+  .toolbar-right {
+    display: flex;
+    gap: var(--spacing-tight);
+  }
 }
 
-/* 响应式设计 */
+// 响应式设计
 @media (max-width: 768px) {
   .scenario-list {
-    @apply px-2;
+    padding: var(--spacing-tight);
   }
 
   .search-filter-bar {
-    @apply p-3;
+    padding: var(--spacing-normal);
+
+    .search-filter-content {
+      gap: var(--spacing-normal);
+    }
   }
 
   .toolbar {
-    @apply flex-col gap-3 items-start;
-  }
+    flex-direction: column;
+    gap: var(--spacing-normal);
+    align-items: stretch;
 
-  .toolbar .flex:last-child {
-    @apply w-full justify-between;
+    .toolbar-left {
+      justify-content: space-between;
+    }
+
+    .toolbar-right {
+      justify-content: space-between;
+    }
   }
 }
 
-/* 自定义滚动条 */
+// 自定义滚动条
 :deep(.el-scrollbar__bar) {
   opacity: 0.6;
 }
 
 :deep(.el-scrollbar__thumb) {
-  background-color: #c1c1c1;
-  border-radius: 4px;
+  background-color: var(--border-primary);
+  border-radius: var(--radius-sm);
 }
 
-/* 标签样式优化 */
+// 标签样式优化
 .el-tag {
-  transition: all 0.3s ease;
-}
+  transition: all var(--duration-normal);
+  cursor: pointer;
 
-.el-tag:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* 网格布局优化 */
-.grid {
-  gap: 1.5rem;
-}
-
-@media (min-width: 1536px) {
-  .grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
   }
 }
 
-/* 分页样式 */
+// 网格布局优化
+.grid {
+  display: grid;
+  gap: var(--spacing-comfortable);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+// 分页样式
 :deep(.el-pagination) {
-  @apply bg-white rounded-lg shadow-sm p-4;
+  background: var(--surface-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-comfortable);
+  justify-content: center;
+
+  .el-pager li {
+    background: var(--surface-2);
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
+
+    &.active {
+      background: var(--brand-primary-500);
+      border-color: var(--brand-primary-500);
+      color: white;
+    }
+  }
+
+  .btn-prev,
+  .btn-next {
+    background: var(--surface-2);
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
+  }
+}
+
+// 加载和空状态
+.text-center {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.py-12 {
+  padding: var(--spacing-loose) 0;
 }
 </style>

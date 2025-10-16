@@ -173,3 +173,152 @@ $container-lg: 1024px;
 $container-xl: 1280px;
 $container-2xl: 1536px;
 $container-max: 1200px;   // 主要内容区最大宽度
+
+// =====================================
+// CSS 自定义属性 (用于现代 CSS 变量系统)
+// =====================================
+
+:root {
+  // 色彩系统
+  --brand-primary-50: #{$primary-50};
+  --brand-primary-100: #{$primary-100};
+  --brand-primary-200: #{$primary-200};
+  --brand-primary-300: #{$primary-300};
+  --brand-primary-400: #{$primary-400};
+  --brand-primary-500: #{$primary-500};
+  --brand-primary-600: #{$primary-600};
+  --brand-primary-700: #{$primary-700};
+  --brand-primary-800: #{$primary-800};
+  --brand-primary-900: #{$primary-900};
+
+  // 背景色系
+  --surface-0: #{$dark-bg-primary};
+  --surface-1: #{$dark-bg-secondary};
+  --surface-2: #{$dark-bg-tertiary};
+  --surface-3: #{$dark-bg-card};
+  --surface-4: #{$gray-800};
+
+  // 边框色系
+  --border-primary: #{$gray-600};
+  --border-secondary: #{$gray-700};
+  --border-tertiary: #{$gray-800};
+
+  // 文字色系
+  --text-primary: #{$text-primary};
+  --text-secondary: #{$text-secondary};
+  --text-tertiary: #{$text-tertiary};
+  --text-placeholder: #{$text-muted};
+
+  // 功能色系
+  --success: #{$success-color};
+  --warning: #{$warning-color};
+  --error: #{$error-color};
+  --info: #{$info-color};
+
+  // 字体系统
+  --font-sans: #{$font-family-base};
+  --font-mono: #{$font-family-mono};
+  --font-serif: #{$font-family-serif};
+
+  // 字体大小
+  --text-xs: #{$font-size-xs};
+  --text-sm: #{$font-size-sm};
+  --text-base: #{$font-size-base};
+  --text-lg: #{$font-size-lg};
+  --text-xl: #{$font-size-xl};
+  --text-2xl: #{$font-size-2xl};
+  --text-3xl: #{$font-size-3xl};
+  --text-4xl: #{$font-size-4xl};
+
+  // 行高
+  --leading-tight: #{$line-height-tight};
+  --leading-normal: #{$line-height-normal};
+  --leading-relaxed: #{$line-height-relaxed};
+
+  // 字重
+  --font-light: #{$font-weight-light};
+  --font-normal: #{$font-weight-normal};
+  --font-medium: #{$font-weight-medium};
+  --font-semibold: #{$font-weight-semibold};
+  --font-bold: #{$font-weight-bold};
+
+  // 间距系统
+  --spacing-micro: #{$spacing-1};
+  --spacing-tight: #{$spacing-2};
+  --spacing-normal: #{$spacing-3};
+  --spacing-comfortable: #{$spacing-4};
+  --spacing-loose: #{$spacing-6};
+  --spacing-relaxed: #{$spacing-8};
+  --spacing-extra-loose: #{$spacing-12};
+
+  // 圆角系统
+  --radius-sm: #{$border-radius-sm};
+  --radius-base: #{$border-radius-base};
+  --radius-lg: #{$border-radius-lg};
+  --radius-xl: #{$border-radius-xl};
+  --radius-full: #{$border-radius-full};
+
+  // 阴影系统
+  --shadow-sm: #{$shadow-sm};
+  --shadow-base: #{$shadow-base};
+  --shadow-lg: #{$shadow-lg};
+  --shadow-xl: #{$shadow-xl};
+  --shadow-2xl: #{$shadow-xl}, 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  // 过渡动画
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 350ms;
+
+  // 特殊单位
+  --space-px: 1px;
+  --space-px-2: 2px;
+
+  // TavernAI 特殊变量
+  --tavern-primary: #{$primary-500};
+  --focus-ring: rgba(139, 92, 246, 0.5);
+
+  // 输入框特殊变量
+  --input-radius: #{$border-radius-base};
+  --input-transition: #{$transition-base};
+  --component-padding-md: #{$spacing-3};
+
+  // DT 渐变
+  --dt-gradient-primary: linear-gradient(135deg, #{$primary-400}, #{$primary-600});
+
+  // 兼容性别名
+  --spacing-0: #{$spacing-0};
+  --spacing-1: #{$spacing-1};
+  --spacing-2: #{$spacing-2};
+  --spacing-3: #{$spacing-3};
+  --spacing-4: #{$spacing-4};
+  --spacing-5: #{$spacing-5};
+  --spacing-6: #{$spacing-6};
+  --spacing-8: #{$spacing-8};
+  --spacing-10: #{$spacing-10};
+  --spacing-12: #{$spacing-12};
+  --spacing-16: #{$spacing-16};
+  --spacing-20: #{$spacing-20};
+}
+
+// 导出 SCSS 变量（用于旧代码兼容）
+@export {
+  --brand-primary-500: #{$primary-500};
+  --surface-1: #{$dark-bg-secondary};
+  --surface-2: #{$dark-bg-tertiary};
+  --surface-3: #{$dark-bg-card};
+  --text-primary: #{$text-primary};
+  --text-secondary: #{$text-secondary};
+  --text-tertiary: #{$text-tertiary};
+  --text-placeholder: #{$text-muted};
+  --border-primary: #{$gray-600};
+  --border-secondary: #{$gray-700};
+  --border-tertiary: #{$gray-800};
+  --radius-sm: #{$border-radius-sm};
+  --radius-base: #{$border-radius-base};
+  --radius-lg: #{$border-radius-lg};
+  --radius-full: #{$border-radius-full};
+  --shadow-lg: #{$shadow-lg};
+  --shadow-xl: #{$shadow-xl};
+  --shadow-2xl: #{$shadow-xl}, 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}

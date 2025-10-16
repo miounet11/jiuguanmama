@@ -1,46 +1,46 @@
 <template>
-  <div class="immersive-chat-input" :class="inputClasses">
-    <!-- 输入区域容器 -->
-    <div class="input-container">
-      <!-- 左侧功能按钮 -->
-      <div class="input-sidebar left-sidebar">
-        <div class="sidebar-actions">
-          <el-button
-            type="text"
-            size="default"
+  <div class="modern-chat-input" :class="inputClasses">
+    <!-- 主输入区域 -->
+    <div class="input-area">
+      <!-- 左侧工具栏 -->
+      <div class="toolbar toolbar-left">
+        <div class="tool-group">
+          <button
             @click="toggleAttachMenu"
             :disabled="isLoading"
-            title="附件"
-            class="sidebar-btn"
+            class="tool-btn"
             :class="{ 'is-active': showAttachMenu }"
+            data-tooltip="附件"
           >
-            <el-icon><Paperclip /></el-icon>
-          </el-button>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+            </svg>
+          </button>
 
-          <el-button
-            type="text"
-            size="default"
+          <button
             @click="toggleEmojiPicker"
-            title="表情"
-            class="sidebar-btn"
+            class="tool-btn"
             :class="{ 'is-active': showEmojiPicker }"
+            data-tooltip="表情"
           >
-            <span class="emoji-icon">😊</span>
-          </el-button>
+            <span class="emoji-indicator">😊</span>
+          </button>
 
-          <el-button
-            type="text"
-            size="default"
+          <button
             @click="toggleVoiceInput"
             :disabled="isLoading"
-            :title="isVoiceRecording ? '停止录音' : '语音输入'"
-            class="sidebar-btn"
-            :class="{ 'is-danger': isVoiceRecording }"
+            class="tool-btn"
+            :class="{ 'is-recording': isVoiceRecording }"
+            data-tooltip="语音输入"
           >
-            <el-icon>
-              <component :is="isVoiceRecording ? Stop : Microphone" />
-            </el-icon>
-          </el-button>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+            <span v-if="isVoiceRecording" class="recording-indicator"></span>
+          </button>
         </div>
 
         <!-- 附件菜单 -->
@@ -48,15 +48,29 @@
           <div v-if="showAttachMenu" class="attach-menu">
             <div class="attach-options">
               <button @click="selectFile('image')" class="attach-option">
-                <el-icon><Picture /></el-icon>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
                 <span>图片</span>
               </button>
               <button @click="selectFile('document')" class="attach-option">
-                <el-icon><Document /></el-icon>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
                 <span>文档</span>
               </button>
               <button @click="selectFile('audio')" class="attach-option">
-                <el-icon><Headphones /></el-icon>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 18V5l12-2v13"/>
+                  <circle cx="6" cy="18" r="3"/>
+                  <circle cx="18" cy="16" r="3"/>
+                </svg>
                 <span>音频</span>
               </button>
             </div>
@@ -66,67 +80,58 @@
 
       <!-- 中央输入区域 -->
       <div class="input-main">
-        <div class="input-wrapper">
-          <!-- 输入框 -->
-          <div class="input-field-wrapper">
-            <textarea
-              ref="inputRef"
-              v-model="inputMessage"
-              @keydown="handleKeyDown"
-              @input="handleInput"
-              @paste="handlePaste"
-              @focus="handleFocus"
-              @blur="handleBlur"
-              @compositionstart="handleCompositionStart"
-              @compositionend="handleCompositionEnd"
-              :placeholder="computedPlaceholder"
-              :disabled="isLoading || disabled"
-              :maxlength="maxLength"
-              :rows="inputRows"
-              class="message-input"
-              :style="{ height: inputHeight }"
-            />
+        <div class="input-container">
+          <textarea
+            ref="inputRef"
+            v-model="inputMessage"
+            @keydown="handleKeyDown"
+            @input="handleInput"
+            @paste="handlePaste"
+            @focus="handleFocus"
+            @blur="handleBlur"
+            :placeholder="computedPlaceholder"
+            :disabled="isLoading || disabled"
+            :maxlength="maxLength"
+            class="message-input"
+            :style="{ height: inputHeight }"
+            rows="1"
+          />
 
-            <!-- 输入状态指示器 -->
-            <div class="input-indicators">
-              <!-- 字数统计 -->
-              <div
-                v-if="showCharCount"
-                class="char-count"
-                :class="{ 'count-warning': isNearLimit, 'count-error': isOverLimit }"
-              >
+          <!-- 输入状态指示器 -->
+          <div class="input-status">
+            <Transition name="fade">
+              <div v-if="isComposing" class="status-indicator composing">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 12l2 2 4-4"/>
+                  <path d="M21 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
+                </svg>
+                <span>输入法</span>
+              </div>
+            </Transition>
+
+            <Transition name="fade">
+              <div v-if="showCharCount && (isNearLimit || isOverLimit)" class="char-count" :class="charCountClass">
                 {{ inputMessage.length }}/{{ maxLength }}
               </div>
-
-              <!-- 输入状态 -->
-              <div class="input-status">
-                <div v-if="isComposing" class="composing-indicator">
-                  <el-icon><Language /></el-icon>
-                  <span>输入法</span>
-                </div>
-                <div v-else-if="isAnalyzing" class="analyzing-indicator">
-                  <el-icon><CpuChip /></el-icon>
-                  <span>分析中</span>
-                </div>
-              </div>
-            </div>
+            </Transition>
           </div>
+        </div>
 
-          <!-- 智能建议栏 -->
-          <Transition name="slide-down">
-            <div v-if="showSuggestions && suggestions.length > 0" class="suggestions-bar">
+        <!-- 智能建议 -->
+        <Transition name="slide-down">
+          <div v-if="showSuggestions && suggestions.length > 0" class="suggestions-bar">
+            <div class="suggestions-content">
               <div class="suggestions-header">
-                <el-icon><Sparkles /></el-icon>
+                <svg class="icon sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
                 <span>智能建议</span>
-                <el-button
-                  type="text"
-                  size="small"
-                  @click="hideSuggestions"
-                  title="关闭建议"
-                  class="suggestion-close-btn"
-                >
-                  <el-icon><Close /></el-icon>
-                </el-button>
+                <button @click="hideSuggestions" class="close-btn">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
               </div>
               <div class="suggestions-list">
                 <button
@@ -135,74 +140,63 @@
                   @click="applySuggestion(suggestion)"
                   class="suggestion-item"
                 >
-                  <el-icon><Lightbulb /></el-icon>
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 11l3 3L22 4"/>
+                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                  </svg>
                   <span>{{ suggestion }}</span>
                 </button>
               </div>
             </div>
-          </Transition>
-
-          <!-- 快捷回复栏 -->
-          <Transition name="slide-down">
-            <div v-if="showQuickReplies && quickReplies.length > 0" class="quick-replies-bar">
-              <div class="quick-replies-list">
-                <button
-                  v-for="reply in quickReplies"
-                  :key="reply"
-                  @click="sendQuickReply(reply)"
-                  class="quick-reply-item"
-                >
-                  {{ reply }}
-                </button>
-              </div>
-            </div>
-          </Transition>
-        </div>
+          </div>
+        </Transition>
       </div>
 
-      <!-- 右侧发送按钮 -->
-      <div class="input-sidebar right-sidebar">
-        <div class="send-actions">
+      <!-- 右侧发送区域 -->
+      <div class="toolbar toolbar-right">
+        <div class="send-container">
           <!-- 停止生成按钮 -->
-          <el-button
+          <button
             v-if="isLoading"
             @click="stopGeneration"
-            type="danger"
-            title="停止生成"
             class="send-btn stop-btn"
-            circle
+            data-tooltip="停止生成"
           >
-            <el-icon><Stop /></el-icon>
-          </el-button>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="6" y="6" width="12" height="12"/>
+            </svg>
+            <span class="btn-text">停止</span>
+          </button>
 
           <!-- 发送按钮 -->
-          <el-button
+          <button
             v-else
             @click="sendMessage"
-            :type="canSend ? 'primary' : 'default'"
             :disabled="!canSend"
-            :title="canSend ? '发送消息 (Enter)' : sendDisabledReason"
             class="send-btn"
-            :class="{ 'send-ready': canSend }"
-            circle
+            :class="{ 'is-ready': canSend }"
+            data-tooltip="发送消息 (Enter)"
           >
-            <el-icon><PaperPlane /></el-icon>
-          </el-button>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            <span class="btn-text">发送</span>
+          </button>
         </div>
 
-        <!-- 高级功能按钮 -->
-        <div class="advanced-actions">
-          <el-button
-            type="text"
-            size="small"
-            @click="toggleAdvancedPanel"
-            title="高级选项"
-            class="advanced-btn"
-            :class="{ 'is-active': showAdvancedPanel }"
-          >
-            <el-icon><Cog6Tooth /></el-icon>
-          </el-button>
-        </div>
+        <!-- 高级选项 -->
+        <button
+          @click="toggleAdvancedPanel"
+          class="tool-btn advanced-btn"
+          :class="{ 'is-active': showAdvancedPanel }"
+          data-tooltip="高级选项"
+        >
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 9.96l4.24 4.24M18.46 14.04l4.24 4.24M1.54 14.04l4.24-4.24"/>
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -212,15 +206,13 @@
         <div v-if="showEmojiPicker" class="emoji-picker-overlay" @click="closeEmojiPicker">
           <div class="emoji-picker-panel" @click.stop>
             <div class="emoji-picker-header">
-              <span>选择表情</span>
-              <el-button
-                type="text"
-                size="small"
-                @click="closeEmojiPicker"
-                class="emoji-close-btn"
-              >
-                <el-icon><Close /></el-icon>
-              </el-button>
+              <h3>选择表情</h3>
+              <button @click="closeEmojiPicker" class="close-btn">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
             </div>
             <div class="emoji-categories">
               <button
@@ -248,28 +240,9 @@
                 v-model="emojiSearch"
                 type="text"
                 placeholder="搜索表情..."
-                class="emoji-search-input"
+                class="search-input"
               />
             </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
-
-    <!-- 语音输入对话框 -->
-    <Teleport to="body">
-      <Transition name="fade">
-        <div v-if="showVoiceDialog" class="voice-dialog-overlay" @click="closeVoiceDialog">
-          <div class="voice-dialog-panel" @click.stop>
-            <VoiceInput
-              :auto-transcribe="true"
-              :show-advanced="false"
-              compact
-              @text-ready="handleVoiceTextReady"
-              @recording-start="handleVoiceRecordingStart"
-              @recording-stop="handleVoiceRecordingStop"
-              @error="handleVoiceError"
-            />
           </div>
         </div>
       </Transition>
@@ -282,18 +255,19 @@
           <div class="advanced-panel" @click.stop>
             <div class="advanced-header">
               <h3>高级选项</h3>
-              <el-button
-                type="text"
-                size="small"
-                @click="closeAdvancedPanel"
-                class="advanced-close-btn"
-              >
-                <el-icon><Close /></el-icon>
-              </el-button>
+              <button @click="closeAdvancedPanel" class="close-btn">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
             </div>
             <div class="advanced-content">
               <div class="setting-group">
-                <label>创造性 ({{ temperature }})</label>
+                <label class="setting-label">
+                  <span>创造性</span>
+                  <span class="setting-value">{{ temperature }}</span>
+                </label>
                 <input
                   v-model="temperature"
                   type="range"
@@ -304,7 +278,10 @@
                 />
               </div>
               <div class="setting-group">
-                <label>最大长度 ({{ maxTokens }})</label>
+                <label class="setting-label">
+                  <span>最大长度</span>
+                  <span class="setting-value">{{ maxTokens }}</span>
+                </label>
                 <input
                   v-model="maxTokens"
                   type="range"
@@ -343,23 +320,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, nextTick, watch, onMounted, onUnmounted, type PropType } from 'vue'
-import {
-  Paperclip,
-  Microphone,
-  Stop,
-  Close,
-  PaperPlane,
-  Cog6Tooth,
-  Sparkles,
-  Lightbulb,
-  Language,
-  CpuChip,
-  Picture,
-  Document,
-  Headphones
-} from '@element-plus/icons-vue'
-import VoiceInput from '@/components/voice/VoiceInput.vue'
+import { ref, computed, nextTick, watch, onMounted, onUnmounted, type PropType } from 'vue'
 
 // Props
 const props = defineProps({
@@ -371,15 +332,7 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
-  isTyping: {
-    type: Boolean,
-    default: false
-  },
   suggestions: {
-    type: Array as PropType<string[]>,
-    default: () => []
-  },
-  quickReplies: {
     type: Array as PropType<string[]>,
     default: () => []
   },
@@ -429,17 +382,12 @@ const inputMessage = ref(props.modelValue)
 const inputHeight = ref('auto')
 const isFocused = ref(false)
 const isComposing = ref(false)
-const isAnalyzing = ref(false)
 
 // UI 状态
 const showAttachMenu = ref(false)
 const showEmojiPicker = ref(false)
-const showVoiceDialog = ref(false)
 const showAdvancedPanel = ref(false)
 const showSuggestions = ref(false)
-const showQuickReplies = ref(false)
-
-// 语音状态
 const isVoiceRecording = ref(false)
 
 // 表情选择器
@@ -453,31 +401,23 @@ const enableStream = ref(true)
 
 // 表情分类
 const emojiCategories = [
-  { name: 'smileys', icon: '😊', emojis: ['😊', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇'] },
-  { name: 'people', icon: '👋', emojis: ['👋', '🤝', '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉'] },
-  { name: 'animals', icon: '🐶', emojis: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮'] },
-  { name: 'food', icon: '🍎', emojis: ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭'] },
-  { name: 'activities', icon: '⚽', emojis: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓'] },
-  { name: 'objects', icon: '💡', emojis: ['💡', '🔦', '🕯️', '💥', '🔥', '💧', '🌊', '🌈', '⭐', '✨', '💫', '☄️'] }
+  { name: 'smileys', icon: '😊', emojis: ['😊', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉'] },
+  { name: 'people', icon: '👋', emojis: ['👋', '🤝', '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙'] },
+  { name: 'animals', icon: '🐶', emojis: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯'] },
+  { name: 'food', icon: '🍎', emojis: ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒'] }
 ]
 
 // 计算属性
 const inputClasses = computed(() => [
-  'immersive-chat-input',
+  'modern-chat-input',
   {
-    'input-focused': isFocused.value,
-    'input-loading': props.isLoading,
-    'input-disabled': props.disabled,
+    'is-focused': isFocused.value,
+    'is-loading': props.isLoading,
+    'is-disabled': props.disabled,
     'has-suggestions': showSuggestions.value,
-    'has-quick-replies': showQuickReplies.value,
-    'voice-recording': isVoiceRecording.value
+    'is-recording': isVoiceRecording.value
   }
 ])
-
-const inputRows = computed(() => {
-  const lines = Math.max(1, inputMessage.value.split('\n').length)
-  return Math.min(lines, 6)
-})
 
 const computedPlaceholder = computed(() => {
   if (props.disabled) return '输入已禁用'
@@ -493,14 +433,6 @@ const canSend = computed(() => {
          inputMessage.value.length <= props.maxLength
 })
 
-const sendDisabledReason = computed(() => {
-  if (!inputMessage.value.trim()) return '请输入消息内容'
-  if (props.isLoading) return '正在生成回复...'
-  if (props.disabled) return '输入已禁用'
-  if (inputMessage.value.length > props.maxLength) return '消息长度超出限制'
-  return '发送消息'
-})
-
 const isNearLimit = computed(() => {
   const threshold = props.maxLength * 0.9
   return inputMessage.value.length >= threshold && inputMessage.value.length <= props.maxLength
@@ -510,8 +442,14 @@ const isOverLimit = computed(() => {
   return inputMessage.value.length > props.maxLength
 })
 
+const charCountClass = computed(() => {
+  if (isOverLimit.value) return 'error'
+  if (isNearLimit.value) return 'warning'
+  return ''
+})
+
 const displaySuggestions = computed(() => {
-  return props.suggestions.slice(0, 4)
+  return props.suggestions.slice(0, 3)
 })
 
 const currentEmojis = computed(() => {
@@ -520,12 +458,15 @@ const currentEmojis = computed(() => {
 
   if (emojiSearch.value) {
     return category.emojis.filter(emoji =>
-      emoji.includes(emojiSearch.value) ||
-      getEmojiName(emoji).includes(emojiSearch.value.toLowerCase())
+      emoji.includes(emojiSearch.value)
     )
   }
 
   return category.emojis
+})
+
+const fileAccept = computed(() => {
+  return 'image/*,audio/*,video/*,.pdf,.doc,.docx,.txt'
 })
 
 // 监听器
@@ -550,40 +491,19 @@ watch(() => props.suggestions, (newSuggestions) => {
   }
 })
 
-watch(() => props.quickReplies, (newReplies) => {
-  showQuickReplies.value = newReplies.length > 0 && !props.isLoading
-})
-
 // 方法
 const handleKeyDown = (event: KeyboardEvent) => {
   if (event.key === 'Enter') {
     if (event.shiftKey) {
-      // Shift + Enter 换行
       return
     } else {
-      // Enter 发送消息
       event.preventDefault()
       sendMessage()
     }
   } else if (event.key === 'Escape') {
-    // ESC 关闭面板
     showAttachMenu.value = false
     showEmojiPicker.value = false
     showSuggestions.value = false
-  } else if (event.ctrlKey || event.metaKey) {
-    // Ctrl/Cmd 快捷键
-    switch (event.key) {
-      case 'v':
-        // 处理粘贴
-        setTimeout(() => {
-          adjustInputHeight()
-        }, 0)
-        break
-      case 'Enter':
-        event.preventDefault()
-        sendMessage()
-        break
-    }
   }
 }
 
@@ -593,15 +513,7 @@ const handleInput = (event: Event) => {
 }
 
 const handleInputChange = () => {
-  // 清除错误状态
-  if (isOverLimit.value) {
-    // 可以在这里显示错误提示
-  }
-
-  // 触发建议分析
-  if (props.enableSuggestions && inputMessage.value.length > 0) {
-    analyzeInput()
-  }
+  // 输入变化处理逻辑
 }
 
 const handlePaste = async (event: ClipboardEvent) => {
@@ -620,8 +532,6 @@ const handlePaste = async (event: ClipboardEvent) => {
       }
     }
   }
-
-  // 延迟调整高度以确保内容已更新
   setTimeout(adjustInputHeight, 0)
 }
 
@@ -635,26 +545,13 @@ const handleBlur = () => {
   emit('blur')
 }
 
-const handleCompositionStart = () => {
-  isComposing.value = true
-}
-
-const handleCompositionEnd = () => {
-  isComposing.value = false
-  adjustInputHeight()
-}
-
 const adjustInputHeight = () => {
   if (!inputRef.value) return
 
-  // 重置高度
   inputRef.value.style.height = 'auto'
-
-  // 计算新高度
   const scrollHeight = inputRef.value.scrollHeight
-  const maxHeight = 200 // 最大高度
+  const maxHeight = 120
   const newHeight = Math.min(scrollHeight, maxHeight)
-
   inputHeight.value = `${newHeight}px`
 }
 
@@ -666,9 +563,7 @@ const sendMessage = () => {
     emit('send', content)
     inputMessage.value = ''
     showSuggestions.value = false
-    showQuickReplies.value = false
 
-    // 重置输入框高度
     nextTick(() => {
       adjustInputHeight()
     })
@@ -722,7 +617,6 @@ const insertEmoji = (emoji: string) => {
     const newValue = inputMessage.value.substring(0, start) + emoji + inputMessage.value.substring(end)
     inputMessage.value = newValue
 
-    // 恢复光标位置
     nextTick(() => {
       textarea.focus()
       textarea.setSelectionRange(start + emoji.length, start + emoji.length)
@@ -738,43 +632,7 @@ const insertEmoji = (emoji: string) => {
 // 语音相关
 const toggleVoiceInput = () => {
   if (!props.enableVoice) return
-
-  if (isVoiceRecording.value) {
-    closeVoiceDialog()
-  } else {
-    showVoiceDialog.value = true
-  }
-}
-
-const closeVoiceDialog = () => {
-  showVoiceDialog.value = false
-  isVoiceRecording.value = false
-}
-
-const handleVoiceTextReady = (text: string) => {
-  inputMessage.value = text
-  showVoiceDialog.value = false
-  isVoiceRecording.value = false
-  emit('voice-text', text)
-
-  nextTick(() => {
-    inputRef.value?.focus()
-    adjustInputHeight()
-  })
-}
-
-const handleVoiceRecordingStart = () => {
-  isVoiceRecording.value = true
-}
-
-const handleVoiceRecordingStop = () => {
-  isVoiceRecording.value = false
-}
-
-const handleVoiceError = (error: string) => {
-  console.error('语音输入错误:', error)
-  isVoiceRecording.value = false
-  showVoiceDialog.value = false
+  isVoiceRecording.value = !isVoiceRecording.value
 }
 
 // 高级设置
@@ -785,8 +643,6 @@ const toggleAdvancedPanel = () => {
 
 const closeAdvancedPanel = () => {
   showAdvancedPanel.value = false
-
-  // 发送设置变更
   emit('settings-change', {
     temperature: temperature.value,
     maxTokens: maxTokens.value,
@@ -809,47 +665,11 @@ const applySuggestion = (suggestion: string) => {
   })
 }
 
-const sendQuickReply = (reply: string) => {
-  emit('send', reply)
-  showQuickReplies.value = false
-}
-
-const analyzeInput = async () => {
-  if (isAnalyzing.value) return
-
-  isAnalyzing.value = true
-
-  try {
-    // 这里可以集成AI来分析输入内容并提供智能建议
-    // 模拟分析延迟
-    await new Promise(resolve => setTimeout(resolve, 500))
-  } finally {
-    isAnalyzing.value = false
-  }
-}
-
 // 工具方法
 const closeOtherPanels = () => {
   showAttachMenu.value = false
   showEmojiPicker.value = false
   showAdvancedPanel.value = false
-}
-
-const getEmojiName = (emoji: string): string => {
-  // 简单的emoji名称映射，实际应用中可以使用更完整的映射
-  const emojiNames: Record<string, string> = {
-    '😊': 'smile',
-    '😄': 'happy',
-    '😁': 'grin',
-    '😆': 'laugh',
-    '😅': 'sweat_smile',
-    '🤣': 'rolling_on_floor_laughing',
-    '😂': 'joy',
-    '🙂': 'slight_smile',
-    '🙃': 'upside_down_face',
-    '😉': 'wink'
-  }
-  return emojiNames[emoji] || emoji
 }
 
 // 暴露方法
@@ -873,7 +693,6 @@ onMounted(() => {
   }
 
   document.addEventListener('keydown', handleGlobalKeyDown)
-
   onUnmounted(() => {
     document.removeEventListener('keydown', handleGlobalKeyDown)
   })
@@ -884,109 +703,121 @@ onMounted(() => {
 @import '@/styles/variables.scss';
 @import '@/styles/mixins.scss';
 
-.immersive-chat-input {
+.modern-chat-input {
   background: linear-gradient(135deg, rgba($dark-bg-secondary, 0.95) 0%, rgba($dark-bg-tertiary, 0.9) 100%);
   backdrop-filter: blur(20px);
   border: 1px solid rgba($primary-500, 0.15);
   border-radius: 20px;
-  padding: 20px;
+  padding: 16px 20px;
   position: relative;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba($primary-500, 0.05);
 
-  &.input-focused {
+  &.is-focused {
     border-color: rgba($primary-500, 0.4);
     box-shadow: 0 0 0 3px rgba($primary-500, 0.1), 0 12px 48px rgba(0, 0, 0, 0.4);
     transform: translateY(-2px);
   }
 
-  &.input-loading {
+  &.is-loading {
     border-color: rgba($warning-color, 0.4);
     animation: loadingPulse 2s ease-in-out infinite;
   }
 
-  &.input-disabled {
+  &.is-disabled {
     opacity: 0.5;
     pointer-events: none;
   }
 
-  &.voice-recording {
+  &.is-recording {
     border-color: rgba($error-color, 0.6);
     animation: recordingPulse 1.5s ease-in-out infinite;
   }
 }
 
-.input-container {
+.input-area {
   display: flex;
   align-items: flex-end;
   gap: 16px;
 }
 
-.input-sidebar {
+.toolbar {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   flex-shrink: 0;
 
-  &.left-sidebar {
+  &.toolbar-left {
     align-items: flex-start;
   }
 
-  &.right-sidebar {
+  &.toolbar-right {
     align-items: flex-end;
   }
 }
 
-.sidebar-actions {
+.tool-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+}
 
-  .sidebar-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: rgba($gray-800, 0.4);
-    border: 1px solid rgba($gray-600, 0.2);
-    color: $text-secondary;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.tool-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: rgba($gray-800, 0.4);
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    &:hover:not(:disabled) {
-      background: rgba($gray-700, 0.6);
-      color: $text-primary;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    }
+  &:hover:not(:disabled) {
+    background: rgba($gray-700, 0.6);
+    color: $text-primary;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  }
 
-    &:active:not(:disabled) {
-      transform: translateY(0);
-    }
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
 
-    &.is-active {
-      background: rgba($primary-500, 0.2);
-      color: $primary-300;
-      border-color: rgba($primary-500, 0.3);
-    }
+  &.is-active {
+    background: rgba($primary-500, 0.2);
+    color: $primary-300;
+    border: 1px solid rgba($primary-500, 0.3);
+  }
 
-    &.is-danger {
-      background: rgba($error-color, 0.2);
-      color: $error-color;
-      animation: recordPulse 1s ease-in-out infinite;
-    }
+  &.is-recording {
+    background: rgba($error-color, 0.2);
+    color: $error-color;
+    animation: recordPulse 1s ease-in-out infinite;
+  }
 
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+  .icon {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s ease;
+  }
 
-    .emoji-icon {
-      font-size: 20px;
-    }
+  .emoji-indicator {
+    font-size: 20px;
+  }
+
+  .recording-indicator {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 12px;
+    height: 12px;
+    background: $error-color;
+    border-radius: 50%;
+    animation: recordDot 1s ease-in-out infinite;
   }
 }
 
@@ -998,37 +829,40 @@ onMounted(() => {
   border: 1px solid rgba($gray-600, 0.3);
   border-radius: 16px;
   padding: 12px;
-  margin-bottom: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  margin-bottom: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   z-index: 1000;
+  min-width: 140px;
 
   .attach-options {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 
     .attach-option {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 12px 16px;
-      background: rgba($gray-700, 0.2);
-      border: 1px solid rgba($gray-600, 0.3);
+      background: rgba($gray-700, 0.3);
+      border: 1px solid rgba($gray-600, 0.2);
       border-radius: 12px;
       color: $text-secondary;
       cursor: pointer;
       transition: all 0.2s ease;
       font-size: 14px;
-      min-width: 120px;
+      white-space: nowrap;
 
       &:hover {
-        background: rgba($gray-700, 0.3);
+        background: rgba($gray-700, 0.5);
         color: $text-primary;
-        transform: translateY(-1px);
+        transform: translateX(4px);
       }
 
-      &:active {
-        transform: translateY(0);
+      .icon {
+        width: 18px;
+        height: 18px;
+        color: $primary-400;
       }
     }
   }
@@ -1039,11 +873,7 @@ onMounted(() => {
   min-width: 0;
 }
 
-.input-wrapper {
-  position: relative;
-}
-
-.input-field-wrapper {
+.input-container {
   position: relative;
   background: rgba($gray-900, 0.6);
   border: 2px solid rgba($gray-600, 0.2);
@@ -1060,22 +890,23 @@ onMounted(() => {
 
 .message-input {
   width: 100%;
-  min-height: 52px;
-  max-height: 200px;
-  padding: 16px 20px;
+  min-height: 48px;
+  max-height: 120px;
+  padding: 16px 20px 16px 20px;
   background: transparent;
   border: none;
   outline: none;
   color: $text-primary;
   font-size: 16px;
   line-height: 1.5;
-  font-family: inherit;
+  font-family: $font-family-base;
   resize: none;
   transition: all 0.3s ease;
 
   &::placeholder {
     color: $text-muted;
-    font-style: italic;
+    font-style: normal;
+    opacity: 0.7;
   }
 
   &:disabled {
@@ -1083,13 +914,12 @@ onMounted(() => {
     opacity: 0.6;
   }
 
-  // iOS Safari 修复
   @supports (-webkit-touch-callout: none) {
-    font-size: 16px; // 防止缩放
+    font-size: 16px;
   }
 }
 
-.input-indicators {
+.input-status {
   position: absolute;
   bottom: 8px;
   right: 12px;
@@ -1098,191 +928,220 @@ onMounted(() => {
   gap: 8px;
   pointer-events: none;
 
-  .char-count {
-    font-size: 11px;
-    color: $text-muted;
-    font-variant-numeric: tabular-nums;
-    background: rgba($gray-800, 0.8);
-    padding: 2px 6px;
-    border-radius: 8px;
-
-    &.count-warning {
-      color: $warning-color;
-      background: rgba($warning-color, 0.1);
-    }
-
-    &.count-error {
-      color: $error-color;
-      background: rgba($error-color, 0.1);
-    }
-  }
-
-  .input-status {
+  .status-indicator {
     display: flex;
     align-items: center;
     gap: 4px;
     font-size: 11px;
+    color: $primary-400;
+    background: rgba($primary-500, 0.1);
+    padding: 2px 6px;
+    border-radius: 8px;
+
+    .icon {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  .char-count {
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background: rgba($gray-800, 0.8);
     color: $text-muted;
 
-    .composing-indicator,
-    .analyzing-indicator {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      background: rgba($gray-800, 0.8);
-      padding: 2px 6px;
-      border-radius: 8px;
-    }
-
-    .composing-indicator {
-      color: $primary-400;
-    }
-
-    .analyzing-indicator {
+    &.warning {
       color: $warning-color;
+      background: rgba($warning-color, 0.1);
+    }
+
+    &.error {
+      color: $error-color;
+      background: rgba($error-color, 0.1);
     }
   }
 }
 
-.suggestions-bar,
-.quick-replies-bar {
+.suggestions-bar {
   margin-top: 12px;
   background: rgba($primary-500, 0.05);
   border: 1px solid rgba($primary-500, 0.2);
   border-radius: 16px;
   padding: 12px;
   backdrop-filter: blur(10px);
+
+  .suggestions-content {
+    .suggestions-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: $primary-300;
+      font-weight: 500;
+
+      .icon.sparkles {
+        width: 14px;
+        height: 14px;
+        color: $primary-400;
+      }
+
+      .close-btn {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: $text-muted;
+        cursor: pointer;
+        padding: 2px;
+
+        &:hover {
+          color: $text-primary;
+        }
+
+        .icon {
+          width: 12px;
+          height: 12px;
+        }
+      }
+    }
+
+    .suggestions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      .suggestion-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: rgba($gray-700, 0.3);
+        border: 1px solid rgba($gray-600, 0.2);
+        border-radius: 12px;
+        color: $text-secondary;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 13px;
+        text-align: left;
+
+        &:hover {
+          background: rgba($primary-500, 0.1);
+          border-color: rgba($primary-500, 0.3);
+          color: $primary-300;
+          transform: translateX(4px);
+        }
+
+        .icon {
+          width: 14px;
+          height: 14px;
+          color: $primary-400;
+          flex-shrink: 0;
+        }
+      }
+    }
+  }
 }
 
-.suggestions-header {
+.send-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.send-btn {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 14px;
+  background: rgba($gray-700, 0.4);
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 12px;
-  color: $text-secondary;
-  font-weight: 500;
-}
-
-.suggestions-list {
-  display: flex;
-  flex-direction: column;
+  justify-content: center;
   gap: 6px;
+  padding: 0 12px;
+  position: relative;
+  overflow: hidden;
 
-  .suggestion-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: rgba($gray-700, 0.3);
-    border: 1px solid rgba($gray-600, 0.2);
-    border-radius: 12px;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  &.is-ready {
+    background: linear-gradient(135deg, $primary-500 0%, $primary-600 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba($primary-500, 0.3);
+    transform: scale(1.05);
+
+    &:hover:not(:disabled) {
+      transform: scale(1.1);
+      box-shadow: 0 6px 24px rgba($primary-500, 0.4);
+      background: linear-gradient(135deg, $primary-400 0%, $primary-500 100%);
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.95);
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.6s ease;
+    }
+
+    &:hover::before {
+      left: 100%;
+    }
+  }
+
+  &.stop-btn {
+    background: linear-gradient(135deg, $error-color 0%, #DC2626 100%);
+    color: white;
+    animation: stopPulse 1s ease-in-out infinite;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+    }
+  }
+
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .btn-text {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}
+
+.advanced-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba($gray-800, 0.4);
+  color: $text-tertiary;
+
+  &:hover {
+    background: rgba($gray-700, 0.6);
     color: $text-secondary;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 13px;
-    text-align: left;
-
-    &:hover {
-      background: rgba($primary-500, 0.1);
-      border-color: rgba($primary-500, 0.3);
-      color: $primary-300;
-      transform: translateX(4px);
-    }
   }
-}
 
-.quick-replies-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-
-  .quick-reply-item {
-    padding: 6px 12px;
-    background: rgba($primary-500, 0.1);
-    border: 1px solid rgba($primary-500, 0.3);
-    border-radius: 16px;
-    color: $primary-300;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: rgba($primary-500, 0.2);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba($primary-500, 0.2);
-    }
-  }
-}
-
-.send-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  .send-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-
-    &.send-ready {
-      background: linear-gradient(135deg, $primary-500 0%, $primary-600 100%);
-      box-shadow: 0 4px 16px rgba($primary-500, 0.3);
-      transform: scale(1.05);
-
-      &:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 24px rgba($primary-500, 0.4);
-        background: linear-gradient(135deg, $primary-400 0%, $primary-500 100%);
-      }
-
-      &:active {
-        transform: scale(0.95);
-      }
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.6s ease;
-      }
-
-      &:hover::before {
-        left: 100%;
-      }
-    }
-
-    &.stop-btn {
-      background: linear-gradient(135deg, $error-color 0%, #DC2626 100%);
-      animation: stopPulse 1s ease-in-out infinite;
-
-      &:hover {
-        background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
-      }
-    }
-  }
-}
-
-.advanced-actions {
-  .advanced-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 12px;
-    background: rgba($gray-700, 0.2);
-    border: 1px solid rgba($gray-600, 0.3);
-    color: $text-tertiary;
-
-    &:hover {
-      background: rgba($gray-700, 0.3);
-      color: $text-secondary;
-    }
+  .icon {
+    width: 16px;
+    height: 16px;
   }
 }
 
@@ -1293,7 +1152,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   z-index: 2000;
   display: flex;
@@ -1306,7 +1165,7 @@ onMounted(() => {
   background: $dark-bg-secondary;
   border: 1px solid rgba($gray-600, 0.3);
   border-radius: 20px;
-  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 64px rgba(0, 0, 0, 0.4);
   width: 100%;
   max-width: 400px;
   max-height: 80vh;
@@ -1321,7 +1180,30 @@ onMounted(() => {
   justify-content: space-between;
   padding: 16px 20px;
   border-bottom: 1px solid rgba($gray-600, 0.2);
-  font-weight: 600;
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: $text-primary;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    color: $text-muted;
+    cursor: pointer;
+    padding: 4px;
+
+    &:hover {
+      color: $text-primary;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
 }
 
 .emoji-categories {
@@ -1331,8 +1213,8 @@ onMounted(() => {
   border-bottom: 1px solid rgba($gray-600, 0.2);
 
   .category-btn {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border: none;
     background: transparent;
     border-radius: 10px;
@@ -1360,8 +1242,8 @@ onMounted(() => {
   gap: 4px;
 
   .emoji-item {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border: none;
     background: transparent;
     border-radius: 8px;
@@ -1384,7 +1266,7 @@ onMounted(() => {
   padding: 12px 20px;
   border-top: 1px solid rgba($gray-600, 0.2);
 
-  .emoji-search-input {
+  .search-input {
     width: 100%;
     padding: 8px 12px;
     background: rgba($gray-900, 0.6);
@@ -1404,32 +1286,6 @@ onMounted(() => {
   }
 }
 
-// 语音对话框
-.voice-dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.voice-dialog-panel {
-  background: $dark-bg-secondary;
-  border: 1px solid rgba($gray-600, 0.3);
-  border-radius: 20px;
-  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.3);
-  width: 100%;
-  max-width: 500px;
-  padding: 24px;
-}
-
 // 高级设置面板
 .advanced-panel-overlay {
   position: fixed;
@@ -1437,7 +1293,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   z-index: 2000;
   display: flex;
@@ -1450,7 +1306,7 @@ onMounted(() => {
   background: $dark-bg-secondary;
   border: 1px solid rgba($gray-600, 0.3);
   border-radius: 20px 20px 0 0;
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
   width: 100%;
   max-width: 600px;
   max-height: 70vh;
@@ -1466,8 +1322,26 @@ onMounted(() => {
 
   h3 {
     margin: 0;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
+    color: $text-primary;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    color: $text-muted;
+    cursor: pointer;
+    padding: 4px;
+
+    &:hover {
+      color: $text-primary;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
   }
 }
 
@@ -1479,12 +1353,19 @@ onMounted(() => {
   .setting-group {
     margin-bottom: 24px;
 
-    label {
-      display: block;
+    .setting-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 8px;
       font-size: 14px;
       font-weight: 500;
       color: $text-secondary;
+
+      .setting-value {
+        color: $primary-400;
+        font-weight: 600;
+      }
     }
 
     .setting-slider {
@@ -1503,6 +1384,12 @@ onMounted(() => {
         background: $primary-500;
         cursor: pointer;
         border: 2px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.2s ease;
+
+        &:hover {
+          transform: scale(1.1);
+          box-shadow: 0 0 10px rgba($primary-500, 0.5);
+        }
       }
 
       &::-moz-range-thumb {
@@ -1512,6 +1399,12 @@ onMounted(() => {
         background: $primary-500;
         cursor: pointer;
         border: 2px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.2s ease;
+
+        &:hover {
+          transform: scale(1.1);
+          box-shadow: 0 0 10px rgba($primary-500, 0.5);
+        }
       }
     }
 
@@ -1520,6 +1413,8 @@ onMounted(() => {
       align-items: center;
       gap: 8px;
       cursor: pointer;
+      color: $text-secondary;
+      font-size: 14px;
 
       .setting-checkbox {
         width: 18px;
@@ -1527,6 +1422,33 @@ onMounted(() => {
         accent-color: $primary-500;
       }
     }
+  }
+}
+
+// Tooltip 样式
+.tool-btn[data-tooltip],
+.send-btn[data-tooltip] {
+  &::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba($gray-800, 0.9);
+    color: $text-primary;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    margin-bottom: 6px;
+    z-index: 1000;
+  }
+
+  &:hover::before {
+    opacity: 1;
   }
 }
 
@@ -1555,6 +1477,15 @@ onMounted(() => {
   }
   50% {
     opacity: 0.7;
+  }
+}
+
+@keyframes recordDot {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
   }
 }
 
@@ -1604,30 +1535,47 @@ onMounted(() => {
 
 // 响应式设计
 @media (max-width: 768px) {
-  .immersive-chat-input {
-    padding: 12px;
-    border-radius: 20px;
+  .modern-chat-input {
+    padding: 12px 16px;
+    border-radius: 16px;
   }
 
-  .input-container {
-    gap: 8px;
+  .input-area {
+    gap: 12px;
   }
 
-  .sidebar-actions .sidebar-btn {
+  .tool-btn {
     width: 40px;
     height: 40px;
-    font-size: 18px;
+
+    .icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    .emoji-indicator {
+      font-size: 18px;
+    }
   }
 
-  .send-actions .send-btn {
+  .send-btn {
     width: 44px;
     height: 44px;
+
+    .icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    .btn-text {
+      display: none;
+    }
   }
 
   .message-input {
     min-height: 44px;
     padding: 12px 16px;
-    font-size: 16px; // 防止iOS缩放
+    font-size: 16px;
   }
 
   .emoji-picker-panel {
@@ -1638,25 +1586,32 @@ onMounted(() => {
 
   .emoji-grid {
     grid-template-columns: repeat(6, 1fr);
+
+    .emoji-item {
+      width: 28px;
+      height: 28px;
+      font-size: 16px;
+    }
   }
 
-  .emoji-item {
-    width: 32px;
-    height: 32px;
-    font-size: 16px;
+  .advanced-panel {
+    max-width: 100%;
   }
 }
 
 // 无障碍支持
 @media (prefers-reduced-motion: reduce) {
-  .immersive-chat-input,
-  .sidebar-btn,
+  .modern-chat-input,
+  .tool-btn,
   .send-btn,
   .message-input {
     transition: none;
   }
 
+  @keyframes loadingPulse,
   @keyframes recordingPulse,
+  @keyframes recordPulse,
+  @keyframes recordDot,
   @keyframes stopPulse {
     display: none;
   }
@@ -1664,17 +1619,17 @@ onMounted(() => {
 
 // 高对比度模式
 @media (prefers-contrast: high) {
-  .immersive-chat-input {
+  .modern-chat-input {
     border-width: 2px;
   }
 
-  .input-field-wrapper {
+  .input-container {
     border-width: 2px;
   }
 
-  .sidebar-btn,
+  .tool-btn,
   .send-btn {
-    border-width: 2px;
+    border: 2px solid rgba($gray-600, 0.5);
   }
 }
 </style>

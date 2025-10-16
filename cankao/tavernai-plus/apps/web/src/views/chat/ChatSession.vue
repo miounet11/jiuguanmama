@@ -390,120 +390,195 @@
         </TavernButton>
       </div>
 
-      <!-- 输入区域 -->
-      <div class="chat-input-area">
+      <!-- Grok风格现代化输入区域 -->
+      <div class="grok-input-area">
         <div class="input-container">
-          <!-- 快捷操作 -->
-          <div class="input-actions">
-            <TavernButton
-              size="sm"
-              variant="ghost"
-              @click="showEmojiPicker = !showEmojiPicker"
-              title="表情"
-            >
-              😊
-            </TavernButton>
-            <TavernButton
-              size="sm"
-              variant="ghost"
-              @click="handleFileUpload"
-              title="上传文件"
-              :disabled="isLoading"
-            >
-              <TavernIcon name="arrow-up-tray" />
-            </TavernButton>
-            <!-- 语音输入按钮 -->
-            <TavernButton
-              size="sm"
-              @click="startVoiceInput"
-              :variant="isVoiceRecording ? 'danger' : 'primary'"
-              :title="isVoiceRecording ? '停止录音' : '语音输入'"
-              :disabled="isLoading"
-            >
-              <TavernIcon :name="isVoiceRecording ? 'stop' : 'microphone'" />
-            </TavernButton>
-            <!-- 简化的图像功能 -->
-            <SimplifiedChatImageFeatures
-              :current-character="character"
-              :messages="messages"
-              @image-generated="handleImageGenerated"
-              @image-message="handleImageMessage"
-            />
-          </div>
+          <!-- 主输入区域 - 类似Grok的简洁设计 -->
+          <div class="grok-input-card">
+            <!-- 左侧工具栏 -->
+            <div class="input-toolbar-left">
+              <button
+                @click="toggleExpandedTools"
+                class="toolbar-btn attachment-btn"
+                :class="{ 'active': showExpandedTools }"
+                title="附件"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                </svg>
+              </button>
+            </div>
 
-          <!-- 输入框 -->
-          <div class="input-wrapper">
-            <textarea
-              ref="inputRef"
-              v-model="inputMessage"
-              @keydown="handleKeyDown"
-              @input="handleInput"
-              placeholder="输入消息..."
-              class="message-input"
-              :rows="inputRows"
-              :disabled="isLoading"
-            />
+            <!-- 中央输入区域 -->
+            <div class="grok-input-main">
+              <div class="input-wrapper">
+                <textarea
+                  ref="inputRef"
+                  v-model="inputMessage"
+                  @keydown="handleKeyDown"
+                  @input="handleInput"
+                  :placeholder="getInputPlaceholder()"
+                  class="grok-textarea"
+                  :rows="1"
+                  :disabled="isLoading"
+                  :style="{ height: inputHeight + 'px' }"
+                />
+                <!-- 输入状态栏 -->
+                <div class="input-status-bar">
+                  <div class="status-left">
+                    <span v-if="inputMessage.length > 1500" class="char-warning">
+                      {{ inputMessage.length }}/2000
+                    </span>
+                  </div>
+                  <div class="status-right">
+                    <div v-if="isVoiceRecording" class="voice-status">
+                      <div class="recording-pulse"></div>
+                      <span>录音中</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            <!-- 字数统计 -->
-            <div class="input-stats">
-              <span>{{ inputMessage.length }}/2000</span>
+            <!-- 右侧操作栏 -->
+            <div class="input-toolbar-right">
+              <!-- 语音输入 -->
+              <button
+                v-if="!showExpandedTools && !isLoading"
+                @click="startVoiceInput"
+                class="toolbar-btn voice-btn"
+                :class="{ 'recording': isVoiceRecording }"
+                :title="isVoiceRecording ? '停止录音' : '语音输入'"
+                :disabled="isLoading"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3 3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2a7 7 0 0 1 14 0"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </button>
+
+              <!-- 停止生成按钮 -->
+              <button
+                v-if="isLoading"
+                @click="stopGeneration"
+                class="toolbar-btn stop-btn"
+                title="停止生成"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="6" width="12" height="12" rx="2"/>
+                </svg>
+              </button>
+
+              <!-- 发送按钮 -->
+              <button
+                v-else
+                @click="sendMessage"
+                class="toolbar-btn send-btn"
+                :class="{ 'active': canSend }"
+                :disabled="!canSend"
+                title="发送 (Enter)"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 2 12 3 2 12 12 3 2"/>
+                </svg>
+              </button>
             </div>
           </div>
 
-          <!-- 发送按钮 -->
-          <div class="send-actions">
-            <TavernButton
-              v-if="isLoading"
-              @click="stopGeneration"
-              variant="danger"
-              size="lg"
-              title="停止生成"
-            >
-              <TavernIcon name="x-mark" />
-            </TavernButton>
-            <TavernButton
-              v-else
-              @click="sendMessage"
-              variant="primary"
-              size="lg"
-              :disabled="!canSend"
-              title="发送消息"
-            >
-              <TavernIcon name="paper-airplane" />
-            </TavernButton>
+          <!-- 快速建议 - 类似Grok的芯片式设计 -->
+          <div v-if="shouldShowSuggestions" class="grok-suggestions">
+            <div class="suggestions-track">
+              <button
+                v-for="(suggestion, index) in getDisplaySuggestions()"
+                :key="index"
+                @click="sendSuggestedMessage(suggestion)"
+                class="suggestion-chip"
+              >
+                {{ suggestion }}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- 表情选择器 -->
-        <div v-if="showEmojiPicker" class="emoji-picker">
-          <div class="emoji-grid">
-            <button
-              v-for="emoji in commonEmojis"
-              :key="emoji"
-              @click="addEmoji(emoji)"
-              class="emoji-btn"
-            >
-              {{ emoji }}
-            </button>
+          <!-- 工具面板 - 简化版 -->
+          <div v-if="showExpandedTools" class="grok-tool-panel">
+            <div class="tool-grid">
+              <button
+                @click="showEmojiPicker = !showEmojiPicker"
+                class="tool-item"
+                :class="{ 'active': showEmojiPicker }"
+              >
+                <span class="tool-emoji">😊</span>
+                <span class="tool-label">表情</span>
+              </button>
+              <button
+                @click="handleFileUpload"
+                class="tool-item"
+                :disabled="isLoading"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <span class="tool-label">文件</span>
+              </button>
+              <button
+                @click="showImageTools = !showImageTools"
+                class="tool-item"
+                :class="{ 'active': showImageTools }"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <span class="tool-label">图像</span>
+              </button>
+            </div>
+
+            <!-- 子面板 -->
+            <div v-if="showEmojiPicker" class="sub-panel">
+              <div class="emoji-quick-grid">
+                <button
+                  v-for="emoji in getQuickEmojis()"
+                  :key="emoji"
+                  @click="addEmoji(emoji)"
+                  class="quick-emoji"
+                >
+                  {{ emoji }}
+                </button>
+              </div>
+            </div>
+
+            <div v-if="showImageTools" class="sub-panel">
+              <SimplifiedChatImageFeatures
+                :current-character="character"
+                :messages="messages"
+                @image-generated="handleImageGenerated"
+                @image-message="handleImageMessage"
+              />
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 底部交互区域 -->
-    <div class="bottom-interaction-area">
-      <!-- 语音功能组件 -->
-      <ChatVoiceFeatures
-        :messages="messages"
-        :current-character="character"
-        :is-mobile="isMobile"
-        class="integrated-voice-features"
-        @voice-text-ready="handleVoiceTextReady"
-        @voice-message-play="handleVoiceMessagePlay"
-        @voice-message-stop="handleVoiceMessageStop"
-        @auto-voice-toggle="handleAutoVoiceToggle"
-      />
-    </div>
+    <!-- 语音功能组件 - 集成到现代化输入区域中 -->
+    <!-- 暂时隐藏，语音功能已整合到主输入区域 -->
+    <ChatVoiceFeatures
+      v-if="false"
+      :messages="messages"
+      :current-character="character"
+      :is-mobile="isMobile"
+      class="integrated-voice-features"
+      @voice-text-ready="handleVoiceTextReady"
+      @voice-message-play="handleVoiceMessagePlay"
+      @voice-message-stop="handleVoiceMessageStop"
+      @auto-voice-toggle="handleAutoVoiceToggle"
+    ></ChatVoiceFeatures>
 
     <!-- 语音输入对话框 -->
     <div v-if="showVoiceDialog" class="modal-overlay" @click="showVoiceDialog = false">
@@ -600,6 +675,11 @@ const showEmojiPicker = ref(false)
 const soundEnabled = ref(true)
 const fullscreen = ref(false)
 const isMobile = ref(false)
+
+// 现代化输入区域状态
+const showExpandedTools = ref(false)
+const showImageTools = ref(false)
+const showQuickSuggestions = ref(true)
 
 // 语音功能状态
 const showVoiceDialog = ref(false)
@@ -785,6 +865,16 @@ const toggleSettings = () => {
   showSettings.value = !showSettings.value
 }
 
+// 现代化输入区域控制方法
+const toggleExpandedTools = () => {
+  showExpandedTools.value = !showExpandedTools.value
+  // 关闭其他展开的面板
+  if (!showExpandedTools.value) {
+    showEmojiPicker.value = false
+    showImageTools.value = false
+  }
+}
+
 const onModelChange = (model: any) => {
   console.log('模型已切换到:', model)
   // 根据模型配置调整设置
@@ -844,6 +934,14 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 const handleInput = () => {
   // 自动调整文本框高度已通过 computed 实现
+}
+
+// 输入框占位符
+const getInputPlaceholder = () => {
+  if (character.value) {
+    return `向 ${character.value.name} 发送消息...`
+  }
+  return '输入消息...'
 }
 
 // 消息相关方法
@@ -1462,7 +1560,7 @@ watch(messages, (newMessages) => {
   transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 
   &.active {
-    opacity: 0.4; // 背景半透明，保证文字可读性
+    opacity: 0.4; /* 背景半透明, 保证文字可读性 */
     transform: scale(1);
   }
 
@@ -1580,12 +1678,11 @@ watch(messages, (newMessages) => {
 }
 
 .scene-selector-panel {
-  position: absolute;
-  top: 100%;
-  right: 0;
+  position: fixed;
+  top: 60px; /* 刚好为聊天头部的高度 */
+  right: 25px; /* 距离右边缘 */
   width: 320px;
   max-height: 400px;
-  margin-top: 8px;
   background: rgba(28, 28, 32, 0.95);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1593,6 +1690,42 @@ watch(messages, (newMessages) => {
   padding: 16px;
   z-index: 1000;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  pointer-events: auto; /* 确保面板可以接收点击事件 */
+
+  // 确保面板不会超出屏幕边界
+  @media (max-width: 400px) {
+    width: calc(100vw - 50px);
+    right: 25px;
+  }
+
+  @media (max-height: 500px) {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+
+  // 移动端优化
+  @include mobile-only {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(90vw);
+    max-width: 320px;
+    right: auto;
+  }
+
+  // 确保面板在屏幕可见区域内 - 添加背景遮罩
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 998; /* 降低z-index，确保不会阻挡面板交互 */
+    pointer-events: none; /* 让背景不阻挡点击事件 */
+  }
 
   .panel-header {
     display: flex;
@@ -1616,14 +1749,15 @@ watch(messages, (newMessages) => {
     }
   }
 
-  .scenes-grid {
+  .scene-backgrounds-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     max-height: 300px;
     overflow-y: auto;
+    pointer-events: auto; /* 确保网格可以接收点击事件 */
 
-    .scene-option {
+    .scene-background-item {
       position: relative;
       aspect-ratio: 16/9;
       border-radius: 8px;
@@ -1631,23 +1765,25 @@ watch(messages, (newMessages) => {
       cursor: pointer;
       border: 2px solid transparent;
       transition: all 0.2s ease;
+      pointer-events: auto; /* 确保项目可以接收点击事件 */
 
       &:hover {
-        border-color: rgba(var(--el-color-primary-rgb), 0.6);
+        border-color: rgba($primary-500, 0.6);
         transform: translateY(-2px);
       }
 
       &.active {
-        border-color: var(--el-color-primary);
-        box-shadow: 0 0 0 1px var(--el-color-primary);
+        border-color: $primary-500;
+        box-shadow: 0 0 0 1px $primary-500;
       }
 
-      .scene-preview {
+      .scene-thumbnail {
         width: 100%;
         height: 100%;
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
+        pointer-events: none; /* 让图片不阻挡点击事件 */
       }
 
       .scene-overlay {
@@ -1657,14 +1793,54 @@ watch(messages, (newMessages) => {
         right: 0;
         background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
         padding: 12px 8px 8px;
+        pointer-events: none; /* 让覆盖层不阻挡点击事件 */
 
-        .scene-title {
+        .check-icon {
+          position: absolute;
+          top: 8px;
+          right: 8px;
           color: white;
-          font-size: 12px;
-          font-weight: 500;
-          line-height: 1.2;
+          font-size: 16px;
           text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
         }
+      }
+
+      .scene-name {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        right: 8px;
+        color: white;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.2;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        pointer-events: none; /* 让文字不阻挡点击事件 */
+      }
+    }
+  }
+
+  // AI自动检测开关
+  .scene-auto-detect {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    pointer-events: auto; /* 确保开关区域可以接收点击事件 */
+
+    .scene-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 14px;
+
+      input[type="checkbox"] {
+        pointer-events: auto; /* 确保复选框可以接收点击事件 */
+      }
+
+      span {
+        pointer-events: none; /* 让文字不阻挡点击事件 */
       }
     }
   }
@@ -2313,7 +2489,707 @@ watch(messages, (newMessages) => {
   }
 }
 
-// 输入区域
+// 现代化输入区域
+.modern-input-area {
+  background: rgba($dark-bg-secondary, 0.95);
+  border-top: 1px solid rgba($primary-500, 0.2);
+  padding: $space-5;
+  backdrop-filter: blur(10px);
+
+  // 移动端输入区域
+  @include mobile-only {
+    padding: $space-4;
+    position: relative;
+    z-index: 100;
+  }
+
+  .input-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  // 主输入卡片 - 现代化圆角设计
+  .input-card {
+    background: rgba($gray-900, 0.8);
+    border: 1px solid rgba($primary-500, 0.3);
+    border-radius: 20px;
+    padding: $space-2;
+    display: flex;
+    align-items: flex-end;
+    gap: $space-2;
+    transition: all $transition-base;
+    backdrop-filter: blur(10px);
+
+    &:hover {
+      border-color: rgba($primary-500, 0.5);
+      box-shadow: 0 0 0 1px rgba($primary-500, 0.1);
+    }
+
+    &:focus-within {
+      border-color: $primary-500;
+      box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+    }
+
+    // 移动端优化
+    @include mobile-only {
+      border-radius: 16px;
+      padding: $space-1;
+      gap: $space-1;
+    }
+  }
+
+  // 前置功能区域
+  .input-prefix-actions {
+    display: flex;
+    align-items: center;
+
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: $space-1;
+    }
+
+    .tool-toggle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba($primary-500, 0.1);
+      border: 1px solid rgba($primary-500, 0.2);
+      color: $primary-400;
+      transition: all $transition-base;
+
+      &:hover {
+        background: rgba($primary-500, 0.2);
+        transform: scale(1.05);
+      }
+
+      &.active {
+        background: $primary-500;
+        color: white;
+        border-color: $primary-500;
+      }
+
+      // 移动端优化
+      @include mobile-only {
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    .expanded-tools {
+      display: flex;
+      align-items: center;
+      gap: $space-1;
+      margin-left: $space-1;
+      padding-left: $space-1;
+      border-left: 1px solid rgba($gray-700, 0.5);
+
+      .tool-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba($gray-700, 0.3);
+        border: 1px solid rgba($gray-600, 0.3);
+        color: $text-secondary;
+        transition: all $transition-base;
+
+        &:hover {
+          background: rgba($gray-600, 0.5);
+          color: $text-primary;
+        }
+
+        &.active {
+          background: rgba($primary-500, 0.3);
+          color: $primary-400;
+          border-color: rgba($primary-500, 0.4);
+        }
+
+        // 移动端优化
+        @include mobile-only {
+          width: 28px;
+          height: 28px;
+        }
+      }
+    }
+  }
+
+  // 中央输入区域
+  .input-main {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+
+    .message-input-modern {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: $text-primary;
+      font-size: $font-size-base;
+      line-height: $line-height-normal;
+      resize: none;
+      padding: $space-3 $space-2;
+      min-height: 24px;
+      max-height: 120px;
+      font-family: $font-family-base;
+
+      // 移动端优化
+      @include mobile-only {
+        font-size: 16px; // 防止iOS缩放
+        padding: $space-2;
+      }
+
+      &::placeholder {
+        color: $text-muted;
+        opacity: 0.7;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    .input-indicators {
+      position: absolute;
+      bottom: -20px;
+      right: $space-2;
+      display: flex;
+      align-items: center;
+      gap: $space-3;
+
+      .char-count {
+        font-size: $font-size-xs;
+        color: $text-muted;
+        opacity: 0.7;
+      }
+
+      .voice-recording-indicator {
+        display: flex;
+        align-items: center;
+        gap: $space-1;
+        font-size: $font-size-xs;
+        color: $error-color;
+
+        .recording-dot {
+          width: 8px;
+          height: 8px;
+          background: $error-color;
+          border-radius: 50%;
+          animation: recording-pulse 1.5s ease-in-out infinite;
+        }
+
+        span {
+          font-weight: $font-weight-medium;
+        }
+      }
+    }
+  }
+
+  // 后置功能区域
+  .input-suffix-actions {
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+
+    .voice-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba($gray-700, 0.3);
+      border: 1px solid rgba($gray-600, 0.3);
+      color: $text-secondary;
+      transition: all $transition-base;
+
+      &:hover:not(:disabled) {
+        background: rgba($gray-600, 0.5);
+        color: $text-primary;
+      }
+
+      &.recording {
+        background: rgba($error-color, 0.2);
+        color: $error-color;
+        border-color: rgba($error-color, 0.3);
+        animation: recording-pulse 1.5s ease-in-out infinite;
+      }
+
+      // 移动端优化
+      @include mobile-only {
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    .send-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: $primary-500;
+      border: 1px solid $primary-500;
+      color: white;
+      transition: all $transition-base;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover:not(:disabled) {
+        background: $primary-600;
+        border-color: $primary-600;
+        transform: scale(1.05);
+      }
+
+      &:active:not(:disabled) {
+        transform: scale(0.95);
+      }
+
+      &:disabled {
+        background: rgba($gray-600, 0.5);
+        border-color: rgba($gray-600, 0.5);
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      &.stop-btn {
+        background: $error-color;
+        border-color: $error-color;
+
+        &:hover:not(:disabled) {
+          background: darken($error-color, 10%);
+          border-color: darken($error-color, 10%);
+        }
+      }
+
+      // 移动端优化
+      @include mobile-only {
+        width: 36px;
+        height: 36px;
+      }
+    }
+  }
+
+  // 快捷提示栏
+  .quick-suggestions {
+    margin-top: $space-4;
+    padding: 0 $space-2;
+
+    .suggestions-container {
+      display: flex;
+      align-items: center;
+      gap: $space-2;
+      flex-wrap: wrap;
+
+      .suggestions-label {
+        font-size: $font-size-sm;
+        color: $text-tertiary;
+        font-weight: $font-weight-medium;
+      }
+
+      .suggestion-chip {
+        padding: $space-1 $space-3;
+        background: rgba($primary-500, 0.1);
+        border: 1px solid rgba($primary-500, 0.2);
+        border-radius: $border-radius-full;
+        color: $primary-400;
+        font-size: $font-size-sm;
+        cursor: pointer;
+        transition: all $transition-base;
+        white-space: nowrap;
+
+        &:hover {
+          background: rgba($primary-500, 0.2);
+          border-color: rgba($primary-500, 0.3);
+          color: $primary-300;
+          transform: translateY(-1px);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+
+  // 工具面板
+  .tool-panels {
+    margin-top: $space-3;
+    padding: 0 $space-2;
+
+    .tool-panel {
+      background: rgba($gray-900, 0.6);
+      border: 1px solid rgba($primary-500, 0.2);
+      border-radius: 12px;
+      padding: $space-3;
+      margin-bottom: $space-2;
+      backdrop-filter: blur(10px);
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: $space-3;
+
+        span {
+          font-size: $font-size-sm;
+          font-weight: $font-weight-medium;
+          color: $text-secondary;
+        }
+      }
+
+      &.emoji-panel {
+        .emoji-grid-modern {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+          gap: $space-1;
+          max-width: 300px;
+
+          .emoji-btn-modern {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: rgba($gray-700, 0.3);
+            border-radius: $border-radius-base;
+            cursor: pointer;
+            font-size: $font-size-lg;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all $transition-base;
+
+            &:hover {
+              background: rgba($primary-500, 0.2);
+              transform: scale(1.1);
+            }
+
+            &:active {
+              transform: scale(0.95);
+            }
+          }
+        }
+      }
+
+      &.image-panel {
+        // 图像面板样式由组件内部管理
+      }
+    }
+  }
+}
+
+// 录音脉冲动画
+@keyframes recording-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+// Grok风格输入区域样式
+.grok-input-area {
+  background: rgba($dark-bg-secondary, 0.95);
+  border-top: 1px solid rgba($primary-500, 0.2);
+  padding: $space-5;
+  backdrop-filter: blur(10px);
+
+  // 移动端输入区域
+  @include mobile-only {
+    padding: $space-4;
+    position: relative;
+    z-index: 100;
+  }
+
+  .input-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .grok-input-card {
+    background: rgba($gray-900, 0.8);
+    border: 1px solid rgba($primary-500, 0.3);
+    border-radius: 20px;
+    padding: $space-2;
+    display: flex;
+    align-items: flex-end;
+    gap: $space-2;
+    transition: all $transition-base;
+    backdrop-filter: blur(10px);
+
+    &:hover {
+      border-color: rgba($primary-500, 0.5);
+      box-shadow: 0 0 0 1px rgba($primary-500, 0.1);
+    }
+
+    &:focus-within {
+      border-color: $primary-500;
+      box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+    }
+
+    // 移动端优化
+    @include mobile-only {
+      border-radius: 16px;
+      padding: $space-1;
+      gap: $space-1;
+    }
+  }
+
+  .input-toolbar-left,
+  .input-toolbar-right {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    flex-shrink: 0;
+  }
+
+  .input-toolbar-left {
+    align-items: flex-start;
+  }
+
+  .input-toolbar-right {
+    align-items: flex-end;
+  }
+
+  .grok-input-main {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+  }
+
+  .input-wrapper {
+    position: relative;
+  }
+
+  .grok-textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: $text-primary;
+    font-size: $font-size-base;
+    line-height: $line-height-normal;
+    resize: none;
+    padding: $space-3 $space-2;
+    min-height: 24px;
+    max-height: 120px;
+    font-family: $font-family-base;
+
+    // 移动端优化
+    @include mobile-only {
+      font-size: 16px; // 防止iOS缩放
+      padding: $space-2;
+    }
+
+    &::placeholder {
+      color: $text-muted;
+      opacity: 0.7;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .input-status-bar {
+    position: absolute;
+    bottom: -$space-4;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    font-size: $font-size-xs;
+
+    .char-warning {
+      color: $warning-color;
+    }
+
+    .voice-status {
+      display: flex;
+      align-items: center;
+      gap: $space-1;
+      color: $error-color;
+
+      .recording-pulse {
+        width: 8px;
+        height: 8px;
+        background: $error-color;
+        border-radius: 50%;
+        animation: recording-pulse 1.5s ease-in-out infinite;
+      }
+    }
+  }
+
+  .toolbar-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 12px;
+    background: rgba($gray-800, 0.4);
+    color: $text-secondary;
+    cursor: pointer;
+    transition: all $transition-base;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover:not(:disabled) {
+      background: rgba($gray-700, 0.6);
+      color: $text-primary;
+      transform: translateY(-2px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &.active {
+      background: rgba($primary-500, 0.2);
+      color: $primary-300;
+      border: 1px solid rgba($primary-500, 0.3);
+    }
+
+    &.recording {
+      background: rgba($error-color, 0.2);
+      color: $error-color;
+      animation: recording-pulse 1.5s ease-in-out infinite;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    // 移动端优化
+    @include mobile-only {
+      width: 40px;
+      height: 40px;
+    }
+  }
+
+  .grok-suggestions {
+    margin-top: $space-3;
+    padding: 0 $space-2;
+
+    .suggestions-track {
+      display: flex;
+      align-items: center;
+      gap: $space-2;
+      flex-wrap: wrap;
+
+      .suggestion-chip {
+        padding: $space-1 $space-3;
+        background: rgba($primary-500, 0.1);
+        border: 1px solid rgba($primary-500, 0.2);
+        border-radius: $border-radius-full;
+        color: $primary-400;
+        font-size: $font-size-sm;
+        cursor: pointer;
+        transition: all $transition-base;
+        white-space: nowrap;
+
+        &:hover {
+          background: rgba($primary-500, 0.2);
+          border-color: rgba($primary-500, 0.3);
+          color: $primary-300;
+          transform: translateY(-1px);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+
+  .grok-tool-panel {
+    margin-top: $space-3;
+    background: rgba($gray-900, 0.6);
+    border: 1px solid rgba($primary-500, 0.2);
+    border-radius: 12px;
+    padding: $space-3;
+    backdrop-filter: blur(10px);
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: $space-2;
+      margin-bottom: $space-2;
+
+      .tool-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: $space-1;
+        padding: $space-2;
+        background: rgba($gray-700, 0.3);
+        border: 1px solid rgba($gray-600, 0.3);
+        border-radius: 8px;
+        color: $text-secondary;
+        cursor: pointer;
+        transition: all $transition-base;
+        font-size: $font-size-xs;
+
+        &:hover {
+          background: rgba($gray-600, 0.5);
+          color: $text-primary;
+        }
+
+        &.active {
+          background: rgba($primary-500, 0.3);
+          color: $primary-400;
+          border-color: rgba($primary-500, 0.4);
+        }
+
+        .tool-emoji {
+          font-size: $font-size-lg;
+        }
+
+        .tool-label {
+          font-weight: $font-weight-medium;
+        }
+      }
+    }
+
+    .sub-panel {
+      margin-top: $space-2;
+      padding-top: $space-2;
+      border-top: 1px solid rgba($gray-600, 0.3);
+
+      .emoji-quick-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+        gap: $space-1;
+
+        .quick-emoji {
+          width: 40px;
+          height: 40px;
+          border: none;
+          background: rgba($gray-700, 0.3);
+          border-radius: $border-radius-base;
+          cursor: pointer;
+          font-size: $font-size-lg;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all $transition-base;
+
+          &:hover {
+            background: rgba($primary-500, 0.2);
+            transform: scale(1.1);
+          }
+
+          &:active {
+            transform: scale(0.95);
+          }
+        }
+      }
+    }
+  }
+}
+
+// 兼容性：保留原有输入区域样式
 .chat-input-area {
   background: rgba($dark-bg-secondary, 0.95);
   border-top: 1px solid rgba($primary-500, 0.2);

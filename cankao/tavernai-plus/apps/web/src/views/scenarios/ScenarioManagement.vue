@@ -8,26 +8,26 @@
           <p class="subtitle">创建和管理您的世界信息剧本</p>
         </div>
         <div class="actions-section">
-          <TavernButton
-            variant="primary"
-            size="lg"
+          <el-button
+            type="primary"
+            size="large"
             @click="createNewScenario"
           >
-            <TavernIcon name="plus" />
+            <el-icon><Plus /></el-icon>
             创建剧本
-          </TavernButton>
+          </el-button>
         </div>
       </div>
     </div>
 
     <!-- 主内容区域 -->
     <div class="management-content">
-      <TavernCard variant="glass" class="scenario-container">
+      <el-card class="scenario-container">
         <ScenarioList
           @scenario-created="handleScenarioCreated"
           @scenario-selected="handleScenarioSelected"
         />
-      </TavernCard>
+      </el-card>
     </div>
   </div>
 </template>
@@ -84,14 +84,14 @@ onMounted(() => {
 .scenario-management {
   min-height: 100vh;
   background: linear-gradient(135deg,
-    var(--dt-color-background-primary) 0%,
-    var(--dt-color-background-secondary) 50%,
-    var(--dt-color-background-tertiary) 100%);
-  padding: var(--dt-spacing-lg);
+    var(--surface-0) 0%,
+    var(--surface-1) 50%,
+    var(--surface-2) 100%);
+  padding: var(--spacing-comfortable);
 }
 
 .page-header {
-  margin-bottom: var(--dt-spacing-2xl);
+  margin-bottom: var(--spacing-relaxed);
 
   .header-content {
     max-width: 1200px;
@@ -99,22 +99,22 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    gap: var(--dt-spacing-lg);
+    gap: var(--spacing-loose);
 
     .title-section {
       .gradient-title {
-        font-size: var(--dt-font-size-4xl);
-        font-weight: var(--dt-font-weight-bold);
+        font-size: var(--text-4xl);
+        font-weight: var(--font-bold);
         background: var(--dt-gradient-primary);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: var(--dt-spacing-sm);
+        margin-bottom: var(--space-3);
       }
 
       .subtitle {
-        font-size: var(--dt-font-size-lg);
-        color: var(--dt-color-text-secondary);
+        font-size: var(--text-lg);
+        color: var(--text-secondary);
         margin: 0;
       }
     }
@@ -131,25 +131,28 @@ onMounted(() => {
 
   .scenario-container {
     min-height: 400px;
-    padding: var(--dt-spacing-xl);
+    padding: var(--section-padding-y);
+    background: var(--surface-1);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
   }
 }
 
 // 响应式设计
 @media (max-width: 768px) {
   .scenario-management {
-    padding: var(--dt-spacing-md);
+    padding: var(--spacing-normal);
   }
 
   .page-header {
     .header-content {
       flex-direction: column;
       align-items: flex-start;
-      gap: var(--dt-spacing-md);
+      gap: var(--spacing-normal);
 
       .title-section {
         .gradient-title {
-          font-size: var(--dt-font-size-2xl);
+          font-size: var(--text-2xl);
         }
       }
     }
@@ -157,7 +160,7 @@ onMounted(() => {
 
   .management-content {
     .scenario-container {
-      padding: var(--dt-spacing-lg);
+      padding: var(--spacing-comfortable);
     }
   }
 }

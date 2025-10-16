@@ -137,21 +137,21 @@ export default defineConfig({
     cssCodeSplit: true, // CSS 代码分割
   },
 
-  // 开发服务器配置 - 已修复代理配置
+  // 开发服务器配置 - 固定端口配置
   server: {
-    port: 3002,
+    port: 8080,
     host: '0.0.0.0', // 允许外部访问
     proxy: {
       '/api': {
-        target: 'http://localhost:3009',
+        target: 'http://localhost:8081',
         changeOrigin: true
       },
       '/health': {
-        target: 'http://localhost:3009',
+        target: 'http://localhost:8081',
         changeOrigin: true
       },
       '/ws': {
-        target: 'ws://localhost:3009',
+        target: 'ws://localhost:8081',
         ws: true
       }
     }

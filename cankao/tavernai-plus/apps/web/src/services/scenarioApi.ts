@@ -265,10 +265,10 @@ export const scenarioApi = {
   /**
    * 获取所有标签
    */
-  getTags: async (): Promise<string[]> => {
+  getTags: async (): Promise<Array<{ name: string; count: number }>> => {
     const response = await api.get<{
       success: boolean
-      data: string[]
+      data: Array<{ name: string; count: number }>
     }>('/api/scenarios/tags')
 
     if (!response.success) {

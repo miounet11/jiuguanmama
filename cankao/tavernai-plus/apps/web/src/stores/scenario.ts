@@ -48,7 +48,7 @@ export const useScenarioStore = defineStore('scenario', () => {
 
   // ===== 分类和标签缓存 =====
   const categories = ref<string[]>([])
-  const tags = ref<string[]>([])
+  const tags = ref<Array<{ name: string; count: number }>>([])
 
   // ===== 计算属性 =====
   const filteredScenarios = computed(() => {

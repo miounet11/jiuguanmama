@@ -26,15 +26,15 @@
       <div class="chat-sidebar">
         <div class="sidebar-header">
           <h2 class="gradient-text">对话列表</h2>
-          <TavernButton
+          <el-button
             @click="createNewChat"
-            variant="primary"
-            size="sm"
+            type="primary"
+            size="small"
             class="btn-new-chat"
           >
-            <TavernIcon name="plus" size="sm" />
+            <el-icon><Plus /></el-icon>
             新对话
-          </TavernButton>
+          </el-button>
         </div>
 
         <!-- 现代化对话列表 -->
@@ -61,27 +61,25 @@
       <div class="chat-main">
         <!-- 移动端顶部导航 -->
         <div v-if="isMobile && selectedChatId" class="mobile-chat-header">
-          <TavernButton
-            variant="ghost"
-            size="md"
+          <el-button
+            type="text"
             @click="openMobileConversationList"
             class="mobile-nav-btn"
           >
-            <TavernIcon name="bars-3" size="lg" />
-          </TavernButton>
+            <el-icon size="20"><Menu /></el-icon>
+          </el-button>
 
           <div class="mobile-chat-title">
             <span class="mobile-chat-name">{{ getCurrentChatName() }}</span>
           </div>
 
-          <TavernButton
-            variant="ghost"
-            size="md"
+          <el-button
+            type="text"
             @click="showMobileChatOptions"
             class="mobile-nav-btn"
           >
-            <TavernIcon name="ellipsis-vertical" size="lg" />
-          </TavernButton>
+            <el-icon size="20"><MoreFilled /></el-icon>
+          </el-button>
         </div>
 
         <!-- 聊天内容区域 -->
@@ -94,29 +92,28 @@
               </div>
               <h1 class="gradient-title">欢迎使用 TavernAI Plus</h1>
               <p>选择一个对话或创建新对话开始</p>
-              <TavernButton @click="createNewChat" variant="primary" size="lg" class="create-chat-btn">
-                <TavernIcon name="plus" />
+              <el-button @click="createNewChat" type="primary" size="large" class="create-chat-btn">
+                <el-icon><Plus /></el-icon>
                 创建新对话
-              </TavernButton>
+              </el-button>
             </div>
 
             <!-- 快速开始卡片 -->
             <div class="quick-start">
               <h3 class="gradient-text">热门角色</h3>
               <div class="character-grid">
-                <TavernCard
+                <el-card
                   v-for="char in popularCharacters"
                   :key="char.id"
                   @click="quickStart(char)"
                   class="character-quick-card"
-                  variant="glass"
-                  hoverable
+                  shadow="hover"
                 >
                   <div class="character-card-content">
                     <img :src="char.avatar || '/default-avatar.png'" :alt="char.name" class="character-avatar" />
                     <span class="character-name">{{ char.name }}</span>
                   </div>
-                </TavernCard>
+                </el-card>
               </div>
             </div>
           </div>
@@ -133,25 +130,24 @@
       class="character-selector-dialog"
     >
       <div class="character-selector">
-        <TavernInput
+        <el-input
           v-model="characterSearchQuery"
           placeholder="搜索角色..."
           class="mb-4"
           clearable
         >
           <template #prefix>
-            <TavernIcon name="magnifying-glass" size="sm" />
+            <el-icon><Search /></el-icon>
           </template>
-        </TavernInput>
+        </el-input>
 
         <div class="character-grid-modal">
-          <TavernCard
+          <el-card
             v-for="character in filteredCharacters"
             :key="character.id"
             @click="selectCharacter(character)"
             class="character-option"
-            variant="glass"
-            hoverable
+            shadow="hover"
           >
             <div class="character-option-content">
               <img
@@ -164,14 +160,12 @@
                 <div class="character-desc">{{ character.description }}</div>
               </div>
             </div>
-          </TavernCard>
+          </el-card>
         </div>
       </div>
 
       <template #footer>
-        <TavernButton @click="showCharacterSelector = false" variant="secondary">
-          取消
-        </TavernButton>
+        <el-button @click="showCharacterSelector = false">取消</el-button>
       </template>
     </el-dialog>
   </div>
@@ -181,6 +175,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElDialog } from 'element-plus'
+import { Plus, Menu, MoreFilled, Search } from '@element-plus/icons-vue'
 import { api } from '@/services/api'
 import ConversationList from '@/components/chat/ConversationList.vue'
 import MobileConversationList from '@/components/chat/MobileConversationList.vue'
@@ -356,15 +351,27 @@ const createNewChat = async () => {
 // 选择角色
 const selectCharacter = async (character: Character) => {
   try {
-    const response = await api.post('/chat/sessions', {
-      characterId: character.id,
-      title: `与${character.name}的对话`
-    })
+    // 首先检查是否已有该角色的对话会话
+    const existingSession = chatList.value.find(chat => chat.characterId === character.id)
 
-    if (response.success && response.session) {
+    if (existingSession) {
+      // 如果已存在，直接打开该对话
       showCharacterSelector.value = false
-      await fetchChats()
-      router.push(`/chat/${response.session.id}`)
+      selectedChatId.value = existingSession.id
+      router.push(`/chat/${existingSession.id}`)
+      ElMessage.success('已打开与该角色的对话')
+    } else {
+      // 如果不存在，创建新对话
+      const response = await api.post('/chat/sessions', {
+        characterId: character.id,
+        title: `与${character.name}的对话`
+      })
+
+      if (response.success && response.session) {
+        showCharacterSelector.value = false
+        await fetchChats()
+        router.push(`/chat/${response.session.id}`)
+      }
     }
   } catch (error) {
     console.error('创建对话失败:', error)
@@ -599,10 +606,10 @@ onUnmounted(() => {
 .chat-page {
   min-height: 100vh;
   background: linear-gradient(135deg,
-    var(--dt-color-background-primary) 0%,
-    var(--dt-color-background-secondary) 50%,
-    var(--dt-color-background-tertiary) 100%);
-  padding: var(--dt-spacing-md);
+    var(--surface-0) 0%,
+    var(--surface-1) 50%,
+    var(--surface-2) 100%);
+  padding: var(--spacing-normal);
 }
 
 .chat-container {
@@ -610,11 +617,11 @@ onUnmounted(() => {
   height: calc(100vh - 2rem);
   max-width: 1600px;
   margin: 0 auto;
-  background: var(--dt-color-surface-primary);
-  border-radius: var(--dt-border-radius-lg);
+  background: var(--surface-1);
+  border-radius: var(--radius-lg);
   backdrop-filter: blur(20px);
-  border: 1px solid var(--dt-color-border-primary);
-  box-shadow: var(--dt-shadow-xl);
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-xl);
   overflow: hidden;
 }
 
@@ -623,25 +630,25 @@ onUnmounted(() => {
   width: 380px;
   min-width: 280px;
   max-width: 420px;
-  border-right: 1px solid var(--dt-color-border-secondary);
+  border-right: 1px solid var(--border-secondary);
   display: flex;
   flex-direction: column;
-  background: var(--dt-color-surface-secondary);
+  background: var(--surface-2);
   backdrop-filter: blur(10px);
   flex-shrink: 0;
 
   .sidebar-header {
-    padding: var(--dt-spacing-lg);
-    border-bottom: 1px solid var(--dt-color-border-tertiary);
+    padding: var(--spacing-comfortable);
+    border-bottom: 1px solid var(--border-tertiary);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--dt-color-surface-primary);
+    background: var(--surface-1);
     backdrop-filter: blur(15px);
 
     h2 {
-      font-size: var(--dt-font-size-lg);
-      font-weight: var(--dt-font-weight-semibold);
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
       margin: 0;
 
       &.gradient-text {
@@ -653,7 +660,7 @@ onUnmounted(() => {
     }
 
     .btn-new-chat {
-      gap: var(--dt-spacing-xs);
+      gap: var(--spacing-micro);
     }
   }
 
@@ -670,7 +677,7 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--dt-color-surface-primary);
+  background: var(--surface-1);
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
@@ -681,9 +688,9 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--dt-spacing-sm) var(--dt-spacing-md);
-  background: var(--dt-color-surface-secondary);
-  border-bottom: 1px solid var(--dt-color-border-secondary);
+  padding: var(--space-3) var(--spacing-normal);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-secondary);
   height: 60px;
   flex-shrink: 0;
 }
@@ -694,7 +701,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--dt-border-radius-lg);
+  border-radius: var(--radius-lg);
 }
 
 .mobile-chat-title {
@@ -704,9 +711,9 @@ onUnmounted(() => {
 }
 
 .mobile-chat-name {
-  font-size: var(--dt-font-size-base);
-  font-weight: var(--dt-font-weight-semibold);
-  color: var(--dt-color-text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -727,23 +734,23 @@ onUnmounted(() => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: var(--dt-spacing-4xl);
+    padding: var(--spacing-relaxed);
     position: relative;
 
     .welcome-content {
       text-align: center;
-      margin-bottom: var(--dt-spacing-4xl);
+      margin-bottom: var(--spacing-relaxed);
       z-index: 2;
 
       .welcome-logo-container {
         position: relative;
-        margin-bottom: var(--dt-spacing-2xl);
+        margin-bottom: var(--spacing-loose);
 
         .welcome-logo {
           width: 120px;
           height: 120px;
           opacity: 0.9;
-          filter: drop-shadow(0 0 20px var(--dt-color-primary-400));
+          filter: drop-shadow(0 0 20px var(--brand-primary-400));
           animation: float 3s ease-in-out infinite;
         }
 
@@ -754,7 +761,7 @@ onUnmounted(() => {
           left: 50%;
           width: 200px;
           height: 200px;
-          background: radial-gradient(circle, var(--dt-color-primary-500) 0%, transparent 70%);
+          background: radial-gradient(circle, var(--brand-primary-500) 0%, transparent 70%);
           opacity: 0.1;
           transform: translate(-50%, -50%);
           border-radius: 50%;
@@ -763,9 +770,9 @@ onUnmounted(() => {
       }
 
       h1 {
-        font-size: var(--dt-font-size-4xl);
-        font-weight: var(--dt-font-weight-bold);
-        margin-bottom: var(--dt-spacing-sm);
+        font-size: var(--text-4xl);
+        font-weight: var(--font-bold);
+        margin-bottom: var(--space-3);
 
         &.gradient-title {
           background: var(--dt-gradient-primary);
@@ -776,13 +783,13 @@ onUnmounted(() => {
       }
 
       p {
-        font-size: var(--dt-font-size-lg);
-        color: var(--dt-color-text-secondary);
-        margin-bottom: var(--dt-spacing-xl);
+        font-size: var(--text-lg);
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-loose);
       }
 
       .create-chat-btn {
-        gap: var(--dt-spacing-sm);
+        gap: var(--spacing-tight);
       }
     }
 
@@ -792,9 +799,9 @@ onUnmounted(() => {
       z-index: 2;
 
       h3 {
-        font-size: var(--dt-font-size-xl);
-        font-weight: var(--dt-font-weight-semibold);
-        margin-bottom: var(--dt-spacing-lg);
+        font-size: var(--text-xl);
+        font-weight: var(--font-semibold);
+        margin-bottom: var(--spacing-loose);
         text-align: center;
 
         &.gradient-text {
@@ -808,38 +815,38 @@ onUnmounted(() => {
       .character-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: var(--dt-spacing-lg);
+        gap: var(--spacing-loose);
 
         .character-quick-card {
           cursor: pointer;
-          transition: all var(--dt-transition-normal);
+          transition: all var(--duration-normal);
 
           &:hover {
             transform: translateY(-8px) scale(1.05);
-            box-shadow: var(--dt-shadow-2xl);
+            box-shadow: var(--shadow-2xl);
           }
 
           .character-card-content {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: var(--dt-spacing-lg);
+            padding: var(--spacing-comfortable);
             text-align: center;
 
             .character-avatar {
               width: 64px;
               height: 64px;
               border-radius: 50%;
-              margin-bottom: var(--dt-spacing-sm);
-              border: 3px solid var(--dt-color-border-primary);
+              margin-bottom: var(--spacing-tight);
+              border: 3px solid var(--border-primary);
               object-fit: cover;
-              transition: all var(--dt-transition-normal);
+              transition: all var(--duration-normal);
             }
 
             .character-name {
-              font-size: var(--dt-font-size-sm);
-              font-weight: var(--dt-font-weight-medium);
-              color: var(--dt-color-text-primary);
+              font-size: var(--text-sm);
+              font-weight: var(--font-medium);
+              color: var(--text-primary);
             }
           }
         }
@@ -850,51 +857,51 @@ onUnmounted(() => {
 // 角色选择对话框
 .character-selector-dialog {
   :deep(.el-dialog) {
-    background: var(--dt-color-surface-primary);
-    border: 1px solid var(--dt-color-border-primary);
+    background: var(--surface-1);
+    border: 1px solid var(--border-primary);
     backdrop-filter: blur(20px);
   }
 
   :deep(.el-dialog__title) {
-    color: var(--dt-color-text-primary);
-    font-weight: var(--dt-font-weight-semibold);
+    color: var(--text-primary);
+    font-weight: var(--font-semibold);
   }
 }
 
 .character-selector {
   .mb-4 {
-    margin-bottom: var(--dt-spacing-lg);
+    margin-bottom: var(--spacing-loose);
   }
 
   .character-grid-modal {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: var(--dt-spacing-md);
+    gap: var(--spacing-normal);
     max-height: 400px;
     overflow-y: auto;
-    padding: var(--dt-spacing-xs);
+    padding: var(--spacing-micro);
 
     .character-option {
       cursor: pointer;
-      transition: all var(--dt-transition-normal);
+      transition: all var(--duration-normal);
 
       &:hover {
         transform: translateY(-4px);
-        box-shadow: var(--dt-shadow-lg);
+        box-shadow: var(--shadow-lg);
       }
 
       .character-option-content {
         display: flex;
         align-items: center;
-        padding: var(--dt-spacing-md);
+        padding: var(--spacing-normal);
 
         .character-option-avatar {
           width: 48px;
           height: 48px;
           border-radius: 50%;
-          margin-right: var(--dt-spacing-md);
+          margin-right: var(--spacing-normal);
           object-fit: cover;
-          border: 2px solid var(--dt-color-border-primary);
+          border: 2px solid var(--border-primary);
         }
 
         .character-info {
@@ -902,15 +909,15 @@ onUnmounted(() => {
           min-width: 0;
 
           .character-name {
-            font-weight: var(--dt-font-weight-semibold);
-            margin-bottom: var(--dt-spacing-xs);
-            font-size: var(--dt-font-size-sm);
-            color: var(--dt-color-text-primary);
+            font-weight: var(--font-semibold);
+            margin-bottom: var(--spacing-micro);
+            font-size: var(--text-sm);
+            color: var(--text-primary);
           }
 
           .character-desc {
-            font-size: var(--dt-font-size-xs);
-            color: var(--dt-color-text-secondary);
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -957,7 +964,7 @@ onUnmounted(() => {
   }
 
   .chat-page {
-    padding: var(--dt-spacing-sm);
+    padding: var(--spacing-tight);
   }
 }
 
@@ -968,7 +975,7 @@ onUnmounted(() => {
   }
 
   .chat-page {
-    padding: var(--dt-spacing-sm);
+    padding: var(--spacing-tight);
   }
 
   .chat-container {
@@ -978,7 +985,7 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .chat-page {
-    padding: var(--dt-spacing-xs);
+    padding: var(--spacing-micro);
   }
 
   .chat-container {
@@ -992,7 +999,7 @@ onUnmounted(() => {
     min-width: unset;
     max-width: unset;
     border-right: none;
-    border-bottom: 1px solid var(--dt-color-border-secondary);
+    border-bottom: 1px solid var(--border-secondary);
   }
 
   .chat-main {
@@ -1005,7 +1012,7 @@ onUnmounted(() => {
       }
 
       h1 {
-        font-size: var(--dt-font-size-2xl);
+        font-size: var(--text-2xl);
       }
     }
   }
@@ -1017,29 +1024,29 @@ onUnmounted(() => {
 
 @media (max-width: 480px) {
   .chat-page {
-    padding: var(--dt-spacing-xs);
+    padding: var(--spacing-micro);
   }
 
   .chat-sidebar {
     height: 35vh;
 
     .sidebar-header {
-      padding: var(--dt-spacing-md);
+      padding: var(--spacing-normal);
 
       h2 {
-        font-size: var(--dt-font-size-md);
+        font-size: var(--text-base);
       }
     }
 
     .chat-item {
       .chat-item-content {
-        padding: var(--dt-spacing-sm);
+        padding: var(--spacing-tight);
       }
 
       .chat-avatar {
         width: 40px;
         height: 40px;
-        margin-right: var(--dt-spacing-sm);
+        margin-right: var(--spacing-tight);
       }
     }
   }
@@ -1056,17 +1063,17 @@ onUnmounted(() => {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--dt-color-surface-secondary);
-  border-radius: var(--dt-border-radius-sm);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--dt-color-border-primary);
-  border-radius: var(--dt-border-radius-sm);
-  border: 2px solid var(--dt-color-surface-secondary);
+  background: var(--border-primary);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--surface-2);
 
   &:hover {
-    background: var(--dt-color-primary-400);
+    background: var(--brand-primary-400);
   }
 }
 </style>
