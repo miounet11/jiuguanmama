@@ -134,7 +134,7 @@ onMounted(async () => {
   await loadScenario()
 
   // 设置页面标题
-  if (scenario.value) {
+  if (scenario && scenario.value && scenario.value.name) {
     document.title = `编辑 ${scenario.value.name} - TavernAI Plus`
   }
 

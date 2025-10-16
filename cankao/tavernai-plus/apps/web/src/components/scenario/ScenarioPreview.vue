@@ -1,11 +1,11 @@
 <template>
-  <div class="scenario-preview h-full flex flex-col bg-white">
+  <div class="scenario-preview h-full flex flex-col">
     <!-- 预览头部 -->
-    <div class="preview-header border-b border-gray-200 p-4 flex-shrink-0">
+    <div class="preview-header backdrop-blur-sm border-b p-4 flex-shrink-0">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-semibold text-gray-900">剧本预览</h2>
-          <p class="text-sm text-gray-500">
+          <h2 class="text-lg font-semibold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">剧本预览</h2>
+          <p class="text-sm text-purple-300">
             实时查看剧本效果和世界信息条目匹配
           </p>
         </div>
@@ -34,40 +34,41 @@
       <!-- 基本信息预览 -->
       <div v-if="previewMode === 'info'" class="info-preview p-6">
         <!-- 剧本基本信息 -->
-        <div class="scenario-info bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6">
-          <h3 class="text-xl font-bold text-gray-900 mb-2">{{ scenario.name }}</h3>
-          <p v-if="scenario.description" class="text-gray-700 mb-4">
+        <div class="scenario-info bg-gradient-to-r from-purple-900/50 to-blue-900/30 backdrop-blur-sm rounded-lg p-6 mb-6 border border-purple-700/30">
+          <h3 class="text-xl font-bold text-white mb-2">{{ scenario.name }}</h3>
+          <p v-if="scenario.description" class="text-purple-200 mb-4">
             {{ scenario.description }}
           </p>
 
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div class="stat-item">
-              <div class="stat-label">分类</div>
-              <div class="stat-value">{{ scenario.category }}</div>
+              <div class="stat-label text-purple-300">分类</div>
+              <div class="stat-value text-white font-semibold">{{ scenario.category }}</div>
             </div>
             <div class="stat-item">
-              <div class="stat-label">语言</div>
-              <div class="stat-value">{{ scenario.language || 'zh-CN' }}</div>
+              <div class="stat-label text-purple-300">语言</div>
+              <div class="stat-value text-white font-semibold">{{ scenario.language || 'zh-CN' }}</div>
             </div>
             <div class="stat-item">
-              <div class="stat-label">条目数量</div>
-              <div class="stat-value">{{ entries.length }}</div>
+              <div class="stat-label text-purple-300">条目数量</div>
+              <div class="stat-value text-white font-semibold">{{ entries.length }}</div>
             </div>
             <div class="stat-item">
-              <div class="stat-label">活跃条目</div>
-              <div class="stat-value">{{ activeEntriesCount }}</div>
+              <div class="stat-label text-purple-300">活跃条目</div>
+              <div class="stat-value text-white font-semibold">{{ activeEntriesCount }}</div>
             </div>
           </div>
 
           <!-- 标签 -->
           <div v-if="scenario.tags && scenario.tags.length > 0" class="mt-4">
-            <div class="text-sm font-medium text-gray-700 mb-2">标签:</div>
+            <div class="text-sm font-medium text-purple-200 mb-2">标签:</div>
             <div class="flex flex-wrap gap-2">
               <el-tag
                 v-for="tag in scenario.tags"
                 :key="tag"
                 size="small"
                 effect="plain"
+                type="primary"
               >
                 {{ tag }}
               </el-tag>
@@ -77,11 +78,11 @@
 
         <!-- 世界信息条目概览 -->
         <div class="entries-overview">
-          <h4 class="text-lg font-semibold text-gray-900 mb-4">
+          <h4 class="text-lg font-semibold text-white mb-4">
             世界信息条目概览
           </h4>
 
-          <div v-if="entries.length === 0" class="text-center py-8 text-gray-500">
+          <div v-if="entries.length === 0" class="text-center py-8 text-purple-300">
             暂无世界信息条目
           </div>
 
@@ -90,12 +91,12 @@
             <div
               v-for="group in entryGroups"
               :key="group.category"
-              class="entry-group bg-gray-50 rounded-lg p-4"
+              class="entry-group bg-purple-900/20 backdrop-blur-sm rounded-lg p-4 border border-purple-700/20"
             >
               <div class="flex items-center justify-between mb-3">
-                <h5 class="font-medium text-gray-800">
+                <h5 class="font-medium text-white">
                   {{ group.category }}
-                  <span class="text-sm text-gray-500 ml-2">
+                  <span class="text-sm text-purple-300 ml-2">
                     ({{ group.entries.length }} 个条目)
                   </span>
                 </h5>
@@ -104,6 +105,7 @@
                   :icon="group.expanded ? 'ArrowUp' : 'ArrowDown'"
                   size="small"
                   text
+                  type="primary"
                 />
               </div>
 
@@ -111,35 +113,35 @@
                 <div
                   v-for="entry in group.entries"
                   :key="entry.id"
-                  class="entry-item bg-white rounded border border-gray-200 p-3"
+                  class="entry-item bg-purple-800/30 backdrop-blur-sm rounded-lg border border-purple-600/30 p-3 hover:bg-purple-800/40 transition-all duration-200"
                 >
                   <div class="flex items-start justify-between">
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-2 mb-1">
-                        <h6 class="font-medium text-gray-900 truncate">
+                        <h6 class="font-medium text-white truncate">
                           {{ entry.title }}
                         </h6>
                         <el-tag
                           :type="entry.isActive ? 'success' : 'info'"
                           size="small"
-                          effect="plain"
+                          effect="dark"
                         >
                           {{ entry.isActive ? '活跃' : '禁用' }}
                         </el-tag>
                         <el-tag
                           size="small"
-                          effect="plain"
+                          effect="dark"
                           type="warning"
                         >
                           优先级 {{ entry.priority }}
                         </el-tag>
                       </div>
 
-                      <div class="text-sm text-gray-600 mb-2 line-clamp-2">
+                      <div class="text-sm text-purple-200 mb-2 line-clamp-2">
                         {{ entry.content }}
                       </div>
 
-                      <div class="flex items-center gap-4 text-xs text-gray-500">
+                      <div class="flex items-center gap-4 text-xs text-purple-300">
                         <span>关键词: {{ entry.keywords.join(', ') }}</span>
                         <span>匹配方式: {{ getMatchTypeLabel(entry.matchType) }}</span>
                         <span>触发概率: {{ (entry.probability * 100).toFixed(0) }}%</span>
@@ -156,13 +158,13 @@
       <!-- 匹配测试预览 -->
       <div v-else-if="previewMode === 'test'" class="test-preview p-6">
         <div class="test-input-section mb-6">
-          <h4 class="text-lg font-semibold text-gray-900 mb-4">
+          <h4 class="text-lg font-semibold text-white mb-4">
             匹配测试
           </h4>
 
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
+              <label class="block text-sm font-medium text-purple-200 mb-2">
                 测试文本
               </label>
               <el-input
@@ -176,7 +178,7 @@
 
             <div class="flex items-center gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
+                <label class="block text-sm font-medium text-purple-200 mb-1">
                   测试深度
                 </label>
                 <el-input-number
@@ -203,15 +205,15 @@
         <!-- 测试结果 -->
         <div v-if="testResults" class="test-results">
           <div class="flex items-center justify-between mb-4">
-            <h5 class="font-semibold text-gray-900">
+            <h5 class="font-semibold text-white">
               测试结果 ({{ testResults.totalMatches }} 个匹配)
             </h5>
-            <div class="text-sm text-gray-500">
+            <div class="text-sm text-purple-300">
               执行时间: {{ testResults.executionTime }}ms
             </div>
           </div>
 
-          <div v-if="testResults.matchedEntries.length === 0" class="text-center py-8 text-gray-500">
+          <div v-if="testResults.matchedEntries.length === 0" class="text-center py-8 text-purple-300">
             没有找到匹配的世界信息条目
           </div>
 
@@ -219,14 +221,14 @@
             <div
               v-for="(match, index) in testResults.matchedEntries"
               :key="index"
-              class="match-result bg-blue-50 border border-blue-200 rounded-lg p-4"
+              class="match-result bg-purple-900/40 backdrop-blur-sm border border-purple-600/40 rounded-lg p-4 hover:bg-purple-900/50 transition-all duration-200"
             >
               <div class="flex items-start justify-between mb-2">
                 <div>
-                  <h6 class="font-medium text-blue-900">
+                  <h6 class="font-medium text-white">
                     {{ match.entry.title }}
                   </h6>
-                  <div class="text-sm text-blue-700">
+                  <div class="text-sm text-purple-200">
                     匹配关键词: {{ match.matchedKeywords.join(', ') }}
                   </div>
                 </div>
@@ -239,12 +241,12 @@
                 </el-tag>
               </div>
 
-              <div class="bg-white rounded border border-blue-100 p-3 mb-2">
-                <div class="text-sm text-gray-600 mb-1">将插入的内容:</div>
-                <div class="text-sm">{{ match.insertText }}</div>
+              <div class="bg-purple-800/30 backdrop-blur-sm rounded border border-purple-600/30 p-3 mb-2">
+                <div class="text-sm text-purple-200 mb-1">将插入的内容:</div>
+                <div class="text-sm text-white">{{ match.insertText }}</div>
               </div>
 
-              <div class="text-xs text-blue-600">
+              <div class="text-xs text-purple-300">
                 优先级: {{ match.entry.priority }} |
                 插入深度: {{ match.entry.insertDepth }} |
                 触发概率: {{ (match.entry.probability * 100).toFixed(0) }}%
@@ -254,11 +256,11 @@
 
           <!-- 处理后的文本 -->
           <div v-if="testResults.processedText !== testText" class="processed-text mt-6">
-            <h5 class="font-semibold text-gray-900 mb-2">处理后的文本:</h5>
-            <div class="bg-gray-50 rounded border border-gray-200 p-4">
+            <h5 class="font-semibold text-white mb-2">处理后的文本:</h5>
+            <div class="bg-purple-900/30 backdrop-blur-sm rounded border border-purple-600/30 p-4">
               <div
                 v-html="highlightProcessedText(testResults.processedText)"
-                class="text-sm leading-relaxed whitespace-pre-wrap"
+                class="text-sm leading-relaxed whitespace-pre-wrap text-purple-100"
               />
             </div>
           </div>
@@ -267,14 +269,14 @@
 
       <!-- 导出预览 -->
       <div v-else-if="previewMode === 'export'" class="export-preview p-6">
-        <h4 class="text-lg font-semibold text-gray-900 mb-4">
+        <h4 class="text-lg font-semibold text-white mb-4">
           导出预览
         </h4>
 
         <div class="space-y-6">
           <!-- 导出格式选择 -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-purple-200 mb-2">
               导出格式
             </label>
             <el-radio-group v-model="exportFormat">
@@ -286,10 +288,10 @@
 
           <!-- 预览内容 -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-purple-200 mb-2">
               预览内容
             </label>
-            <div class="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto max-h-96">
+            <div class="bg-purple-950/50 backdrop-blur-sm border border-purple-700/30 text-purple-100 rounded-lg p-4 overflow-auto max-h-96">
               <pre><code>{{ getExportPreview() }}</code></pre>
             </div>
           </div>
@@ -567,10 +569,14 @@ expandedGroups.value.add('通用')
 <style scoped>
 .scenario-preview {
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  background: linear-gradient(135deg, var(--surface-0) 0%, var(--surface-1) 50%, var(--surface-2) 100%);
+  color: var(--text-primary);
 }
 
 .preview-header {
-  background: linear-gradient(to right, #f8fafc, #f1f5f9);
+  background: rgba(37, 37, 68, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .stat-item {
@@ -578,11 +584,13 @@ expandedGroups.value.add('通用')
 }
 
 .stat-label {
-  @apply text-xs font-medium text-gray-500 uppercase tracking-wide;
+  @apply text-xs font-medium uppercase tracking-wide;
+  color: var(--text-tertiary);
 }
 
 .stat-value {
-  @apply text-lg font-semibold text-gray-900 mt-1;
+  @apply text-lg font-semibold mt-1;
+  color: var(--text-primary);
 }
 
 .line-clamp-2 {
@@ -632,15 +640,16 @@ code {
 }
 
 .preview-content::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  background: var(--surface-2);
 }
 
 .preview-content::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded;
+  background: var(--border-primary);
+  border-radius: var(--radius-base);
 }
 
 .preview-content::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400;
+  background: var(--border-secondary);
 }
 
 /* 响应式设计 */

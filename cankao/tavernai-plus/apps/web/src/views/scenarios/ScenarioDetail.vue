@@ -116,6 +116,29 @@
             <div class="immersive-particles">
               <div v-for="i in 20" :key="i" class="particle" :style="getParticleStyle(i)"></div>
             </div>
+
+            <!-- 剧场效果层 -->
+            <div class="theatrical-effects">
+              <!-- 动态光效 -->
+              <div class="dynamic-lighting">
+                <div v-for="i in 3" :key="`light-${i}`" class="light-beam" :style="getLightBeamStyle(i)"></div>
+              </div>
+
+              <!-- 氛围粒子 -->
+              <div class="atmosphere-particles">
+                <div v-for="i in 15" :key="`atm-${i}`" class="atmosphere-particle" :style="getAtmosphereParticleStyle(i)"></div>
+              </div>
+
+              <!-- 星光闪烁效果 -->
+              <div class="sparkle-effects">
+                <div v-for="i in 8" :key="`sparkle-${i}`" class="sparkle" :style="getSparkleStyle(i)"></div>
+              </div>
+
+              <!-- 动态波纹效果 -->
+              <div class="ripple-effects">
+                <div v-for="i in 4" :key="`ripple-${i}`" class="ripple" :style="getRippleStyle(i)"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1114,6 +1137,121 @@ const getParticleStyle = (index: number) => {
     animation: `float ${Math.random() * 3 + 2}s ease-in-out infinite`,
     animationDelay: `${Math.random() * 2}s`,
     boxShadow: `0 0 ${Math.random() * 10 + 5}px ${color}`
+  }
+}
+
+// 剧场效果方法
+const getLightBeamStyle = (index: number) => {
+  const theme = getScenarioTheme()
+  const lightColors = {
+    scifi: ['rgba(0, 255, 255, 0.1)', 'rgba(255, 0, 255, 0.1)', 'rgba(255, 255, 0, 0.1)'],
+    fantasy: ['rgba(255, 215, 0, 0.1)', 'rgba(255, 105, 180, 0.1)', 'rgba(0, 255, 255, 0.1)'],
+    mystery: ['rgba(128, 128, 128, 0.1)', 'rgba(169, 169, 169, 0.1)', 'rgba(192, 192, 192, 0.1)'],
+    horror: ['rgba(139, 0, 0, 0.1)', 'rgba(220, 20, 60, 0.1)', 'rgba(255, 0, 0, 0.1)'],
+    historical: ['rgba(218, 165, 32, 0.1)', 'rgba(205, 133, 63, 0.1)', 'rgba(210, 105, 30, 0.1)'],
+    default: ['rgba(102, 126, 234, 0.1)', 'rgba(118, 75, 162, 0.1)', 'rgba(240, 147, 251, 0.1)']
+  }
+
+  const colors = lightColors[theme] || lightColors.default
+  const color = colors[index % colors.length]
+
+  return {
+    position: 'absolute',
+    left: `${25 + index * 25}%`,
+    top: '0',
+    width: '2px',
+    height: '100%',
+    background: `linear-gradient(180deg, ${color} 0%, transparent 50%, ${color} 100%)`,
+    animation: `lightBeamSweep ${8 + index * 2}s ease-in-out infinite`,
+    animationDelay: `${index * 1.5}s`,
+    transform: `rotate(${-15 + index * 15}deg)`,
+    transformOrigin: 'top center'
+  }
+}
+
+const getAtmosphereParticleStyle = (index: number) => {
+  const theme = getScenarioTheme()
+  const atmosphereColors = {
+    scifi: ['rgba(0, 255, 255, 0.3)', 'rgba(255, 0, 255, 0.3)', 'rgba(255, 255, 0, 0.3)'],
+    fantasy: ['rgba(255, 215, 0, 0.3)', 'rgba(255, 105, 180, 0.3)', 'rgba(147, 112, 219, 0.3)'],
+    mystery: ['rgba(105, 105, 105, 0.3)', 'rgba(128, 128, 128, 0.3)', 'rgba(169, 169, 169, 0.3)'],
+    horror: ['rgba(139, 0, 0, 0.3)', 'rgba(178, 34, 34, 0.3)', 'rgba(255, 69, 0, 0.3)'],
+    historical: ['rgba(222, 184, 135, 0.3)', 'rgba(244, 164, 96, 0.3)', 'rgba(210, 180, 140, 0.3)'],
+    default: ['rgba(102, 126, 234, 0.3)', 'rgba(118, 75, 162, 0.3)', 'rgba(240, 147, 251, 0.3)']
+  }
+
+  const colors = atmosphereColors[theme] || atmosphereColors.default
+  const color = colors[index % colors.length]
+
+  return {
+    position: 'absolute',
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    width: `${Math.random() * 80 + 20}px`,
+    height: `${Math.random() * 80 + 20}px`,
+    background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+    borderRadius: '50%',
+    opacity: 0,
+    animation: `atmosphereFloat ${10 + Math.random() * 5}s ease-in-out infinite`,
+    animationDelay: `${Math.random() * 5}s`,
+    filter: `blur(${Math.random() * 3 + 1}px)`
+  }
+}
+
+const getSparkleStyle = (index: number) => {
+  const theme = getScenarioTheme()
+  const sparkleColors = {
+    scifi: ['#00ffff', '#ff00ff', '#ffff00', '#00ff00'],
+    fantasy: ['#ffd700', '#ff69b4', '#00ffff', '#dda0dd'],
+    mystery: ['#c0c0c0', '#dcdcdc', '#f5f5f5', '#e0e0e0'],
+    horror: ['#ff6347', '#ff4500', '#dc143c', '#ff0000'],
+    historical: ['#ffd700', '#daa520', '#f4a460', '#d2691e'],
+    default: ['#ffffff', '#f0f0f0', '#e0e0e0', '#fafafa']
+  }
+
+  const colors = sparkleColors[theme] || sparkleColors.default
+  const color = colors[index % colors.length]
+
+  return {
+    position: 'absolute',
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    width: '2px',
+    height: '2px',
+    backgroundColor: color,
+    borderRadius: '50%',
+    opacity: 0,
+    animation: `sparkle ${3 + Math.random() * 2}s ease-in-out infinite`,
+    animationDelay: `${Math.random() * 3}s`,
+    boxShadow: `0 0 6px ${color}`
+  }
+}
+
+const getRippleStyle = (index: number) => {
+  const theme = getScenarioTheme()
+  const rippleColors = {
+    scifi: 'rgba(0, 255, 255, 0.2)',
+    fantasy: 'rgba(255, 215, 0, 0.2)',
+    mystery: 'rgba(128, 128, 128, 0.2)',
+    horror: 'rgba(139, 0, 0, 0.2)',
+    historical: 'rgba(218, 165, 32, 0.2)',
+    default: 'rgba(102, 126, 234, 0.2)'
+  }
+
+  const color = rippleColors[theme] || rippleColors.default
+
+  return {
+    position: 'absolute',
+    left: `${40 + index * 10}%`,
+    top: `${30 + index * 10}%`,
+    width: '100px',
+    height: '100px',
+    border: `2px solid ${color}`,
+    borderRadius: '50%',
+    opacity: 0,
+    animation: `rippleExpand ${6 + index * 2}s ease-out infinite`,
+    animationDelay: `${index * 1.5}s`,
+    transform: 'translate(-50%, -50%)'
   }
 }
 
@@ -2410,6 +2548,76 @@ onUnmounted(() => {
   will-change: transform, opacity;
 }
 
+// 剧场效果层
+.theatrical-effects {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+}
+
+// 动态光效
+.dynamic-lighting {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.light-beam {
+  will-change: transform, opacity;
+  filter: blur(1px);
+}
+
+// 氛围粒子
+.atmosphere-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.atmosphere-particle {
+  will-change: transform, opacity;
+  filter: blur(2px);
+  mix-blend-mode: screen;
+}
+
+// 星光闪烁效果
+.sparkle-effects {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.sparkle {
+  will-change: transform, opacity;
+  filter: blur(1px);
+  mix-blend-mode: screen;
+}
+
+// 动态波纹效果
+.ripple-effects {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.ripple {
+  will-change: transform, opacity;
+  filter: blur(1px);
+}
+
 // 沉浸式内容区域
 .immersive-content {
   position: relative;
@@ -2697,6 +2905,71 @@ onUnmounted(() => {
   }
   100% {
     transform: translateX(100%);
+  }
+}
+
+// 剧场效果动画
+@keyframes lightBeamSweep {
+  0% {
+    opacity: 0;
+    transform: rotate(-15deg) scaleY(0);
+  }
+  50% {
+    opacity: 0.8;
+    transform: rotate(15deg) scaleY(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(-15deg) scaleY(0);
+  }
+}
+
+@keyframes atmosphereFloat {
+  0% {
+    opacity: 0;
+    transform: translate(0, 20px) scale(0.5);
+  }
+  20% {
+    opacity: 0.6;
+    transform: translate(10px, 0px) scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: translate(-10px, -20px) scale(1.2);
+  }
+  80% {
+    opacity: 0.6;
+    transform: translate(-20px, 0px) scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, 20px) scale(0.5);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes rippleExpand {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2);
   }
 }
 

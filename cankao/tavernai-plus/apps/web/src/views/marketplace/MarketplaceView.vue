@@ -5,7 +5,11 @@
       <div class="header-container">
         <div class="title-section">
           <h1 class="page-title">
-            <TavernIcon name="shopping-bag" class="title-icon" />
+            <div class="title-icon">
+              <svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+              </svg>
+            </div>
             角色市场
           </h1>
           <p class="page-subtitle">
@@ -15,34 +19,50 @@
 
         <!-- 快速统计 -->
         <div class="stats-grid">
-          <TavernCard variant="glass" class="stat-card">
-            <TavernIcon name="users" class="stat-icon primary-color" />
+          <div class="stat-card glass-card">
+            <div class="stat-icon primary-color">
+              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+              </svg>
+            </div>
             <div class="stat-content">
-              <div class="stat-number">{{ stats.totalCharacters || 0 }}</div>
+              <div class="stat-number">{{ formatNumber(stats.totalCharacters || 0) }}</div>
               <div class="stat-label">总角色数</div>
             </div>
-          </TavernCard>
-          <TavernCard variant="glass" class="stat-card">
-            <TavernIcon name="star" class="stat-icon warning-color" />
+          </div>
+          <div class="stat-card glass-card">
+            <div class="stat-icon warning-color">
+              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>
+            </div>
             <div class="stat-content">
-              <div class="stat-number">{{ stats.activeCreators || 0 }}</div>
+              <div class="stat-number">{{ formatNumber(stats.activeCreators || 0) }}</div>
               <div class="stat-label">活跃创作者</div>
             </div>
-          </TavernCard>
-          <TavernCard variant="glass" class="stat-card">
-            <TavernIcon name="arrow-down-tray" class="stat-icon success-color" />
+          </div>
+          <div class="stat-card glass-card">
+            <div class="stat-icon success-color">
+              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+              </svg>
+            </div>
             <div class="stat-content">
-              <div class="stat-number">{{ stats.totalDownloads || 0 }}</div>
+              <div class="stat-number">{{ formatNumber(stats.totalDownloads || 0) }}</div>
               <div class="stat-label">总下载量</div>
             </div>
-          </TavernCard>
-          <TavernCard variant="glass" class="stat-card">
-            <TavernIcon name="squares-2x2" class="stat-icon info-color" />
+          </div>
+          <div class="stat-card glass-card">
+            <div class="stat-icon info-color">
+              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z"/>
+              </svg>
+            </div>
             <div class="stat-content">
               <div class="stat-number">{{ stats.categories || 0 }}</div>
               <div class="stat-label">分类数量</div>
             </div>
-          </TavernCard>
+          </div>
         </div>
       </div>
     </div>
@@ -51,7 +71,11 @@
       <!-- 特色角色轮播 -->
       <section v-if="featuredCharacters && featuredCharacters.length > 0" class="featured-section">
         <h2 class="section-title">
-          <TavernIcon name="star" class="section-icon" />
+          <div class="section-icon">
+            <svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+          </div>
           特色推荐
         </h2>
 
@@ -63,7 +87,7 @@
             :class="{ 'active': currentCarouselIndex === index }"
             @click="showCharacterDetail(character)"
           >
-            <TavernCard variant="glass" class="featured-card">
+            <div class="featured-card glass-card">
               <div class="featured-card-background">
                 <img
                   v-if="character.avatar"
@@ -78,21 +102,25 @@
                 <p class="featured-description">{{ character.description }}</p>
                 <div class="featured-stats">
                   <div class="featured-meta">
-                    <TavernBadge variant="warning" class="rating-badge">
-                      <TavernIcon name="star" class="badge-icon" />
+                    <div class="rating-badge glass-card">
+                      <svg class="badge-icon w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                      </svg>
                       {{ character.rating.toFixed(1) }}
-                    </TavernBadge>
-                    <TavernBadge variant="info" class="chat-badge">
-                      <TavernIcon name="chat-bubble-left" class="badge-icon" />
+                    </div>
+                    <div class="chat-badge glass-card">
+                      <svg class="badge-icon w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clip-rule="evenodd"/>
+                      </svg>
                       {{ formatNumber(character.favorites) }}
-                    </TavernBadge>
+                    </div>
                   </div>
-                  <TavernButton variant="primary" size="md" class="featured-button">
+                  <button class="featured-button primary-button">
                     查看详情
-                  </TavernButton>
+                  </button>
                 </div>
               </div>
-            </TavernCard>
+            </div>
           </div>
 
           <!-- 轮播指示器 -->
@@ -113,31 +141,46 @@
         <!-- 侧边栏 -->
         <aside class="sidebar">
           <!-- 搜索框 -->
-          <TavernCard variant="glass" class="sidebar-section">
+          <div class="sidebar-section glass-card">
             <h3 class="sidebar-title">
-              <TavernIcon name="magnifying-glass" class="sidebar-icon" />
+              <div class="sidebar-icon">
+                <svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                </svg>
+              </div>
               搜索角色
             </h3>
-            <TavernInput
-              v-model="searchQuery"
-              placeholder="搜索角色名称、描述、标签..."
-              size="lg"
-              icon-left="magnifying-glass"
-              class="search-input"
-              @input="debouncedSearch"
-            />
+            <div class="search-input-wrapper">
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="搜索角色名称、描述、标签..."
+                class="search-input"
+                @input="debouncedSearch"
+              />
+              <div class="search-icon">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+            </div>
 
             <!-- 高级搜索切换 -->
-            <TavernButton
-              variant="secondary"
-              size="sm"
+            <button
               @click="showAdvancedFilters = !showAdvancedFilters"
-              class="filter-toggle"
+              class="filter-toggle secondary-button"
             >
               {{ showAdvancedFilters ? '隐藏' : '显示' }}高级筛选
-              <TavernIcon :name="showAdvancedFilters ? 'chevron-up' : 'chevron-down'" class="toggle-icon" />
-            </TavernButton>
-          </TavernCard>
+              <div class="toggle-icon">
+                <svg v-if="showAdvancedFilters" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                </svg>
+                <svg v-else class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+            </button>
+          </div>
 
           <!-- 高级筛选 -->
           <MarketplaceFilters
@@ -149,9 +192,13 @@
           />
 
           <!-- 分类快速导航 -->
-          <TavernCard variant="glass" class="sidebar-section">
+          <div class="sidebar-section glass-card">
             <h3 class="sidebar-title">
-              <TavernIcon name="folder" class="sidebar-icon" />
+              <div class="sidebar-icon">
+                <svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
+                </svg>
+              </div>
               热门分类
             </h3>
             <div class="category-list">
@@ -163,41 +210,45 @@
                 @click="selectCategory(category.name)"
               >
                 <div class="category-info">
-                  <span class="category-emoji">{{ category.icon }}</span>
+                  <span class="category-emoji">{{ category.icon || '📁' }}</span>
                   <span class="category-name">{{ category.name }}</span>
                 </div>
-                <TavernBadge variant="secondary" class="category-count">
+                <div class="category-count glass-card">
                   {{ category.count }}
-                </TavernBadge>
+                </div>
               </div>
             </div>
-          </TavernCard>
+          </div>
 
           <!-- 热门标签 -->
-          <TavernCard variant="glass" class="sidebar-section">
+          <div class="sidebar-section glass-card">
             <h3 class="sidebar-title">
-              <TavernIcon name="hashtag" class="sidebar-icon" />
+              <div class="sidebar-icon">
+                <svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.512 0 1.024.195 1.414.586l7 7zM5 6a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
+                </svg>
+              </div>
               热门标签
             </h3>
             <div class="tags-container">
-              <TavernBadge
+              <div
                 v-for="tag in (trendingTags || [])"
                 :key="tag.tag"
-                :variant="currentFilters.tags?.includes(tag.tag) ? 'primary' : 'secondary'"
-                class="tag-badge"
+                class="tag-badge glass-card"
+                :class="{ 'active': currentFilters.tags?.includes(tag.tag) }"
                 @click="toggleTag(tag.tag)"
               >
                 {{ tag.tag }}
                 <span class="tag-count">{{ tag.count }}</span>
-              </TavernBadge>
+              </div>
             </div>
-          </TavernCard>
+          </div>
         </aside>
 
         <!-- 主内容 -->
         <main class="main-content">
           <!-- 工具栏 -->
-          <TavernCard variant="glass" class="toolbar">
+          <div class="toolbar glass-card">
             <div class="toolbar-left">
               <span class="results-count">
                 找到 <strong class="highlight">{{ totalCharacters }}</strong> 个角色
@@ -205,29 +256,33 @@
 
               <!-- 视图切换 -->
               <div class="view-mode-toggle">
-                <TavernButton
-                  :variant="viewMode === 'grid' ? 'primary' : 'secondary'"
-                  size="sm"
+                <button
+                  :class="['view-button', { 'active': viewMode === 'grid' }]"
                   @click="viewMode = 'grid'"
-                  class="view-button"
                 >
-                  <TavernIcon name="squares-2x2" />
-                </TavernButton>
-                <TavernButton
-                  :variant="viewMode === 'list' ? 'primary' : 'secondary'"
-                  size="sm"
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM13 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2z"/>
+                  </svg>
+                </button>
+                <button
+                  :class="['view-button', { 'active': viewMode === 'list' }]"
                   @click="viewMode = 'list'"
-                  class="view-button"
                 >
-                  <TavernIcon name="list-bullet" />
-                </TavernButton>
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                </button>
               </div>
             </div>
 
             <!-- 排序 -->
             <div class="sort-section">
               <label class="sort-label">
-                <TavernIcon name="adjustments-horizontal" class="sort-icon" />
+                <div class="sort-icon">
+                  <svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z"/>
+                  </svg>
+                </div>
                 排序
               </label>
               <select
@@ -241,17 +296,16 @@
                 <option value="favorites">❤️ 收藏最多</option>
               </select>
             </div>
-          </TavernCard>
+          </div>
 
           <!-- 角色列表 -->
           <div class="characters-section">
             <!-- 加载状态 -->
             <div v-if="loading" class="loading-grid">
-              <TavernCard
+              <div
                 v-for="i in 9"
                 :key="i"
-                variant="glass"
-                class="skeleton-card"
+                class="skeleton-card glass-card"
               >
                 <div class="skeleton-image"></div>
                 <div class="skeleton-content">
@@ -259,17 +313,21 @@
                   <div class="skeleton-line skeleton-description"></div>
                   <div class="skeleton-line skeleton-short"></div>
                 </div>
-              </TavernCard>
+              </div>
             </div>
 
             <!-- 空状态 -->
             <div v-else-if="!characters || characters.length === 0" class="empty-state">
-              <TavernIcon name="face-frown" class="empty-icon" />
+              <div class="empty-icon">
+                <svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+              </div>
               <h3 class="empty-title">暂无找到角色</h3>
               <p class="empty-description">试试调整搜索条件或浏览其他分类</p>
-              <TavernButton variant="primary" @click="clearFilters" class="empty-button">
+              <button @click="clearFilters" class="empty-button primary-button">
                 清除所有筛选
-              </TavernButton>
+              </button>
             </div>
 
             <!-- 角色内容 -->
@@ -304,7 +362,7 @@
 
               <!-- 分页 -->
               <div class="pagination-section">
-                <TavernCard variant="glass" class="pagination-container">
+                <div class="pagination-container glass-card">
                   <div class="pagination-info">
                     <span class="pagination-text">
                       显示第 {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, totalCharacters) }} 项，
@@ -312,42 +370,48 @@
                     </span>
                   </div>
                   <div class="pagination-controls">
-                    <TavernButton
-                      variant="secondary"
-                      size="sm"
+                    <button
                       :disabled="currentPage === 1"
                       @click="handlePageChange(currentPage - 1)"
-                      class="pagination-button"
+                      class="pagination-button secondary-button"
+                      :class="{ disabled: currentPage === 1 }"
                     >
-                      <TavernIcon name="chevron-left" />
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                      </svg>
                       上一页
-                    </TavernButton>
+                    </button>
 
                     <div class="page-numbers">
-                      <TavernButton
+                      <button
                         v-for="page in visiblePages"
                         :key="page"
-                        :variant="page === currentPage ? 'primary' : 'secondary'"
-                        size="sm"
+                        v-if="page !== -1"
                         @click="handlePageChange(page)"
-                        class="page-button"
+                        :class="['page-button', {
+                          'active': page === currentPage,
+                          'primary-button': page === currentPage,
+                          'secondary-button': page !== currentPage
+                        }]"
                       >
                         {{ page }}
-                      </TavernButton>
+                      </button>
+                      <span v-else class="page-ellipsis">...</span>
                     </div>
 
-                    <TavernButton
-                      variant="secondary"
-                      size="sm"
+                    <button
                       :disabled="currentPage === totalPages"
                       @click="handlePageChange(currentPage + 1)"
-                      class="pagination-button"
+                      class="pagination-button secondary-button"
+                      :class="{ disabled: currentPage === totalPages }"
                     >
                       下一页
-                      <TavernIcon name="chevron-right" />
-                    </TavernButton>
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                      </svg>
+                    </button>
                   </div>
-                </TavernCard>
+                </div>
               </div>
             </div>
           </div>
@@ -718,14 +782,84 @@ watch(featuredCharacters, () => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/design-tokens.scss';
+@import '@/styles/variables.scss';
 
 .marketplace-page {
   min-height: 100vh;
   background: linear-gradient(135deg,
-    var(--dt-color-background-primary) 0%,
-    var(--dt-color-background-secondary) 50%,
-    var(--dt-color-background-tertiary) 100%);
+    var(--surface-0) 0%,
+    var(--surface-1) 50%,
+    var(--surface-2) 100%);
+  color: var(--text-primary);
+}
+
+// 玻璃卡片样式
+.glass-card {
+  background: rgba(37, 37, 68, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.2);
+  transform: translateY(-2px);
+}
+
+// 按钮样式
+.primary-button {
+  background: linear-gradient(135deg, var(--brand-primary-500), var(--brand-primary-600));
+  color: white;
+  border: none;
+  border-radius: var(--radius-base);
+  padding: var(--spacing-3) var(--spacing-6);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.primary-button:hover {
+  background: linear-gradient(135deg, var(--brand-primary-600), var(--brand-primary-700));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+}
+
+.secondary-button {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--brand-primary-400);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: var(--radius-base);
+  padding: var(--spacing-2) var(--spacing-4);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.secondary-button:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
+  transform: translateY(-1px);
+}
+
+.secondary-button:disabled,
+.secondary-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 // 页面头部

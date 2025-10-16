@@ -167,6 +167,7 @@
           @delete="deleteScenario(scenario)"
           @clone="cloneScenario(scenario)"
           @toggle-public="toggleScenarioPublic(scenario)"
+          @comment="openComments(scenario)"
         />
       </div>
 
@@ -181,6 +182,7 @@
           @delete="deleteScenario(scenario)"
           @clone="cloneScenario(scenario)"
           @toggle-public="toggleScenarioPublic(scenario)"
+          @comment="openComments(scenario)"
         />
       </div>
 
@@ -390,6 +392,15 @@ const handleScenarioCreated = (scenario: Scenario) => {
   ElMessage.success('剧本创建成功')
   // 刷新列表或导航到新剧本
   router.push(`/scenarios/${scenario.id}/edit`)
+}
+
+const openComments = (scenario: Scenario) => {
+  // 跳转到剧本详情页面并打开评论区
+  router.push({
+    path: `/scenarios/${scenario.id}`,
+    query: { tab: 'comments' }
+  })
+  ElMessage.info(`正在查看 "${scenario.name}" 的评论`)
 }
 
 // 监听搜索查询变化
