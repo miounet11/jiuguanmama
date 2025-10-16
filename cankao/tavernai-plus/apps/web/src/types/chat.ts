@@ -46,7 +46,6 @@ export interface Character extends BaseEntity {
 export interface Message extends BaseEntity {
   role: 'user' | 'assistant' | 'system'
   content: string
-  timestamp: Date
   chatId: string
   userId?: string
   characterId?: string

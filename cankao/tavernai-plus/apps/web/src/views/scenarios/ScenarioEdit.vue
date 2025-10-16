@@ -30,6 +30,21 @@
         @saved="handleSaved"
       />
     </div>
+
+    <!-- 空状态 -->
+    <div v-else class="empty-container">
+      <el-result
+        icon="info"
+        title="剧本不存在"
+        sub-title="请检查剧本ID是否正确，或剧本可能已被删除"
+      >
+        <template #extra>
+          <el-button type="primary" @click="goBack">
+            返回
+          </el-button>
+        </template>
+      </el-result>
+    </div>
   </div>
 </template>
 
@@ -154,7 +169,8 @@ onBeforeUnmount(() => {
 }
 
 .loading-container,
-.error-container {
+.error-container,
+.empty-container {
   @apply flex items-center justify-center h-screen;
 }
 

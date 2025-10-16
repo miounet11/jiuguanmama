@@ -134,7 +134,7 @@
                 @change="markAsChanged"
               >
                 <el-option
-                  v-for="category in categories"
+                  v-for="category in (categories || [])"
                   :key="category"
                   :label="category"
                   :value="category"
@@ -716,7 +716,7 @@ onMounted(async () => {
   await loadScenario()
 
   // 加载分类数据
-  if (categories.value.length === 0) {
+  if (!categories.value || categories.value.length === 0) {
     scenarioStore.fetchCategories()
   }
 })

@@ -64,6 +64,30 @@
             <span>• 自动降噪和回声消除</span>
             <span>• 支持多种语言识别</span>
           </div>
+
+          <!-- 设备状态显示 -->
+          <div class="device-status" v-if="!isCheckingDevices">
+            <div class="device-indicator" :class="{ 'has-devices': availableDevices.length > 0, 'no-devices': availableDevices.length === 0 }">
+              <el-icon><Microphone /></el-icon>
+              <span class="device-text">
+                {{ availableDevices.length > 0 ? `检测到 ${availableDevices.length} 个音频设备` : '未检测到音频设备' }}
+              </span>
+            </div>
+            <el-button
+              v-if="availableDevices.length === 0"
+              size="small"
+              type="primary"
+              @click="checkAudioDevices"
+              :loading="isCheckingDevices"
+            >
+              重新检测
+            </el-button>
+          </div>
+
+          <div v-else class="checking-devices">
+            <el-icon class="spinning"><Loading /></el-icon>
+            <span>正在检测音频设备...</span>
+          </div>
         </div>
       </div>
     </div>
@@ -204,6 +228,31 @@
       />
     </div>
 
+    <!-- 麦克风权限问题提示 -->
+    <div class="microphone-issue" v-if="hasError && error">
+      <el-alert
+        title="麦克风访问问题"
+        :description="getMicrophoneErrorMessage(error)"
+        type="error"
+        :closable="true"
+        @close="clearError"
+        show-icon
+      >
+        <template #default>
+          <div class="error-suggestions">
+            <p><strong>解决建议：</strong></p>
+            <ul>
+              <li v-if="error.includes('未检测到麦克风')">连接麦克风设备，确保麦克风正常工作</li>
+              <li v-if="error.includes('权限被拒绝')">点击浏览器地址栏左侧的麦克风图标，选择"允许"</li>
+              <li v-if="error.includes('其他应用占用')">关闭正在使用麦克风的其他应用程序</li>
+              <li v-if="error.includes('约束条件')">检查麦克风是否支持所需的音频格式</li>
+              <li>刷新页面并重新尝试</li>
+            </ul>
+          </div>
+        </template>
+      </el-alert>
+    </div>
+
     <!-- 高级选项 -->
     <div class="advanced-options" v-if="showAdvanced">
       <el-collapse>
@@ -306,8 +355,13 @@ const {
   seekAudio,
   transcribeAudio,
   clearError,
-  getAudioLevel
+  getAudioLevel,
+  getAvailableAudioDevices
 } = voice
+
+// 设备检查状态
+const availableDevices = ref([])
+const isCheckingDevices = ref(false)
 
 // 组件状态
 const visualizerCanvas = ref<HTMLCanvasElement | null>(null)
@@ -489,6 +543,20 @@ const getLanguageName = (code: string): string => {
   return lang?.name || code
 }
 
+const getMicrophoneErrorMessage = (errorMsg: string): string => {
+  if (errorMsg.includes('未检测到麦克风')) {
+    return '系统未检测到可用的麦克风设备'
+  } else if (errorMsg.includes('权限被拒绝')) {
+    return '浏览器无法访问麦克风，需要您的授权'
+  } else if (errorMsg.includes('其他应用占用')) {
+    return '麦克风正被其他应用程序使用'
+  } else if (errorMsg.includes('约束条件')) {
+    return '当前麦克风设备不满足录音要求'
+  } else {
+    return errorMsg
+  }
+}
+
 // 监听状态变化
 watch(isRecordingActive, (recording) => {
   if (recording) {
@@ -512,8 +580,21 @@ watch(hasError, (hasErr) => {
   }
 })
 
+// 检查可用设备
+const checkAudioDevices = async () => {
+  isCheckingDevices.value = true
+  try {
+    availableDevices.value = await getAvailableAudioDevices()
+    console.log('检测到的音频设备:', availableDevices.value)
+  } catch (err) {
+    console.error('检查音频设备失败:', err)
+  } finally {
+    isCheckingDevices.value = false
+  }
+}
+
 // 生命周期
-onMounted(() => {
+onMounted(async () => {
   // 检查麦克风权限
   if (navigator.permissions) {
     navigator.permissions.query({ name: 'microphone' as PermissionName }).then(result => {
@@ -521,6 +602,14 @@ onMounted(() => {
         ElMessage.warning('需要麦克风权限才能使用语音输入功能')
       }
     })
+  }
+
+  // 检查可用设备
+  await checkAudioDevices()
+
+  // 监听设备变化
+  if (navigator.mediaDevices) {
+    navigator.mediaDevices.addEventListener('devicechange', checkAudioDevices)
   }
 })
 
@@ -656,6 +745,44 @@ onUnmounted(() => {
           font-size: 14px;
           color: var(--el-text-color-secondary);
         }
+
+        .device-status {
+          margin-top: 16px;
+          padding-top: 16px;
+          border-top: 1px solid var(--el-border-color-lighter);
+
+          .device-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+
+            &.has-devices {
+              color: var(--el-color-success);
+            }
+
+            &.no-devices {
+              color: var(--el-color-warning);
+            }
+
+            .device-text {
+              font-size: 14px;
+              font-weight: 500;
+            }
+          }
+
+          .checking-devices {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--el-text-color-secondary);
+            font-size: 14px;
+
+            .spinning {
+              animation: spin 1s linear infinite;
+            }
+          }
+        }
       }
     }
   }
@@ -780,6 +907,29 @@ onUnmounted(() => {
 
   .unsupported-warning {
     margin-top: 16px;
+  }
+
+  .microphone-issue {
+    margin-top: 16px;
+
+    .error-suggestions {
+      margin-top: 12px;
+
+      p {
+        margin-bottom: 8px;
+      }
+
+      ul {
+        margin: 8px 0;
+        padding-left: 20px;
+
+        li {
+          margin-bottom: 4px;
+          font-size: 14px;
+          color: var(--el-text-color-regular);
+        }
+      }
+    }
   }
 
   .advanced-options {

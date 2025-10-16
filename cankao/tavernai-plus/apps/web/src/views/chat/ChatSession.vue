@@ -318,7 +318,7 @@
                   <span class="message-sender">
                     {{ message.role === 'user' ? '你' : character?.name }}
                   </span>
-                  <span class="message-time">{{ formatTime(message.timestamp) }}</span>
+                  <span class="message-time">{{ formatTime(message.createdAt) }}</span>
                 </div>
 
                 <!-- 图像消息 -->
@@ -659,7 +659,7 @@ interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
-  timestamp: Date
+  createdAt: Date
 }
 
 // 响应式数据
@@ -1097,7 +1097,7 @@ const handleImageMessage = (imageMessage: any) => {
     content: imageMessage.type === 'image' ?
       `[图像] ${imageMessage.prompt || '用户发送了一张图像'}` :
       imageMessage.content,
-    timestamp: imageMessage.timestamp
+    createdAt: imageMessage.timestamp
   }
 
   // 如果是图像消息，添加特殊处理
@@ -1141,7 +1141,7 @@ const sendMessage = async () => {
     id: Date.now().toString(),
     role: 'user',
     content: inputMessage.value,
-    timestamp: new Date()
+    createdAt: new Date()
   }
 
   messages.value.push(userMessage)
@@ -1205,7 +1205,7 @@ const sendStreamingMessage = async (messageContent: string) => {
       id: Date.now().toString(),
       role: 'assistant',
       content: '',
-      timestamp: new Date()
+      createdAt: new Date()
     }
 
     messages.value.push(streamingMessage.value)
@@ -1255,7 +1255,7 @@ const sendStreamingMessage = async (messageContent: string) => {
                 if (streamingMessage.value) {
                   streamingMessage.value.id = data.id
                   streamingMessage.value.content = data.content
-                  streamingMessage.value.timestamp = new Date(data.timestamp)
+                  streamingMessage.value.createdAt = new Date(data.timestamp)
                 }
               } else if (data.type === 'error') {
                 // 流式错误
@@ -1301,7 +1301,7 @@ const sendRegularMessage = async (messageContent: string) => {
     id: response.id,
     role: 'assistant',
     content: response.content,
-    timestamp: new Date(response.timestamp)
+    createdAt: new Date(response.timestamp)
   }
 
   messages.value.push(assistantMessage)
@@ -1326,7 +1326,7 @@ const handleMessageError = () => {
       id: Date.now().toString(),
       role: 'assistant',
       content: '抱歉，我现在无法响应。请稍后再试。',
-      timestamp: new Date()
+      createdAt: new Date()
     }
     messages.value.push(errorMessage)
     scrollToBottom()

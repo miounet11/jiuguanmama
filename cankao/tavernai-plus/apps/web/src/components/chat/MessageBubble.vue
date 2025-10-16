@@ -28,10 +28,10 @@
         </span>
         <time
           class="message-time"
-          :datetime="message.timestamp.toISOString()"
-          :title="formatDateTime(message.timestamp)"
+          :datetime="message.createdAt.toISOString()"
+          :title="formatDateTime(message.createdAt)"
         >
-          {{ formatTime(message.timestamp) }}
+          {{ formatTime(message.createdAt) }}
         </time>
       </div>
 
@@ -148,7 +148,7 @@ export interface Message {
   id: string
   role: 'user' | 'assistant' | 'system'
   content: string
-  timestamp: Date
+  createdAt: Date
   imageUrl?: string
   imagePrompt?: string
   error?: boolean
@@ -240,7 +240,7 @@ const isStreaming = computed(() => {
 })
 
 const ariaLabel = computed(() => {
-  const timeStr = formatDateTime(props.message.timestamp)
+  const timeStr = formatDateTime(props.message.createdAt)
   return `${senderName.value} 于 ${timeStr} 发送的消息`
 })
 

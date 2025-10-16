@@ -98,10 +98,12 @@ export const formatTimeOnly = (timestamp: string | number | Date): string => {
 }
 
 /**
- * 格式化为日期字符串 (YYYY-MM-DD)
+ * 格式化为日期字符串 (YYYY-MM-DD)（带错误处理）
  */
 export const formatDateOnly = (timestamp: string | number | Date): string => {
-  const date = new Date(timestamp)
+  const date = createSafeDate(timestamp)
+  if (!date) return '时间错误'
+
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
@@ -110,10 +112,12 @@ export const formatDateOnly = (timestamp: string | number | Date): string => {
 }
 
 /**
- * 判断是否为今天
+ * 判断是否为今天（带错误处理）
  */
 export const isToday = (timestamp: string | number | Date): boolean => {
-  const date = new Date(timestamp)
+  const date = createSafeDate(timestamp)
+  if (!date) return false
+
   const today = new Date()
 
   return date.getFullYear() === today.getFullYear() &&
@@ -122,10 +126,12 @@ export const isToday = (timestamp: string | number | Date): boolean => {
 }
 
 /**
- * 判断是否为昨天
+ * 判断是否为昨天（带错误处理）
  */
 export const isYesterday = (timestamp: string | number | Date): boolean => {
-  const date = new Date(timestamp)
+  const date = createSafeDate(timestamp)
+  if (!date) return false
+
   const yesterday = new Date()
   yesterday.setDate(yesterday.getDate() - 1)
 
@@ -135,9 +141,12 @@ export const isYesterday = (timestamp: string | number | Date): boolean => {
 }
 
 /**
- * 获取相对时间描述
+ * 获取相对时间描述（带错误处理）
  */
 export const getRelativeTime = (timestamp: string | number | Date): string => {
+  const date = createSafeDate(timestamp)
+  if (!date) return '时间错误'
+
   if (isToday(timestamp)) {
     return `今天 ${formatTimeOnly(timestamp)}`
   }

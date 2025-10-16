@@ -164,6 +164,21 @@ export function useVoice() {
     }
   }
 
+  // 获取可用的音频设备列表
+  const getAvailableAudioDevices = async () => {
+    try {
+      if (!navigator.mediaDevices?.enumerateDevices) {
+        return []
+      }
+
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      return devices.filter(device => device.kind === 'audioinput')
+    } catch (err) {
+      console.error('获取音频设备列表失败:', err)
+      return []
+    }
+  }
+
   // 获取音频格式支持
   const getSupportedAudioFormat = (): AudioFormat => {
     const formats: AudioFormat[] = ['webm', 'mp4', 'wav', 'ogg']
@@ -214,17 +229,56 @@ export function useVoice() {
       recordingDuration.value = 0
       audioChunks.value = []
 
-      // 获取麦克风权限
-      const constraints = {
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 16000
+      // 首先检查可用的音频设备
+      const availableDevices = await getAvailableAudioDevices()
+      console.log('可用的音频设备:', availableDevices)
+
+      if (availableDevices.length === 0) {
+        throw new Error('NotFoundError')
+      }
+
+      // 尝试不同的音频约束配置
+      const constraintsList = [
+        {
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: 16000
+          }
+        },
+        {
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+            sampleRate: 16000
+          }
+        },
+        {
+          audio: true // 最基本的约束
+        }
+      ]
+
+      let stream = null
+      let lastError = null
+
+      for (const constraints of constraintsList) {
+        try {
+          console.log('尝试使用音频约束:', constraints)
+          stream = await navigator.mediaDevices.getUserMedia(constraints)
+          break
+        } catch (err) {
+          console.warn('使用约束失败:', constraints, err)
+          lastError = err
         }
       }
 
-      audioStream.value = await navigator.mediaDevices.getUserMedia(constraints)
+      if (!stream) {
+        throw lastError || new Error('无法获取音频流')
+      }
+
+      audioStream.value = stream
 
       // 初始化音频上下文
       await initAudioContext()
@@ -291,7 +345,25 @@ export function useVoice() {
       return true
     } catch (err) {
       console.error('开始录音失败:', err)
-      setError('无法访问麦克风，请检查权限设置')
+
+      // 根据不同的错误类型提供更友好的错误信息
+      let errorMessage = '无法访问麦克风'
+
+      if (err instanceof Error) {
+        if (err.name === 'NotFoundError') {
+          errorMessage = '未检测到麦克风设备，请连接麦克风后重试'
+        } else if (err.name === 'NotAllowedError') {
+          errorMessage = '麦克风权限被拒绝，请在浏览器设置中允许麦克风访问'
+        } else if (err.name === 'NotReadableError') {
+          errorMessage = '麦克风被其他应用占用，请关闭其他应用后重试'
+        } else if (err.name === 'OverconstrainedError') {
+          errorMessage = '麦克风不满足要求的约束条件'
+        } else {
+          errorMessage = `麦克风访问失败: ${err.message}`
+        }
+      }
+
+      setError(errorMessage)
       state.value = 'idle'
       return false
     }
@@ -698,6 +770,7 @@ export function useVoice() {
     // 音频分析
     getFrequencyData,
     getAudioLevel,
+    getAvailableAudioDevices,
 
     // 方法
     startRecording,
