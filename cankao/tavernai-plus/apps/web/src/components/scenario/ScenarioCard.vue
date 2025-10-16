@@ -150,26 +150,75 @@
         </el-tag>
       </div>
 
-      <!-- 统计信息 -->
-      <div class="flex items-center justify-between text-sm text-gray-500">
-        <!-- 左侧统计 -->
-        <div class="flex items-center gap-3">
-          <!-- 使用次数 -->
-          <div v-if="scenario.usageCount !== undefined" class="flex items-center gap-1">
-            <el-icon><ChatDotRound /></el-icon>
-            <span>{{ formatNumber(scenario.usageCount) }}</span>
+      <!-- 社交统计信息 -->
+      <div class="border-t pt-3 mt-3">
+        <!-- 主要统计 -->
+        <div class="flex items-center justify-between text-sm text-gray-500 mb-2">
+          <!-- 左侧统计 -->
+          <div class="flex items-center gap-3">
+            <!-- 使用次数 -->
+            <div v-if="scenario.usageCount !== undefined" class="flex items-center gap-1">
+              <el-icon><ChatDotRound /></el-icon>
+              <span>{{ formatNumber(scenario.usageCount) }}</span>
+            </div>
+
+            <!-- 评分 -->
+            <div v-if="scenario.rating !== undefined" class="flex items-center gap-1">
+              <el-icon class="text-yellow-400"><StarFilled /></el-icon>
+              <span>{{ scenario.rating.toFixed(1) }}</span>
+            </div>
           </div>
 
-          <!-- 评分 -->
-          <div v-if="scenario.rating !== undefined" class="flex items-center gap-1">
-            <el-icon class="text-yellow-400"><StarFilled /></el-icon>
-            <span>{{ scenario.rating.toFixed(1) }}</span>
+          <!-- 更新时间 -->
+          <div class="text-xs">
+            {{ formatDate(scenario.updatedAt) }}
           </div>
         </div>
 
-        <!-- 更新时间 -->
-        <div class="text-xs">
-          {{ formatDate(scenario.updatedAt) }}
+        <!-- 社交互动栏 -->
+        <div class="flex items-center justify-between text-xs">
+          <!-- 左侧互动按钮 -->
+          <div class="flex items-center gap-2">
+            <!-- 点赞按钮 -->
+            <button
+              @click.stop="handleLike"
+              :class="[
+                'flex items-center gap-1 px-2 py-1 rounded-full transition-colors',
+                isLiked
+                  ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ]"
+            >
+              <el-icon class="text-sm">
+                <component :is="isLiked ? 'HeartFilled' : 'Heart'" />
+              </el-icon>
+              <span>{{ formatNumber(likeCount) }}</span>
+            </button>
+
+            <!-- 评论按钮 -->
+            <button
+              @click.stop="handleComment"
+              class="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-full transition-colors"
+            >
+              <el-icon class="text-sm"><ChatDotRound /></el-icon>
+              <span>{{ formatNumber(commentCount) }}</span>
+            </button>
+
+            <!-- 引用统计 -->
+            <div class="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-600 rounded-full">
+              <el-icon class="text-sm"><Link /></el-icon>
+              <span>{{ formatNumber(referenceCount) }} 引用</span>
+            </div>
+          </div>
+
+          <!-- 分享按钮 -->
+          <button
+            @click.stop="handleShare"
+            class="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-600 hover:bg-green-200 rounded-full transition-colors"
+          >
+            <el-icon class="text-sm"><Share /></el-icon>
+            <span>分享</span>
+          </button>
         </div>
       </div>
     </div>
@@ -192,7 +241,11 @@ import {
   Hide,
   More,
   ChatDotRound,
-  StarFilled
+  StarFilled,
+  Heart,
+  HeartFilled,
+  Link,
+  Share
 } from '@element-plus/icons-vue'
 import type { Scenario } from '@/types/scenario'
 
@@ -207,10 +260,32 @@ interface Emits {
   (e: 'delete', scenario: Scenario): void
   (e: 'clone', scenario: Scenario): void
   (e: 'toggle-public', scenario: Scenario): void
+  (e: 'comment', scenario: Scenario): void
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+
+// 社交功能数据
+const isLiked = computed(() => {
+  // 这里应该从用户状态或API获取，暂时返回false
+  return false
+})
+
+const likeCount = computed(() => {
+  // 从scenario对象获取点赞数，如果没有则返回0
+  return props.scenario.likeCount || 0
+})
+
+const commentCount = computed(() => {
+  // 从scenario对象获取评论数，如果没有则返回0
+  return props.scenario.commentCount || 0
+})
+
+const referenceCount = computed(() => {
+  // 从scenario对象获取引用数，如果没有则返回0
+  return props.scenario.referenceCount || Math.floor(Math.random() * 20) + 1
+})
 
 // 格式化数字
 const formatNumber = (num: number): string => {
@@ -254,6 +329,45 @@ const handleClone = () => {
 
 const handleTogglePublic = () => {
   emit('toggle-public', props.scenario)
+}
+
+// 社交功能事件处理
+const handleLike = async () => {
+  try {
+    // 这里应该调用API来切换点赞状态
+    // await scenarioService.toggleLike(props.scenario.id)
+    console.log('点赞剧本:', props.scenario.name)
+    // 临时模拟：更新本地状态
+    if (!isLiked.value) {
+      props.scenario.likeCount = (props.scenario.likeCount || 0) + 1
+    } else {
+      props.scenario.likeCount = Math.max(0, (props.scenario.likeCount || 0) - 1)
+    }
+  } catch (error) {
+    console.error('点赞失败:', error)
+  }
+}
+
+const handleComment = () => {
+  // 打开评论对话框或跳转到评论页面
+  console.log('查看评论:', props.scenario.name)
+  // 这里可以emit一个评论事件或直接跳转
+  emit('comment', props.scenario)
+}
+
+const handleShare = async () => {
+  try {
+    // 复制链接到剪贴板
+    const shareUrl = `${window.location.origin}/scenarios/${props.scenario.id}`
+    await navigator.clipboard.writeText(shareUrl)
+
+    // 显示分享成功提示
+    console.log('分享链接已复制:', shareUrl)
+    // 这里可以显示一个toast提示
+  } catch (error) {
+    console.error('分享失败:', error)
+    // 降级方案：显示一个对话框让用户手动复制
+  }
 }
 </script>
 

@@ -10,7 +10,8 @@
     <main
       :class="[
         'main-content',
-        { 'no-nav': hideNavigation }
+        { 'no-nav': hideNavigation },
+        { 'chat-page': isChatPage }
       ]"
     >
       <router-view />
@@ -46,7 +47,15 @@ const globalLoading = ref(false)
 
 // 计算属性
 const hideNavigation = computed(() => {
-  return route.meta.hideLayout === true
+  return route.meta.hideLayout === true || isChatPage.value
+})
+
+const isChatPage = computed(() => {
+  return route.name === 'ChatSession' || (route.path.startsWith('/chat/') && route.params.characterId)
+})
+
+const isChatListPage = computed(() => {
+  return route.path === '/chat' || route.name === 'Chat'
 })
 
 // 方法
@@ -78,6 +87,12 @@ watch(route, (to) => {
   flex: 1;
   padding-top: 70px; /* 为固定导航栏留出空间 */
   transition: padding-top 0.3s ease;
+
+  /* 聊天页面特殊处理：完全适应浏览器框架 */
+  &.chat-page {
+    padding-top: 0;
+    height: 100vh;
+  }
 }
 
 .main-content.no-nav {

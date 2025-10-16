@@ -171,9 +171,23 @@
     <div class="chat-main">
       <!-- 聊天顶部栏 -->
       <div class="chat-header">
-        <div class="chat-header-info">
-          <span class="session-title">与 {{ character?.name || '...' }} 的对话</span>
-          <span class="message-count">{{ messages.length }} 条消息</span>
+        <!-- 左侧返回按钮 -->
+        <div class="chat-header-left">
+          <TavernButton
+            variant="ghost"
+            size="sm"
+            @click="goToChatList"
+            title="返回聊天列表"
+            class="back-btn"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5L5 12L19 12M5 12V7H19M12 19l7-7M12 5l-7 7"/>
+            </svg>
+          </TavernButton>
+          <div class="chat-header-info">
+            <span class="session-title">与 {{ character?.name || '...' }} 的对话</span>
+            <span class="message-count">{{ messages.length }} 条消息</span>
+          </div>
         </div>
         <div class="chat-header-actions">
           <!-- 场景背景选择器 -->
@@ -421,8 +435,7 @@
                   class="grok-textarea"
                   :rows="1"
                   :disabled="isLoading"
-                  :style="{ height: inputHeight + 'px' }"
-                />
+                  />
                 <!-- 输入状态栏 -->
                 <div class="input-status-bar">
                   <div class="status-left">
@@ -630,7 +643,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick, watch, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { http } from '@/utils/axios'
 import { formatTime as formatTimeUtil, getRelativeTime } from '@/utils/date'
 import ModelSelector from '@/components/common/ModelSelector.vue'
@@ -640,6 +653,7 @@ import VoiceInput from '@/components/voice/VoiceInput.vue'
 import SimplifiedChatImageFeatures from '@/components/image/SimplifiedChatImageFeatures.vue'
 
 const route = useRoute()
+const router = useRouter()
 
 interface Message {
   id: string
@@ -658,6 +672,16 @@ const virtualList = ref<HTMLElement | null>(null)
 const isLoading = ref(false)
 const isTyping = ref(false)
 const isOnline = ref(true)
+
+// 响应式布局状态
+const layoutDimensions = reactive({
+  viewportHeight: window.innerHeight,
+  viewportWidth: window.innerWidth,
+  headerHeight: 60,
+  inputAreaHeight: 120,
+  minMessagesHeight: 200,
+  sidebarWidth: 320
+})
 
 // 虚拟滚动相关
 const virtualScrollTop = ref(0)
@@ -873,6 +897,12 @@ const toggleExpandedTools = () => {
     showEmojiPicker.value = false
     showImageTools.value = false
   }
+}
+
+// 导航方法
+const goToChatList = () => {
+  // 使用 Vue Router 导航到聊天列表页面
+  router.push('/chat')
 }
 
 const onModelChange = (model: any) => {
@@ -1426,22 +1456,128 @@ watch(containerHeight, () => {
   }
 })
 
-// 添加窗口大小变化监听
-const handleResize = () => {
-  if (messagesContainer.value) {
-    containerHeight.value = messagesContainer.value.clientHeight
+// 防抖函数
+const debounce = (func: Function, delay: number) => {
+  let timeoutId: ReturnType<typeof setTimeout>
+  return (...args: any[]) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => func.apply(null, args), delay)
   }
+}
+
+// 添加窗口大小变化监听
+const handleResize = debounce(() => {
+  calculateLayoutDimensions()
   checkMobile()
 
   if (shouldUseVirtualScroll.value) {
     updateVirtualScroll()
   }
+}, 100) // 100ms防抖
+
+// 动态高度计算函数
+const calculateLayoutDimensions = () => {
+  const vh = window.innerHeight
+  const vw = window.innerWidth
+
+  layoutDimensions.viewportHeight = vh
+  layoutDimensions.viewportWidth = vw
+
+  // 更新CSS变量以使用实际的浏览器窗口尺寸
+  const root = document.documentElement
+  root.style.setProperty('--actual-viewport-height', `${vh}px`)
+  root.style.setProperty('--actual-viewport-width', `${vw}px`)
+
+  // 优化大屏幕下的侧边栏宽度分配
+  if (vw >= 1920) { // 1080p+ 大屏幕
+    layoutDimensions.sidebarWidth = 380
+  } else if (vw >= 1680) { // 高分辨率桌面
+    layoutDimensions.sidebarWidth = 360
+  } else if (vw >= 1536) { // 2xl
+    layoutDimensions.sidebarWidth = 340
+  } else if (vw >= 1280) { // xl
+    layoutDimensions.sidebarWidth = 320
+  } else if (vw >= 1024) { // lg
+    layoutDimensions.sidebarWidth = 280
+  } else {
+    layoutDimensions.sidebarWidth = 0 // 移动端
+  }
+
+  // 优化大屏幕下的输入区域高度
+  let baseInputHeight = 120
+  let maxInputHeight = 200
+
+  if (vh >= 1080) { // 高分辨率屏幕
+    baseInputHeight = 140
+    maxInputHeight = Math.min(280, vh * 0.22)
+  } else if (vh >= 900) {
+    baseInputHeight = 130
+    maxInputHeight = Math.min(240, vh * 0.24)
+  } else {
+    baseInputHeight = 120
+    maxInputHeight = Math.min(200, vh * 0.25)
+  }
+
+  layoutDimensions.inputAreaHeight = Math.max(baseInputHeight, maxInputHeight)
+
+  // 计算消息区域可用高度
+  const availableHeight = vh - layoutDimensions.headerHeight - layoutDimensions.inputAreaHeight
+  layoutDimensions.minMessagesHeight = Math.max(300, availableHeight * 0.7) // 大屏幕下增加最小高度
+
+  // 更新容器高度
+  if (messagesContainer.value) {
+    containerHeight.value = availableHeight
+  }
+
+  // 更新CSS变量
+  updateLayoutCSSVariables()
+}
+
+// 更新CSS变量
+const updateLayoutCSSVariables = () => {
+  const root = document.documentElement
+  root.style.setProperty('--viewport-height', `${layoutDimensions.viewportHeight}px`)
+  root.style.setProperty('--sidebar-width', `${layoutDimensions.sidebarWidth}px`)
+  root.style.setProperty('--header-height', `${layoutDimensions.headerHeight}px`)
+  root.style.setProperty('--input-area-height', `${layoutDimensions.inputAreaHeight}px`)
+  root.style.setProperty('--messages-height', `${layoutDimensions.viewportHeight - layoutDimensions.headerHeight - layoutDimensions.inputAreaHeight}px`)
+
+  // 大屏幕优化变量
+  const vw = layoutDimensions.viewportWidth
+  const vh = layoutDimensions.viewportHeight
+
+  // 动态内容最大宽度
+  let contentMaxWidth = 900
+  if (vw >= 1920) {
+    contentMaxWidth = 1200
+  } else if (vw >= 1680) {
+    contentMaxWidth = 1100
+  } else if (vw >= 1536) {
+    contentMaxWidth = 1000
+  }
+  root.style.setProperty('--content-max-width', `${contentMaxWidth}px`)
+
+  // 消息最大宽度（百分比）
+  let messageMaxWidthPercent = 70
+  if (vw >= 1920) {
+    messageMaxWidthPercent = 65
+  } else if (vw >= 1680) {
+    messageMaxWidthPercent = 68
+  }
+  root.style.setProperty('--message-max-width-percent', `${messageMaxWidthPercent}%`)
+
+  // 侧边栏在大屏幕上的优化宽度
+  let optimizedSidebarWidth = layoutDimensions.sidebarWidth
+  if (vw >= 1920 && vh >= 1080) {
+    optimizedSidebarWidth = Math.min(400, vw * 0.2) // 最大400px或屏幕宽度的20%
+  }
+  root.style.setProperty('--optimized-sidebar-width', `${optimizedSidebarWidth}px`)
 }
 
 // 初始化时设置容器高度
 const initializeContainer = () => {
+  calculateLayoutDimensions()
   if (messagesContainer.value) {
-    containerHeight.value = messagesContainer.value.clientHeight
     if (shouldUseVirtualScroll.value) {
       updateVirtualScroll()
     }
@@ -1849,15 +1985,54 @@ watch(messages, (newMessages) => {
 
 .chat-session-container {
   display: flex;
-  height: 100vh;
+  height: var(--viewport-height, 100vh);
+  max-height: var(--viewport-height, 100vh);
+  overflow: hidden;
   background: linear-gradient(135deg, $dark-bg-primary 0%, rgba($dark-bg-secondary, 0.8) 100%);
   color: $text-primary;
+
+  /* 聊天页面完全适应浏览器框架 */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
 
   // 移动端优化
   @include mobile-only {
     flex-direction: column;
-    height: 100vh;
-    position: relative;
+    height: var(--viewport-height, 100vh);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+  }
+
+  // 桌面端优化 - 使用CSS变量实现动态布局
+  @include desktop-up {
+    .chat-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      max-width: calc(100vw - var(--sidebar-width, 320px));
+    }
+
+    .chat-messages {
+      height: var(--messages-height, calc(100vh - 60px - 120px));
+      min-height: 400px;
+    }
+
+    .grok-input-area {
+      height: var(--input-area-height, 120px);
+      min-height: 120px;
+      max-height: 200px;
+    }
   }
 
   /* 全屏模式移动端优化 */
@@ -1867,7 +2042,7 @@ watch(messages, (newMessages) => {
     }
 
     .chat-main {
-      height: 100vh;
+      height: var(--viewport-height, 100vh);
     }
 
     .chat-header {
@@ -1875,7 +2050,7 @@ watch(messages, (newMessages) => {
     }
 
     .message-area {
-      height: calc(100vh - 100px);
+      height: calc(var(--viewport-height, 100vh) - 100px);
     }
 
     .input-area {
@@ -1909,7 +2084,7 @@ watch(messages, (newMessages) => {
 
 // 侧边栏样式
 .sidebar {
-  width: 320px;
+  width: var(--optimized-sidebar-width, var(--sidebar-width, 320px));
   background: rgba($dark-bg-secondary, 0.95);
   border-right: 1px solid rgba($primary-500, 0.2);
   display: flex;
@@ -1918,8 +2093,23 @@ watch(messages, (newMessages) => {
   position: relative;
   backdrop-filter: blur(10px);
 
+  // 桌面端动态宽度调整
+  @include desktop-up {
+    width: var(--optimized-sidebar-width, var(--sidebar-width, 320px));
+    flex-shrink: 0;
+  }
+
+  // 大屏幕优化（1920px+）
+  @media (min-width: 1920px) {
+    width: var(--optimized-sidebar-width, 380px);
+  }
+
   &.sidebar-collapsed {
     width: 60px;
+
+    @include desktop-up {
+      width: 60px;
+    }
   }
 
   // 移动端侧边栏
@@ -2201,7 +2391,17 @@ watch(messages, (newMessages) => {
   display: flex;
   flex-direction: column;
   min-width: 0;
-}
+
+  // 桌面端优化布局
+  @include desktop-up {
+    max-width: calc(100vw - var(--optimized-sidebar-width, var(--sidebar-width, 320px)));
+  }
+
+  // 大屏幕优化（1920px+）
+  @media (min-width: 1920px) {
+    max-width: calc(100vw - var(--optimized-sidebar-width, 380px));
+  }
+  }
 
 .chat-header {
   height: 60px;
@@ -2212,20 +2412,57 @@ watch(messages, (newMessages) => {
   justify-content: space-between;
   padding: 0 25px;
 
-  .chat-header-info {
+  .chat-header-left {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
 
-    .session-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #f3f4f6;
+    .back-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      color: #c084fc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(139, 92, 246, 0.2);
+        border-color: rgba(139, 92, 246, 0.3);
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // 移动端优化
+      @include mobile-only {
+        width: 40px;
+        height: 40px;
+      }
     }
 
-    .message-count {
-      font-size: 12px;
-      color: #9ca3af;
+    .chat-header-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      .session-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #f3f4f6;
+      }
+
+      .message-count {
+        font-size: 12px;
+        color: #9ca3af;
+      }
     }
   }
 
@@ -2241,6 +2478,16 @@ watch(messages, (newMessages) => {
   overflow-y: auto;
   padding: 20px;
   position: relative;
+  min-height: 0; // 确保可以收缩
+
+  // 桌面端使用固定高度避免布局问题
+  @include desktop-up {
+    height: var(--messages-height, calc(100vh - 60px - 120px));
+    flex: none;
+    min-height: 400px;
+    max-height: calc(var(--viewport-height, 100vh) - var(--header-height, 60px) - var(--input-area-height, 120px));
+  }
+
 
   .empty-state {
     display: flex;
@@ -2349,10 +2596,21 @@ watch(messages, (newMessages) => {
       }
 
       .message-content {
-        max-width: 70%;
+        max-width: var(--message-max-width-percent, 70%);
         padding: 12px 16px;
         border-radius: 16px;
         position: relative;
+
+        // 大屏幕下的消息内容优化
+        @media (min-width: 1920px) {
+          padding: 14px 18px;
+          font-size: 16px; // 稍微增大字体
+          line-height: 1.7;
+        }
+
+        @media (min-width: 1680px) {
+          padding: 13px 17px;
+        }
 
         .message-header {
           display: flex;
@@ -2893,6 +3151,16 @@ watch(messages, (newMessages) => {
   padding: $space-5;
   backdrop-filter: blur(10px);
 
+  // 桌面端使用固定高度
+  @include desktop-up {
+    height: var(--input-area-height, 120px);
+    min-height: 120px;
+    max-height: 200px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    padding: $space-4;
+  }
+
   // 移动端输入区域
   @include mobile-only {
     padding: $space-4;
@@ -2901,7 +3169,7 @@ watch(messages, (newMessages) => {
   }
 
   .input-container {
-    max-width: 900px;
+    max-width: var(--content-max-width, 900px);
     margin: 0 auto;
   }
 

@@ -25,169 +25,173 @@
     </div>
 
     <!-- 正常内容 -->
-    <div v-else-if="scenario || enhancedScenario" class="scenario-content">
-      <!-- 页面头部 -->
-      <PageHeader
-        :title="currentScenarioData?.name || ''"
-        :subtitle="currentScenarioData?.description || '无描述'"
-        :breadcrumb="breadcrumbItems"
-      >
-        <template #actions>
-          <div class="header-actions">
-            <!-- 状态指示器 -->
-            <TavernBadge
-              :variant="currentScenarioData?.isPublic ? 'success' : 'warning'"
-              :text="currentScenarioData?.isPublic ? '公开' : '私有'"
-            />
-
-            <!-- 增强剧本标识 -->
-            <TavernBadge
-              v-if="isEnhanced"
-              variant="primary"
-              text="增强剧本"
-            />
-
-            <!-- 操作按钮 -->
-            <TavernButton
-              @click="editScenario"
-              variant="primary"
-              class="edit-btn"
-            >
-              <TavernIcon name="edit" class="mr-2" />
-              编辑剧本
-            </TavernButton>
-
-            <div class="dropdown-wrapper">
-              <TavernButton @click="toggleDropdown" class="dropdown-trigger">
-                <TavernIcon name="menu" />
-              </TavernButton>
-              <div v-if="showDropdown" class="dropdown-menu" @click="hideDropdown">
-                <button @click="handleCommand('clone')" class="dropdown-item">
-                  <TavernIcon name="document" class="mr-2" />
-                  复制剧本
-                </button>
-                <button @click="handleCommand('export')" class="dropdown-item">
-                  <TavernIcon name="download" class="mr-2" />
-                  导出剧本
-                </button>
-                <div class="dropdown-divider"></div>
-                <button @click="handleCommand('test')" class="dropdown-item">
-                  <TavernIcon name="sparkles" class="mr-2" />
-                  测试匹配
-                </button>
-                <div class="dropdown-divider"></div>
-                <button @click="handleCommand('delete')" class="dropdown-item danger">
-                  <TavernIcon name="delete" class="mr-2" />
-                  删除剧本
-                </button>
-              </div>
+    <div v-else-if="scenario || enhancedScenario" class="scenario-content" :class="`scenario-theme--${getScenarioTheme()}`">
+      <!-- 沉浸式页面头部 -->
+      <div class="immersive-header" :style="getHeaderBackground()">
+        <div class="immersive-header__overlay">
+          <div class="immersive-header__content">
+            <div class="breadcrumb-nav">
+              <nav class="breadcrumb-items">
+                <router-link to="/" class="breadcrumb-item">首页</router-link>
+                <span class="breadcrumb-separator">›</span>
+                <router-link to="/scenarios" class="breadcrumb-item">剧本管理</router-link>
+                <span class="breadcrumb-separator">›</span>
+                <span class="breadcrumb-item current">{{ currentScenarioData?.name || '剧本详情' }}</span>
+              </nav>
             </div>
-          </div>
-        </template>
-      </PageHeader>
 
-      <!-- 主内容区域 -->
-      <div class="detail-content">
-        <!-- 剧本信息卡片 -->
-        <TavernCard class="scenario-info-card">
-          <div class="info-grid">
-            <!-- 基本信息 -->
-            <div class="basic-info">
-              <h3 class="section-title">剧本信息</h3>
-              <div class="info-list">
-                <div class="info-item">
-                  <label class="info-label">描述</label>
-                  <p class="info-value">
-                    {{ currentScenarioData?.description || '暂无描述' }}
-                  </p>
+            <div class="immersive-header__main">
+              <h1 class="immersive-title">
+                <span class="title-text">{{ currentScenarioData?.name || '' }}</span>
+                <div class="title-decorations">
+                  <div class="decoration-line decoration-left"></div>
+                  <div class="decoration-icon">{{ getScenarioIcon() }}</div>
+                  <div class="decoration-line decoration-right"></div>
                 </div>
+              </h1>
+              <p class="immersive-subtitle">{{ currentScenarioData?.description || '无描述' }}</p>
 
-                <div v-if="currentScenarioData?.content" class="info-item">
-                  <label class="info-label">剧本内容</label>
-                  <div class="content-preview">
-                    {{ currentScenarioData.content }}
-                  </div>
-                </div>
-
-                <!-- 增强剧本的额外信息 -->
-                <div v-if="isEnhanced && enhancedScenario?.genre" class="info-item">
-                  <label class="info-label">题材类型</label>
-                  <p class="info-value">{{ enhancedScenario.genre }}</p>
-                </div>
-
-                <div v-if="isEnhanced && enhancedScenario?.complexity" class="info-item">
-                  <label class="info-label">复杂度</label>
+              <div class="immersive-meta">
+                <div class="meta-badges">
                   <TavernBadge
-                    :text="enhancedScenario.complexity"
-                    :variant="complexityVariant(enhancedScenario.complexity)"
+                    :variant="currentScenarioData?.isPublic ? 'success' : 'warning'"
+                    :text="currentScenarioData?.isPublic ? '公开' : '私有'"
+                    class="meta-badge"
+                  />
+                  <TavernBadge
+                    v-if="isEnhanced"
+                    variant="primary"
+                    text="增强剧本"
+                    class="meta-badge enhanced"
+                  />
+                  <TavernBadge
+                    v-if="getScenarioGenre()"
+                    :text="getScenarioGenre()"
+                    variant="secondary"
+                    class="meta-badge genre"
                   />
                 </div>
 
-                <div v-if="isEnhanced && enhancedScenario?.worldScope" class="info-item">
-                  <label class="info-label">世界范围</label>
-                  <p class="info-value">{{ enhancedScenario.worldScope }}</p>
-                </div>
+                <div class="immersive-actions">
+                  <TavernButton
+                    @click="editScenario"
+                    variant="primary"
+                    size="lg"
+                    class="action-btn primary-action"
+                  >
+                    <TavernIcon name="edit" class="mr-2" />
+                    编辑剧本
+                  </TavernButton>
 
-                <div v-if="currentScenarioData?.tags && currentScenarioData.tags.length > 0" class="info-item">
-                  <label class="info-label">标签</label>
-                  <div class="tags-list">
-                    <TavernBadge
-                      v-for="tag in currentScenarioData.tags"
-                      :key="tag"
-                      :text="tag"
-                      variant="secondary"
-                    />
+                  <div class="dropdown-wrapper">
+                    <TavernButton @click="toggleDropdown" class="dropdown-trigger action-btn">
+                      <TavernIcon name="menu" />
+                    </TavernButton>
+                    <div v-if="showDropdown" class="dropdown-menu" @click="hideDropdown">
+                      <button @click="handleCommand('clone')" class="dropdown-item">
+                        <TavernIcon name="document" class="mr-2" />
+                        复制剧本
+                      </button>
+                      <button @click="handleCommand('export')" class="dropdown-item">
+                        <TavernIcon name="download" class="mr-2" />
+                        导出剧本
+                      </button>
+                      <div class="dropdown-divider"></div>
+                      <button @click="handleCommand('test')" class="dropdown-item">
+                        <TavernIcon name="sparkles" class="mr-2" />
+                        测试匹配
+                      </button>
+                      <div class="dropdown-divider"></div>
+                      <button @click="handleCommand('delete')" class="dropdown-item danger">
+                        <TavernIcon name="delete" class="mr-2" />
+                        删除剧本
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- 统计信息 -->
-            <div class="stats-info">
-              <h3 class="section-title">统计信息</h3>
-              <div class="stats-list">
-                <div class="stat-item">
-                  <div class="stat-label">分类</div>
-                  <div class="stat-value">{{ currentScenarioData?.category }}</div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-label">语言</div>
-                  <div class="stat-value">{{ currentScenarioData?.language || 'zh-CN' }}</div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-label">条目数量</div>
-                  <div class="stat-value">{{ currentScenarioData?.worldInfoEntries?.length || 0 }}</div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-label">活跃条目</div>
-                  <div class="stat-value">{{ activeEntriesCount }}</div>
-                </div>
-                <!-- 增强剧本的额外统计 -->
-                <div v-if="isEnhanced && enhancedScenario?.worldLocations?.length" class="stat-item">
-                  <div class="stat-label">地点数量</div>
-                  <div class="stat-value">{{ enhancedScenario.worldLocations.length }}</div>
-                </div>
-                <div v-if="isEnhanced && enhancedScenario?.worldEvents?.length" class="stat-item">
-                  <div class="stat-label">事件数量</div>
-                  <div class="stat-value">{{ enhancedScenario.worldEvents.length }}</div>
-                </div>
-                <div v-if="isEnhanced && enhancedScenario?.worldOrganizations?.length" class="stat-item">
-                  <div class="stat-label">组织数量</div>
-                  <div class="stat-value">{{ enhancedScenario.worldOrganizations.length }}</div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-label">创建时间</div>
-                  <div class="stat-value stat-date">{{ formatDate(currentScenarioData?.createdAt) }}</div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-label">更新时间</div>
-                  <div class="stat-value stat-date">{{ formatDate(currentScenarioData?.updatedAt) }}</div>
+            <!-- 沉浸式背景动画效果 -->
+            <div class="immersive-particles">
+              <div v-for="i in 20" :key="i" class="particle" :style="getParticleStyle(i)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 沉浸式主内容区域 -->
+      <div class="immersive-content">
+        <!-- 剧本核心信息 -->
+        <div class="scenario-core-info">
+          <div class="core-info-container">
+            <div class="info-section">
+              <h2 class="section-title-with-icon">
+                <TavernIcon name="scroll" class="section-icon" />
+                世界观设定
+              </h2>
+              <div class="world-description">
+                <div class="description-text">
+                  {{ currentScenarioData?.description || '暂无描述' }}
                 </div>
               </div>
             </div>
-          </div>
-        </TavernCard>
 
+            <div v-if="currentScenarioData?.content" class="info-section">
+              <h2 class="section-title-with-icon">
+                <TavernIcon name="book-open" class="section-icon" />
+                详细内容
+              </h2>
+              <div class="content-detail">
+                <div class="content-text">
+                  {{ currentScenarioData.content }}
+                </div>
+              </div>
+            </div>
+
+            <!-- 增强剧本的额外信息 -->
+            <div v-if="isEnhanced && enhancedScenario?.genre" class="info-section">
+              <h2 class="section-title-with-icon">
+                <TavernIcon name="tag" class="section-icon" />
+                题材类型
+              </h2>
+              <div class="genre-info">
+                <TavernBadge
+                  :text="enhancedScenario.genre"
+                  :variant="getGenreVariant(enhancedScenario.genre)"
+                  size="lg"
+                />
+                <p class="genre-description">{{ getGenreDescription(enhancedScenario.genre) }}</p>
+              </div>
+            </div>
+
+            <div v-if="isEnhanced && enhancedScenario?.complexity" class="info-section">
+              <h2 class="section-title-with-icon">
+                <TavernIcon name="cog" class="section-icon" />
+                复杂度评估
+              </h2>
+              <div class="complexity-info">
+                <div class="complexity-visual">
+                  <div class="complexity-bar">
+                    <div
+                      class="complexity-fill"
+                      :class="`complexity-${enhancedScenario.complexity.toLowerCase()}`"
+                      :style="{ width: getComplexityWidth(enhancedScenario.complexity) }"
+                    ></div>
+                  </div>
+                  <TavernBadge
+                    :text="enhancedScenario.complexity"
+                    :variant="complexityVariant(enhancedScenario.complexity)"
+                    class="complexity-badge"
+                  />
+                </div>
+                <p class="complexity-description">{{ getComplexityDescription(enhancedScenario.complexity) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+  
         <!-- 世界信息预览 -->
         <TavernCard class="entries-preview">
           <div class="entries-header">
@@ -766,22 +770,6 @@ const editScenario = () => {
   }
 }
 
-const complexityVariant = (complexity: string) => {
-  switch (complexity?.toLowerCase()) {
-    case 'simple':
-    case '简单':
-      return 'success'
-    case 'moderate':
-    case '中等':
-      return 'warning'
-    case 'complex':
-    case '复杂':
-      return 'danger'
-    default:
-      return 'secondary'
-  }
-}
-
 const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value
 }
@@ -1040,6 +1028,177 @@ onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
 })
 
+// 沉浸式设计相关方法
+const getScenarioTheme = () => {
+  const scenarioData = currentScenarioData.value
+  if (!scenarioData) return 'default'
+
+  // 根据剧本类型和内容返回主题类型
+  if (scenarioData.category?.includes('科幻') || scenarioData.tags?.some(tag => tag.includes('科幻'))) {
+    return 'scifi'
+  } else if (scenarioData.category?.includes('奇幻') || scenarioData.tags?.some(tag => tag.includes('奇幻'))) {
+    return 'fantasy'
+  } else if (scenarioData.category?.includes('悬疑') || scenarioData.tags?.some(tag => tag.includes('悬疑'))) {
+    return 'mystery'
+  } else if (scenarioData.category?.includes('恐怖') || scenarioData.tags?.some(tag => tag.includes('恐怖'))) {
+    return 'horror'
+  } else if (scenarioData.category?.includes('历史') || scenarioData.tags?.some(tag => tag.includes('历史'))) {
+    return 'historical'
+  } else if (isEnhanced.value && enhancedScenario.value?.genre) {
+    const genre = enhancedScenario.value.genre.toLowerCase()
+    if (genre.includes('sci-fi')) return 'scifi'
+    if (genre.includes('fantasy')) return 'fantasy'
+    if (genre.includes('mystery')) return 'mystery'
+    if (genre.includes('horror')) return 'horror'
+    if (genre.includes('historical')) return 'historical'
+  }
+
+  return 'default'
+}
+
+const getHeaderBackground = () => {
+  const theme = getScenarioTheme()
+  const themeGradients = {
+    scifi: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #e94560 100%)',
+    fantasy: 'linear-gradient(135deg, #2d1b69 0%, #0f3460 25%, #533483 50%, #c77dff 75%, #e7c6ff 100%)',
+    mystery: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 25%, #3a3a3a 50%, #4a4a4a 75%, #5a5a5a 100%)',
+    horror: 'linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 25%, #2a0a0a 50%, #3a0a0a 75%, #4a0a0a 100%)',
+    historical: 'linear-gradient(135deg, #3e2723 0%, #5d4037 25%, #6d4c41 50%, #795548 75%, #8d6e63 100%)',
+    default: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #fecfef 75%, #fecfef 100%)'
+  }
+
+  return {
+    background: themeGradients[theme] || themeGradients.default,
+    position: 'relative',
+    overflow: 'hidden'
+  }
+}
+
+const getScenarioIcon = () => {
+  const theme = getScenarioTheme()
+  const themeIcons = {
+    scifi: '🚀',
+    fantasy: '🔮',
+    mystery: '🔍',
+    horror: '🌙',
+    historical: '📜',
+    default: '📖'
+  }
+
+  return themeIcons[theme] || themeIcons.default
+}
+
+const getParticleStyle = (index: number) => {
+  const theme = getScenarioTheme()
+  const particleColors = {
+    scifi: ['#00ffff', '#ff00ff', '#ffff00', '#00ff00', '#ff6b6b'],
+    fantasy: ['#ffd700', '#ff69b4', '#00ffff', '#98fb98', '#dda0dd'],
+    mystery: ['#808080', '#a9a9a9', '#c0c0c0', '#dcdcdc', '#f5f5f5'],
+    horror: ['#8b0000', '#dc143c', '#ff0000', '#ff6347', '#ff4500'],
+    historical: ['#daa520', '#cd853f', '#d2691e', '#8b4513', '#a0522d'],
+    default: ['#667eea', '#764ba2', '#f093fb', '#fecfef', '#fecfef']
+  }
+
+  const colors = particleColors[theme] || particleColors.default
+  const color = colors[index % colors.length]
+
+  return {
+    position: 'absolute',
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    width: `${Math.random() * 4 + 2}px`,
+    height: `${Math.random() * 4 + 2}px`,
+    backgroundColor: color,
+    borderRadius: '50%',
+    opacity: Math.random() * 0.8 + 0.2,
+    animation: `float ${Math.random() * 3 + 2}s ease-in-out infinite`,
+    animationDelay: `${Math.random() * 2}s`,
+    boxShadow: `0 0 ${Math.random() * 10 + 5}px ${color}`
+  }
+}
+
+const getScenarioGenre = () => {
+  if (isEnhanced.value && enhancedScenario.value?.genre) {
+    return enhancedScenario.value.genre
+  }
+  return currentScenarioData.value?.category || ''
+}
+
+const getGenreVariant = (genre: string) => {
+  const lowerGenre = genre.toLowerCase()
+  if (lowerGenre.includes('sci-fi') || lowerGenre.includes('科幻')) return 'primary'
+  if (lowerGenre.includes('fantasy') || lowerGenre.includes('奇幻')) return 'success'
+  if (lowerGenre.includes('mystery') || lowerGenre.includes('悬疑')) return 'warning'
+  if (lowerGenre.includes('horror') || lowerGenre.includes('恐怖')) return 'danger'
+  if (lowerGenre.includes('historical') || lowerGenre.includes('历史')) return 'info'
+  return 'secondary'
+}
+
+const getGenreDescription = (genre: string) => {
+  const descriptions: Record<string, string> = {
+    'Sci-Fi': '探索未来世界的无限可能性，科技与人文的交织',
+    'Fantasy': '魔法与神话的世界，奇幻冒险的史诗故事',
+    'Mystery': '迷雾重重的案件，需要智慧与洞察力来解开',
+    'Horror': '深入恐惧的边缘，体验心跳加速的刺激',
+    'Historical': '穿越时空的长河，重现历史的重要时刻',
+    'Romance': '浪漫温馨的爱情故事，感受真挚的情感',
+    'Action': '紧张刺激的动作场面，充满肾上腺素的体验',
+    'Comedy': '轻松幽默的剧情，带来欢声笑语',
+    'Drama': '深刻感人的故事，探讨人性的复杂与美好'
+  }
+
+  return descriptions[genre] || '独特的故事类型，带来不同的体验'
+}
+
+const getComplexityWidth = (complexity: string) => {
+  const widths: Record<string, string> = {
+    'Simple': '25%',
+    'Moderate': '50%',
+    'Complex': '75%',
+    'Very Complex': '100%',
+    '简单': '25%',
+    '中等': '50%',
+    '复杂': '75%',
+    '非常复杂': '100%'
+  }
+
+  return widths[complexity] || '50%'
+}
+
+const getComplexityDescription = (complexity: string) => {
+  const descriptions: Record<string, string> = {
+    'Simple': '适合新手，世界观简单易懂，容易上手',
+    'Moderate': '适合有一定经验的玩家，世界观较为丰富',
+    'Complex': '适合资深玩家，世界观复杂，需要深入理解',
+    'Very Complex': '适合专业玩家，世界观极其复杂，充满挑战',
+    '简单': '适合新手，世界观简单易懂，容易上手',
+    '中等': '适合有一定经验的玩家，世界观较为丰富',
+    '复杂': '适合资深玩家，世界观复杂，需要深入理解',
+    '非常复杂': '适合专业玩家，世界观极其复杂，充满挑战'
+  }
+
+  return descriptions[complexity] || '复杂度未知'
+}
+
+const complexityVariant = (complexity: string) => {
+  const lowerComplexity = complexity.toLowerCase()
+  if (lowerComplexity.includes('simple') || lowerComplexity.includes('简单')) return 'success'
+  if (lowerComplexity.includes('moderate') || lowerComplexity.includes('中等')) return 'warning'
+  if (lowerComplexity.includes('complex') || lowerComplexity.includes('复杂')) return 'danger'
+  if (lowerComplexity.includes('very') || lowerComplexity.includes('非常')) return 'danger'
+  return 'secondary'
+}
+
+const previewBackgroundImage = (background: any) => {
+  selectedBackground.value = background
+  showBackgroundPreview.value = true
+}
+
+const useBackground = (background: any) => {
+  // 这里可以实现使用背景图的逻辑
+  console.log('使用背景图:', background)
+}
+
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
@@ -1255,6 +1414,8 @@ onUnmounted(() => {
 
 .entries-preview {
   padding: var(--dt-spacing-2xl);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .entries-header {
@@ -1582,12 +1743,15 @@ onUnmounted(() => {
 // 角色卡展示样式
 .characters-section {
   padding: var(--dt-spacing-2xl);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .characters-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--dt-spacing-lg);
+  width: 100%;
 
   @media (max-width: 768px) {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -1698,12 +1862,15 @@ onUnmounted(() => {
 // 背景画廊样式
 .backgrounds-section {
   padding: var(--dt-spacing-2xl);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .backgrounds-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--dt-spacing-md);
+  width: 100%;
 
   @media (max-width: 768px) {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -1970,6 +2137,650 @@ onUnmounted(() => {
 .characters-loading {
   .loading-spinner {
     color: var(--dt-color-primary);
+  }
+}
+
+// 沉浸式设计样式
+.scenario-content {
+  // 主题背景色
+  &.scenario-theme--scifi {
+    --immersive-primary: #1a1a2e;
+    --immersive-secondary: #0f3460;
+    --immersive-accent: #e94560;
+    --immersive-glow: #00ffff;
+  }
+
+  &.scenario-theme--fantasy {
+    --immersive-primary: #2d1b69;
+    --immersive-secondary: #533483;
+    --immersive-accent: #c77dff;
+    --immersive-glow: #ffd700;
+  }
+
+  &.scenario-theme--mystery {
+    --immersive-primary: #1a1a1a;
+    --immersive-secondary: #3a3a3a;
+    --immersive-accent: #4a4a4a;
+    --immersive-glow: #808080;
+  }
+
+  &.scenario-theme--horror {
+    --immersive-primary: #0a0a0a;
+    --immersive-secondary: #2a0a0a;
+    --immersive-accent: #4a0a0a;
+    --immersive-glow: #dc143c;
+  }
+
+  &.scenario-theme--historical {
+    --immersive-primary: #3e2723;
+    --immersive-secondary: #6d4c41;
+    --immersive-accent: #8d6e63;
+    --immersive-glow: #daa520;
+  }
+
+  &.scenario-theme--default {
+    --immersive-primary: #667eea;
+    --immersive-secondary: #764ba2;
+    --immersive-accent: #f093fb;
+    --immersive-glow: #fecfef;
+  }
+}
+
+// 沉浸式头部
+.immersive-header {
+  height: 60vh;
+  min-height: 400px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1;
+  }
+}
+
+.immersive-header__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.5) 50%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+  z-index: 2;
+}
+
+.immersive-header__content {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  max-width: 1200px;
+  padding: 0 var(--dt-spacing-lg);
+  width: 100%;
+}
+
+// 面包屑导航
+.breadcrumb-nav {
+  margin-bottom: var(--dt-spacing-xl);
+}
+
+.breadcrumb-items {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--dt-spacing-sm);
+  font-size: var(--dt-font-size-sm);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.breadcrumb-item {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: var(--dt-transition-fast);
+
+  &:hover {
+    color: white;
+    text-decoration: underline;
+  }
+
+  &.current {
+    color: white;
+    font-weight: var(--dt-font-weight-medium);
+  }
+}
+
+.breadcrumb-separator {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+// 沉浸式标题
+.immersive-header__main {
+  margin-bottom: var(--dt-spacing-2xl);
+}
+
+.immersive-title {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: var(--dt-font-weight-bold);
+  color: white;
+  margin: 0 0 var(--dt-spacing-lg) 0;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--dt-spacing-md);
+}
+
+.title-text {
+  letter-spacing: 2px;
+  animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+.title-decorations {
+  display: flex;
+  align-items: center;
+  gap: var(--dt-spacing-lg);
+}
+
+.decoration-line {
+  height: 2px;
+  width: 80px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--immersive-glow) 50%,
+    transparent 100%
+  );
+  animation: lineGlow 2s ease-in-out infinite alternate;
+
+  &.decoration-left {
+    animation-delay: 0s;
+  }
+
+  &.decoration-right {
+    animation-delay: 1s;
+  }
+}
+
+.decoration-icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 0 20px var(--immersive-glow));
+  animation: iconFloat 4s ease-in-out infinite;
+}
+
+.immersive-subtitle {
+  font-size: var(--dt-font-size-lg);
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  max-width: 800px;
+  line-height: 1.6;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+}
+
+// 沉浸式元信息
+.immersive-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--dt-spacing-lg);
+}
+
+.meta-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--dt-spacing-md);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.meta-badge {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  &.enhanced {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+
+  &.genre {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+.immersive-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--dt-spacing-lg);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.action-btn {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  transition: var(--dt-transition-fast);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  &.primary-action {
+    background: var(--immersive-accent);
+    border-color: var(--immersive-accent);
+    box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+
+    &:hover {
+      background: color-mix(in srgb, var(--immersive-accent) 90%, white 10%);
+      box-shadow: 0 8px 30px rgba(233, 69, 96, 0.6);
+    }
+  }
+}
+
+// 粒子动画
+.immersive-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.particle {
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+// 沉浸式内容区域
+.immersive-content {
+  position: relative;
+  z-index: 10;
+  margin-top: -80px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 var(--dt-spacing-lg) var(--dt-spacing-xl);
+  max-width: 1400px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// 确保所有TavernCard组件正确对齐
+.immersive-content :deep(.tavern-card) {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: var(--dt-spacing-xl);
+}
+
+.immersive-content :deep(.scenario-backgrounds) {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.immersive-content :deep(.related-characters) {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// 核心信息区域
+.scenario-core-info {
+  margin-bottom: var(--dt-spacing-2xl);
+  width: 100%;
+}
+
+.core-info-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--dt-radius-xl);
+  padding: var(--dt-spacing-2xl);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.info-section {
+  margin-bottom: var(--dt-spacing-2xl);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.section-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: var(--dt-spacing-md);
+  font-size: var(--dt-font-size-xl);
+  font-weight: var(--dt-font-weight-semibold);
+  color: var(--dt-color-text-primary);
+  margin: 0 0 var(--dt-spacing-lg) 0;
+}
+
+.section-icon {
+  color: var(--immersive-accent);
+  font-size: 1.5rem;
+}
+
+.world-description,
+.content-detail {
+  .description-text,
+  .content-text {
+    line-height: 1.8;
+    color: var(--dt-color-text-primary);
+    background: var(--dt-color-surface-secondary);
+    padding: var(--dt-spacing-lg);
+    border-radius: var(--dt-radius-lg);
+    border-left: 4px solid var(--immersive-accent);
+    white-space: pre-wrap;
+  }
+}
+
+// 题材信息
+.genre-info {
+  display: flex;
+  align-items: center;
+  gap: var(--dt-spacing-lg);
+  flex-wrap: wrap;
+}
+
+.genre-description {
+  flex: 1;
+  color: var(--dt-color-text-secondary);
+  font-style: italic;
+  min-width: 300px;
+}
+
+// 复杂度信息
+.complexity-info {
+  .complexity-visual {
+    display: flex;
+    align-items: center;
+    gap: var(--dt-spacing-lg);
+    margin-bottom: var(--dt-spacing-md);
+  }
+
+  .complexity-bar {
+    flex: 1;
+    height: 12px;
+    background: var(--dt-color-surface-secondary);
+    border-radius: var(--dt-radius-full);
+    overflow: hidden;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: shimmer 2s ease-in-out infinite;
+    }
+  }
+
+  .complexity-fill {
+    height: 100%;
+    transition: width 1s ease-out;
+    border-radius: var(--dt-radius-full);
+
+    &.complexity-simple {
+      background: linear-gradient(90deg, #4caf50, #8bc34a);
+    }
+
+    &.complexity-moderate {
+      background: linear-gradient(90deg, #ff9800, #ffc107);
+    }
+
+    &.complexity-complex {
+      background: linear-gradient(90deg, #f44336, #ff5722);
+    }
+
+    &.complexity-very-complex {
+      background: linear-gradient(90deg, #9c27b0, #e91e63);
+    }
+  }
+
+  .complexity-badge {
+    font-weight: var(--dt-font-weight-semibold);
+  }
+
+  .complexity-description {
+    color: var(--dt-color-text-secondary);
+    line-height: 1.6;
+  }
+}
+
+// 统计概览
+.stats-overview {
+  margin-bottom: var(--dt-spacing-2xl);
+}
+
+.stats-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--dt-radius-xl);
+  padding: var(--dt-spacing-2xl);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--dt-spacing-lg);
+}
+
+.stat-card {
+  background: var(--dt-color-surface-primary);
+  border: 1px solid var(--dt-color-border-secondary);
+  border-radius: var(--dt-radius-lg);
+  padding: var(--dt-spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--dt-spacing-md);
+  transition: var(--dt-transition-fast);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--immersive-accent), var(--immersive-glow));
+  }
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--dt-shadow-lg);
+    border-color: var(--immersive-accent);
+  }
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--immersive-accent), var(--immersive-glow));
+  border-radius: var(--dt-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: var(--dt-font-size-lg);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: var(--dt-font-size-xl);
+  font-weight: var(--dt-font-weight-bold);
+  color: var(--dt-color-text-primary);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: var(--dt-font-size-sm);
+  color: var(--dt-color-text-secondary);
+  margin-top: var(--dt-spacing-xs);
+}
+
+// 动画定义
+@keyframes titleGlow {
+  0% {
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5), 0 0 30px var(--immersive-glow);
+  }
+  100% {
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5), 0 0 50px var(--immersive-glow);
+  }
+}
+
+@keyframes lineGlow {
+  0% {
+    opacity: 0.3;
+    transform: scaleX(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(1.2);
+  }
+}
+
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  33% {
+    transform: translateY(-10px) translateX(5px);
+  }
+  66% {
+    transform: translateY(5px) translateX(-5px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .immersive-header {
+    height: 50vh;
+    min-height: 300px;
+  }
+
+  .immersive-title {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+
+  .title-decorations {
+    flex-direction: column;
+    gap: var(--dt-spacing-md);
+  }
+
+  .decoration-line {
+    width: 60px;
+  }
+
+  .immersive-meta {
+    gap: var(--dt-spacing-md);
+  }
+
+  .meta-badges,
+  .immersive-actions {
+    gap: var(--dt-spacing-sm);
+  }
+
+  .immersive-content {
+    margin-top: -60px;
+    padding: 0 var(--dt-spacing-md) var(--dt-spacing-lg);
+  }
+
+  .core-info-container,
+  .stats-container {
+    padding: var(--dt-spacing-lg);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--dt-spacing-md);
+  }
+
+  .stat-card {
+    padding: var(--dt-spacing-md);
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: var(--dt-font-size-md);
+  }
+
+  .genre-info {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--dt-spacing-md);
+  }
+
+  .complexity-visual {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--dt-spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .breadcrumb-items {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .immersive-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .action-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>
