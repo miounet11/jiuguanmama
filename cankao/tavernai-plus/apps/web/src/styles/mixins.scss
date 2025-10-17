@@ -66,6 +66,19 @@
   }
 }
 
+// 设备方向
+@mixin portrait {
+  @media (orientation: portrait) {
+    @content;
+  }
+}
+
+@mixin landscape {
+  @media (orientation: landscape) {
+    @content;
+  }
+}
+
 // 用户偏好响应
 @mixin prefers-dark {
   @media (prefers-color-scheme: dark) {

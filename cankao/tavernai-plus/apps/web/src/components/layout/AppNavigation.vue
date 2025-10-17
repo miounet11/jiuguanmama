@@ -159,7 +159,7 @@
           text
           circle
           @click="toggleMobileMenu"
-          class="mobile-menu-btn md:hidden"
+          class="mobile-menu-btn mobile-only"
         >
           <el-icon :size="24">
             <component :is="showMobileMenu ? 'Close' : 'Menu'" />
@@ -169,7 +169,7 @@
     </div>
 
     <!-- 移动端菜单 -->
-    <div v-if="showMobileMenu" class="mobile-menu md:hidden">
+    <div v-if="showMobileMenu" class="mobile-menu mobile-only">
       <div class="mobile-menu-content">
         <router-link
           v-for="item in navigationItems"
@@ -452,22 +452,22 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .app-navigation {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(17, 24, 39, 0.95);
+  background: rgba($dark-bg-primary, 0.95);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  border-bottom: 1px solid rgba($primary-500, 0.2);
 }
 
 .nav-container {
-  max-width: 1200px;
+  max-width: $container-max-width;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 $spacing-4;
   height: 70px;
   display: flex;
   align-items: center;
@@ -485,26 +485,33 @@ onMounted(() => {
 .brand-logo {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: $spacing-2;
+  transition: transform $transition-base;
+
+  &:hover {
+    transform: scale(1.02);
+  }
 }
 
 .logo-icon {
-  font-size: 1.5rem;
+  font-size: $font-size-2xl;
+  filter: drop-shadow(0 0 8px rgba($primary-500, 0.3));
 }
 
 .brand-text {
-  font-size: 1.25rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #f3f4f6 0%, #c084fc 100%);
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  background: linear-gradient(135deg, #{$primary-400}, #{$primary-600});
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: $spacing-4;
   flex: 1;
   justify-content: center;
 }
@@ -512,53 +519,96 @@ onMounted(() => {
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  gap: $spacing-2;
+  padding: $spacing-2 $spacing-4;
+  border-radius: $border-radius-base;
   text-decoration: none;
-  color: #9ca3af;
-  transition: all 0.2s;
+  color: $text-secondary;
+  transition: all $transition-base;
   position: relative;
-}
+  font-weight: $font-weight-medium;
 
-.nav-item:hover {
-  color: #c084fc;
-  background-color: rgba(139, 92, 246, 0.1);
-}
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 60%;
+    height: 2px;
+    background: linear-gradient(135deg, #{$primary-400}, #{$primary-600});
+    transition: transform $transition-base;
+    border-radius: $border-radius-full;
+  }
 
-.nav-item--active {
-  color: #c084fc;
-  background-color: rgba(139, 92, 246, 0.2);
+  &:hover {
+    color: $primary-400;
+    background-color: rgba($primary-500, 0.1);
+    transform: translateY(-1px);
+
+    &::before {
+      transform: translateX(-50%) scaleX(1);
+    }
+  }
+
+  &--active {
+    color: $primary-400;
+    background-color: rgba($primary-500, 0.2);
+    box-shadow: 0 0 20px rgba($primary-500, 0.3);
+
+    &::before {
+      transform: translateX(-50%) scaleX(1);
+    }
+  }
 }
 
 .nav-icon {
-  font-size: 1.2rem;
+  font-size: $font-size-lg;
+  transition: transform $transition-base;
+
+  .nav-item:hover & {
+    transform: scale(1.1);
+  }
 }
 
 .nav-text {
-  font-weight: 500;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
 }
 
 .nav-badge {
-  background: #ef4444;
+  background: $error-color;
   color: white;
-  font-size: 0.75rem;
-  padding: 0.125rem 0.375rem;
-  border-radius: 9999px;
+  font-size: $font-size-xs;
+  padding: $spacing-1 $spacing-1;
+  border-radius: $border-radius-full;
   min-width: 1.25rem;
   text-align: center;
+  font-weight: $font-weight-medium;
+  animation: pulse 2s infinite;
+  box-shadow: 0 2px 4px rgba($error-color, 0.3);
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: $spacing-4;
   flex-shrink: 0;
 }
 
 .search-box {
   position: relative;
   width: 240px;
+  transition: width $transition-base;
+
+  &:focus-within {
+    width: 280px;
+  }
 }
 
 .search-suggestions {
@@ -566,92 +616,139 @@ onMounted(() => {
   top: 100%;
   left: 0;
   right: 0;
-  background: rgba(17, 24, 39, 0.95);
+  background: rgba($dark-bg-primary, 0.95);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  border-radius: 0.5rem;
-  margin-top: 0.25rem;
+  border: 1px solid rgba($primary-500, 0.2);
+  border-radius: $border-radius-base;
+  margin-top: $spacing-1;
   max-height: 200px;
   overflow-y: auto;
   z-index: 1001;
+  box-shadow: $shadow-lg;
 }
 
 .suggestion-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  gap: $spacing-2;
+  padding: $spacing-3 $spacing-4;
   cursor: pointer;
-  transition: background-color 0.2s;
-}
+  transition: all $transition-base;
+  border-bottom: 1px solid rgba($gray-700, 0.2);
 
-.suggestion-item:hover {
-  background-color: rgba(139, 92, 246, 0.1);
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: rgba($primary-500, 0.1);
+    transform: translateX(4px);
+  }
 }
 
 .suggestion-icon {
-  color: #9ca3af;
+  color: $text-secondary;
+  transition: color $transition-base;
+
+  .suggestion-item:hover & {
+    color: $primary-400;
+  }
 }
 
 .suggestion-type {
   margin-left: auto;
-  font-size: 0.75rem;
-  color: #6b7280;
+  font-size: $font-size-xs;
+  color: $text-muted;
+  background: rgba($primary-500, 0.1);
+  padding: 2px 8px;
+  border-radius: $border-radius-full;
+  font-weight: $font-weight-medium;
 }
 
 .quick-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: $spacing-3;
 }
 
 .action-btn {
   position: relative;
-  color: #9ca3af;
+  color: $text-secondary;
+  transition: all $transition-base;
+
+  &:hover {
+    color: $primary-400;
+    transform: scale(1.1);
+  }
 }
 
 .notification-btn {
   position: relative;
+
+  &:hover {
+    .notification-count {
+      transform: scale(1.1);
+    }
+  }
 }
 
 .notification-count {
   position: absolute;
   top: -4px;
   right: -4px;
-  background: #ef4444;
+  background: $error-color;
   color: white;
-  font-size: 0.625rem;
-  padding: 0.125rem 0.25rem;
-  border-radius: 9999px;
+  font-size: $font-size-xs;
+  padding: 2px 4px;
+  border-radius: $border-radius-full;
   min-width: 1rem;
   text-align: center;
   line-height: 1;
+  font-weight: $font-weight-bold;
+  box-shadow: 0 2px 4px rgba($error-color, 0.3);
+  animation: pulse 2s infinite;
+  transition: transform $transition-base;
 }
 
 .create-btn {
-  background: linear-gradient(135deg, #8b5cf6, #c084fc);
+  background: linear-gradient(135deg, #{$primary-400}, #{$primary-600});
   border: none;
+  box-shadow: 0 0 20px rgba($primary-500, 0.3);
+  transition: all $transition-base;
+  font-weight: $font-weight-medium;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-xl, 0 0 20px rgba($primary-500, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 .create-text {
-  margin-left: 0.25rem;
+  margin-left: $spacing-1;
 }
 
 .user-menu-trigger {
   cursor: pointer;
-  transition: transform 0.2s;
-}
+  transition: all $transition-base;
+  border-radius: $border-radius-full;
 
-.user-menu-trigger:hover {
-  transform: scale(1.05);
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba($primary-500, 0.3);
+  }
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: $spacing-3;
+  padding: $spacing-4;
   pointer-events: none;
+  border-bottom: 1px solid rgba($gray-700, 0.2);
 }
 
 .user-details {
@@ -660,84 +757,128 @@ onMounted(() => {
 }
 
 .username {
-  font-weight: 600;
-  color: white;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
 }
 
 .user-email {
-  font-size: 0.875rem;
-  color: #9ca3af;
+  font-size: $font-size-sm;
+  color: $text-secondary;
 }
 
 .auth-buttons {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: $spacing-2;
+
+  .el-button {
+    transition: all $transition-base;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
 }
 
 .mobile-menu-btn {
-  color: #9ca3af;
+  color: $text-secondary;
+  transition: all $transition-base;
+
+  &:hover {
+    color: $primary-400;
+    transform: scale(1.1);
+  }
 }
 
 .mobile-menu {
-  background: rgba(17, 24, 39, 0.98);
+  background: rgba($dark-bg-primary, 0.98);
   backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(139, 92, 246, 0.2);
+  border-top: 1px solid rgba($primary-500, 0.2);
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
 }
 
 .mobile-menu-content {
-  padding: 1rem;
+  padding: $spacing-4;
 }
 
 .mobile-nav-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
+  gap: $spacing-3;
+  padding: $spacing-4;
+  border-radius: $border-radius-base;
   text-decoration: none;
-  color: #9ca3af;
-  transition: all 0.2s;
+  color: $text-secondary;
+  transition: all $transition-base;
   position: relative;
-}
+  font-weight: $font-weight-medium;
+  margin-bottom: $spacing-2;
 
-.mobile-nav-item:hover,
-.mobile-nav-item--active {
-  color: #c084fc;
-  background-color: rgba(139, 92, 246, 0.1);
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) scaleX(0);
+    width: 3px;
+    height: 60%;
+    background: linear-gradient(135deg, #{$primary-400}, #{$primary-600});
+    transition: transform $transition-base;
+    border-radius: 0 $border-radius-full $border-radius-full 0;
+  }
+
+  &:hover,
+  &--active {
+    color: $primary-400;
+    background-color: rgba($primary-500, 0.1);
+    transform: translateX(4px);
+
+    &::before {
+      transform: translateY(-50%) scaleX(1);
+    }
+  }
 }
 
 .mobile-nav-icon {
-  font-size: 1.25rem;
+  font-size: $font-size-xl;
+  transition: transform $transition-base;
+
+  .mobile-nav-item:hover & {
+    transform: scale(1.1);
+  }
 }
 
 .mobile-nav-text {
-  font-weight: 500;
+  font-weight: $font-weight-medium;
   flex: 1;
 }
 
 .mobile-nav-badge {
-  background: #ef4444;
+  background: $error-color;
   color: white;
-  font-size: 0.75rem;
-  padding: 0.125rem 0.375rem;
-  border-radius: 9999px;
+  font-size: $font-size-xs;
+  padding: 2px 6px;
+  border-radius: $border-radius-full;
+  font-weight: $font-weight-medium;
+  animation: pulse 2s infinite;
 }
 
 .mobile-user-section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(139, 92, 246, 0.2);
+  margin-top: $spacing-6;
+  padding-top: $spacing-6;
+  border-top: 1px solid rgba($primary-500, 0.2);
 }
 
 .mobile-user-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: rgba(139, 92, 246, 0.1);
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
+  gap: $spacing-4;
+  padding: $spacing-4;
+  background: rgba($primary-500, 0.1);
+  border-radius: $border-radius-base;
+  margin-bottom: $spacing-4;
+  box-shadow: 0 0 20px rgba($primary-500, 0.3);
 }
 
 .mobile-user-details {
@@ -746,31 +887,38 @@ onMounted(() => {
 }
 
 .mobile-username {
-  font-weight: 600;
-  color: white;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
 }
 
 .mobile-user-email {
-  font-size: 0.875rem;
-  color: #9ca3af;
+  font-size: $font-size-sm;
+  color: $text-secondary;
 }
 
 .mobile-user-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: $spacing-2;
 }
 
 .mobile-action-btn {
   width: 100%;
   justify-content: flex-start;
+  transition: all $transition-base;
+
+  &:hover {
+    transform: translateX(4px);
+  }
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
+// 响应式工具类已在 utilities.scss 中定义
+
+/* 移动端优化 - 768px以下 */
+@include mobile-only {
   .nav-container {
     height: 60px;
-    padding: 0 0.75rem;
+    padding: 0 $spacing-3;
   }
 
   .nav-menu {
@@ -783,6 +931,158 @@ onMounted(() => {
 
   .create-text {
     display: none;
+  }
+
+  .brand-text {
+    font-size: $font-size-lg;
+  }
+
+  .quick-actions {
+    gap: $spacing-2;
+  }
+
+  .action-btn {
+    padding: $spacing-2;
+  }
+}
+
+/* 小屏手机优化 - 640px以下 */
+@include respond-below($breakpoint-sm) {
+  .nav-container {
+    padding: 0 $spacing-2;
+  }
+
+  .quick-actions {
+    gap: $spacing-2;
+  }
+
+  .logo-icon {
+    font-size: $font-size-xl;
+  }
+
+  .brand-text {
+    font-size: $font-size-base;
+  }
+}
+
+/* 超小屏手机优化 - 475px以下 */
+@include respond-below($breakpoint-xs) {
+  .nav-container {
+    height: 56px;
+    padding: 0 $spacing-2;
+  }
+
+  .logo-icon {
+    font-size: $font-size-lg;
+  }
+
+  .brand-text {
+    font-size: $font-size-sm;
+  }
+
+  .quick-actions {
+    gap: $spacing-1;
+  }
+
+  .mobile-menu-btn {
+    padding: $spacing-1;
+  }
+
+  .user-menu-trigger {
+    .el-avatar {
+      width: 32px !important;
+      height: 32px !important;
+    }
+  }
+}
+
+/* 大屏桌面优化 - 1280px以上 */
+@media (min-width: $breakpoint-xl) {
+  .nav-container {
+    max-width: 1400px;
+    padding: 0 $spacing-6;
+  }
+
+  .search-box {
+    width: 320px;
+
+    &:focus-within {
+      width: 360px;
+    }
+  }
+
+  .nav-menu {
+    gap: $spacing-6;
+  }
+
+  .quick-actions {
+    gap: $spacing-4;
+  }
+}
+
+/* 超大屏桌面优化 - 1536px以上 */
+@media (min-width: $breakpoint-2xl) {
+  .nav-container {
+    max-width: 1600px;
+  }
+
+  .search-box {
+    width: 360px;
+
+    &:focus-within {
+      width: 400px;
+    }
+  }
+}
+
+/* 横屏模式优化 */
+@media (orientation: landscape) and (max-height: 600px) {
+  .nav-container {
+    height: 56px;
+  }
+
+  .mobile-menu {
+    max-height: calc(100vh - 56px);
+  }
+
+  .mobile-user-section {
+    margin-top: $spacing-4;
+    padding-top: $spacing-4;
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) {
+  .nav-item,
+  .action-btn,
+  .mobile-nav-item {
+    &:hover {
+      transform: none;
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  .brand-logo:hover {
+    transform: none;
+  }
+
+  .user-menu-trigger:hover {
+    transform: none;
+  }
+}
+
+/* 高分辨率屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .brand-text {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .logo-icon {
+    -webkit-font-smoothing: antialiased;
   }
 }
 </style>

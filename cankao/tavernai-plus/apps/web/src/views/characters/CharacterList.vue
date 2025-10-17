@@ -455,7 +455,7 @@ onMounted(() => {
   max-width: 1000px;
   margin: 0 auto;
 
-  @media (min-width: 768px) {
+  @include tablet-up {
     flex-direction: row;
     align-items: end;
   }
@@ -470,7 +470,7 @@ onMounted(() => {
   gap: var(--space-3);
   flex-wrap: wrap;
 
-  @media (min-width: 768px) {
+  @include tablet-up {
     flex-wrap: nowrap;
   }
 }
@@ -538,11 +538,11 @@ onMounted(() => {
   gap: var(--space-6);
   margin-bottom: var(--space-12);
 
-  @media (min-width: 640px) {
+  @include tablet-up {
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   }
 
-  @media (min-width: 1024px) {
+  @include desktop-up {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
 }
@@ -739,7 +739,7 @@ onMounted(() => {
 }
 
 /* 响应式调整 */
-@media (max-width: 640px) {
+@include mobile-only {
   .search-toolbar {
     .filter-section {
       .filter-select {

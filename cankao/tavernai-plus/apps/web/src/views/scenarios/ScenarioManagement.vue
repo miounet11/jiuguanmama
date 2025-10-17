@@ -7,7 +7,7 @@
           <h1 class="gradient-title">剧本管理</h1>
           <p class="subtitle">创建和管理您的世界信息剧本</p>
         </div>
-        <div class="actions-section">
+        <div class="actions-section desktop-only">
           <el-button
             type="primary"
             size="large"
@@ -18,12 +18,26 @@
           </el-button>
         </div>
       </div>
+
+      <!-- 移动端创建按钮 -->
+      <div class="mobile-create-section mobile-only">
+        <el-button
+          type="primary"
+          size="large"
+          @click="createNewScenario"
+          class="w-full"
+        >
+          <el-icon><Plus /></el-icon>
+          创建剧本
+        </el-button>
+      </div>
     </div>
 
     <!-- 主内容区域 -->
     <div class="management-content">
       <el-card class="scenario-container">
         <ScenarioList
+          ref="scenarioListRef"
           @scenario-created="handleScenarioCreated"
           @scenario-selected="handleScenarioSelected"
         />
@@ -48,6 +62,9 @@ const router = useRouter()
 // Store
 const scenarioStore = useScenarioStore()
 
+// 组件引用
+const scenarioListRef = ref<InstanceType<typeof ScenarioList>>()
+
 // 面包屑导航
 const breadcrumbItems = [
   { text: '首页', to: '/' },
@@ -56,8 +73,10 @@ const breadcrumbItems = [
 
 // 方法
 const createNewScenario = () => {
-  // 触发创建新剧本对话框
-  // 这个逻辑将由 ScenarioList 组件处理
+  // 调用 ScenarioList 组件的创建新剧本方法
+  if (scenarioListRef.value) {
+    scenarioListRef.value.createNewScenario()
+  }
 }
 
 const handleScenarioCreated = (scenario: Scenario) => {
@@ -109,7 +128,7 @@ onMounted(() => {
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: var(--space-3);
+        margin-bottom: var(--spacing-tight);
       }
 
       .subtitle {
@@ -123,6 +142,11 @@ onMounted(() => {
       flex-shrink: 0;
     }
   }
+
+  .mobile-create-section {
+    max-width: 1200px;
+    margin: var(--spacing-normal) auto 0;
+  }
 }
 
 .management-content {
@@ -131,7 +155,7 @@ onMounted(() => {
 
   .scenario-container {
     min-height: 400px;
-    padding: var(--section-padding-y);
+    padding: var(--spacing-loose);
     background: var(--surface-1);
     border: 1px solid var(--border-primary);
     border-radius: var(--radius-lg);
@@ -139,7 +163,7 @@ onMounted(() => {
 }
 
 // 响应式设计
-@media (max-width: 768px) {
+@include mobile-only {
   .scenario-management {
     padding: var(--spacing-normal);
   }
@@ -162,6 +186,12 @@ onMounted(() => {
     .scenario-container {
       padding: var(--spacing-comfortable);
     }
+  }
+}
+
+@include tablet-up {
+  .mobile-create-section {
+    display: none;
   }
 }
 </style>

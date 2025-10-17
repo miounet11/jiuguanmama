@@ -139,7 +139,7 @@ export default defineConfig({
 
   // 开发服务器配置 - 固定端口配置
   server: {
-    port: 8080,
+    port: 8080, // 前端服务器运行在8080端口
     host: '0.0.0.0', // 允许外部访问
     proxy: {
       '/api': {

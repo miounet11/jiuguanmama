@@ -343,10 +343,13 @@ model Post {
   characterId  String? // 关联的角色ID（如果是角色分享）
   content      String // 动态内容
   images       String? // 图片列表，JSON格式
+  type         String   @default("text") // 动态类型：text, image, character_share
+  visibility    String   @default("public") // 可见性：public, followers, private
   isPublic     Boolean  @default(true)
   likeCount    Int      @default(0) @map("like_count")
   shareCount   Int      @default(0) @map("share_count")
   commentCount Int      @default(0) @map("comment_count")
+  viewCount    Int      @default(0) @map("view_count")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 

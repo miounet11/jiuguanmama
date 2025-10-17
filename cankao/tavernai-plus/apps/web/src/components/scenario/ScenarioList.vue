@@ -410,6 +410,11 @@ watch(localSearchQuery, (newValue) => {
   }
 })
 
+// 暴露方法给父组件
+defineExpose({
+  createNewScenario
+})
+
 // 组件挂载时加载数据
 onMounted(async () => {
   // 并行加载数据

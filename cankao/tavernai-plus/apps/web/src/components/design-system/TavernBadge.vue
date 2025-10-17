@@ -13,7 +13,7 @@
       :size="iconSize"
     />
 
-    <span v-if="$slots.default" class="tavern-badge__content">
+    <span v-if="slots.default" class="tavern-badge__content">
       <slot />
     </span>
 
@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type Component } from 'vue'
+import { computed, useSlots, type Component } from 'vue'
 import TavernIcon from './TavernIcon.vue'
 
 // Types
@@ -84,6 +84,9 @@ const emit = defineEmits<{
   close: []
 }>()
 
+// Slots
+const slots = useSlots()
+
 // Computed
 const tag = computed((): string | Component => {
   if (props.href) {
@@ -108,7 +111,7 @@ const badgeClasses = computed(() => [
     'tavern-badge--closable': props.closable,
     'tavern-badge--dot': props.dot,
     'tavern-badge--count': props.count !== undefined,
-    'tavern-badge--icon-only': props.icon && !$slots.default && props.count === undefined
+    'tavern-badge--icon-only': props.icon && !slots.default && props.count === undefined
   }
 ])
 

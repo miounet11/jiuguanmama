@@ -13,7 +13,7 @@
     <!-- 卡片状态指示器 -->
     <div class="chat-conversation-card__indicators">
       <div v-if="isPinned" class="chat-conversation-card__pin">
-        <TavernIcon name="pin" size="xs" />
+        <TavernIcon name="star" size="xs" />
       </div>
       <div v-if="hasUnread" class="chat-conversation-card__unread-dot"></div>
       <div v-if="isOnline" class="chat-conversation-card__online-status"></div>
@@ -52,38 +52,35 @@
       <div class="chat-conversation-card__info">
         <!-- 头部：角色名 + 时间 -->
         <div class="chat-conversation-card__header">
-          <h3 class="chat-conversation-card__character-name">
-            {{ characterName || '未知角色' }}
-          </h3>
-          <div class="chat-conversation-card__metadata">
+          <div class="chat-conversation-card__title-section">
+            <h3 class="chat-conversation-card__character-name">
+              {{ characterName || '未知角色' }}
+            </h3>
             <span class="chat-conversation-card__time">
               {{ formattedTime }}
             </span>
-            <div class="chat-conversation-card__actions">
-              <button
-                v-if="showPinButton"
-                @click.stop="togglePin"
-                class="chat-conversation-card__action-btn"
-                :title="isPinned ? '取消置顶' : '置顶对话'"
-              >
-                <TavernIcon :name="isPinned ? 'pin-fill' : 'pin'" size="sm" />
-              </button>
-              <button
-                v-if="showArchiveButton"
-                @click.stop="toggleArchive"
-                class="chat-conversation-card__action-btn"
-                :title="isArchived ? '取消归档' : '归档对话'"
-              >
-                <TavernIcon :name="isArchived ? 'archive-fill' : 'archive'" size="sm" />
-              </button>
-              <button
-                @click.stop="showMoreOptions"
-                class="chat-conversation-card__action-btn"
-                title="更多选项"
-              >
-                <TavernIcon name="ellipsis-vertical" size="sm" />
-              </button>
-            </div>
+          </div>
+          <!-- 悬浮时显示的操作按钮 -->
+          <div class="chat-conversation-card__quick-actions">
+            <!-- 置顶按钮 -->
+            <button
+              v-if="showPinButton"
+              @click.stop="togglePin"
+              class="quick-action-btn quick-action-btn--pin"
+              :class="{ 'quick-action-btn--active': isPinned }"
+              :title="isPinned ? '取消置顶' : '置顶对话'"
+            >
+              <TavernIcon :name="isPinned ? 'star' : 'star'" size="xs" />
+            </button>
+
+            <!-- 更多操作按钮 -->
+            <button
+              @click.stop="handleContextMenu"
+              class="quick-action-btn quick-action-btn--more"
+              title="更多操作"
+            >
+              <TavernIcon name="ellipsis-horizontal" size="xs" />
+            </button>
           </div>
         </div>
 
@@ -174,7 +171,7 @@
         重命名对话
       </div>
       <div class="context-menu__item" @click="togglePin">
-        <TavernIcon :name="isPinned ? 'pin-fill' : 'pin'" size="sm" />
+        <TavernIcon :name="isPinned ? 'star' : 'star'" size="sm" />
         {{ isPinned ? '取消置顶' : '置顶对话' }}
       </div>
       <div class="context-menu__item" @click="toggleArchive">
@@ -404,6 +401,13 @@ const deleteConversation = () => {
   hideContextMenu()
 }
 
+const handleDelete = () => {
+  // 直接显示确认对话框，而不是右键菜单
+  if (confirm('确定要删除这个对话吗？此操作不可撤销。')) {
+    emit('delete', props.id)
+  }
+}
+
 const showMoreOptions = (event: MouseEvent) => {
   emit('moreOptions', props.id, event)
 }
@@ -443,7 +447,7 @@ onUnmounted(() => {
     transform: translateY(-2px);
     box-shadow: $shadow-lg;
 
-    .chat-conversation-card__actions {
+    .chat-conversation-card__quick-actions {
       opacity: 1;
     }
   }
@@ -615,7 +619,16 @@ onUnmounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: $spacing-2;
+    gap: $spacing-3;
+    margin-bottom: $spacing-1;
+  }
+
+  &__title-section {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-1;
   }
 
   &__character-name {
@@ -625,13 +638,9 @@ onUnmounted(() => {
     margin: 0;
     line-height: $line-height-tight;
     transition: color $transition-fast;
-  }
-
-  &__metadata {
-    display: flex;
-    align-items: center;
-    gap: $spacing-2;
-    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__time {
@@ -641,30 +650,64 @@ onUnmounted(() => {
     transition: color $transition-fast;
   }
 
-  &__actions {
+  &__quick-actions {
     display: flex;
     align-items: center;
     gap: $spacing-1;
     opacity: 0;
-    transition: opacity $transition-fast;
+    transition: all $transition-fast;
+    flex-shrink: 0;
   }
 
-  &__action-btn {
+  .quick-action-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    background: transparent;
-    border: none;
-    border-radius: $border-radius-base;
-    color: $text-tertiary;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: var(--surface-3);
+    border: 1px solid var(--border-secondary);
+    border-radius: $border-radius-full;
+    color: $text-secondary;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
     cursor: pointer;
     transition: all $transition-fast;
 
     &:hover {
       background: var(--surface-4);
+      border-color: var(--border-primary);
       color: $text-primary;
+      transform: scale(1.1);
+      box-shadow: $shadow-sm;
+    }
+
+    &:active {
+      transform: scale(0.95);
+      box-shadow: none;
+    }
+
+    // 置顶按钮样式
+    &--pin {
+      &.quick-action-btn--active {
+        background: $secondary-500;
+        border-color: $secondary-400;
+        color: $gray-50;
+
+        &:hover {
+          background: $secondary-600;
+          border-color: $secondary-300;
+        }
+      }
+    }
+
+    // 更多操作按钮样式
+    &--more {
+      &:hover {
+        background: var(--surface-4);
+        border-color: var(--border-primary);
+      }
     }
   }
 
@@ -841,6 +884,10 @@ onUnmounted(() => {
       height: 40px;
     }
 
+    &__header {
+      gap: $spacing-2;
+    }
+
     &__character-name {
       font-size: $font-size-sm;
     }
@@ -850,8 +897,13 @@ onUnmounted(() => {
       -webkit-line-clamp: 1;
     }
 
-    &__actions {
+    &__quick-actions {
       opacity: 1;
+    }
+
+    .quick-action-btn {
+      width: 24px;
+      height: 24px;
     }
 
     &__stats {
@@ -871,17 +923,37 @@ onUnmounted(() => {
     }
 
     &__header {
-      flex-direction: column;
-      align-items: flex-start;
       gap: $spacing-1;
     }
 
-    &__metadata {
-      width: 100%;
-      justify-content: space-between;
+    &__title-section {
+      gap: 0;
+    }
+
+    &__character-name {
+      font-size: $font-size-sm;
+      margin-bottom: 2px;
+    }
+
+    &__time {
+      font-size: 10px;
+    }
+
+    &__quick-actions {
+      opacity: 1;
+      gap: $spacing-1;
+    }
+
+    .quick-action-btn {
+      width: 22px;
+      height: 22px;
     }
 
     &__tags {
+      display: none;
+    }
+
+    &__stats {
       display: none;
     }
   }

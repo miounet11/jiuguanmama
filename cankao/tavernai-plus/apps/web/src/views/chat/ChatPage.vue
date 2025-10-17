@@ -950,40 +950,22 @@ onUnmounted(() => {
 }
 
 // 响应式优化
-@media (max-width: 1440px) {
+@include desktop-up {
+  .chat-sidebar {
+    width: 380px;
+    min-width: 280px;
+    max-width: 420px;
+  }
+}
+
+@include tablet-up {
   .chat-sidebar {
     width: 320px;
     min-width: 280px;
   }
 }
 
-@media (max-width: 1200px) {
-  .chat-sidebar {
-    width: 300px;
-    min-width: 260px;
-  }
-
-  .chat-page {
-    padding: var(--spacing-tight);
-  }
-}
-
-@media (max-width: 1024px) {
-  .chat-sidebar {
-    width: 280px;
-    min-width: 240px;
-  }
-
-  .chat-page {
-    padding: var(--spacing-tight);
-  }
-
-  .chat-container {
-    height: calc(100vh - 1.5rem);
-  }
-}
-
-@media (max-width: 768px) {
+@include mobile-only {
   .chat-page {
     padding: var(--spacing-micro);
   }
@@ -1020,39 +1002,13 @@ onUnmounted(() => {
   .character-grid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
   }
-}
 
-@media (max-width: 480px) {
-  .chat-page {
-    padding: var(--spacing-micro);
-  }
+  .sidebar-header {
+    padding: var(--spacing-normal);
 
-  .chat-sidebar {
-    height: 35vh;
-
-    .sidebar-header {
-      padding: var(--spacing-normal);
-
-      h2 {
-        font-size: var(--text-base);
-      }
+    h2 {
+      font-size: var(--text-base);
     }
-
-    .chat-item {
-      .chat-item-content {
-        padding: var(--spacing-tight);
-      }
-
-      .chat-avatar {
-        width: 40px;
-        height: 40px;
-        margin-right: var(--spacing-tight);
-      }
-    }
-  }
-
-  .chat-main {
-    height: 65vh;
   }
 }
 

@@ -1,0 +1,29 @@
+const quickPost = async () => {
+  if (!quickPostContent.value.trim()) {
+    ElMessage.warning('请输入动态内容')
+    return
+  }
+
+  try {
+    isPosting.value = true
+
+    const response = await communityStore.createPost({
+      content: quickPostContent.value,
+      type: 'text',
+      visibility: 'public'
+    })
+
+    if (response.success && response.data) {
+      posts.value.unshift(response.data)
+      quickPostContent.value = ''
+      ElMessage.success('动态发布成功!')
+    } else {
+      ElMessage.error(response.error || '发布失败')
+    }
+  } catch (error) {
+    console.error('发布动态失败:', error)
+    ElMessage.error('发布动态失败，请稍后重试')
+  } finally {
+    isPosting.value = false
+  }
+}

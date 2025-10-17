@@ -24,8 +24,150 @@
       @click="sidebarCollapsed = true"
     ></div>
 
-    <!-- 侧边栏 -->
-    <div class="sidebar" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
+    <!-- 现代化聊天顶部栏 - 通顶组件 -->
+    <div class="modern-chat-header">
+      <!-- 左侧导航区 -->
+      <div class="header-nav-section">
+        <!-- 现代化返回按钮 -->
+        <button
+          @click="goToChatList"
+          class="modern-back-button"
+          title="返回聊天列表"
+        >
+          <div class="back-icon-container">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M19 12H5M12 19l-7-7M14 8l7-7"/>
+            </svg>
+          </div>
+          <div class="back-text">返回</div>
+        </button>
+
+        <!-- 对话标题 -->
+        <div class="header-title-section">
+          <div class="main-title">与 {{ character?.name || 'AI助手' }} 的对话</div>
+          <div class="subtitle">
+            <span class="message-indicator">{{ messages.length }}</span>
+            <span class="separator">·</span>
+            <span class="last-activity">{{ getLastActivity() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧功能区 -->
+      <div class="header-actions-section">
+        <!-- 设置按钮 -->
+        <div class="settings-dropdown" :class="{ 'active': showSettingsPanel }" @click="toggleSettingsPanel">
+          <button class="settings-trigger">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6m0 6v6"/>
+              <path d="M12 9v3m0 3v3"/>
+            </svg>
+            <span class="settings-label">设置</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="dropdown-arrow">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
+
+          <!-- 设置面板 -->
+          <div v-if="showSettingsPanel" class="settings-panel-overlay" @click.stop>
+            <div class="settings-content">
+              <div class="settings-header">
+                <h4>聊天设置</h4>
+                <button @click="showSettingsPanel = false" class="close-btn">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="settings-body">
+                <div class="setting-item">
+                  <label class="setting-label">AI 模型</label>
+                  <select v-model="settings.model" class="setting-select">
+                    <option value="grok-3">Grok-3</option>
+                    <option value="gpt-4">GPT-4</option>
+                    <option value="claude-3">Claude-3</option>
+                  </select>
+                </div>
+
+                <div class="setting-item">
+                  <label class="setting-label">创造性</label>
+                  <div class="range-control">
+                    <input
+                      type="range"
+                      v-model="settings.temperature"
+                      min="0"
+                      max="2"
+                      step="0.1"
+                      class="setting-range"
+                    />
+                    <span class="range-value">{{ settings.temperature.toFixed(1) }}</span>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <label class="setting-label">最大长度</label>
+                  <div class="range-control">
+                    <input
+                      type="range"
+                      v-model="settings.maxTokens"
+                      min="100"
+                      max="4000"
+                      step="100"
+                      class="setting-range"
+                    />
+                    <span class="range-value">{{ settings.maxTokens }}</span>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <label class="checkbox-label">
+                    <input
+                      v-model="settings.enableStream"
+                      type="checkbox"
+                      class="setting-checkbox"
+                    />
+                    <span>启用流式响应</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 其他功能按钮 -->
+        <div class="action-buttons">
+          <button class="action-btn scene-btn" title="场景背景">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+          </button>
+          <button class="action-btn sound-btn active" title="关闭提示音">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 5L6 9l2 2L7 9l4-4"></path>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14M14 12a10 10 0 0 1-2.93 7.07"></path>
+              <path d="M5.64 7.07A10 10 0 0 1 3.93 14.07"></path>
+            </svg>
+          </button>
+          <button class="action-btn fullscreen-btn" title="全屏模式">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3"></path>
+              <path d="M8 21h8a2 2 0 0 0 2-2v-3m2 0h3a2 2 0 0 0 2-2v-8"></path>
+              <path d="M8 12h8"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 内容区域包装器 - 包含侧边栏和主聊天内容 -->
+    <div class="chat-content-wrapper">
+      <!-- 侧边栏 -->
+      <div class="sidebar" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
       <!-- 折叠按钮 -->
       <TavernButton
         @click="toggleSidebar"
@@ -169,55 +311,6 @@
 
     <!-- 主聊天区域 -->
     <div class="chat-main">
-      <!-- 聊天顶部栏 -->
-      <div class="chat-header">
-        <!-- 左侧返回按钮 -->
-        <div class="chat-header-left">
-          <TavernButton
-            variant="ghost"
-            size="sm"
-            @click="goToChatList"
-            title="返回聊天列表"
-            class="back-btn"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 12H5L5 12L19 12M5 12V7H19M12 19l7-7M12 5l-7 7"/>
-            </svg>
-          </TavernButton>
-          <div class="chat-header-info">
-            <span class="session-title">与 {{ character?.name || '...' }} 的对话</span>
-            <span class="message-count">{{ messages.length }} 条消息</span>
-          </div>
-        </div>
-        <div class="chat-header-actions">
-          <!-- 场景背景选择器 -->
-          <TavernButton
-            variant="ghost"
-            size="sm"
-            @click="toggleSceneSelector"
-            title="切换场景背景"
-            class="scene-selector-btn"
-          >
-            <TavernIcon name="photo" />
-          </TavernButton>
-          <TavernButton
-            variant="ghost"
-            size="sm"
-            @click="toggleSound"
-            :title="soundEnabled ? '关闭消息提示音' : '开启消息提示音'"
-          >
-            <TavernIcon :name="soundEnabled ? 'speaker-wave' : 'speaker-x-mark'" />
-          </TavernButton>
-          <TavernButton
-            variant="ghost"
-            size="sm"
-            @click="toggleFullscreen"
-            :title="fullscreen ? '退出全屏' : '全屏模式'"
-          >
-            <TavernIcon :name="fullscreen ? 'arrows-pointing-in' : 'arrows-pointing-out'" />
-          </TavernButton>
-        </div>
-      </div>
 
       <!-- 场景选择器面板 -->
       <div v-if="showSceneSelector" class="scene-selector-panel">
@@ -578,6 +671,7 @@
         </div>
       </div>
     </div>
+    </div>
 
     <!-- 语音功能组件 - 集成到现代化输入区域中 -->
     <!-- 暂时隐藏，语音功能已整合到主输入区域 -->
@@ -868,6 +962,31 @@ const formatCount = (count: number) => {
 
 const formatTime = (time: Date | string | number) => {
   return formatTimeUtil(time)
+}
+
+// 获取最后活动时间
+const getLastActivity = () => {
+  if (messages.value.length === 0) {
+    return '暂无活动'
+  }
+
+  const lastMessage = messages.value[messages.value.length - 1]
+  const now = new Date()
+  const messageTime = new Date(lastMessage.createdAt)
+
+  const diffInMinutes = Math.floor((now.getTime() - messageTime.getTime()) / (1000 * 60))
+
+  if (diffInMinutes < 1) {
+    return '刚刚'
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes}分钟前`
+  } else if (diffInMinutes < 1440) { // 24小时
+    const diffInHours = Math.floor(diffInMinutes / 60)
+    return `${diffInHours}小时前`
+  } else {
+    const diffInDays = Math.floor(diffInMinutes / 1440)
+    return `${diffInDays}天前`
+  }
 }
 
 // 格式化消息内容（支持 Markdown）
@@ -1828,26 +1947,64 @@ watch(messages, (newMessages) => {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   pointer-events: auto; /* 确保面板可以接收点击事件 */
 
-  // 确保面板不会超出屏幕边界
-  @media (max-width: 400px) {
-    width: calc(100vw - 50px);
-    right: 25px;
+  // 响应式面板优化 - 完整的PC和移动端支持
+  /* 超小屏手机 (iPhone SE) - 475px以下 */
+  @media (max-width: 475px) {
+    width: calc(100vw - 32px);
+    right: 16px;
+    top: 56px;
+    max-height: calc(100vh - 112px);
   }
 
-  @media (max-height: 500px) {
-    max-height: calc(100vh - 100px);
-    overflow-y: auto;
-  }
-
-  // 移动端优化
-  @include mobile-only {
+  /* 小屏手机 (iPhone 12) - 640px以下 */
+  @media (max-width: 640px) {
     position: fixed;
     top: 60px;
     left: 50%;
     transform: translateX(-50%);
-    width: calc(90vw);
+    width: calc(90vw - 32px);
     max-width: 320px;
     right: auto;
+    border-radius: 12px;
+    max-height: calc(100vh - 120px);
+  }
+
+  /* 平板竖屏 (iPad) - 768px以下 */
+  @media (max-width: 768px) {
+    width: 280px;
+    right: 16px;
+    max-height: calc(100vh - 120px);
+  }
+
+  /* 低高度屏幕优化 */
+  @media (max-height: 600px) {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+
+    .scene-backgrounds-grid {
+      max-height: 200px;
+    }
+  }
+
+  /* 横屏模式优化 */
+  @media (orientation: landscape) and (max-height: 500px) {
+    top: 56px;
+    max-height: calc(100vh - 112px);
+    padding: 12px;
+
+    .panel-header {
+      margin-bottom: 12px;
+
+      h4 {
+        font-size: 14px;
+      }
+    }
+
+    .scene-backgrounds-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-height: 180px;
+    }
   }
 
   // 确保面板在屏幕可见区域内 - 添加背景遮罩
@@ -1985,6 +2142,7 @@ watch(messages, (newMessages) => {
 
 .chat-session-container {
   display: flex;
+  flex-direction: column;
   height: var(--viewport-height, 100vh);
   max-height: var(--viewport-height, 100vh);
   overflow: hidden;
@@ -2001,8 +2159,9 @@ watch(messages, (newMessages) => {
   height: 100vh;
   z-index: 1;
 
-  // 移动端优化
-  @include mobile-only {
+  // 响应式布局优化 - 完整的PC和移动端支持
+  /* 超小屏手机 (iPhone SE) - 475px以下 */
+  @media (max-width: 475px) {
     flex-direction: column;
     height: var(--viewport-height, 100vh);
     position: fixed;
@@ -2011,6 +2170,186 @@ watch(messages, (newMessages) => {
     right: 0;
     bottom: 0;
     width: 100vw;
+
+    .chat-content-wrapper {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: 100%;
+      height: 40vh;
+      position: relative;
+      transform: none;
+      border-right: none;
+      border-bottom: 1px solid rgba($primary-500, 0.2);
+    }
+
+    .chat-main {
+      flex: 1;
+      height: 60vh;
+      position: relative;
+    }
+
+    .modern-chat-header {
+      height: 44px;
+      padding: 8px 12px;
+
+      .header-left {
+        gap: 8px;
+
+        .back-btn {
+          display: flex;
+        }
+
+        .character-info {
+          .character-name {
+            font-size: 16px;
+          }
+
+          .character-status {
+            display: none;
+          }
+        }
+      }
+
+      .header-right {
+        gap: 8px;
+
+        .header-action {
+          width: 32px;
+          height: 32px;
+        }
+      }
+    }
+  }
+
+  /* 小屏手机 (iPhone 12) - 640px以下 */
+  @media (max-width: 640px) {
+    flex-direction: column;
+    height: var(--viewport-height, 100vh);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+
+    .chat-content-wrapper {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: 100%;
+      height: 35vh;
+      position: relative;
+      transform: none;
+      border-right: none;
+      border-bottom: 1px solid rgba($primary-500, 0.2);
+    }
+
+    .chat-main {
+      flex: 1;
+      height: 65vh;
+      position: relative;
+    }
+
+    .modern-chat-header {
+      height: 48px;
+      padding: 10px 16px;
+
+      .header-left {
+        .character-info {
+          .character-name {
+            font-size: 18px;
+          }
+
+          .character-status {
+            font-size: 12px;
+          }
+        }
+      }
+    }
+  }
+
+  /* 平板竖屏 (iPad) - 768px以下 */
+  @media (max-width: 768px) {
+    .chat-content-wrapper {
+      flex-direction: row;
+    }
+
+    .sidebar {
+      width: 280px;
+      position: relative;
+      transform: none;
+      border-right: 1px solid rgba($primary-500, 0.2);
+      border-bottom: none;
+      height: 100%;
+    }
+
+    .chat-main {
+      flex: 1;
+      height: 100%;
+      position: relative;
+    }
+
+    .modern-chat-header {
+      height: 52px;
+      padding: 12px 20px;
+    }
+  }
+
+  /* 横屏模式优化 */
+  @media (orientation: landscape) and (max-height: 600px) {
+    .modern-chat-header {
+      height: 44px;
+      padding: 8px 16px;
+
+      .header-left {
+        .character-info {
+          .character-name {
+            font-size: 16px;
+          }
+
+          .character-status {
+            display: none;
+          }
+        }
+      }
+    }
+
+    .chat-messages {
+      height: calc(100vh - 44px - 80px);
+    }
+
+    .grok-input-area {
+      height: 80px;
+      min-height: 80px;
+    }
+  }
+
+  /* 触摸设备优化 */
+  @media (hover: none) {
+    .modern-chat-header {
+      .header-action {
+        &:hover {
+          transform: none;
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        &:active {
+          transform: scale(0.95);
+          background: rgba(255, 255, 255, 0.1);
+        }
+      }
+    }
+  }
+
+  // 内容区域包装器 - 包含侧边栏和主聊天内容
+  .chat-content-wrapper {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
 
   // 桌面端优化 - 使用CSS变量实现动态布局
@@ -4150,6 +4489,580 @@ watch(messages, (newMessages) => {
   }
 }
 
+// 现代化聊天头部样式
+.modern-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-comfortable) var(--spacing-loose);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-primary);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  transition: all var(--duration-base) ease;
+  box-shadow: var(--shadow-sm);
+
+  &:hover {
+    background: var(--surface-3);
+    box-shadow: var(--shadow-base);
+  }
+
+  // 头部左侧区域
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    flex: 1;
+    min-width: 0;
+  }
+
+  // 现代化返回按钮
+  .modern-back-button {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-tight);
+    padding: var(--spacing-normal) var(--spacing-comfortable);
+    background: var(--brand-primary-500);
+    color: var(--text-primary);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: var(--text-base);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    transition: all var(--duration-base) ease;
+    box-shadow: var(--shadow-sm);
+
+    &:hover {
+      background: var(--brand-primary-600);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-base);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .back-icon {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover .back-icon {
+      transform: translateX(-2px);
+    }
+  }
+
+  // 角色信息区域
+  .character-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-comfortable);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .character-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    border: 2px solid var(--border-primary);
+    transition: all var(--duration-base) ease;
+
+    &:hover {
+      border-color: var(--brand-primary-400);
+      transform: scale(1.05);
+    }
+  }
+
+  .character-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .character-name {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-micro) 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: var(--dt-gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .character-status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-tight);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-success);
+
+      &.away {
+        background: var(--color-warning);
+      }
+
+      &.offline {
+        background: var(--color-muted);
+      }
+    }
+
+    .message-count {
+      background: var(--color-muted);
+      padding: 2px var(--spacing-sm);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--font-medium);
+    }
+  }
+
+  // 头部导航区域
+  .header-nav-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-comfortable);
+    flex: 1;
+    min-width: 0;
+  }
+
+  // 标题区域
+  .header-title-section {
+    flex: 1;
+    min-width: 0;
+
+    .main-title {
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+      color: var(--text-primary);
+      margin: 0;
+      background: var(--dt-gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .subtitle {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-micro);
+      margin-top: var(--spacing-micro);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+
+      .message-indicator {
+        background: var(--brand-primary-500);
+        color: var(--text-primary);
+        padding: 2px var(--spacing-tight);
+        border-radius: var(--radius-full);
+        font-size: var(--text-xs);
+        font-weight: var(--font-medium);
+      }
+
+      .separator {
+        color: var(--text-tertiary);
+      }
+
+      .last-activity {
+        color: var(--text-tertiary);
+      }
+    }
+  }
+
+  // 头部右侧区域
+  .header-actions-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-normal);
+
+    .settings-dropdown {
+      position: relative;
+    }
+
+    .settings-trigger {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-tight);
+      padding: var(--spacing-normal) var(--spacing-comfortable);
+      background: var(--surface-3);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg);
+      color: var(--text-secondary);
+      font-size: var(--text-sm);
+      cursor: pointer;
+      transition: all var(--duration-base) ease;
+
+      &:hover {
+        background: var(--surface-4);
+        border-color: var(--brand-primary-400);
+        color: var(--text-primary);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .settings-label {
+        font-weight: var(--font-medium);
+      }
+
+      .dropdown-arrow {
+        transition: transform var(--duration-base) ease;
+      }
+
+      &.active .dropdown-arrow {
+        transform: rotate(180deg);
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: var(--spacing-tight);
+
+      .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background: var(--surface-3);
+        border: 1px solid var(--border-primary);
+        border-radius: var(--radius-lg);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all var(--duration-base) ease;
+
+        &:hover {
+          background: var(--surface-4);
+          border-color: var(--brand-primary-400);
+          color: var(--text-primary);
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-sm);
+        }
+
+        &.active {
+          background: var(--brand-primary-500);
+          border-color: var(--brand-primary-500);
+          color: var(--text-primary);
+        }
+      }
+    }
+  }
+
+  // 头部右侧区域（兼容旧样式）
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-normal);
+  }
+
+  // 设置下拉菜单
+  .settings-dropdown {
+    position: relative;
+  }
+
+  .settings-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    color: var(--color-muted-foreground);
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: var(--color-surface-hover);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    .settings-icon {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.3s ease;
+    }
+
+    &.active .settings-icon {
+      transform: rotate(90deg);
+    }
+  }
+
+  .settings-menu {
+    position: absolute;
+    top: calc(100% + var(--spacing-sm));
+    right: 0;
+    min-width: 280px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    z-index: 1000;
+    animation: dropdownSlideIn 0.3s ease;
+
+    &.hidden {
+      display: none;
+    }
+  }
+
+  .settings-section {
+    padding: var(--spacing-lg);
+
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .section-title {
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: var(--color-muted-foreground);
+      margin: 0 0 var(--spacing-md) 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  .setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md) 0;
+
+    .setting-label {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+
+      .label-text {
+        font-size: var(--text-sm);
+        color: var(--color-foreground);
+        font-weight: var(--font-medium);
+      }
+
+      .label-description {
+        font-size: var(--text-xs);
+        color: var(--color-muted-foreground);
+        line-height: var(--line-height-relaxed);
+      }
+    }
+
+    .setting-control {
+      // 开关控件样式
+      input[type="checkbox"] {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        appearance: none;
+        background: var(--color-muted);
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        transition: background 0.3s ease;
+
+        &:checked {
+          background: var(--color-primary);
+        }
+
+        &::after {
+          content: '';
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          width: 20px;
+          height: 20px;
+          background: white;
+          border-radius: var(--radius-full);
+          transition: transform 0.3s ease;
+        }
+
+        &:checked::after {
+          transform: translateX(20px);
+        }
+      }
+
+      // 选择器样式
+      select {
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        font-size: var(--text-sm);
+        color: var(--color-foreground);
+        cursor: pointer;
+
+        &:focus {
+          outline: none;
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 2px var(--color-primary-subtle);
+        }
+      }
+    }
+  }
+
+  .settings-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+
+    .action-button {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: var(--spacing-md);
+      width: 100%;
+      padding: var(--spacing-md);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      color: var(--color-foreground);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: var(--color-surface-hover);
+      }
+
+      &.danger {
+        color: var(--color-destructive);
+
+        &:hover {
+          background: var(--color-destructive-subtle);
+        }
+      }
+
+      .action-icon {
+        width: 16px;
+        height: 16px;
+        opacity: 0.7;
+      }
+    }
+  }
+}
+
+// 动画
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .modern-chat-header {
+    padding: var(--spacing-md) var(--spacing-lg);
+
+    .modern-back-button {
+      padding: var(--spacing-sm) var(--spacing-md);
+      font-size: var(--text-sm);
+
+      .back-text {
+        display: none; // 移动端隐藏文字，只显示图标
+      }
+    }
+
+    .character-avatar {
+      width: 40px;
+      height: 40px;
+    }
+
+    .character-name {
+      font-size: var(--text-base);
+    }
+
+    .character-status {
+      .status-text {
+        display: none; // 移动端隐藏状态文字
+      }
+    }
+
+    .settings-menu {
+      min-width: 260px;
+      right: -var(--spacing-md);
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .modern-chat-header {
+    .header-left {
+      gap: var(--spacing-md);
+    }
+
+    .character-section {
+      gap: var(--spacing-md);
+    }
+
+    .character-info {
+      .character-name {
+        font-size: var(--text-sm);
+      }
+    }
+
+    .settings-menu {
+      min-width: 240px;
+    }
+  }
+}
+
+// 高对比度和无障碍支持
+@media (prefers-contrast: high) {
+  .modern-chat-header {
+    border-bottom-width: 2px;
+
+    .modern-back-button {
+      border: 2px solid var(--color-primary);
+    }
+
+    .settings-toggle {
+      border-width: 2px;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modern-chat-header {
+    transition: none;
+
+    .modern-back-button,
+    .settings-toggle,
+    .character-avatar {
+      transition: none;
+    }
+  }
+
+  .settings-menu {
+    animation: none;
+  }
+}
+
 /* PWA和全屏应用优化 */
 @media (display-mode: standalone) {
   .chat-session-container {
@@ -4159,6 +5072,10 @@ watch(messages, (newMessages) => {
 
   .chat-input-area {
     padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .modern-chat-header {
+    padding-top: calc(var(--spacing-lg) + env(safe-area-inset-top));
   }
 }
 </style>

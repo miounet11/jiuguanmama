@@ -1,0 +1,407 @@
+// =====================================
+// 响应式工具类 - 统一项目响应式设计
+// =====================================
+
+// 导入断点变量
+@import '../variables.scss';
+@import '../mixins.scss';
+
+// =====================================
+// 响应式显示/隐藏工具类
+// =====================================
+
+// 移动端专属 (768px以下)
+.mobile-only {
+  display: block !important;
+}
+
+// 平板端专属 (768px - 1023px)
+.tablet-only {
+  display: none !important;
+}
+
+// 桌面端专属 (1024px以上)
+.desktop-only {
+  display: none !important;
+}
+
+// 大屏桌面专属 (1280px以上)
+.lg-desktop-only {
+  display: none !important;
+}
+
+// 超大屏专属 (1536px以上)
+.xl-desktop-only {
+  display: none !important;
+}
+
+// 向上兼容类
+.mobile-up {
+  display: block !important;
+}
+
+.tablet-up {
+  display: none !important;
+}
+
+.desktop-up {
+  display: none !important;
+}
+
+.lg-desktop-up {
+  display: none !important;
+}
+
+.xl-desktop-up {
+  display: none !important;
+}
+
+// 向下兼容类
+.mobile-down {
+  display: block !important;
+}
+
+.tablet-down {
+  display: none !important;
+}
+
+.desktop-down {
+  display: none !important;
+}
+
+.lg-desktop-down {
+  display: none !important;
+}
+
+.xl-desktop-down {
+  display: none !important;
+}
+
+// =====================================
+// 响应式布局工具类
+// =====================================
+
+// Flexbox 响应式
+.flex-mobile {
+  display: flex !important;
+}
+
+.flex-tablet {
+  display: flex !important;
+}
+
+.flex-desktop {
+  display: flex !important;
+}
+
+// Grid 响应式
+.grid-mobile {
+  display: grid !important;
+}
+
+.grid-tablet {
+  display: grid !important;
+}
+
+.grid-desktop {
+  display: grid !important;
+}
+
+// =====================================
+// 响应式文本工具类
+// =====================================
+
+.text-xs-mobile {
+  font-size: var(--text-xs) !important;
+}
+
+.text-sm-mobile {
+  font-size: var(--text-sm) !important;
+}
+
+.text-base-mobile {
+  font-size: var(--text-base) !important;
+}
+
+.text-lg-mobile {
+  font-size: var(--text-lg) !important;
+}
+
+.text-xl-mobile {
+  font-size: var(--text-xl) !important;
+}
+
+// =====================================
+// 响应式间距工具类
+// =====================================
+
+.p-mobile {
+  padding: var(--spacing-normal) !important;
+}
+
+.p-tablet {
+  padding: var(--spacing-comfortable) !important;
+}
+
+.p-desktop {
+  padding: var(--spacing-loose) !important;
+}
+
+.px-mobile {
+  padding-left: var(--spacing-normal) !important;
+  padding-right: var(--spacing-normal) !important;
+}
+
+.px-tablet {
+  padding-left: var(--spacing-comfortable) !important;
+  padding-right: var(--spacing-comfortable) !important;
+}
+
+.px-desktop {
+  padding-left: var(--spacing-loose) !important;
+  padding-right: var(--spacing-loose) !important;
+}
+
+// =====================================
+// 媒体查询实现 - 移动端优先
+// =====================================
+
+// 移动端样式 (默认样式已在上面定义)
+@include mobile-only {
+  // 移动端专属元素显示
+  .mobile-only { display: block !important; }
+
+  // 大屏幕元素隐藏
+  .tablet-only,
+  .desktop-only,
+  .lg-desktop-only,
+  .xl-desktop-only {
+    display: none !important;
+  }
+
+  // 向上兼容元素隐藏
+  .tablet-up,
+  .desktop-up,
+  .lg-desktop-up,
+  .xl-desktop-up {
+    display: none !important;
+  }
+
+  // 向下兼容元素保持显示
+  .mobile-down { display: block !important; }
+  .tablet-down,
+  .desktop-down,
+  .lg-desktop-down,
+  .xl-desktop-down {
+    display: none !important;
+  }
+}
+
+// 平板端及桌面端样式
+@include tablet-up {
+  // 移动端专属隐藏
+  .mobile-only { display: none !important; }
+  .mobile-up { display: block !important; }
+
+  // 平板端专属显示
+  .tablet-only { display: block !important; }
+
+  // 桌面端专属隐藏
+  .desktop-only,
+  .lg-desktop-only,
+  .xl-desktop-only {
+    display: none !important;
+  }
+
+  // 向上兼容更新
+  .desktop-up,
+  .lg-desktop-up,
+  .xl-desktop-up {
+    display: none !important;
+  }
+
+  // 向下兼容更新
+  .mobile-down { display: block !important; }
+  .tablet-down { display: block !important; }
+  .desktop-down,
+  .lg-desktop-down,
+  .xl-desktop-down {
+    display: none !important;
+  }
+}
+
+// 桌面端样式
+@include desktop-up {
+  // 移动端和平板端专属隐藏
+  .mobile-only,
+  .tablet-only {
+    display: none !important;
+  }
+
+  // 桌面端专属显示
+  .desktop-only { display: block !important; }
+
+  // 大屏幕专属隐藏
+  .lg-desktop-only,
+  .xl-desktop-only {
+    display: none !important;
+  }
+
+  // 向上兼容更新
+  .lg-desktop-up,
+  .xl-desktop-up {
+    display: none !important;
+  }
+
+  // 向下兼容更新
+  .mobile-down,
+  .tablet-down,
+  .desktop-down {
+    display: block !important;
+  }
+  .lg-desktop-down,
+  .xl-desktop-down {
+    display: none !important;
+  }
+}
+
+// 大屏桌面样式
+@include large-desktop-up {
+  // 更小屏幕专属隐藏
+  .mobile-only,
+  .tablet-only,
+  .desktop-only {
+    display: none !important;
+  }
+
+  // 大屏桌面专属显示
+  .lg-desktop-only { display: block !important; }
+
+  // 超大屏专属隐藏
+  .xl-desktop-only {
+    display: none !important;
+  }
+
+  // 向上兼容更新
+  .xl-desktop-up {
+    display: none !important;
+  }
+
+  // 向下兼容更新
+  .mobile-down,
+  .tablet-down,
+  .desktop-down,
+  .lg-desktop-down {
+    display: block !important;
+  }
+  .xl-desktop-down {
+    display: none !important;
+  }
+}
+
+// 超大屏桌面样式
+@include respond-to($breakpoint-2xl) {
+  // 所有小屏幕专属隐藏
+  .mobile-only,
+  .tablet-only,
+  .desktop-only,
+  .lg-desktop-only {
+    display: none !important;
+  }
+
+  // 超大屏专属显示
+  .xl-desktop-only { display: block !important; }
+
+  // 向下兼容更新
+  .mobile-down,
+  .tablet-down,
+  .desktop-down,
+  .lg-desktop-down,
+  .xl-desktop-down {
+    display: block !important;
+  }
+}
+
+// =====================================
+// 容器查询支持 (现代浏览器)
+// =====================================
+
+@container (max-width: 640px) {
+  .container-mobile { display: block !important; }
+  .container-tablet { display: none !important; }
+  .container-desktop { display: none !important; }
+}
+
+@container (min-width: 641px) {
+  .container-mobile { display: none !important; }
+  .container-tablet { display: block !important; }
+  .container-desktop { display: none !important; }
+}
+
+@container (min-width: 1024px) {
+  .container-mobile { display: none !important; }
+  .container-tablet { display: none !important; }
+  .container-desktop { display: block !important; }
+}
+
+// =====================================
+// 设备方向支持
+// =====================================
+
+@media (orientation: portrait) {
+  .landscape-only { display: none !important; }
+  .portrait-only { display: block !important; }
+}
+
+@media (orientation: landscape) {
+  .portrait-only { display: none !important; }
+  .landscape-only { display: block !important; }
+}
+
+// =====================================
+// 高密度屏幕优化
+// =====================================
+
+@include retina {
+  .retina-optimized {
+    // 高密度屏幕特定样式
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+// =====================================
+// 触控设备优化
+// =====================================
+
+@media (hover: none) {
+  .touch-optimized {
+    // 触控设备优化样式
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+}
+
+// =====================================
+// 深色模式支持
+// =====================================
+
+@media (prefers-color-scheme: dark) {
+  .dark-mode-optimized {
+    // 深色模式优化样式
+    color-scheme: dark;
+  }
+}
+
+// =====================================
+// 减少动画支持
+// =====================================
+
+@media (prefers-reduced-motion: reduce) {
+  .reduced-motion {
+    // 减少动画
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

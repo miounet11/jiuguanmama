@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 变量诊断</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            margin: 0;
+        }
+
+        .debug-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .css-var-test {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+
+        .mobile-test {
+            background: var(--surface-1, #fff);
+            color: var(--text-primary, #000);
+            border: 1px solid var(--border-primary, #ddd);
+        }
+
+        .desktop-test {
+            background: var(--surface-2, #f0f0f0);
+            color: var(--text-secondary, #333);
+            border: 1px solid var(--border-secondary, #ccc);
+        }
+
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .error {
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #f44336;
+        }
+
+        .success {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #4caf50;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-only {
+                display: none !important;
+            }
+            .desktop-only {
+                display: block !important;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .mobile-only {
+                display: block !important;
+            }
+            .desktop-only {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>CSS 变量和响应式诊断</h1>
+
+    <div class="debug-section">
+        <h2>CSS 变量测试</h2>
+        <div class="css-var-test mobile-test">
+            <h3>移动端样式 (应该显示)</h3>
+            <p>背景色: var(--surface-1)</p>
+            <p>文字色: var(--text-primary)</p>
+            <p>边框色: var(--border-primary)</p>
+        </div>
+
+        <div class="css-var-test desktop-test">
+            <h3>桌面端样式 (应该显示)</h3>
+            <p>背景色: var(--surface-2)</p>
+            <p>文字色: var(--text-secondary)</p>
+            <p>边框色: var(--border-secondary)</p>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h2>响应式类测试</h2>
+        <div class="mobile-only css-var-test">
+            <h3>📱 移动端专属内容</h3>
+            <p>这个内容只在768px以下显示</p>
+        </div>
+
+        <div class="desktop-only css-var-test">
+            <h3>🖥️ 桌面端专属内容</h3>
+            <p>这个内容只在768px以上显示</p>
+        </div>
+
+        <div class="css-var-test">
+            <h3>📱➡🖥️ 所有设备通用内容</h3>
+            <p>这个内容在所有设备上都显示</p>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h2>JavaScript 诊断</h2>
+        <p>当前窗口宽度: <span id="window-width">检测中...</span>px</p>
+        <p>断点状态: <span id="breakpoint-status">检测中...</span></p>
+        <p>设备类型: <span id="device-type">检测中...</span></p>
+        <p>CSS变量支持: <span id="css-support">检测中...</span></p>
+    </div>
+
+    <div class="debug-section">
+        <h2>测试结果</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        // 检测窗口宽度
+        function updateWidth() {
+            const width = window.innerWidth;
+            const widthElement = document.getElementById('window-width');
+            const breakpointElement = document.getElementById('breakpoint-status');
+            const deviceElement = document.getElementById('device-type');
+
+            widthElement.textContent = width;
+
+            if (width < 768) {
+                breakpointElement.textContent = '移动端 (< 768px)';
+                deviceElement.textContent = '移动设备';
+            } else if (width < 1024) {
+                breakpointElement.textContent = '平板端 (768px - 1023px)';
+                deviceElement.textContent = '平板设备';
+            } else if (width < 1280) {
+                breakpointElement.textContent = '桌面端 (1024px - 1279px)';
+                deviceElement.textContent = '桌面设备';
+            } else {
+                breakpointElement.textContent = '大屏桌面 (≥ 1280px)';
+                deviceElement.textContent = '大屏设备';
+            }
+        }
+
+        // 检查CSS变量支持
+        function checkCSSVariables() {
+            const testElement = document.querySelector('.css-var-test');
+            const computedStyle = window.getComputedStyle(testElement);
+            const supportElement = document.getElementById('css-support');
+
+            const hasCSSVars = computedStyle.getPropertyValue('--surface-1') !== '';
+            supportElement.textContent = hasCSSVars ? '✅ 支持' : '❌ 不支持';
+        }
+
+        // 检查响应式类是否工作
+        function testResponsiveClasses() {
+            const mobileOnly = document.querySelector('.mobile-only');
+            const desktopOnly = document.querySelector('.desktop-only');
+            const results = document.getElementById('test-results');
+
+            const mobileDisplay = window.getComputedStyle(mobileOnly).display;
+            const desktopDisplay = window.getComputedStyle(desktopOnly).display;
+
+            let html = '<h3>测试结果:</h3>';
+
+            if (window.innerWidth < 768) {
+                html += mobileDisplay !== 'none' ?
+                    '<div class="success">✅ 移动端类正常工作</div>' :
+                    '<div class="error">❌ 移动端类未生效</div>';
+                html += desktopDisplay === 'none' ?
+                    '<div class="success">✅ 桌面端类正确隐藏</div>' :
+                    '<div class="error">❌ 桌面端类错误显示</div>';
+            } else {
+                html += mobileDisplay === 'none' ?
+                    '<div class="success">✅ 移动端类正确隐藏</div>' :
+                    '<div class="error">❌ 移动端类错误显示</div>';
+                html += desktopDisplay !== 'none' ?
+                    '<div class="success">✅ 桌面端类正常工作</div>' :
+                    '<div class="error">❌ 桌面端类未生效</div>';
+            }
+
+            results.innerHTML = html;
+        }
+
+        // 检查是否有CSS文件加载错误
+        function checkCSSErrors() {
+            const info = document.getElementById('css-info');
+            if (info) {
+                html += '<div class="info">检查浏览器开发者工具的Console面板查看CSS加载情况</div>';
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateWidth();
+            checkCSSVariables();
+            testResponsiveClasses();
+            checkCSSErrors();
+
+            // 监听窗口大小变化
+            window.addEventListener('resize', function() {
+                updateWidth();
+                testResponsiveClasses();
+            });
+
+            // 定期更新
+            setInterval(updateWidth, 1000);
+        });
+    </script>
+</body>
+</html>

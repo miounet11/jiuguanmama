@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>响应式设计测试 - TavernAI Plus</title>
+    <link rel="stylesheet" href="/src/styles/main.css">
+    <style>
+        .test-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px solid var(--border-primary, #e5e7eb);
+            border-radius: var(--radius-lg, 8px);
+            background: var(--surface-1, #ffffff);
+        }
+
+        .responsive-box {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: var(--radius-md, 6px);
+            background: var(--brand-primary-100, #dbeafe);
+            border: 1px solid var(--brand-primary-300, #93c5fd);
+        }
+
+        .mobile-box {
+            background: var(--success-100, #dcfce7);
+            border-color: var(--success-300, #86efac);
+        }
+
+        .desktop-box {
+            background: var(--warning-100, #fef3c7);
+            border-color: var(--warning-300, #fcd34d);
+        }
+
+        .info-text {
+            font-size: 14px;
+            color: var(--text-secondary, #6b7280);
+            margin-top: 10px;
+        }
+
+        .current-breakpoint {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: var(--brand-primary-500, #3b82f6);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div class="current-breakpoint" id="breakpoint">加载中...</div>
+
+    <div class="test-container">
+        <h1>TavernAI Plus 响应式设计测试</h1>
+
+        <div class="test-section">
+            <h2>显示/隐藏测试</h2>
+
+            <div class="responsive-box mobile-only mobile-box">
+                <h3>📱 移动端专属内容</h3>
+                <p class="info-text">这个内容只在移动设备上（768px以下）显示</p>
+            </div>
+
+            <div class="responsive-box desktop-only desktop-box">
+                <h3>🖥️ 桌面端专属内容</h3>
+                <p class="info-text">这个内容只在桌面设备上（1024px以上）显示</p>
+            </div>
+
+            <div class="responsive-box">
+                <h3>📱➡🖥️ 所有设备通用内容</h3>
+                <p class="info-text">这个内容在所有设备上都会显示</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>布局测试</h2>
+
+            <div class="responsive-box flex-mobile">
+                <h3>Flexbox 布局</h3>
+                <p class="info-text">使用 flex-mobile 类，在移动端显示为 flex 布局</p>
+            </div>
+
+            <div class="responsive-box grid-mobile">
+                <h3>Grid 布局</h3>
+                <p class="info-text">使用 grid-mobile 类，在移动端显示为 grid 布局</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>间距测试</h2>
+
+            <div class="responsive-box p-mobile">
+                <h3>移动端间距</h3>
+                <p class="info-text">使用 p-mobile 类，移动端有较小的内边距</p>
+            </div>
+
+            <div class="responsive-box px-desktop">
+                <h3>桌面端间距</h3>
+                <p class="info-text">使用 px-desktop 类，桌面端有较大的左右内边距</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试说明</h2>
+            <ul>
+                <li>调整浏览器窗口大小测试响应式效果</li>
+                <li>移动端专用内容应在窄屏幕下显示</li>
+                <li>桌面端专用内容应在宽屏幕下显示</li>
+                <li>右上角显示当前检测到的断点</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function updateBreakpoint() {
+            const width = window.innerWidth;
+            let breakpoint = '未知';
+
+            if (width < 768) {
+                breakpoint = '移动端 (< 768px)';
+            } else if (width < 1024) {
+                breakpoint = '平板端 (768px - 1023px)';
+            } else if (width < 1280) {
+                breakpoint = '桌面端 (1024px - 1279px)';
+            } else if (width < 1536) {
+                breakpoint = '大屏桌面 (1280px - 1535px)';
+            } else {
+                breakpoint = '超大屏 (≥ 1536px)';
+            }
+
+            document.getElementById('breakpoint').textContent = breakpoint;
+        }
+
+        // 初始化
+        updateBreakpoint();
+
+        // 监听窗口大小变化
+        window.addEventListener('resize', updateBreakpoint);
+
+        // 每5秒更新一次（用于调试）
+        setInterval(updateBreakpoint, 5000);
+    </script>
+</body>
+</html>

@@ -17,6 +17,7 @@
 
 // 导入响应式样式系统 (Issue #35)
 @import './responsive/breakpoints.scss';
+@import './responsive/utilities.scss';
 @import './responsive/mobile.scss';
 @import './responsive/tablet.scss';
 @import './responsive/touch.scss';
