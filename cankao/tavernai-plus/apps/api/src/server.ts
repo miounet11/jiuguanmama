@@ -4,7 +4,7 @@ import helmet from 'helmet'
 import compression from 'compression'
 import dotenv from 'dotenv'
 import { createServer } from 'http'
-const { PrismaClient } = require('../node_modules/.prisma/client')
+// import { PrismaClient } from '@prisma/client'
 // import WebSocketServer from './websocket'  // 临时禁用以快速启动
 
 // 配置环境变量
@@ -18,6 +18,7 @@ const envConfig = configValidator.validateAndLoad()
 
 // 导入中间件
 import { errorHandler } from './middleware/errorHandler'
+import { prismaErrorHandler } from './middleware/prismaErrorHandler'
 import { requestLogger } from './middleware/requestLogger'
 import { rateLimiter } from './middleware/rateLimiter'
 
@@ -60,6 +61,7 @@ const app: Application = express()
 const httpServer = createServer(app)
 
 // 创建数据库客户端
+const { PrismaClient } = require('../node_modules/.prisma/client')
 export const prisma = new PrismaClient()
 
 // 创建 WebSocket 服务器
@@ -190,6 +192,7 @@ app.get('/health', async (req, res) => {
 // WebSocket 连接已在 WebSocketServer 中处理
 
 // 错误处理中间件（必须放在最后）
+app.use(prismaErrorHandler)
 app.use(errorHandler)
 
 async function startServer() {

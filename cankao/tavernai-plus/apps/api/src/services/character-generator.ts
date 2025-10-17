@@ -1,6 +1,6 @@
 import { prisma } from '../server'
 import { aiService } from './ai'
-import axios from 'axios'
+import NewAPIImageGenerator from './newapi-image-generator'
 
 export interface GenerationOptions {
   prompt: string                    // 用户描述
@@ -237,7 +237,7 @@ Requirements:
   }
 
   /**
-   * 生成角色头像（使用 NAI3 或其他图像生成服务）
+   * 生成角色头像（使用 NEWAPI）
    */
   async generateAvatar(
     character: GeneratedCharacter,
@@ -247,18 +247,9 @@ Requirements:
       // 构建图像生成提示词
       const imagePrompt = this.buildImagePrompt(character, style)
 
-      // 调用 NAI3 API（需要配置）
-      if (process.env.NAI3_API_KEY) {
-        return await this.generateNAI3Image(imagePrompt)
-      }
-
-      // 备选：使用 DALL-E 3
-      if (process.env.OPENAI_API_KEY) {
-        return await this.generateDALLE3Image(imagePrompt)
-      }
-
-      // 返回默认头像
-      return '/avatars/default.png'
+      // 使用 NEWAPI 生成图像
+      const imageGenerator = new NewAPIImageGenerator()
+      return await imageGenerator.generateAvatar(character)
     } catch (error) {
       console.error('生成头像失败:', error)
       return '/avatars/default.png'

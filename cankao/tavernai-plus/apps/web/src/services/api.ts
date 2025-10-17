@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import router from '@/router'
 
 // API 基础配置
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3008'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081'
 const TIMEOUT = 30000
 
 // 创建 axios 实例
@@ -177,7 +177,11 @@ apiClient.interceptors.response.use(
 // API 请求方法封装
 export const api = {
   get<T = any>(url: string, params?: any, config?: AxiosRequestConfig): Promise<T> {
-    return apiClient.get(url, { params, ...config })
+    if (config) {
+      return apiClient.get(url, { params, ...config })
+    } else {
+      return apiClient.get(url, { params })
+    }
   },
 
   post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {

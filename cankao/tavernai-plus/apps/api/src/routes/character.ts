@@ -2,19 +2,49 @@ import { Router } from 'express'
 import { authenticate, optionalAuth, AuthRequest } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
 import { aiService } from '../services/ai'
+import { validate } from '../middleware/validate'
+import {
+  createCharacterSchema,
+  updateCharacterSchema,
+  rateCharacterSchema,
+  characterQuerySchema
+} from '../schemas/character'
 
 const router = Router()
 
+// 安全的标签解析函数
+const parseTags = (tags: any): string[] => {
+  if (!tags) return []
+
+  if (Array.isArray(tags)) {
+    return tags
+  }
+
+  if (typeof tags === 'string') {
+    try {
+      // 尝试解析为JSON
+      const parsed = JSON.parse(tags)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      // 如果JSON解析失败，按逗号分割
+      return tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+    }
+  }
+
+  return []
+}
+
 // 获取公开角色列表
-router.get('/', optionalAuth, async (req: AuthRequest, res, next) => {
+router.get('/', optionalAuth, validate(characterQuerySchema, 'query'), async (req: AuthRequest, res, next) => {
   try {
     const {
-      page = 1,
-      limit = 20,
-      sort = 'created',
-      search = '',
-      tags = []
-    } = req.query
+      page,
+      limit,
+      sort,
+      search,
+      category,
+      tags
+    } = req.query as any
 
     const orderBy = sort === 'rating'
       ? { rating: 'desc' as const }
@@ -27,9 +57,13 @@ router.get('/', optionalAuth, async (req: AuthRequest, res, next) => {
 
     if (search) {
       where.OR = [
-        { name: { contains: String(search), mode: 'insensitive' } },
-        { description: { contains: String(search), mode: 'insensitive' } }
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
       ]
+    }
+
+    if (category && category !== 'all') {
+      where.category = category
     }
 
     // TODO: Fix tag filtering for SQLite (tags is now a JSON string)
@@ -76,6 +110,7 @@ router.get('/', optionalAuth, async (req: AuthRequest, res, next) => {
     // 添加是否收藏标记
     const charactersWithFavorite = characters.map((char: any) => ({
       ...char,
+      tags: parseTags(char.tags),
       isFavorited: char._count.favorites > 0,
       isNew: new Date(char.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
     }))
@@ -175,6 +210,7 @@ router.get('/featured', optionalAuth, async (req: AuthRequest, res, next) => {
     // 添加是否收藏标记和是否为新角色标记
     const charactersWithExtra = characters.map((char: any) => ({
       ...char,
+      tags: parseTags(char.tags),
       isFavorited: char._count.favorites > 0,
       isNew: new Date(char.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000,
       isPremium: char.rating >= 4.5 && char.chatCount >= 100
@@ -291,9 +327,15 @@ router.get('/popular', optionalAuth, async (req: AuthRequest, res, next) => {
       }
     })
 
+    // 添加标签解析
+    const charactersWithTags = characters.map((char: any) => ({
+      ...char,
+      tags: parseTags(char.tags)
+    }))
+
     res.json({
       success: true,
-      characters
+      characters: charactersWithTags
     })
   } catch (error) {
     next(error)
@@ -308,9 +350,15 @@ router.get('/my', authenticate, async (req: AuthRequest, res, next) => {
       orderBy: { updatedAt: 'desc' }
     })
 
+    // 添加标签解析
+    const charactersWithTags = characters.map((char: any) => ({
+      ...char,
+      tags: parseTags(char.tags)
+    }))
+
     res.json({
       success: true,
-      characters
+      characters: charactersWithTags
     })
   } catch (error) {
     next(error)
@@ -338,9 +386,18 @@ router.get('/favorites', authenticate, async (req: AuthRequest, res, next) => {
       orderBy: { createdAt: 'desc' }
     })
 
+    // 添加标签解析
+    const charactersWithTags = favorites.map((f: any) => {
+      const character = f.character
+      return {
+        ...character,
+        tags: parseTags(character.tags)
+      }
+    })
+
     res.json({
       success: true,
-      characters: favorites.map((f: any) => f.character)
+      characters: charactersWithTags
     })
   } catch (error) {
     next(error)
@@ -472,6 +529,7 @@ router.get('/:id', optionalAuth, async (req: AuthRequest, res, next) => {
       success: true,
       character: {
         ...character,
+        tags: parseTags(character.tags),
         isFavorited: character._count.favorites > 0
       }
     })
@@ -481,11 +539,35 @@ router.get('/:id', optionalAuth, async (req: AuthRequest, res, next) => {
 })
 
 // 创建新角色
-router.post('/', authenticate, async (req: AuthRequest, res, next) => {
+router.post('/', authenticate, validate(createCharacterSchema), async (req: AuthRequest, res, next) => {
   try {
+    const characterData = req.body
+
+    // 验证角色名称唯一性（同一用户下）
+    const existingCharacter = await prisma.character.findFirst({
+      where: {
+        name: characterData.name,
+        creatorId: req.user!.id
+      }
+    })
+
+    if (existingCharacter) {
+      return res.status(409).json({
+        success: false,
+        message: '您已创建过同名角色，请修改角色名称后重试'
+      })
+    }
+
+    // 确保tags是有效的JSON字符串
+    let tagsJson = characterData.tags || '[]'
+    if (Array.isArray(characterData.tags)) {
+      tagsJson = JSON.stringify(characterData.tags)
+    }
+
     const character = await prisma.character.create({
       data: {
-        ...req.body,
+        ...characterData,
+        tags: tagsJson,
         creatorId: req.user!.id
       }
     })
@@ -495,12 +577,13 @@ router.post('/', authenticate, async (req: AuthRequest, res, next) => {
       character
     })
   } catch (error) {
+    console.error('创建角色失败:', error)
     next(error)
   }
 })
 
 // 更新角色
-router.put('/:id', authenticate, async (req: AuthRequest, res, next) => {
+router.put('/:id', authenticate, validate(updateCharacterSchema), async (req: AuthRequest, res, next) => {
   try {
     // 验证所有权
     const existing = await prisma.character.findUnique({
@@ -514,9 +597,36 @@ router.put('/:id', authenticate, async (req: AuthRequest, res, next) => {
       })
     }
 
+    const updateData = req.body
+
+    // 如果更新了名称，检查唯一性
+    if (updateData.name && updateData.name !== existing.name) {
+      const nameConflict = await prisma.character.findFirst({
+        where: {
+          name: updateData.name,
+          creatorId: req.user!.id,
+          id: { not: req.params.id }
+        }
+      })
+
+      if (nameConflict) {
+        return res.status(409).json({
+          success: false,
+          message: '您已创建过同名角色，请修改角色名称后重试'
+        })
+      }
+    }
+
+    // 确保tags是有效的JSON字符串
+    if (updateData.tags) {
+      if (Array.isArray(updateData.tags)) {
+        updateData.tags = JSON.stringify(updateData.tags)
+      }
+    }
+
     const character = await prisma.character.update({
       where: { id: req.params.id },
-      data: req.body
+      data: updateData
     })
 
     res.json({
@@ -524,6 +634,7 @@ router.put('/:id', authenticate, async (req: AuthRequest, res, next) => {
       character
     })
   } catch (error) {
+    console.error('更新角色失败:', error)
     next(error)
   }
 })
@@ -677,18 +788,11 @@ router.post('/:id/like', authenticate, async (req: AuthRequest, res, next) => {
 })
 
 // 评分角色
-router.post('/:id/rate', authenticate, async (req: AuthRequest, res, next) => {
+router.post('/:id/rate', authenticate, validate(rateCharacterSchema), async (req: AuthRequest, res, next) => {
   try {
-    const { rating } = req.body
+    const { rating, comment } = req.body
     const characterId = req.params.id
     const userId = req.user!.id
-
-    if (rating < 1 || rating > 5) {
-      return res.status(400).json({
-        success: false,
-        message: 'Rating must be between 1 and 5'
-      })
-    }
 
     // 检查是否已评分
     const existing = await prisma.characterRating.findUnique({
@@ -709,7 +813,7 @@ router.post('/:id/rate', authenticate, async (req: AuthRequest, res, next) => {
             characterId
           }
         },
-        data: { rating }
+        data: { rating, comment: comment || existing.comment }
       })
     } else {
       // 新增评分
@@ -717,7 +821,8 @@ router.post('/:id/rate', authenticate, async (req: AuthRequest, res, next) => {
         data: {
           userId,
           characterId,
-          rating
+          rating,
+          comment
         }
       })
     }
@@ -1343,9 +1448,15 @@ router.get('/:id/related', async (req, res, next) => {
       take: Number(limit)
     })
 
+    // 添加标签解析
+    const charactersWithTags = relatedCharacters.map((char: any) => ({
+      ...char,
+      tags: typeof char.tags === 'string' ? JSON.parse(char.tags) : char.tags
+    }))
+
     res.json({
       success: true,
-      characters: relatedCharacters
+      characters: charactersWithTags
     })
   } catch (error) {
     next(error)

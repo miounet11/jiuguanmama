@@ -100,12 +100,22 @@ export function useCharacterCreation() {
 
       // 准备提交数据
       const submitData = {
-        ...characterData.value,
+        name: characterData.value.name,
+        avatar: characterData.value.avatar,
+        description: characterData.value.shortDescription, // 映射字段名
+        personality: characterData.value.personality.join(', '), // 转换为数组字符串
+        background: characterData.value.background,
+        scenario: characterData.value.scenario,
+        firstMessage: characterData.value.firstMessage,
+        tags: characterData.value.tags, // 直接发送数组，让axios处理序列化
+        category: characterData.value.category,
+        isPublic: characterData.value.visibility === 'public',
+        isNSFW: characterData.value.isNSFW,
         status: 'published'
       }
 
       // 调用API创建角色
-      const response = await axios.post('/api/characters', submitData)
+      const response = await axios.post('/characters', submitData)
 
       if (response.data && response.data.id) {
         // 创建成功，跳转到角色详情页
@@ -129,12 +139,22 @@ export function useCharacterCreation() {
     try {
       // 准备草稿数据
       const draftData = {
-        ...characterData.value,
+        name: characterData.value.name,
+        avatar: characterData.value.avatar,
+        description: characterData.value.shortDescription, // 映射字段名
+        personality: characterData.value.personality.join(', '), // 转换为数组字符串
+        background: characterData.value.background,
+        scenario: characterData.value.scenario,
+        firstMessage: characterData.value.firstMessage,
+        tags: characterData.value.tags, // 直接发送数组
+        category: characterData.value.category,
+        isPublic: characterData.value.visibility === 'public',
+        isNSFW: characterData.value.isNSFW,
         status: 'draft'
       }
 
       // 调用API保存草稿
-      const response = await axios.post('/api/characters', draftData)
+      const response = await axios.post('/characters', draftData)
 
       if (response.data) {
         lastSavedDraft.value = new Date()

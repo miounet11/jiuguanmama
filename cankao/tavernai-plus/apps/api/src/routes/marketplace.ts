@@ -4,6 +4,28 @@ import { prisma } from '../lib/prisma'
 
 const router = Router()
 
+// 安全的标签解析函数
+const parseTags = (tags: any): string[] => {
+  if (!tags) return []
+
+  if (Array.isArray(tags)) {
+    return tags
+  }
+
+  if (typeof tags === 'string') {
+    try {
+      // 尝试解析为JSON
+      const parsed = JSON.parse(tags)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      // 如果JSON解析失败，按逗号分割
+      return tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+    }
+  }
+
+  return []
+}
+
 // 获取市场角色列表
 router.get('/characters', async (req: Request, res: Response) => {
   try {
@@ -74,6 +96,7 @@ router.get('/characters', async (req: Request, res: Response) => {
     res.json({
       characters: characters.map((char: any) => ({
         ...char,
+        tags: parseTags(char.tags),
         favorites: char._count.favorites,
         ratingCount: char._count.ratings,
         isFeatured: char.isFeatured || false
@@ -117,6 +140,7 @@ router.get('/featured', async (req: Request, res: Response) => {
 
     res.json(characters.map((char: any) => ({
       ...char,
+      tags: parseTags(char.tags),
       favorites: char._count.favorites,
       ratingCount: char._count.ratings,
       isFeatured: true
@@ -204,6 +228,7 @@ router.get('/recommended', authenticate, async (req: AuthRequest, res: Response)
 
     res.json(finalCharacters.map((char: any) => ({
       ...char,
+      tags: parseTags(char.tags),
       favorites: char._count?.favorites || 0,
       ratingCount: char._count?.ratings || 0
     })))
@@ -339,6 +364,7 @@ router.get('/search', async (req: Request, res: Response) => {
 
     res.json(characters.map((char: any) => ({
       ...char,
+      tags: parseTags(char.tags),
       favorites: char._count.favorites,
       ratingCount: char._count.ratings
     })))
@@ -398,6 +424,7 @@ router.get('/characters/:id', async (req: Request, res: Response) => {
 
     res.json({
       ...character,
+      tags: typeof character.tags === 'string' ? JSON.parse(character.tags) : character.tags,
       favorites: character._count.favorites,
       ratingCount: character._count.ratings,
       stats: {

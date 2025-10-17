@@ -111,7 +111,7 @@ export const scenarioApi = {
       success: boolean
       data: WorldInfoEntry
       message: string
-    }>(`/scenarios/${scenarioId}/entries`, data)
+    }>(`/api/scenarios/${scenarioId}/entries`, data)
 
     if (!response.success) {
       throw new Error('添加世界信息条目失败')
@@ -132,7 +132,7 @@ export const scenarioApi = {
       success: boolean
       data: WorldInfoEntry
       message: string
-    }>(`/scenarios/${scenarioId}/entries/${entryId}`, data)
+    }>(`/api/scenarios/${scenarioId}/entries/${entryId}`, data)
 
     if (!response.success) {
       throw new Error('更新世界信息条目失败')
@@ -148,7 +148,7 @@ export const scenarioApi = {
     const response = await api.delete<{
       success: boolean
       message: string
-    }>(`/scenarios/${scenarioId}/entries/${entryId}`)
+    }>(`/api/scenarios/${scenarioId}/entries/${entryId}`)
 
     if (!response.success) {
       throw new Error('删除世界信息条目失败')
@@ -167,7 +167,7 @@ export const scenarioApi = {
     const response = await api.post<{
       success: boolean
       data: TestMatchingResult
-    }>(`/scenarios/${scenarioId}/test`, data)
+    }>(`/api/scenarios/${scenarioId}/test`, data)
 
     if (!response.success) {
       throw new Error('测试关键词匹配失败')
@@ -186,7 +186,7 @@ export const scenarioApi = {
     const response = await api.put<{
       success: boolean
       message: string
-    }>(`/scenarios/${scenarioId}/reorder`, {
+    }>(`/api/scenarios/${scenarioId}/reorder`, {
       entryIds
     })
 
@@ -203,7 +203,7 @@ export const scenarioApi = {
       success: boolean
       data: Scenario
       message: string
-    }>(`/scenarios/${id}/clone`, {
+    }>(`/api/scenarios/${id}/clone`, {
       name: name || `${name || '未命名剧本'} (副本)`
     })
 
@@ -218,7 +218,7 @@ export const scenarioApi = {
    * 导出剧本数据
    */
   exportScenario: async (id: string): Promise<Blob> => {
-    const response = await api.get(`/scenarios/${id}/export`, undefined, {
+    const response = await api.get(`/api/scenarios/${id}/export`, undefined, {
       responseType: 'blob'
     })
     return response
@@ -235,7 +235,7 @@ export const scenarioApi = {
       success: boolean
       data: Scenario
       message: string
-    }>('/scenarios/import', formData)
+    }>('/api/scenarios/import', formData)
 
     if (!response.success) {
       throw new Error('导入剧本失败')
@@ -285,7 +285,7 @@ export const scenarioApi = {
     const response = await api.get<{
       success: boolean
       data: Scenario[]
-    }>('/scenarios/recommended', { limit })
+    }>('/api/scenarios/recommended', { limit })
 
     if (!response.success) {
       throw new Error('获取推荐剧本失败')
@@ -301,7 +301,7 @@ export const scenarioApi = {
     const response = await api.get<{
       success: boolean
       data: ScenarioPaginationResponse
-    }>('/scenarios/my', params)
+    }>('/api/scenarios/my', params)
 
     if (!response.success) {
       throw new Error('获取我的剧本失败')
@@ -318,7 +318,7 @@ export const scenarioApi = {
       success: boolean
       data: Scenario
       message: string
-    }>(`/scenarios/${id}/toggle-public`)
+    }>(`/api/scenarios/${id}/toggle-public`)
 
     if (!response.success) {
       throw new Error('切换公开状态失败')

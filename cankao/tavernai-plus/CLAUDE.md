@@ -153,7 +153,7 @@ docker-compose up -d
 
 ### 重要脚本集合
 - **开发脚本**：
-  - `npm run dev` - 启动开发服务器 (API:3001 + Web:3000)
+  - `npm run dev` - 启动开发服务器 (API:8081 + Web:8080)
   - `npm run build` - 构建生产版本
   - `npm run start` - 启动生产服务器
 - **数据库脚本**：
@@ -246,7 +246,7 @@ docker-compose up -d
 4. **自动化部署**: Shell脚本完整自动化流程
 
 ### 🔧 监控与维护
-- **健康检查**: `/api/health` 端点监控
+- **健康检查**: `/health` 端点监控 (http://localhost:8081/health)
 - **日志系统**: 分级日志记录和轮转
 - **性能监控**: 系统资源和API响应时间
 - **安全监控**: 访问控制和异常检测

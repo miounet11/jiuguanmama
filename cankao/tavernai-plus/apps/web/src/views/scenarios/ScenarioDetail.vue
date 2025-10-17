@@ -25,129 +25,98 @@
     </div>
 
     <!-- 正常内容 -->
-    <div v-else-if="scenario || enhancedScenario" class="scenario-content" :class="`scenario-theme--${getScenarioTheme()}`">
-      <!-- 沉浸式页面头部 -->
-      <div class="immersive-header" :style="getHeaderBackground()">
-        <div class="immersive-header__overlay">
-          <div class="immersive-header__content">
-            <div class="breadcrumb-nav">
-              <nav class="breadcrumb-items">
-                <router-link to="/" class="breadcrumb-item">首页</router-link>
-                <span class="breadcrumb-separator">›</span>
-                <router-link to="/scenarios" class="breadcrumb-item">剧本管理</router-link>
-                <span class="breadcrumb-separator">›</span>
-                <span class="breadcrumb-item current">{{ currentScenarioData?.name || '剧本详情' }}</span>
-              </nav>
+    <div v-else-if="scenario || enhancedScenario" class="scenario-content">
+      <!-- 简化页面头部 -->
+      <div class="scenario-header" :class="`scenario-theme--${getScenarioTheme()}`">
+        <div class="container">
+          <!-- 面包屑导航 -->
+          <div class="breadcrumb-nav">
+            <nav class="breadcrumb-items">
+              <router-link to="/" class="breadcrumb-item">首页</router-link>
+              <span class="breadcrumb-separator">›</span>
+              <router-link to="/scenarios" class="breadcrumb-item">剧本管理</router-link>
+              <span class="breadcrumb-separator">›</span>
+              <span class="breadcrumb-item current">{{ currentScenarioData?.name || '剧本详情' }}</span>
+            </nav>
+          </div>
+
+          <div class="scenario-header__main">
+            <div class="scenario-title-section">
+              <h1 class="scenario-title">
+                {{ currentScenarioData?.name || '' }}
+                <span class="scenario-icon">{{ getScenarioIcon() }}</span>
+              </h1>
+              <p class="scenario-subtitle">{{ currentScenarioData?.description || '无描述' }}</p>
             </div>
 
-            <div class="immersive-header__main">
-              <h1 class="immersive-title">
-                <span class="title-text">{{ currentScenarioData?.name || '' }}</span>
-                <div class="title-decorations">
-                  <div class="decoration-line decoration-left"></div>
-                  <div class="decoration-icon">{{ getScenarioIcon() }}</div>
-                  <div class="decoration-line decoration-right"></div>
-                </div>
-              </h1>
-              <p class="immersive-subtitle">{{ currentScenarioData?.description || '无描述' }}</p>
+            <div class="scenario-actions">
+              <div class="scenario-badges">
+                <TavernBadge
+                  :variant="currentScenarioData?.isPublic ? 'success' : 'warning'"
+                  :text="currentScenarioData?.isPublic ? '公开' : '私有'"
+                  class="scenario-badge"
+                />
+                <TavernBadge
+                  v-if="isEnhanced"
+                  variant="primary"
+                  text="增强剧本"
+                  class="scenario-badge enhanced"
+                />
+                <TavernBadge
+                  v-if="getScenarioGenre()"
+                  :text="getScenarioGenre()"
+                  variant="secondary"
+                  class="scenario-badge genre"
+                />
+              </div>
 
-              <div class="immersive-meta">
-                <div class="meta-badges">
-                  <TavernBadge
-                    :variant="currentScenarioData?.isPublic ? 'success' : 'warning'"
-                    :text="currentScenarioData?.isPublic ? '公开' : '私有'"
-                    class="meta-badge"
-                  />
-                  <TavernBadge
-                    v-if="isEnhanced"
-                    variant="primary"
-                    text="增强剧本"
-                    class="meta-badge enhanced"
-                  />
-                  <TavernBadge
-                    v-if="getScenarioGenre()"
-                    :text="getScenarioGenre()"
-                    variant="secondary"
-                    class="meta-badge genre"
-                  />
-                </div>
+              <div class="action-buttons">
+                <TavernButton
+                  @click="editScenario"
+                  variant="primary"
+                  size="lg"
+                  class="primary-action-btn"
+                >
+                  <TavernIcon name="edit" class="mr-2" />
+                  编辑剧本
+                </TavernButton>
 
-                <div class="immersive-actions">
-                  <TavernButton
-                    @click="editScenario"
-                    variant="primary"
-                    size="lg"
-                    class="action-btn primary-action"
-                  >
-                    <TavernIcon name="edit" class="mr-2" />
-                    编辑剧本
+                <div class="dropdown-wrapper">
+                  <TavernButton @click="toggleDropdown" variant="outline" class="dropdown-trigger">
+                    <TavernIcon name="menu" />
                   </TavernButton>
-
-                  <div class="dropdown-wrapper">
-                    <TavernButton @click="toggleDropdown" class="dropdown-trigger action-btn">
-                      <TavernIcon name="menu" />
-                    </TavernButton>
-                    <div v-if="showDropdown" class="dropdown-menu" @click="hideDropdown">
-                      <button @click="handleCommand('clone')" class="dropdown-item">
-                        <TavernIcon name="document" class="mr-2" />
-                        复制剧本
-                      </button>
-                      <button @click="handleCommand('export')" class="dropdown-item">
-                        <TavernIcon name="download" class="mr-2" />
-                        导出剧本
-                      </button>
-                      <div class="dropdown-divider"></div>
-                      <button @click="handleCommand('test')" class="dropdown-item">
-                        <TavernIcon name="sparkles" class="mr-2" />
-                        测试匹配
-                      </button>
-                      <div class="dropdown-divider"></div>
-                      <button @click="handleCommand('delete')" class="dropdown-item danger">
-                        <TavernIcon name="delete" class="mr-2" />
-                        删除剧本
-                      </button>
-                    </div>
+                  <div v-if="showDropdown" class="dropdown-menu" @click="hideDropdown">
+                    <button @click="handleCommand('clone')" class="dropdown-item">
+                      <TavernIcon name="document" class="mr-2" />
+                      复制剧本
+                    </button>
+                    <button @click="handleCommand('export')" class="dropdown-item">
+                      <TavernIcon name="download" class="mr-2" />
+                      导出剧本
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <button @click="handleCommand('test')" class="dropdown-item">
+                      <TavernIcon name="sparkles" class="mr-2" />
+                      测试匹配
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <button @click="handleCommand('delete')" class="dropdown-item danger">
+                      <TavernIcon name="delete" class="mr-2" />
+                      删除剧本
+                    </button>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <!-- 沉浸式背景动画效果 -->
-            <div class="immersive-particles">
-              <div v-for="i in 20" :key="i" class="particle" :style="getParticleStyle(i)"></div>
-            </div>
-
-            <!-- 剧场效果层 -->
-            <div class="theatrical-effects">
-              <!-- 动态光效 -->
-              <div class="dynamic-lighting">
-                <div v-for="i in 3" :key="`light-${i}`" class="light-beam" :style="getLightBeamStyle(i)"></div>
-              </div>
-
-              <!-- 氛围粒子 -->
-              <div class="atmosphere-particles">
-                <div v-for="i in 15" :key="`atm-${i}`" class="atmosphere-particle" :style="getAtmosphereParticleStyle(i)"></div>
-              </div>
-
-              <!-- 星光闪烁效果 -->
-              <div class="sparkle-effects">
-                <div v-for="i in 8" :key="`sparkle-${i}`" class="sparkle" :style="getSparkleStyle(i)"></div>
-              </div>
-
-              <!-- 动态波纹效果 -->
-              <div class="ripple-effects">
-                <div v-for="i in 4" :key="`ripple-${i}`" class="ripple" :style="getRippleStyle(i)"></div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 沉浸式主内容区域 -->
-      <div class="immersive-content">
-        <!-- 剧本核心信息 -->
-        <div class="scenario-core-info">
-          <div class="core-info-container">
+      <!-- 主内容区域 -->
+      <div class="scenario-main-content">
+        <div class="container">
+          <!-- 剧本核心信息 -->
+          <TavernCard class="scenario-core-info">
             <div class="info-section">
               <h2 class="section-title-with-icon">
                 <TavernIcon name="scroll" class="section-icon" />
@@ -211,12 +180,10 @@
                 <p class="complexity-description">{{ getComplexityDescription(enhancedScenario.complexity) }}</p>
               </div>
             </div>
-          </div>
-        </div>
+          </TavernCard>
 
-  
-        <!-- 世界信息预览 -->
-        <TavernCard class="entries-preview">
+          <!-- 世界信息预览 -->
+          <TavernCard class="entries-preview">
           <div class="entries-header">
             <h3 class="section-title">
               世界信息条目 ({{ currentScenarioData?.worldInfoEntries?.length || 0 }})
@@ -594,6 +561,7 @@
                 </div>
               </div>
             </div>
+          </TavernCard>
           </TavernCard>
         </div>
       </div>
@@ -1347,7 +1315,8 @@ onUnmounted(() => {
 
 .scenario-detail {
   min-height: 100vh;
-  background: var(--dt-color-background-primary);
+  background: var(--surface-0);
+  color: var(--text-primary);
 }
 
 .loading-container,
@@ -1356,7 +1325,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  padding: var(--dt-spacing-lg);
+  padding: var(--spacing-lg);
 }
 
 .error-card {
@@ -1368,63 +1337,445 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--dt-spacing-lg);
+  gap: var(--spacing-lg);
 }
 
 .error-icon {
-  color: var(--dt-color-warning);
+  color: var(--warning);
 }
 
 .error-title {
-  font-size: var(--dt-font-size-xl);
-  font-weight: var(--dt-font-weight-bold);
-  color: var(--dt-color-text-primary);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
   margin: 0;
 }
 
 .error-message {
-  color: var(--dt-color-text-secondary);
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .error-actions {
   display: flex;
-  gap: var(--dt-spacing-md);
+  gap: var(--spacing-md);
   flex-wrap: wrap;
 }
 
-.detail-content {
+// 容器
+.container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--dt-spacing-xl) var(--dt-spacing-lg);
-  display: flex;
-  flex-direction: column;
-  gap: var(--dt-spacing-xl);
+  padding: 0 var(--spacing-lg);
 }
 
-.header-actions {
+// 剧本头部
+.scenario-header {
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border-primary);
+  padding: var(--spacing-xl) 0;
+  margin-bottom: var(--spacing-xl);
+
+  .breadcrumb-nav {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .breadcrumb-items {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+  }
+
+  .breadcrumb-item {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: var(--transition-colors);
+
+    &:hover {
+      color: var(--text-primary);
+    }
+
+    &.current {
+      color: var(--text-primary);
+      font-weight: var(--font-medium);
+    }
+  }
+
+  .breadcrumb-separator {
+    color: var(--text-tertiary);
+  }
+
+  .scenario-header__main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-lg);
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+  }
+
+  .scenario-title-section {
+    flex: 1;
+  }
+
+  .scenario-title {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-md) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+
+  .scenario-icon {
+    font-size: var(--text-2xl);
+    opacity: 0.8;
+  }
+
+  .scenario-subtitle {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .scenario-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: flex-end;
+
+    @media (max-width: 768px) {
+      align-items: stretch;
+    }
+  }
+
+  .scenario-badges {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+  }
+
+  .primary-action-btn {
+    background: var(--tavern-primary);
+    border-color: var(--tavern-primary);
+    color: white;
+
+    &:hover {
+      background: var(--tavern-primary-hover);
+      border-color: var(--tavern-primary-hover);
+    }
+  }
+}
+
+// 主内容区域
+.scenario-main-content {
+  margin-bottom: var(--spacing-3xl);
+}
+
+.scenario-core-info {
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-2xl);
+}
+
+.entries-preview {
+  padding: var(--spacing-2xl);
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: var(--spacing-xl);
+}
+
+.entries-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+}
+
+.section-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+// 信息区块
+.info-section {
+  margin-bottom: var(--spacing-2xl);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.section-title-with-icon {
   display: flex;
   align-items: center;
-  gap: var(--dt-spacing-md);
-  position: relative;
+  gap: var(--spacing-md);
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-lg) 0;
 }
 
+.section-icon {
+  color: var(--tavern-primary);
+  font-size: 1.5rem;
+}
+
+.world-description,
+.content-detail {
+  .description-text,
+  .content-text {
+    line-height: 1.8;
+    color: var(--text-primary);
+    background: var(--surface-2);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--tavern-primary);
+    white-space: pre-wrap;
+    margin: 0;
+  }
+}
+
+// 题材和复杂度信息
+.genre-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+}
+
+.genre-description {
+  flex: 1;
+  color: var(--text-secondary);
+  font-style: italic;
+  min-width: 300px;
+}
+
+.complexity-info {
+  .complexity-visual {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--spacing-md);
+    }
+  }
+
+  .complexity-bar {
+    flex: 1;
+    height: 12px;
+    background: var(--surface-2);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: shimmer 2s ease-in-out infinite;
+    }
+  }
+
+  .complexity-fill {
+    height: 100%;
+    transition: width 1s ease-out;
+    border-radius: var(--radius-full);
+
+    &.complexity-simple {
+      background: linear-gradient(90deg, #4caf50, #8bc34a);
+    }
+
+    &.complexity-moderate {
+      background: linear-gradient(90deg, #ff9800, #ffc107);
+    }
+
+    &.complexity-complex {
+      background: linear-gradient(90deg, #f44336, #ff5722);
+    }
+
+    &.complexity-very-complex {
+      background: linear-gradient(90deg, #9c27b0, #e91e63);
+    }
+  }
+
+  .complexity-badge {
+    font-weight: var(--font-semibold);
+  }
+
+  .complexity-description {
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+}
+
+// 空状态
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-3xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.empty-icon {
+  color: var(--text-tertiary);
+}
+
+.empty-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.empty-description {
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+// 网格布局
+.entries-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.entry-card {
+  padding: var(--spacing-lg);
+  transition: var(--transition-colors), var(--transition-shadow);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-sm);
+  gap: var(--spacing-sm);
+}
+
+.entry-title {
+  font-size: var(--text-md);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entry-content {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--spacing-sm) 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.entry-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.more-entries-card {
+  background: var(--surface-2);
+  border: 2px dashed var(--border-secondary);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-colors);
+
+  &:hover {
+    background: var(--surface-3);
+    border-color: var(--border-primary);
+  }
+}
+
+.more-content {
+  text-align: center;
+  padding: var(--spacing-xl);
+}
+
+.more-count {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.more-text {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+// 下拉菜单
 .dropdown-wrapper {
   position: relative;
 }
 
 .dropdown-trigger {
-  padding: var(--dt-spacing-sm);
+  padding: var(--spacing-sm);
 }
 
 .dropdown-menu {
   position: absolute;
   top: 100%;
   right: 0;
-  background: var(--dt-color-surface-primary);
-  border: 1px solid var(--dt-color-border-secondary);
-  border-radius: var(--dt-radius-lg);
-  box-shadow: var(--dt-shadow-lg);
+  background: var(--surface-1);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   min-width: 200px;
   z-index: 50;
   overflow: hidden;
@@ -1434,30 +1785,96 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: var(--dt-spacing-md);
+  padding: var(--spacing-md);
   border: none;
   background: none;
-  color: var(--dt-color-text-primary);
-  font-size: var(--dt-font-size-sm);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
   cursor: pointer;
-  transition: var(--dt-transition-fast);
+  transition: var(--transition-colors);
 
   &:hover {
-    background: var(--dt-color-surface-secondary);
+    background: var(--surface-2);
   }
 
   &.danger {
-    color: var(--dt-color-danger);
+    color: var(--error);
 
     &:hover {
-      background: var(--dt-color-danger-light);
+      background: rgba(248, 113, 113, 0.1);
     }
   }
 }
 
 .dropdown-divider {
   height: 1px;
-  background: var(--dt-color-border-secondary);
+  background: var(--border-secondary);
+}
+
+// 动画
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+// 主题色彩
+.scenario-header,
+.scenario-content {
+  &.scenario-theme--scifi {
+    .scenario-icon {
+      color: #00ffff;
+    }
+  }
+
+  &.scenario-theme--fantasy {
+    .scenario-icon {
+      color: #ffd700;
+    }
+  }
+
+  &.scenario-theme--mystery {
+    .scenario-icon {
+      color: #808080;
+    }
+  }
+
+  &.scenario-theme--horror {
+    .scenario-icon {
+      color: #dc143c;
+    }
+  }
+
+  &.scenario-theme--historical {
+    .scenario-icon {
+      color: #daa520;
+    }
+  }
+
+  &.scenario-theme--default {
+    .scenario-icon {
+      color: var(--tavern-primary);
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .container {
+    padding: 0 var(--spacing-md);
+  }
+
+  .scenario-header {
+    padding: var(--spacing-lg) 0;
+  }
+
+  .scenario-core-info,
+  .entries-preview {
+    padding: var(--spacing-lg);
+  }
 }
 
 .scenario-info-card {
@@ -1690,7 +2107,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   z-index: 100;
-  padding: var(--dt-spacing-lg);
+  padding: var(--spacing-lg);
 }
 
 .delete-dialog,
@@ -1701,29 +2118,29 @@ onUnmounted(() => {
 
 .delete-content,
 .clone-content {
-  padding: var(--dt-spacing-2xl);
+  padding: var(--spacing-2xl);
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: var(--dt-spacing-lg);
+  gap: var(--spacing-lg);
 }
 
 .delete-icon {
-  color: var(--dt-color-warning);
+  color: var(--warning);
   margin: 0 auto;
 }
 
 .delete-title,
 .clone-title {
-  font-size: var(--dt-font-size-xl);
-  font-weight: var(--dt-font-weight-bold);
-  color: var(--dt-color-text-primary);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
   margin: 0;
 }
 
 .delete-message,
 .clone-description {
-  color: var(--dt-color-text-secondary);
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -1731,7 +2148,7 @@ onUnmounted(() => {
 .clone-actions {
   display: flex;
   justify-content: center;
-  gap: var(--dt-spacing-md);
+  gap: var(--spacing-md);
   flex-wrap: wrap;
 }
 
@@ -1743,30 +2160,30 @@ onUnmounted(() => {
 .enhanced-features {
   display: flex;
   flex-direction: column;
-  gap: var(--dt-spacing-xl);
+  gap: var(--spacing-xl);
 }
 
 .world-section {
-  padding: var(--dt-spacing-2xl);
+  padding: var(--spacing-2xl);
 }
 
 .section-header {
-  margin-bottom: var(--dt-spacing-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
 .section-title {
   display: flex;
   align-items: center;
-  font-size: var(--dt-font-size-lg);
-  font-weight: var(--dt-font-weight-semibold);
-  color: var(--dt-color-text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
   margin: 0;
 }
 
 .world-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--dt-spacing-lg);
+  gap: var(--spacing-lg);
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -1774,16 +2191,16 @@ onUnmounted(() => {
 }
 
 .world-item {
-  background: var(--dt-color-surface-secondary);
-  border: 1px solid var(--dt-color-border-secondary);
-  border-radius: var(--dt-radius-lg);
-  padding: var(--dt-spacing-lg);
-  transition: var(--dt-transition-fast);
+  background: var(--surface-2);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  transition: var(--transition-colors), var(--transition-shadow);
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: var(--dt-shadow-md);
-    border-color: var(--dt-color-border-primary);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-primary);
   }
 }
 
@@ -1791,14 +2208,14 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--dt-spacing-sm);
-  gap: var(--dt-spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  gap: var(--spacing-sm);
 }
 
 .world-item-title {
-  font-size: var(--dt-font-size-md);
-  font-weight: var(--dt-font-weight-medium);
-  color: var(--dt-color-text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
   margin: 0;
   flex: 1;
   overflow: hidden;
@@ -1807,9 +2224,9 @@ onUnmounted(() => {
 }
 
 .world-item-description {
-  color: var(--dt-color-text-secondary);
-  font-size: var(--dt-font-size-sm);
-  margin: 0 0 var(--dt-spacing-sm) 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--spacing-sm) 0;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -1819,9 +2236,9 @@ onUnmounted(() => {
 .world-item-meta {
   display: flex;
   flex-direction: column;
-  gap: var(--dt-spacing-xs);
-  font-size: var(--dt-font-size-xs);
-  color: var(--dt-color-text-tertiary);
+  gap: var(--spacing-xs);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
 }
 
 .meta-item {
@@ -1832,19 +2249,19 @@ onUnmounted(() => {
 .rules-list {
   display: flex;
   flex-direction: column;
-  gap: var(--dt-spacing-lg);
+  gap: var(--spacing-lg);
 }
 
 .rule-item {
-  background: var(--dt-color-surface-secondary);
-  border: 1px solid var(--dt-color-border-secondary);
-  border-radius: var(--dt-radius-lg);
-  padding: var(--dt-spacing-lg);
-  transition: var(--dt-transition-fast);
+  background: var(--surface-2);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  transition: var(--transition-colors), var(--transition-shadow);
 
   &:hover {
-    border-color: var(--dt-color-border-primary);
-    box-shadow: var(--dt-shadow-sm);
+    border-color: var(--border-primary);
+    box-shadow: var(--shadow-sm);
   }
 }
 
@@ -1852,114 +2269,97 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--dt-spacing-sm);
-  gap: var(--dt-spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  gap: var(--spacing-sm);
 }
 
 .rule-title {
-  font-size: var(--dt-font-size-md);
-  font-weight: var(--dt-font-weight-medium);
-  color: var(--dt-color-text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
   margin: 0;
   flex: 1;
 }
 
 .rule-description {
-  color: var(--dt-color-text-secondary);
-  font-size: var(--dt-font-size-sm);
-  margin: 0 0 var(--dt-spacing-sm) 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
 .rule-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--dt-spacing-md);
-  font-size: var(--dt-font-size-xs);
-  color: var(--dt-color-text-tertiary);
+  gap: var(--spacing-md);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
 }
 
 // 角色卡展示样式
-.characters-section {
-  padding: var(--dt-spacing-2xl);
-  width: 100%;
-  box-sizing: border-box;
-}
-
 .characters-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--dt-spacing-lg);
-  width: 100%;
-
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: var(--dt-spacing-md);
-  }
+  gap: var(--spacing-lg);
 }
 
 .character-card {
-  background: var(--dt-color-surface-primary);
-  border: 1px solid var(--dt-color-border-secondary);
-  border-radius: var(--dt-radius-lg);
+  background: var(--surface-1);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: var(--dt-transition-fast);
+  transition: var(--transition-colors), var(--transition-shadow);
   cursor: pointer;
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: var(--dt-shadow-lg);
-    border-color: var(--dt-color-border-primary);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--border-primary);
   }
 }
 
-.character-avatar {
+.character-avatar-container {
   position: relative;
   width: 100%;
   height: 200px;
   overflow: hidden;
-  background: var(--dt-color-surface-secondary);
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: var(--dt-transition-fast);
-  }
-
-  &:hover img {
-    transform: scale(1.05);
-  }
+  background: var(--surface-2);
 }
 
-.character-avatar-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.character-avatar {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--dt-color-surface-secondary), var(--dt-color-surface-tertiary));
-  color: var(--dt-color-text-tertiary);
-  font-size: var(--dt-font-size-2xl);
+  object-fit: cover;
+  transition: var(--transition-colors), var(--transition-transform);
+}
+
+.character-avatar:hover {
+  transform: scale(1.05);
+}
+
+.character-status-badge {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
 }
 
 .character-info {
-  padding: var(--dt-spacing-lg);
+  padding: var(--spacing-lg);
 }
 
 .character-name {
-  font-size: var(--dt-font-size-lg);
-  font-weight: var(--dt-font-weight-semibold);
-  color: var(--dt-color-text-primary);
-  margin: 0 0 var(--dt-spacing-sm) 0;
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .character-description {
-  color: var(--dt-color-text-secondary);
-  font-size: var(--dt-font-size-sm);
-  margin: 0 0 var(--dt-spacing-md) 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--spacing-md) 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1967,84 +2367,64 @@ onUnmounted(() => {
   line-height: 1.4;
 }
 
-.character-tags {
+.character-meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--dt-spacing-xs);
-  margin-bottom: var(--dt-spacing-md);
-}
-
-.character-tag {
-  padding: var(--dt-spacing-xs) var(--dt-spacing-sm);
-  background: var(--dt-color-surface-tertiary);
-  color: var(--dt-color-text-secondary);
-  border-radius: var(--dt-radius-sm);
-  font-size: var(--dt-font-size-xs);
-  border: 1px solid var(--dt-color-border-tertiary);
+  flex-direction: column;
+  gap: var(--spacing-sm);
 }
 
 .character-stats {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: var(--dt-font-size-xs);
-  color: var(--dt-color-text-tertiary);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
 }
 
-.character-rating {
+.stat-item {
   display: flex;
   align-items: center;
-  gap: var(--dt-spacing-xs);
+  gap: var(--spacing-xs);
+}
+
+.character-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.background-preview-btn {
+  position: absolute;
+  bottom: var(--spacing-sm);
+  right: var(--spacing-sm);
 }
 
 // 背景画廊样式
-.backgrounds-section {
-  padding: var(--dt-spacing-2xl);
-  width: 100%;
-  box-sizing: border-box;
-}
-
 .backgrounds-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--dt-spacing-md);
-  width: 100%;
-
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
+  gap: var(--spacing-md);
 }
 
 .background-item {
   position: relative;
   aspect-ratio: 16/9;
-  border-radius: var(--dt-radius-md);
+  border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
-  transition: var(--dt-transition-fast);
-  background: var(--dt-color-surface-secondary);
+  transition: var(--transition-colors), var(--transition-shadow);
+  background: var(--surface-2);
 
   &:hover {
     transform: scale(1.05);
-    box-shadow: var(--dt-shadow-md);
-  }
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    box-shadow: var(--shadow-md);
   }
 }
 
-.background-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.background-image {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--dt-color-surface-secondary), var(--dt-color-surface-tertiary));
-  color: var(--dt-color-text-tertiary);
-  font-size: var(--dt-font-size-lg);
+  object-fit: cover;
 }
 
 .background-overlay {
@@ -2056,19 +2436,29 @@ onUnmounted(() => {
   background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.7));
   display: flex;
   align-items: flex-end;
-  padding: var(--dt-spacing-sm);
+  padding: var(--spacing-sm);
   opacity: 0;
-  transition: var(--dt-transition-fast);
+  transition: var(--transition-colors);
 }
 
 .background-item:hover .background-overlay {
   opacity: 1;
 }
 
-.background-label {
+.background-info {
   color: white;
-  font-size: var(--dt-font-size-sm);
-  font-weight: var(--dt-font-weight-medium);
+  padding: var(--spacing-md);
+}
+
+.background-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  margin-bottom: var(--spacing-xs);
+}
+
+.background-description {
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 // 背景预览模态框
@@ -2083,7 +2473,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: var(--dt-spacing-lg);
+  padding: var(--spacing-lg);
 }
 
 .background-preview-content {
@@ -2095,7 +2485,7 @@ onUnmounted(() => {
 .background-preview-image {
   max-width: 100%;
   max-height: 100%;
-  border-radius: var(--dt-radius-lg);
+  border-radius: var(--radius-lg);
 }
 
 .background-preview-close {
@@ -2105,101 +2495,46 @@ onUnmounted(() => {
   background: none;
   border: none;
   color: white;
-  font-size: var(--dt-font-size-2xl);
+  font-size: var(--text-2xl);
   cursor: pointer;
-  padding: var(--dt-spacing-sm);
-  border-radius: var(--dt-radius-sm);
-  transition: var(--dt-transition-fast);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-colors);
 
   &:hover {
     background: rgba(255, 255, 255, 0.1);
   }
 }
 
-// 空状态样式
-.characters-empty-state,
-.backgrounds-empty-state {
+// 更多角色指示器
+.more-characters-indicator {
   text-align: center;
-  padding: var(--dt-spacing-3xl);
-  color: var(--dt-color-text-tertiary);
+  padding: var(--spacing-xl);
+  cursor: pointer;
+  color: var(--text-tertiary);
+  transition: var(--transition-colors);
+
+  &:hover {
+    color: var(--text-secondary);
+  }
 }
 
-.empty-state-icon {
-  font-size: var(--dt-font-size-3xl);
-  margin-bottom: var(--dt-spacing-md);
+.more-count {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  margin-bottom: var(--spacing-xs);
 }
 
-.empty-state-title {
-  font-size: var(--dt-font-size-lg);
-  font-weight: var(--dt-font-weight-semibold);
-  color: var(--dt-color-text-secondary);
-  margin: 0 0 var(--dt-spacing-sm) 0;
-}
-
-.empty-state-description {
-  color: var(--dt-color-text-tertiary);
-  margin: 0;
-}
-
-// 加载状态
-.characters-loading {
-  display: flex;
-  justify-content: center;
-  padding: var(--dt-spacing-3xl);
-}
-
-// 响应式设计
-@media (max-width: 768px) {
-  .detail-content {
-    padding: var(--dt-spacing-lg) var(--dt-spacing-md);
-  }
-
-  .scenario-info-card,
-  .entries-preview,
-  .world-section,
-  .characters-section,
-  .backgrounds-section {
-    padding: var(--dt-spacing-lg);
-  }
-
-  .header-actions {
-    flex-wrap: wrap;
-    gap: var(--dt-spacing-sm);
-  }
-
-  .entries-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--dt-spacing-md);
-  }
-
-  .world-item-header,
-  .rule-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--dt-spacing-xs);
-  }
-
-  .world-item-title,
-  .rule-title {
-    white-space: normal;
-  }
-
-  .character-info {
-    padding: var(--dt-spacing-md);
-  }
-
-  .background-preview-modal {
-    padding: var(--dt-spacing-md);
-  }
+.more-text {
+  font-size: var(--text-sm);
 }
 
 // 图片错误处理样式
 .error-placeholder {
   opacity: 0.6;
   filter: grayscale(100%);
-  border: 2px dashed var(--dt-color-border-secondary);
-  background-color: var(--dt-color-surface-secondary);
+  border: 2px dashed var(--border-secondary);
+  background-color: var(--surface-2);
   position: relative;
 
   &::after {
@@ -2208,852 +2543,12 @@ onUnmounted(() => {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: var(--dt-color-text-tertiary);
-    font-size: var(--dt-font-size-xs);
-    background: var(--dt-color-surface-primary);
-    padding: var(--dt-spacing-xs) var(--dt-spacing-sm);
-    border-radius: var(--dt-radius-sm);
+    color: var(--text-tertiary);
+    font-size: var(--text-xs);
+    background: var(--surface-1);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
     z-index: 1;
-  }
-}
-
-// 专业度提升样式
-.scenario-detail {
-  // 页面整体渐变背景，营造专业感
-  background: linear-gradient(135deg,
-    var(--dt-color-background-primary) 0%,
-    color-mix(in srgb, var(--dt-color-background-primary) 95%, var(--dt-color-primary) 5%) 100%
-  );
-}
-
-.character-item {
-  // 角色卡片悬浮效果优化
-  transition: all var(--dt-transition-medium);
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--dt-shadow-lg);
-
-    .character-avatar {
-      transform: scale(1.05);
-    }
-  }
-}
-
-.character-avatar {
-  transition: transform var(--dt-transition-medium);
-  // 确保头像在悬浮时保持圆形
-  overflow: hidden;
-}
-
-.background-item {
-  // 背景图片卡片优化
-  position: relative;
-  transition: all var(--dt-transition-medium);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--dt-shadow-md);
-
-    .background-overlay {
-      opacity: 1;
-    }
-  }
-}
-
-.background-overlay {
-  // 背景图片悬浮信息优化
-  transition: opacity var(--dt-transition-medium);
-  opacity: 0.9;
-
-  &:hover {
-    opacity: 1;
-  }
-}
-
-// 加载状态优化
-.characters-loading {
-  .loading-spinner {
-    color: var(--dt-color-primary);
-  }
-}
-
-// 沉浸式设计样式
-.scenario-content {
-  // 主题背景色
-  &.scenario-theme--scifi {
-    --immersive-primary: #1a1a2e;
-    --immersive-secondary: #0f3460;
-    --immersive-accent: #e94560;
-    --immersive-glow: #00ffff;
-  }
-
-  &.scenario-theme--fantasy {
-    --immersive-primary: #2d1b69;
-    --immersive-secondary: #533483;
-    --immersive-accent: #c77dff;
-    --immersive-glow: #ffd700;
-  }
-
-  &.scenario-theme--mystery {
-    --immersive-primary: #1a1a1a;
-    --immersive-secondary: #3a3a3a;
-    --immersive-accent: #4a4a4a;
-    --immersive-glow: #808080;
-  }
-
-  &.scenario-theme--horror {
-    --immersive-primary: #0a0a0a;
-    --immersive-secondary: #2a0a0a;
-    --immersive-accent: #4a0a0a;
-    --immersive-glow: #dc143c;
-  }
-
-  &.scenario-theme--historical {
-    --immersive-primary: #3e2723;
-    --immersive-secondary: #6d4c41;
-    --immersive-accent: #8d6e63;
-    --immersive-glow: #daa520;
-  }
-
-  &.scenario-theme--default {
-    --immersive-primary: #667eea;
-    --immersive-secondary: #764ba2;
-    --immersive-accent: #f093fb;
-    --immersive-glow: #fecfef;
-  }
-}
-
-// 沉浸式头部
-.immersive-header {
-  height: 60vh;
-  min-height: 400px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.3);
-    z-index: 1;
-  }
-}
-
-.immersive-header__overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(180deg,
-    rgba(0, 0, 0, 0.7) 0%,
-    rgba(0, 0, 0, 0.5) 50%,
-    rgba(0, 0, 0, 0.3) 100%
-  );
-  z-index: 2;
-}
-
-.immersive-header__content {
-  position: relative;
-  z-index: 3;
-  text-align: center;
-  max-width: 1200px;
-  padding: 0 var(--dt-spacing-lg);
-  width: 100%;
-}
-
-// 面包屑导航
-.breadcrumb-nav {
-  margin-bottom: var(--dt-spacing-xl);
-}
-
-.breadcrumb-items {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--dt-spacing-sm);
-  font-size: var(--dt-font-size-sm);
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.breadcrumb-item {
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
-  transition: var(--dt-transition-fast);
-
-  &:hover {
-    color: white;
-    text-decoration: underline;
-  }
-
-  &.current {
-    color: white;
-    font-weight: var(--dt-font-weight-medium);
-  }
-}
-
-.breadcrumb-separator {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-// 沉浸式标题
-.immersive-header__main {
-  margin-bottom: var(--dt-spacing-2xl);
-}
-
-.immersive-title {
-  font-size: clamp(2.5rem, 6vw, 4rem);
-  font-weight: var(--dt-font-weight-bold);
-  color: white;
-  margin: 0 0 var(--dt-spacing-lg) 0;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--dt-spacing-md);
-}
-
-.title-text {
-  letter-spacing: 2px;
-  animation: titleGlow 3s ease-in-out infinite alternate;
-}
-
-.title-decorations {
-  display: flex;
-  align-items: center;
-  gap: var(--dt-spacing-lg);
-}
-
-.decoration-line {
-  height: 2px;
-  width: 80px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    var(--immersive-glow) 50%,
-    transparent 100%
-  );
-  animation: lineGlow 2s ease-in-out infinite alternate;
-
-  &.decoration-left {
-    animation-delay: 0s;
-  }
-
-  &.decoration-right {
-    animation-delay: 1s;
-  }
-}
-
-.decoration-icon {
-  font-size: 2rem;
-  filter: drop-shadow(0 0 20px var(--immersive-glow));
-  animation: iconFloat 4s ease-in-out infinite;
-}
-
-.immersive-subtitle {
-  font-size: var(--dt-font-size-lg);
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  max-width: 800px;
-  line-height: 1.6;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
-}
-
-// 沉浸式元信息
-.immersive-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--dt-spacing-lg);
-}
-
-.meta-badges {
-  display: flex;
-  align-items: center;
-  gap: var(--dt-spacing-md);
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.meta-badge {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-
-  &.enhanced {
-    background: rgba(255, 215, 0, 0.2);
-    border-color: rgba(255, 215, 0, 0.4);
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-  }
-
-  &.genre {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
-  }
-}
-
-.immersive-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--dt-spacing-lg);
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.action-btn {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  transition: var(--dt-transition-fast);
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.4);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  }
-
-  &.primary-action {
-    background: var(--immersive-accent);
-    border-color: var(--immersive-accent);
-    box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
-
-    &:hover {
-      background: color-mix(in srgb, var(--immersive-accent) 90%, white 10%);
-      box-shadow: 0 8px 30px rgba(233, 69, 96, 0.6);
-    }
-  }
-}
-
-// 粒子动画
-.immersive-particles {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.particle {
-  pointer-events: none;
-  will-change: transform, opacity;
-}
-
-// 剧场效果层
-.theatrical-effects {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 3;
-  overflow: hidden;
-}
-
-// 动态光效
-.dynamic-lighting {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-.light-beam {
-  will-change: transform, opacity;
-  filter: blur(1px);
-}
-
-// 氛围粒子
-.atmosphere-particles {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-.atmosphere-particle {
-  will-change: transform, opacity;
-  filter: blur(2px);
-  mix-blend-mode: screen;
-}
-
-// 星光闪烁效果
-.sparkle-effects {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-.sparkle {
-  will-change: transform, opacity;
-  filter: blur(1px);
-  mix-blend-mode: screen;
-}
-
-// 动态波纹效果
-.ripple-effects {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-.ripple {
-  will-change: transform, opacity;
-  filter: blur(1px);
-}
-
-// 沉浸式内容区域
-.immersive-content {
-  position: relative;
-  z-index: 10;
-  margin-top: -80px;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 0 var(--dt-spacing-lg) var(--dt-spacing-xl);
-  max-width: 1400px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-// 确保所有TavernCard组件正确对齐
-.immersive-content :deep(.tavern-card) {
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: var(--dt-spacing-xl);
-}
-
-.immersive-content :deep(.scenario-backgrounds) {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.immersive-content :deep(.related-characters) {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-// 核心信息区域
-.scenario-core-info {
-  margin-bottom: var(--dt-spacing-2xl);
-  width: 100%;
-}
-
-.core-info-container {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: var(--dt-radius-xl);
-  padding: var(--dt-spacing-2xl);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.info-section {
-  margin-bottom: var(--dt-spacing-2xl);
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-
-.section-title-with-icon {
-  display: flex;
-  align-items: center;
-  gap: var(--dt-spacing-md);
-  font-size: var(--dt-font-size-xl);
-  font-weight: var(--dt-font-weight-semibold);
-  color: var(--dt-color-text-primary);
-  margin: 0 0 var(--dt-spacing-lg) 0;
-}
-
-.section-icon {
-  color: var(--immersive-accent);
-  font-size: 1.5rem;
-}
-
-.world-description,
-.content-detail {
-  .description-text,
-  .content-text {
-    line-height: 1.8;
-    color: var(--dt-color-text-primary);
-    background: var(--dt-color-surface-secondary);
-    padding: var(--dt-spacing-lg);
-    border-radius: var(--dt-radius-lg);
-    border-left: 4px solid var(--immersive-accent);
-    white-space: pre-wrap;
-  }
-}
-
-// 题材信息
-.genre-info {
-  display: flex;
-  align-items: center;
-  gap: var(--dt-spacing-lg);
-  flex-wrap: wrap;
-}
-
-.genre-description {
-  flex: 1;
-  color: var(--dt-color-text-secondary);
-  font-style: italic;
-  min-width: 300px;
-}
-
-// 复杂度信息
-.complexity-info {
-  .complexity-visual {
-    display: flex;
-    align-items: center;
-    gap: var(--dt-spacing-lg);
-    margin-bottom: var(--dt-spacing-md);
-  }
-
-  .complexity-bar {
-    flex: 1;
-    height: 12px;
-    background: var(--dt-color-surface-secondary);
-    border-radius: var(--dt-radius-full);
-    overflow: hidden;
-    position: relative;
-
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-      animation: shimmer 2s ease-in-out infinite;
-    }
-  }
-
-  .complexity-fill {
-    height: 100%;
-    transition: width 1s ease-out;
-    border-radius: var(--dt-radius-full);
-
-    &.complexity-simple {
-      background: linear-gradient(90deg, #4caf50, #8bc34a);
-    }
-
-    &.complexity-moderate {
-      background: linear-gradient(90deg, #ff9800, #ffc107);
-    }
-
-    &.complexity-complex {
-      background: linear-gradient(90deg, #f44336, #ff5722);
-    }
-
-    &.complexity-very-complex {
-      background: linear-gradient(90deg, #9c27b0, #e91e63);
-    }
-  }
-
-  .complexity-badge {
-    font-weight: var(--dt-font-weight-semibold);
-  }
-
-  .complexity-description {
-    color: var(--dt-color-text-secondary);
-    line-height: 1.6;
-  }
-}
-
-// 统计概览
-.stats-overview {
-  margin-bottom: var(--dt-spacing-2xl);
-}
-
-.stats-container {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: var(--dt-radius-xl);
-  padding: var(--dt-spacing-2xl);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--dt-spacing-lg);
-}
-
-.stat-card {
-  background: var(--dt-color-surface-primary);
-  border: 1px solid var(--dt-color-border-secondary);
-  border-radius: var(--dt-radius-lg);
-  padding: var(--dt-spacing-lg);
-  display: flex;
-  align-items: center;
-  gap: var(--dt-spacing-md);
-  transition: var(--dt-transition-fast);
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--immersive-accent), var(--immersive-glow));
-  }
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--dt-shadow-lg);
-    border-color: var(--immersive-accent);
-  }
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, var(--immersive-accent), var(--immersive-glow));
-  border-radius: var(--dt-radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: var(--dt-font-size-lg);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: var(--dt-font-size-xl);
-  font-weight: var(--dt-font-weight-bold);
-  color: var(--dt-color-text-primary);
-  line-height: 1.2;
-}
-
-.stat-label {
-  font-size: var(--dt-font-size-sm);
-  color: var(--dt-color-text-secondary);
-  margin-top: var(--dt-spacing-xs);
-}
-
-// 动画定义
-@keyframes titleGlow {
-  0% {
-    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5), 0 0 30px var(--immersive-glow);
-  }
-  100% {
-    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5), 0 0 50px var(--immersive-glow);
-  }
-}
-
-@keyframes lineGlow {
-  0% {
-    opacity: 0.3;
-    transform: scaleX(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: scaleX(1.2);
-  }
-}
-
-@keyframes iconFloat {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-10px) rotate(5deg);
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px);
-  }
-  33% {
-    transform: translateY(-10px) translateX(5px);
-  }
-  66% {
-    transform: translateY(5px) translateX(-5px);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-// 剧场效果动画
-@keyframes lightBeamSweep {
-  0% {
-    opacity: 0;
-    transform: rotate(-15deg) scaleY(0);
-  }
-  50% {
-    opacity: 0.8;
-    transform: rotate(15deg) scaleY(1);
-  }
-  100% {
-    opacity: 0;
-    transform: rotate(-15deg) scaleY(0);
-  }
-}
-
-@keyframes atmosphereFloat {
-  0% {
-    opacity: 0;
-    transform: translate(0, 20px) scale(0.5);
-  }
-  20% {
-    opacity: 0.6;
-    transform: translate(10px, 0px) scale(1);
-  }
-  50% {
-    opacity: 0.3;
-    transform: translate(-10px, -20px) scale(1.2);
-  }
-  80% {
-    opacity: 0.6;
-    transform: translate(-20px, 0px) scale(0.8);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(0, 20px) scale(0.5);
-  }
-}
-
-@keyframes sparkle {
-  0%, 100% {
-    opacity: 0;
-    transform: scale(0);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.5);
-  }
-}
-
-@keyframes rippleExpand {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0);
-  }
-  50% {
-    opacity: 0.6;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(2);
-  }
-}
-
-// 响应式设计
-@media (max-width: 768px) {
-  .immersive-header {
-    height: 50vh;
-    min-height: 300px;
-  }
-
-  .immersive-title {
-    font-size: clamp(2rem, 8vw, 3rem);
-  }
-
-  .title-decorations {
-    flex-direction: column;
-    gap: var(--dt-spacing-md);
-  }
-
-  .decoration-line {
-    width: 60px;
-  }
-
-  .immersive-meta {
-    gap: var(--dt-spacing-md);
-  }
-
-  .meta-badges,
-  .immersive-actions {
-    gap: var(--dt-spacing-sm);
-  }
-
-  .immersive-content {
-    margin-top: -60px;
-    padding: 0 var(--dt-spacing-md) var(--dt-spacing-lg);
-  }
-
-  .core-info-container,
-  .stats-container {
-    padding: var(--dt-spacing-lg);
-  }
-
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: var(--dt-spacing-md);
-  }
-
-  .stat-card {
-    padding: var(--dt-spacing-md);
-  }
-
-  .stat-icon {
-    width: 40px;
-    height: 40px;
-    font-size: var(--dt-font-size-md);
-  }
-
-  .genre-info {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--dt-spacing-md);
-  }
-
-  .complexity-visual {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--dt-spacing-md);
-  }
-}
-
-@media (max-width: 480px) {
-  .breadcrumb-items {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .immersive-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .action-btn {
-    width: 100%;
-    justify-content: center;
   }
 }
 </style>

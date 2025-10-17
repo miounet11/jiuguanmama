@@ -46,7 +46,7 @@ declare class CharacterGeneratorService {
      */
     private parseGeneratedContent;
     /**
-     * 生成角色头像（使用 NAI3 或其他图像生成服务）
+     * 生成角色头像（使用 NEWAPI）
      */
     generateAvatar(character: GeneratedCharacter, style?: string): Promise<string>;
     /**

@@ -71,7 +71,7 @@ export const useCharacterStore = defineStore('character', () => {
         sort: options.sort || sortBy.value
       }
 
-      const response = await api.get('/characters', params)
+      const response = await api.get('/api/characters', params)
 
       // 处理响应数据
       if (response.success) {

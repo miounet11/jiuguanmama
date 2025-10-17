@@ -55,7 +55,7 @@ npm run seed         # 生成种子数据
 # 服务器配置
 NODE_ENV=development
 HOST=localhost
-PORT=4000
+PORT=8081
 
 # 数据库配置
 DATABASE_URL="file:./dev.db"
@@ -72,7 +72,7 @@ JWT_SECRET=your_jwt_secret
 JWT_EXPIRES_IN=7d
 
 # 其他配置
-CORS_ORIGIN=http://localhost:3000
+CORS_ORIGIN=http://localhost:8080
 ```
 
 ## 对外接口
@@ -127,7 +127,7 @@ CORS_ORIGIN=http://localhost:3000
 - `PUT /config` - 系统配置
 
 ### WebSocket API
-- **连接端点**: `ws://localhost:4000`
+- **连接端点**: `ws://localhost:8081`
 - **事件类型**:
   - `join_room` - 加入聊天室
   - `leave_room` - 离开聊天室

@@ -133,6 +133,7 @@ import TavernButton from '@/components/design-system/TavernButton.vue'
 import TavernCard from '@/components/design-system/TavernCard.vue'
 import TavernIcon from '@/components/design-system/TavernIcon.vue'
 import TavernBadge from '@/components/design-system/TavernBadge.vue'
+import { characterService } from '@/services/character'
 
 // Types
 interface CharacterData {
@@ -254,19 +255,36 @@ const handleFileSelect = (event: Event) => {
 }
 
 const generateAvatar = async () => {
+  if (!modelValue.value.name.trim()) {
+    alert('请先填写角色名称')
+    return
+  }
+
   isGeneratingAvatar.value = true
   try {
-    // TODO: 集成AI头像生成服务
-    // const avatar = await generateCharacterAvatar(modelValue.value.name, modelValue.value.shortDescription)
-    // modelValue.value = {
-    //   ...modelValue.value,
-    //   avatar
-    // }
+    console.log('开始生成头像...', {
+      name: modelValue.value.name,
+      description: modelValue.value.shortDescription
+    })
 
-    // 模拟生成延迟
-    await new Promise(resolve => setTimeout(resolve, 2000))
-  } catch (error) {
+    const result = await characterService.generateAvatarFromData({
+      name: modelValue.value.name,
+      description: modelValue.value.shortDescription,
+      style: 'anime' // 可以根据用户选择的分类来定
+    })
+
+    console.log('头像生成成功:', result)
+
+    if (result.avatar) {
+      modelValue.value = {
+        ...modelValue.value,
+        avatar: result.avatar
+      }
+    }
+  } catch (error: any) {
     console.error('Avatar generation failed:', error)
+    const errorMessage = error.response?.data?.error || error.message || '头像生成失败，请稍后重试'
+    alert(errorMessage)
   } finally {
     isGeneratingAvatar.value = false
   }

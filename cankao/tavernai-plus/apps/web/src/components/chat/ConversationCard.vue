@@ -134,11 +134,39 @@
           </span>
         </div>
 
+        <!-- 友好度显示 -->
+        <div v-if="showFriendship && friendshipLevel > 0" class="chat-conversation-card__friendship">
+          <div class="chat-conversation-card__friendship-info">
+            <span class="chat-conversation-card__friendship-heart">{{ friendshipHeart }}</span>
+            <span
+              class="chat-conversation-card__friendship-title"
+              :style="{ color: friendshipColor }"
+            >
+              {{ friendshipTitle }}
+            </span>
+            <span
+              class="chat-conversation-card__friendship-level"
+              :style="{ color: friendshipColor }"
+            >
+              {{ friendshipLevel }}%
+            </span>
+          </div>
+          <div class="chat-conversation-card__friendship-bar">
+            <div
+              class="chat-conversation-card__friendship-progress"
+              :style="{
+                width: `${friendshipLevel}%`,
+                backgroundColor: friendshipColor
+              }"
+            ></div>
+          </div>
+        </div>
+
         <!-- 对话统计信息 -->
         <div v-if="showStats" class="chat-conversation-card__stats">
           <span class="chat-conversation-card__stat">
             <TavernIcon name="chat-bubble-left-right" size="xs" />
-            {{ messageCount }}条消息
+            {{ messageCount }}条对话
           </span>
           <span v-if="lastActivityTime" class="chat-conversation-card__stat">
             <TavernIcon name="clock" size="xs" />
@@ -227,10 +255,15 @@ interface Props {
   tags?: ConversationTag[]
   characterStatus?: 'online' | 'offline' | 'away' | 'busy'
 
+  // 友好度和关系
+  friendshipLevel?: number // 0-100
+  friendshipTitle?: string // 友好度标题，如"深度知己"
+
   // 功能开关
   showPinButton?: boolean
   showArchiveButton?: boolean
   showStats?: boolean
+  showFriendship?: boolean
   showSelection?: boolean
   isSelected?: boolean
 
@@ -251,10 +284,13 @@ const props = withDefaults(defineProps<Props>(), {
   hasError: false,
   isEdited: false,
   messageCount: 0,
+  friendshipLevel: 0,
+  friendshipTitle: '初次见面',
   tags: () => [],
   showPinButton: true,
   showArchiveButton: true,
   showStats: false,
+  showFriendship: false,
   showSelection: false,
   isSelected: false,
   maxVisibleTags: 2,
@@ -340,6 +376,25 @@ const contextMenuStyle = computed(() => ({
   left: `${contextMenuPosition.value.x}px`,
   top: `${contextMenuPosition.value.y}px`
 }))
+
+// 友好度相关计算属性
+const friendshipColor = computed(() => {
+  const level = props.friendshipLevel || 0
+  if (level >= 80) return '#10b981' // 绿色 - 深度知己
+  if (level >= 60) return '#3b82f6' // 蓝色 - 亲密伙伴
+  if (level >= 40) return '#8b5cf6' // 紫色 - 熟悉朋友
+  if (level >= 20) return '#f59e0b' // 橙色 - 友好伙伴
+  return '#6b7280' // 灰色 - 刚刚相识
+})
+
+const friendshipHeart = computed(() => {
+  const level = props.friendshipLevel || 0
+  if (level >= 80) return '❤️' // 满心
+  if (level >= 60) return '💖' // 闪亮心
+  if (level >= 40) return '💙' // 蓝心
+  if (level >= 20) return '💛' // 黄心
+  return '🤍' // 白心
+})
 
 // 方法
 const handleClick = () => {
@@ -776,6 +831,52 @@ onUnmounted(() => {
     background: var(--surface-4);
     padding: 2px $spacing-1;
     border-radius: $border-radius-base;
+  }
+
+  // 友好度显示
+  &__friendship {
+    margin-top: $spacing-2;
+    padding: $spacing-2;
+    background: rgba($primary-500, 0.05);
+    border-radius: $border-radius-base;
+    border: 1px solid rgba($primary-500, 0.1);
+  }
+
+  &__friendship-info {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+    margin-bottom: $spacing-1;
+  }
+
+  &__friendship-heart {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  &__friendship-title {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    flex: 1;
+  }
+
+  &__friendship-level {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+  }
+
+  &__friendship-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--surface-4);
+    border-radius: $border-radius-full;
+    overflow: hidden;
+  }
+
+  &__friendship-progress {
+    height: 100%;
+    transition: width $transition-normal, background-color $transition-fast;
+    border-radius: $border-radius-full;
   }
 
   // 统计信息

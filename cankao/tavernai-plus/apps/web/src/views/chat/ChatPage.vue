@@ -196,6 +196,14 @@ interface ChatSession {
   lastMessageAt?: Date
   messageCount: number
   unreadCount: number
+  // 新增字段
+  isPinned?: boolean
+  isArchived?: boolean
+  isOnline?: boolean
+  characterStatus?: 'online' | 'offline'
+  lastMessageRole?: 'user' | 'assistant'
+  friendshipLevel?: number
+  friendshipTitle?: string
 }
 
 interface Character {
@@ -229,19 +237,25 @@ const formattedConversations = computed(() => {
     characterId: chat.characterId,
     characterName: chat.character?.name || '未知角色',
     characterAvatar: chat.character?.avatar,
-    lastMessage: chat.lastMessage,
+    lastMessage: chat.lastMessage || '暂无消息',
     lastMessageAt: chat.lastMessageAt,
     messageCount: chat.messageCount || 0,
     unreadCount: chat.unreadCount || 0,
-    isPinned: false, // TODO: 从后端获取置顶状态
-    isArchived: false, // TODO: 从后端获取归档状态
-    isOnline: Math.random() > 0.5, // TODO: 从后端获取在线状态
+    isPinned: chat.isPinned || false,
+    isArchived: chat.isArchived || false,
+    isOnline: chat.isOnline || false,
     isStreaming: false, // TODO: 从WebSocket获取流式状态
     hasError: false, // TODO: 从状态管理获取错误状态
     isEdited: false, // TODO: 从后端获取编辑状态
-    lastMessageSender: '', // TODO: 从消息数据获取发送者
+    lastMessageSender: chat.lastMessageRole === 'user' ? '你' : chat.character?.name || '',
     tags: [], // TODO: 从后端获取标签
-    characterStatus: Math.random() > 0.5 ? 'online' : 'offline' as 'online' | 'offline' // TODO: 从后端获取状态
+    characterStatus: chat.characterStatus || 'offline',
+    // 新增友好度相关字段
+    friendshipLevel: chat.friendshipLevel || 0,
+    friendshipTitle: chat.friendshipTitle || '初次见面',
+    // 显示配置
+    showStats: true,
+    showFriendship: true
   }))
 })
 
@@ -283,11 +297,9 @@ const fetchChats = async (page: number = 1, reset: boolean = false) => {
   try {
     isLoading.value = true
     const response = await api.get('/chat/sessions', {
-      params: {
-        page,
-        limit: pageSize.value,
-        includeDetails: true
-      }
+      page,
+      limit: pageSize.value,
+      includeDetails: true
     })
 
     if (response.success) {
@@ -319,7 +331,7 @@ const fetchChats = async (page: number = 1, reset: boolean = false) => {
 // 获取热门角色
 const fetchPopularCharacters = async () => {
   try {
-    const response = await api.get('/characters/popular')
+    const response = await api.get('/api/characters/popular')
     if (response.success && response.characters) {
       popularCharacters.value = response.characters.slice(0, 6)
     }
@@ -331,7 +343,10 @@ const fetchPopularCharacters = async () => {
 // 获取可用角色
 const fetchAvailableCharacters = async () => {
   try {
-    const response = await api.get('/characters')
+    const response = await api.get('/api/characters', {
+      page: 1,
+      limit: 50 // 获取更多角色供选择
+    })
     if (response.success && response.characters) {
       availableCharacters.value = response.characters
     }

@@ -23,11 +23,11 @@ declare const envSchema: z.ZodObject<{
     REDIS_URL: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     NODE_ENV: "development" | "production" | "test";
-    JWT_SECRET: string;
-    JWT_REFRESH_SECRET: string;
     PORT: number;
     HOST: string;
     DATABASE_URL: string;
+    JWT_SECRET: string;
+    JWT_REFRESH_SECRET: string;
     CLIENT_URL: string;
     NEWAPI_KEY: string;
     NEWAPI_BASE_URL: string;
@@ -44,9 +44,9 @@ declare const envSchema: z.ZodObject<{
     SMTP_PASS?: string | undefined;
     REDIS_URL?: string | undefined;
 }, {
+    DATABASE_URL: string;
     JWT_SECRET: string;
     JWT_REFRESH_SECRET: string;
-    DATABASE_URL: string;
     NEWAPI_KEY: string;
     NODE_ENV?: "development" | "production" | "test" | undefined;
     PORT?: string | undefined;
@@ -104,11 +104,11 @@ export declare class ConfigValidator {
 export declare const configValidator: ConfigValidator;
 export declare const getEnvConfig: () => {
     NODE_ENV: "development" | "production" | "test";
-    JWT_SECRET: string;
-    JWT_REFRESH_SECRET: string;
     PORT: number;
     HOST: string;
     DATABASE_URL: string;
+    JWT_SECRET: string;
+    JWT_REFRESH_SECRET: string;
     CLIENT_URL: string;
     NEWAPI_KEY: string;
     NEWAPI_BASE_URL: string;

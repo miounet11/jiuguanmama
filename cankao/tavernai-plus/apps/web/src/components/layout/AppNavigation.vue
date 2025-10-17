@@ -100,7 +100,7 @@
           </el-dropdown>
 
           <!-- 用户菜单 -->
-          <el-dropdown v-if="userStore.isAuthenticated" @command="handleUserCommand" placement="bottom-end">
+          <el-dropdown v-if="userStore.isAuthenticated" @command="handleUserCommand" placement="bottom-end" trigger="click">
             <div class="user-menu-trigger">
               <el-avatar :size="36" :src="userStore.user?.avatar">
                 {{ userStore.user?.username?.charAt(0).toUpperCase() }}

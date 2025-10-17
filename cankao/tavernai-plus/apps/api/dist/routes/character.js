@@ -4,11 +4,13 @@ const express_1 = require("express");
 const auth_1 = require("../middleware/auth");
 const prisma_1 = require("../lib/prisma");
 const ai_1 = require("../services/ai");
+const validate_1 = require("../middleware/validate");
+const character_1 = require("../schemas/character");
 const router = (0, express_1.Router)();
 // 获取公开角色列表
-router.get('/', auth_1.optionalAuth, async (req, res, next) => {
+router.get('/', auth_1.optionalAuth, (0, validate_1.validate)(character_1.characterQuerySchema, 'query'), async (req, res, next) => {
     try {
-        const { page = 1, limit = 20, sort = 'created', search = '', tags = [] } = req.query;
+        const { page, limit, sort, search, category, tags } = req.query;
         const orderBy = sort === 'rating'
             ? { rating: 'desc' }
             : sort === 'popular'
@@ -18,9 +20,12 @@ router.get('/', auth_1.optionalAuth, async (req, res, next) => {
         const where = { isPublic: true };
         if (search) {
             where.OR = [
-                { name: { contains: String(search), mode: 'insensitive' } },
-                { description: { contains: String(search), mode: 'insensitive' } }
+                { name: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } }
             ];
+        }
+        if (category && category !== 'all') {
+            where.category = category;
         }
         // TODO: Fix tag filtering for SQLite (tags is now a JSON string)
         // if (tags && Array.isArray(tags) && tags.length > 0) {
@@ -429,11 +434,31 @@ router.get('/:id', auth_1.optionalAuth, async (req, res, next) => {
     }
 });
 // 创建新角色
-router.post('/', auth_1.authenticate, async (req, res, next) => {
+router.post('/', auth_1.authenticate, (0, validate_1.validate)(character_1.createCharacterSchema), async (req, res, next) => {
     try {
+        const characterData = req.body;
+        // 验证角色名称唯一性（同一用户下）
+        const existingCharacter = await prisma_1.prisma.character.findFirst({
+            where: {
+                name: characterData.name,
+                creatorId: req.user.id
+            }
+        });
+        if (existingCharacter) {
+            return res.status(409).json({
+                success: false,
+                message: '您已创建过同名角色，请修改角色名称后重试'
+            });
+        }
+        // 确保tags是有效的JSON字符串
+        let tagsJson = characterData.tags || '[]';
+        if (Array.isArray(characterData.tags)) {
+            tagsJson = JSON.stringify(characterData.tags);
+        }
         const character = await prisma_1.prisma.character.create({
             data: {
-                ...req.body,
+                ...characterData,
+                tags: tagsJson,
                 creatorId: req.user.id
             }
         });
@@ -443,11 +468,12 @@ router.post('/', auth_1.authenticate, async (req, res, next) => {
         });
     }
     catch (error) {
+        console.error('创建角色失败:', error);
         next(error);
     }
 });
 // 更新角色
-router.put('/:id', auth_1.authenticate, async (req, res, next) => {
+router.put('/:id', auth_1.authenticate, (0, validate_1.validate)(character_1.updateCharacterSchema), async (req, res, next) => {
     try {
         // 验证所有权
         const existing = await prisma_1.prisma.character.findUnique({
@@ -459,9 +485,32 @@ router.put('/:id', auth_1.authenticate, async (req, res, next) => {
                 message: 'Access denied'
             });
         }
+        const updateData = req.body;
+        // 如果更新了名称，检查唯一性
+        if (updateData.name && updateData.name !== existing.name) {
+            const nameConflict = await prisma_1.prisma.character.findFirst({
+                where: {
+                    name: updateData.name,
+                    creatorId: req.user.id,
+                    id: { not: req.params.id }
+                }
+            });
+            if (nameConflict) {
+                return res.status(409).json({
+                    success: false,
+                    message: '您已创建过同名角色，请修改角色名称后重试'
+                });
+            }
+        }
+        // 确保tags是有效的JSON字符串
+        if (updateData.tags) {
+            if (Array.isArray(updateData.tags)) {
+                updateData.tags = JSON.stringify(updateData.tags);
+            }
+        }
         const character = await prisma_1.prisma.character.update({
             where: { id: req.params.id },
-            data: req.body
+            data: updateData
         });
         res.json({
             success: true,
@@ -469,6 +518,7 @@ router.put('/:id', auth_1.authenticate, async (req, res, next) => {
         });
     }
     catch (error) {
+        console.error('更新角色失败:', error);
         next(error);
     }
 });
@@ -608,17 +658,11 @@ router.post('/:id/like', auth_1.authenticate, async (req, res, next) => {
     }
 });
 // 评分角色
-router.post('/:id/rate', auth_1.authenticate, async (req, res, next) => {
+router.post('/:id/rate', auth_1.authenticate, (0, validate_1.validate)(character_1.rateCharacterSchema), async (req, res, next) => {
     try {
-        const { rating } = req.body;
+        const { rating, comment } = req.body;
         const characterId = req.params.id;
         const userId = req.user.id;
-        if (rating < 1 || rating > 5) {
-            return res.status(400).json({
-                success: false,
-                message: 'Rating must be between 1 and 5'
-            });
-        }
         // 检查是否已评分
         const existing = await prisma_1.prisma.characterRating.findUnique({
             where: {
@@ -637,7 +681,7 @@ router.post('/:id/rate', auth_1.authenticate, async (req, res, next) => {
                         characterId
                     }
                 },
-                data: { rating }
+                data: { rating, comment: comment || existing.comment }
             });
         }
         else {
@@ -646,7 +690,8 @@ router.post('/:id/rate', auth_1.authenticate, async (req, res, next) => {
                 data: {
                     userId,
                     characterId,
-                    rating
+                    rating,
+                    comment
                 }
             });
         }

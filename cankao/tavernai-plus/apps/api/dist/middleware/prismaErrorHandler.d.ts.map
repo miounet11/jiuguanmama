@@ -1,0 +1,1 @@
+{"version":3,"file":"prismaErrorHandler.d.ts","sourceRoot":"","sources":["../../src/middleware/prismaErrorHandler.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,YAAY,EAAE,MAAM,SAAS,CAAA;AAGzD,eAAO,MAAM,kBAAkB,GAC7B,OAAO,KAAK,EACZ,KAAK,OAAO,EACZ,KAAK,QAAQ,EACb,MAAM,YAAY,mDAgHnB,CAAA"}

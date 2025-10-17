@@ -21,6 +21,7 @@ const router = Router()
 // 获取用户的聊天会话列表 (兼容前端的 /api/chats 调用) - 必须在具体路由之前
 router.get('/', authenticate, async (req: AuthRequest, res, next) => {
   try {
+    // 获取会话，包含最后一条消息和角色信息
     const sessions = await prisma.chatSession.findMany({
       where: {
         userId: req.user!.id,
@@ -33,21 +34,83 @@ router.get('/', authenticate, async (req: AuthRequest, res, next) => {
         lastMessageAt: true,
         messageCount: true,
         updatedAt: true,
+        isPinned: true,
         character: {
           select: {
             id: true,
             name: true,
-            avatar: true
+            avatar: true,
+            description: true
           }
         }
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: [
+        { isPinned: 'desc' },
+        { updatedAt: 'desc' }
+      ],
       take: 20
     })
 
+    // 为每个会话获取最后一条消息和计算友好度
+    const sessionsWithDetails = await Promise.all(
+      sessions.map(async (session) => {
+        // 获取最后一条消息
+        const lastMessage = await prisma.message.findFirst({
+          where: {
+            sessionId: session.id,
+            deleted: false
+          },
+          orderBy: { createdAt: 'desc' },
+          select: {
+            content: true,
+            role: true,
+            createdAt: true
+          }
+        })
+
+        // 计算友好度（基于消息数量的简单算法）
+        let friendshipLevel = 0
+        let friendshipTitle = '初次见面'
+
+        if (session.messageCount && session.messageCount > 0) {
+          if (session.messageCount >= 50) {
+            friendshipLevel = Math.min(100, 50 + Math.floor((session.messageCount - 50) / 10))
+            friendshipTitle = '深度知己'
+          } else if (session.messageCount >= 20) {
+            friendshipLevel = Math.min(90, 30 + Math.floor((session.messageCount - 20) / 3))
+            friendshipTitle = '亲密伙伴'
+          } else if (session.messageCount >= 10) {
+            friendshipLevel = Math.min(70, 20 + Math.floor((session.messageCount - 10) / 2))
+            friendshipTitle = '熟悉朋友'
+          } else if (session.messageCount >= 5) {
+            friendshipLevel = Math.min(50, 10 + (session.messageCount - 5))
+            friendshipTitle = '友好伙伴'
+          } else {
+            friendshipLevel = Math.min(30, session.messageCount * 6)
+            friendshipTitle = '刚刚相识'
+          }
+        }
+
+        // 获取未读消息数（简化为1，因为当前没有已读状态）
+        const unreadCount = lastMessage && lastMessage.role === 'assistant' ? 1 : 0
+
+        return {
+          ...session,
+          lastMessage: lastMessage?.content || '',
+          lastMessageRole: lastMessage?.role || null,
+          friendshipLevel,
+          friendshipTitle,
+          unreadCount,
+          isOnline: Math.random() > 0.3, // 随机在线状态，后续可以改为真实的在线检测
+          characterStatus: Math.random() > 0.3 ? 'online' : 'offline'
+        }
+      })
+    )
+
     res.json({
       success: true,
-      sessions
+      sessions: sessionsWithDetails,
+      total: sessionsWithDetails.length
     })
   } catch (error) {
     next(error)
@@ -57,6 +120,7 @@ router.get('/', authenticate, async (req: AuthRequest, res, next) => {
 // 获取用户的聊天会话列表 (保持向后兼容) - 必须在具体路由之前
 router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
   try {
+    // 获取会话，包含最后一条消息和角色信息
     const sessions = await prisma.chatSession.findMany({
       where: {
         userId: req.user!.id,
@@ -69,21 +133,83 @@ router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
         lastMessageAt: true,
         messageCount: true,
         updatedAt: true,
+        isPinned: true,
         character: {
           select: {
             id: true,
             name: true,
-            avatar: true
+            avatar: true,
+            description: true
           }
         }
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: [
+        { isPinned: 'desc' },
+        { updatedAt: 'desc' }
+      ],
       take: 20
     })
 
+    // 为每个会话获取最后一条消息和计算友好度
+    const sessionsWithDetails = await Promise.all(
+      sessions.map(async (session) => {
+        // 获取最后一条消息
+        const lastMessage = await prisma.message.findFirst({
+          where: {
+            sessionId: session.id,
+            deleted: false
+          },
+          orderBy: { createdAt: 'desc' },
+          select: {
+            content: true,
+            role: true,
+            createdAt: true
+          }
+        })
+
+        // 计算友好度（基于消息数量的简单算法）
+        let friendshipLevel = 0
+        let friendshipTitle = '初次见面'
+
+        if (session.messageCount && session.messageCount > 0) {
+          if (session.messageCount >= 50) {
+            friendshipLevel = Math.min(100, 50 + Math.floor((session.messageCount - 50) / 10))
+            friendshipTitle = '深度知己'
+          } else if (session.messageCount >= 20) {
+            friendshipLevel = Math.min(90, 30 + Math.floor((session.messageCount - 20) / 3))
+            friendshipTitle = '亲密伙伴'
+          } else if (session.messageCount >= 10) {
+            friendshipLevel = Math.min(70, 20 + Math.floor((session.messageCount - 10) / 2))
+            friendshipTitle = '熟悉朋友'
+          } else if (session.messageCount >= 5) {
+            friendshipLevel = Math.min(50, 10 + (session.messageCount - 5))
+            friendshipTitle = '友好伙伴'
+          } else {
+            friendshipLevel = Math.min(30, session.messageCount * 6)
+            friendshipTitle = '刚刚相识'
+          }
+        }
+
+        // 获取未读消息数（简化为1，因为当前没有已读状态）
+        const unreadCount = lastMessage && lastMessage.role === 'assistant' ? 1 : 0
+
+        return {
+          ...session,
+          lastMessage: lastMessage?.content || '',
+          lastMessageRole: lastMessage?.role || null,
+          friendshipLevel,
+          friendshipTitle,
+          unreadCount,
+          isOnline: Math.random() > 0.3, // 随机在线状态，后续可以改为真实的在线检测
+          characterStatus: Math.random() > 0.3 ? 'online' : 'offline'
+        }
+      })
+    )
+
     res.json({
       success: true,
-      sessions
+      sessions: sessionsWithDetails,
+      total: sessionsWithDetails.length
     })
   } catch (error) {
     next(error)

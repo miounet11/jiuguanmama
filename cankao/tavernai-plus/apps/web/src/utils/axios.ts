@@ -6,7 +6,7 @@ import { errorLogger } from './errorLogger'
 
 // 创建 axios 实例
 const instance: AxiosInstance = axios.create({
-  baseURL: (import.meta.env.VITE_API_URL || 'http://localhost:3009') + '/api',
+  baseURL: (import.meta.env.VITE_API_URL || 'http://localhost:8081') + '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
@@ -80,6 +80,22 @@ instance.interceptors.response.use(
 
         case 429:
           ElMessage.error('请求过于频繁，请稍后再试')
+          break
+
+        case 422:
+          // 验证错误，显示具体的验证信息
+          const validationErrors = (response.data as any)?.errors
+          if (validationErrors && typeof validationErrors === 'object') {
+            const errorMessages = Object.values(validationErrors).flat()
+            ElMessage.error(errorMessages.join('，') || '请求参数错误')
+          } else {
+            ElMessage.error((response.data as any)?.message || '请求参数错误')
+          }
+          break
+
+        case 409:
+          // 冲突错误
+          ElMessage.error((response.data as any)?.message || '数据冲突，请检查输入')
           break
 
         case 500:

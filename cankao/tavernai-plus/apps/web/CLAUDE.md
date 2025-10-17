@@ -40,7 +40,7 @@ TavernAI Plus Web前端是基于Vue 3和TypeScript的现代化单页应用(SPA)�
 ### 启动脚本
 ```bash
 # 开发环境
-npm run dev           # 启动Vite开发服务器 (端口3000)
+npm run dev           # 启动Vite开发服务器 (端口8080)
 
 # 生产构建
 npm run build         # 构建生产版本到dist目录
@@ -54,7 +54,7 @@ npm run test          # Vitest单元测试
 ### 环境变量配置
 ```env
 # 开发环境 (.env.development)
-VITE_API_URL=http://localhost:3007
+VITE_API_URL=http://localhost:8081
 
 # 生产环境 (.env.production)
 VITE_API_URL=https://api.tavernai.plus

@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.characterGeneratorService = void 0;
 const ai_1 = require("./ai");
-const axios_1 = __importDefault(require("axios"));
+const newapi_image_generator_1 = __importDefault(require("./newapi-image-generator"));
 class CharacterGeneratorService {
     /**
      * 使用 AI 生成完整的角色设定
@@ -188,22 +188,15 @@ Requirements:
         }
     }
     /**
-     * 生成角色头像（使用 NAI3 或其他图像生成服务）
+     * 生成角色头像（使用 NEWAPI）
      */
     async generateAvatar(character, style) {
         try {
             // 构建图像生成提示词
             const imagePrompt = this.buildImagePrompt(character, style);
-            // 调用 NAI3 API（需要配置）
-            if (process.env.NAI3_API_KEY) {
-                return await this.generateNAI3Image(imagePrompt);
-            }
-            // 备选：使用 DALL-E 3
-            if (process.env.OPENAI_API_KEY) {
-                return await this.generateDALLE3Image(imagePrompt);
-            }
-            // 返回默认头像
-            return '/avatars/default.png';
+            // 使用 NEWAPI 生成图像
+            const imageGenerator = new newapi_image_generator_1.default();
+            return await imageGenerator.generateAvatar(character);
         }
         catch (error) {
             console.error('生成头像失败:', error);
@@ -231,7 +224,7 @@ Requirements:
      * 使用 NAI3 生成图像
      */
     async generateNAI3Image(prompt) {
-        const response = await axios_1.default.post('https://api.novelai.net/ai/generate-image', {
+        const response = await axios.post('https://api.novelai.net/ai/generate-image', {
             input: prompt,
             model: 'nai-diffusion-3',
             parameters: {
@@ -259,7 +252,7 @@ Requirements:
      * 使用 DALL-E 3 生成图像
      */
     async generateDALLE3Image(prompt) {
-        const response = await axios_1.default.post('https://api.openai.com/v1/images/generations', {
+        const response = await axios.post('https://api.openai.com/v1/images/generations', {
             model: 'dall-e-3',
             prompt: prompt,
             n: 1,
