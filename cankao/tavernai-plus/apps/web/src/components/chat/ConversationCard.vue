@@ -134,34 +134,7 @@
           </span>
         </div>
 
-        <!-- 友好度显示 -->
-        <div v-if="showFriendship && friendshipLevel > 0" class="chat-conversation-card__friendship">
-          <div class="chat-conversation-card__friendship-info">
-            <span class="chat-conversation-card__friendship-heart">{{ friendshipHeart }}</span>
-            <span
-              class="chat-conversation-card__friendship-title"
-              :style="{ color: friendshipColor }"
-            >
-              {{ friendshipTitle }}
-            </span>
-            <span
-              class="chat-conversation-card__friendship-level"
-              :style="{ color: friendshipColor }"
-            >
-              {{ friendshipLevel }}%
-            </span>
-          </div>
-          <div class="chat-conversation-card__friendship-bar">
-            <div
-              class="chat-conversation-card__friendship-progress"
-              :style="{
-                width: `${friendshipLevel}%`,
-                backgroundColor: friendshipColor
-              }"
-            ></div>
-          </div>
-        </div>
-
+  
         <!-- 对话统计信息 -->
         <div v-if="showStats" class="chat-conversation-card__stats">
           <span class="chat-conversation-card__stat">
@@ -833,52 +806,7 @@ onUnmounted(() => {
     border-radius: $border-radius-base;
   }
 
-  // 友好度显示
-  &__friendship {
-    margin-top: $spacing-2;
-    padding: $spacing-2;
-    background: rgba($primary-500, 0.05);
-    border-radius: $border-radius-base;
-    border: 1px solid rgba($primary-500, 0.1);
-  }
-
-  &__friendship-info {
-    display: flex;
-    align-items: center;
-    gap: $spacing-2;
-    margin-bottom: $spacing-1;
-  }
-
-  &__friendship-heart {
-    font-size: 14px;
-    line-height: 1;
-  }
-
-  &__friendship-title {
-    font-size: $font-size-xs;
-    font-weight: $font-weight-medium;
-    flex: 1;
-  }
-
-  &__friendship-level {
-    font-size: $font-size-xs;
-    font-weight: $font-weight-semibold;
-  }
-
-  &__friendship-bar {
-    width: 100%;
-    height: 4px;
-    background: var(--surface-4);
-    border-radius: $border-radius-full;
-    overflow: hidden;
-  }
-
-  &__friendship-progress {
-    height: 100%;
-    transition: width $transition-normal, background-color $transition-fast;
-    border-radius: $border-radius-full;
-  }
-
+  
   // 统计信息
   &__stats {
     display: flex;
@@ -943,7 +871,7 @@ onUnmounted(() => {
       color: $error-color;
 
       &:hover {
-        background: rgba($error-color, 0.1);
+        background: rgba(239, 68, 68, 0.1);
       }
     }
   }

@@ -250,13 +250,7 @@ const formattedConversations = computed(() => {
     lastMessageSender: chat.lastMessageRole === 'user' ? '你' : chat.character?.name || '',
     tags: [], // TODO: 从后端获取标签
     characterStatus: chat.characterStatus || 'offline',
-    // 新增友好度相关字段
-    friendshipLevel: chat.friendshipLevel || 0,
-    friendshipTitle: chat.friendshipTitle || '初次见面',
-    // 显示配置
-    showStats: true,
-    showFriendship: true
-  }))
+    }))
 })
 
 const filteredCharacters = computed(() => {
