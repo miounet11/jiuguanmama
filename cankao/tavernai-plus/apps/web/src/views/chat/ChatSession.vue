@@ -139,21 +139,21 @@
 
         <!-- 其他功能按钮 -->
         <div class="action-buttons">
-          <button class="action-btn scene-btn" title="场景背景">
+          <button class="action-btn scene-btn" title="场景背景" @click="toggleSceneSelector">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
               <circle cx="8.5" cy="8.5" r="1.5"></circle>
               <polyline points="21 15 16 10 5 21"></polyline>
             </svg>
           </button>
-          <button class="action-btn sound-btn active" title="关闭提示音">
+          <button class="action-btn sound-btn" :class="{ 'active': soundEnabled }" :title="soundEnabled ? '关闭提示音' : '开启提示音'" @click="toggleSound">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 5L6 9l2 2L7 9l4-4"></path>
               <path d="M19.07 4.93a10 10 0 0 1 0 14M14 12a10 10 0 0 1-2.93 7.07"></path>
               <path d="M5.64 7.07A10 10 0 0 1 3.93 14.07"></path>
             </svg>
           </button>
-          <button class="action-btn fullscreen-btn" title="全屏模式">
+          <button class="action-btn fullscreen-btn" :class="{ 'active': fullscreen }" title="全屏模式" @click="toggleFullscreen">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3"></path>
               <path d="M8 21h8a2 2 0 0 0 2-2v-3m2 0h3a2 2 0 0 0 2-2v-8"></path>
@@ -788,6 +788,7 @@ const overscan = 5 // 上下额外渲染的消息数量
 // UI 状态
 const sidebarCollapsed = ref(false)
 const showSettings = ref(false)
+const showSettingsPanel = ref(false)
 const showScrollToBottom = ref(false)
 const showEmojiPicker = ref(false)
 const soundEnabled = ref(true)
@@ -1006,6 +1007,10 @@ const toggleSidebar = () => {
 
 const toggleSettings = () => {
   showSettings.value = !showSettings.value
+}
+
+const toggleSettingsPanel = () => {
+  showSettingsPanel.value = !showSettingsPanel.value
 }
 
 // 现代化输入区域控制方法
@@ -4772,6 +4777,230 @@ watch(messages, (newMessages) => {
   // 设置下拉菜单
   .settings-dropdown {
     position: relative;
+  }
+
+  // 设置按钮样式
+  .settings-trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-tight);
+    padding: var(--spacing-normal) var(--spacing-comfortable);
+    background: var(--surface-3);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+
+    &:hover {
+      background: var(--surface-4);
+      border-color: var(--brand-primary-500);
+      color: var(--brand-primary-400);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    .dropdown-arrow {
+      transition: transform 0.3s ease;
+    }
+  }
+
+  // 设置下拉容器激活状态
+  .settings-dropdown.active {
+    .settings-trigger {
+      background: var(--surface-4);
+      border-color: var(--brand-primary-500);
+      color: var(--brand-primary-400);
+      box-shadow: var(--shadow-sm);
+
+      .dropdown-arrow {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  // 设置面板遮罩
+  .settings-panel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 999;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding-top: 60px; // 头部高度
+    padding-right: 25px;
+    animation: fadeIn 0.2s ease;
+  }
+
+  // 设置面板内容
+  .settings-content {
+    background: var(--surface-1);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    min-width: 320px;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideInRight 0.3s ease;
+    backdrop-filter: blur(20px);
+  }
+
+  // 设置面板头部
+  .settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-comfortable) var(--spacing-loose);
+    border-bottom: 1px solid var(--border-secondary);
+    background: var(--surface-2);
+
+    h4 {
+      margin: 0;
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+      color: var(--text-primary);
+    }
+
+    .close-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: var(--surface-3);
+        color: var(--text-primary);
+      }
+    }
+  }
+
+  // 设置面板主体
+  .settings-body {
+    padding: var(--spacing-loose);
+  }
+
+  .setting-item {
+    margin-bottom: var(--spacing-comfortable);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .setting-label {
+      display: block;
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-tight);
+    }
+
+    .setting-select {
+      width: 100%;
+      padding: var(--spacing-normal);
+      background: var(--surface-2);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: var(--text-sm);
+      transition: all 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: var(--brand-primary-500);
+        box-shadow: 0 0 0 2px rgba(var(--brand-primary-500-rgb), 0.2);
+      }
+    }
+
+    .range-control {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-normal);
+
+      .setting-range {
+        flex: 1;
+        height: 4px;
+        background: var(--surface-3);
+        border-radius: 2px;
+        outline: none;
+        -webkit-appearance: none;
+
+        &::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 16px;
+          height: 16px;
+          background: var(--brand-primary-500);
+          border-radius: 50%;
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover {
+            transform: scale(1.2);
+          }
+        }
+      }
+
+      .range-value {
+        min-width: 40px;
+        text-align: right;
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        font-weight: var(--font-medium);
+      }
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-normal);
+      cursor: pointer;
+      font-size: var(--text-sm);
+      color: var(--text-primary);
+
+      .setting-checkbox {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--brand-primary-500);
+      }
+    }
+  }
+
+  // 动画定义
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
   .settings-toggle {

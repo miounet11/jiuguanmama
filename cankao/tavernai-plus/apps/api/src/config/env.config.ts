@@ -4,7 +4,7 @@ import { z } from 'zod'
 const envSchema = z.object({
   // 基础配置
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.string().transform(Number).default('3001'),
+  PORT: z.string().transform(Number).default('8081'),
   HOST: z.string().default('localhost'),
 
   // 数据库配置

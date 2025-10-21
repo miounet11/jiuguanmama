@@ -562,7 +562,6 @@
               </div>
             </div>
           </TavernCard>
-          </TavernCard>
         </div>
       </div>
     </div>
@@ -640,6 +639,7 @@ import { ref, computed, onMounted, nextTick, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { formatDistanceToNow, format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
+import { ElMessage } from 'element-plus'
 import PageHeader from '@/components/common/PageHeader.vue'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import TavernCard from '@/components/design-system/TavernCard.vue'

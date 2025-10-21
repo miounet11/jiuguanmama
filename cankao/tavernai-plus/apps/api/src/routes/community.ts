@@ -1333,4 +1333,27 @@ router.get('/notifications', authenticate, async (req: AuthRequest, res: Respons
   }
 })
 
+// GET /api/stats - 获取社区统计数据
+router.get('/stats', async (req: Request, res: Response) => {
+  try {
+    // 这里应该从数据库获取真实的统计数据
+    // 现在返回模拟数据
+    const stats = {
+      totalUsers: 0,
+      totalPosts: 0,
+      totalComments: 0,
+      activeUsers: 0,
+      todayActiveUsers: 0,
+      todayNewPosts: 0,
+      todayNewComments: 0,
+      todayNewUsers: 0
+    }
+
+    res.json(stats)
+  } catch (error) {
+    console.error('获取社区统计数据失败:', error)
+    res.status(500).json({ error: '获取社区统计数据失败' })
+  }
+})
+
 export default router

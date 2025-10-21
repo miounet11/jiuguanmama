@@ -393,10 +393,28 @@ const quickStart = async (character: Character) => {
   await selectCharacter(character)
 }
 
+// 标记消息为已读
+const markMessagesAsRead = async (sessionId: string) => {
+  try {
+    await api.patch(`/api/chat/${sessionId}/read`)
+  } catch (error) {
+    console.error('标记消息为已读失败:', error)
+  }
+}
+
 // 打开对话
-const openChat = (chatId: string) => {
+const openChat = async (chatId: string) => {
   selectedChatId.value = chatId
   router.push(`/chat/${chatId}`)
+
+  // 标记该会话的消息为已读
+  await markMessagesAsRead(chatId)
+
+  // 更新本地未读计数
+  const chat = chatList.value.find(c => c.id === chatId)
+  if (chat) {
+    chat.unreadCount = 0
+  }
 }
 
 // 新的事件处理函数
@@ -569,9 +587,19 @@ const handleResponsiveConversationClick = (chatId: string) => {
 }
 
 // 监听路由变化
-watch(() => route.params.sessionId, (newId) => {
+watch(() => route.params.sessionId, async (newId) => {
   if (newId) {
     selectedChatId.value = newId as string
+
+    // 标记该会话的消息为已读
+    await markMessagesAsRead(newId as string)
+
+    // 更新本地未读计数
+    const chat = chatList.value.find(c => c.id === newId)
+    if (chat) {
+      chat.unreadCount = 0
+    }
+
     // 移动端有选中对话时关闭侧边栏
     if (isMobile.value) {
       closeMobileConversationList()

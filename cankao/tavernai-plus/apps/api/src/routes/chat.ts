@@ -91,8 +91,15 @@ router.get('/', authenticate, async (req: AuthRequest, res, next) => {
           }
         }
 
-        // 获取未读消息数（简化为1，因为当前没有已读状态）
-        const unreadCount = lastMessage && lastMessage.role === 'assistant' ? 1 : 0
+        // 获取未读消息数
+        const unreadCount = await prisma.message.count({
+          where: {
+            sessionId: session.id,
+            role: 'assistant',
+            isRead: false,
+            deleted: false
+          }
+        })
 
         return {
           ...session,
@@ -190,8 +197,15 @@ router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
           }
         }
 
-        // 获取未读消息数（简化为1，因为当前没有已读状态）
-        const unreadCount = lastMessage && lastMessage.role === 'assistant' ? 1 : 0
+        // 获取未读消息数
+        const unreadCount = await prisma.message.count({
+          where: {
+            sessionId: session.id,
+            role: 'assistant',
+            isRead: false,
+            deleted: false
+          }
+        })
 
         return {
           ...session,
@@ -1522,6 +1536,57 @@ router.post('/:sessionId/world-info/toggle', authenticate, async (req: AuthReque
       message: `Scenario ${enabled ? 'enabled' : 'disabled'} successfully`,
       activeScenarios,
       disabledScenarios
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// 标记会话中的消息为已读
+router.patch('/:sessionId/read', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { sessionId } = req.params
+    const { messageIds } = req.body // 可选：指定特定消息ID，如果为空则标记所有未读消息
+
+    // 验证会话属于当前用户
+    const session = await prisma.chatSession.findFirst({
+      where: {
+        id: sessionId,
+        userId: req.user!.id
+      }
+    })
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'Chat session not found'
+      })
+    }
+
+    let whereClause: any = {
+      sessionId: sessionId,
+      role: 'assistant',
+      isRead: false,
+      deleted: false
+    }
+
+    // 如果指定了特定消息ID，只标记这些消息
+    if (messageIds && Array.isArray(messageIds) && messageIds.length > 0) {
+      whereClause.id = { in: messageIds }
+    }
+
+    // 标记消息为已读
+    const result = await prisma.message.updateMany({
+      where: whereClause,
+      data: {
+        isRead: true
+      }
+    })
+
+    res.json({
+      success: true,
+      message: `Marked ${result.count} messages as read`,
+      markedCount: result.count
     })
   } catch (error) {
     next(error)

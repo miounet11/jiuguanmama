@@ -197,7 +197,7 @@
                 <h3 class="section-title">角色标签</h3>
                 <div class="tags-container">
                   <TavernBadge
-                    v-for="tag in (character.tags ? JSON.parse(character.tags) : [])"
+                    v-for="tag in parseTags(character.tags)"
                     :key="tag"
                     variant="primary"
                     class="character-badge"
@@ -292,6 +292,24 @@ const relatedCharacters = ref<any[]>([])
 const otherWorks = ref<any[]>([])
 const canAddReview = ref(true)
 const userRating = ref(5)
+
+// 安全解析标签的函数
+const parseTags = (tags: any): string[] => {
+  if (!tags) return []
+
+  // 确保tags是字符串类型
+  const tagsString = String(tags)
+  if (tagsString === 'null' || tagsString === 'undefined') return []
+
+  try {
+    // 如果是JSON格式，解析为数组
+    const parsed = JSON.parse(tagsString)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    // 如果JSON解析失败，尝试按逗号分割
+    return tagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+  }
+}
 const userComment = ref('')
 const activeTab = ref('info')
 
@@ -349,7 +367,9 @@ const fetchOtherWorks = async () => {
 
   try {
     const response = await http.get(`/users/${character.value.creatorId}/characters`)
-    otherWorks.value = response.data.filter((c: any) => c.id !== route.params.id)
+    // API返回的结构是 {characters: [], pagination: {}}
+    const characters = response.data?.characters || []
+    otherWorks.value = characters.filter((c: any) => c.id !== route.params.id)
   } catch (error) {
     console.error('Failed to fetch other works:', error)
     // 不使用硬编码数据，设置空列表

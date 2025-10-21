@@ -38,9 +38,9 @@ const parseTags = (tags: any): string[] => {
 router.get('/', optionalAuth, validate(characterQuerySchema, 'query'), async (req: AuthRequest, res, next) => {
   try {
     const {
-      page,
-      limit,
-      sort,
+      page = '1',
+      limit = '12',
+      sort = 'created',
       search,
       category,
       tags
