@@ -115,11 +115,11 @@
                         class="avatar-image"
                       />
                       <div v-else class="avatar-placeholder">
-                        {{ user.username.charAt(0).toUpperCase() }}
+                        {{ user.username?.charAt(0)?.toUpperCase() || '?' }}
                       </div>
                     </div>
                     <div class="user-details">
-                      <div class="username">{{ user.username }}</div>
+                      <div class="username">{{ user.username || '未知用户' }}</div>
                       <div class="follower-count">{{ user.followerCount || user._count?.followers || 0 }} 粉丝</div>
                     </div>
                   </div>

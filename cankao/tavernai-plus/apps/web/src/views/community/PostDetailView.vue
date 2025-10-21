@@ -53,11 +53,11 @@
                 @click="goToPost(relatedPost.id)"
               >
                 <div class="flex items-start space-x-3">
-                  <el-avatar :size="32" :src="relatedPost.user.avatar">
-                    {{ relatedPost.user.username.charAt(0).toUpperCase() }}
+                  <el-avatar :size="32" :src="relatedPost.user?.avatar">
+                    {{ relatedPost.user?.username?.charAt(0)?.toUpperCase() || '?' }}
                   </el-avatar>
                   <div class="flex-1 min-w-0">
-                    <div class="font-medium text-white text-sm">{{ relatedPost.user.username }}</div>
+                    <div class="font-medium text-white text-sm">{{ relatedPost.user?.username || '未知用户' }}</div>
                     <p class="text-gray-300 text-sm line-clamp-2 mt-1">{{ relatedPost.content }}</p>
                     <div class="flex items-center space-x-3 mt-2 text-xs text-gray-500">
                       <span>{{ relatedPost.likeCount }} 赞</span>

@@ -5,11 +5,11 @@
       <div class="flex items-center space-x-3">
         <el-avatar
           :size="48"
-          :src="post.user.avatar"
+          :src="post.user?.avatar"
           class="cursor-pointer"
           @click="goToUserProfile"
         >
-          {{ post.user.username.charAt(0).toUpperCase() }}
+          {{ post.user?.username?.charAt(0)?.toUpperCase() || '?' }}
         </el-avatar>
         <div>
           <div class="flex items-center space-x-2">
@@ -17,9 +17,9 @@
               class="font-semibold text-white cursor-pointer hover:text-purple-400 transition-colors"
               @click="goToUserProfile"
             >
-              {{ post.user.username }}
+              {{ post.user?.username || '未知用户' }}
             </h4>
-            <el-icon v-if="post.user.isVerified" class="text-yellow-400" :size="16">
+            <el-icon v-if="post.user?.isVerified" class="text-yellow-400" :size="16">
               <CircleCheck />
             </el-icon>
             <span v-if="post.isPinned" class="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
